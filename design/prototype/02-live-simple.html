@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Selah · Live (Simple) · USWDS + Apple</title>
+<link rel="stylesheet" href="hybrid.css">
+<style>
+  .main { grid-template-columns: 1fr; }
+  .wrap { display: grid; grid-template-rows: auto auto 1fr auto; gap: 14px; padding: 16px 28px 18px; min-height: 0; }
+  .pair { display: grid; grid-template-columns: 1.12fr 1fr; gap: 24px; align-items: end; }
+  .cap { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; font-size: 15px; font-weight: 700; }
+  .cap .h { color: var(--muted); font-weight: 500; }
+  .big { border-radius: 18px; overflow: hidden; box-shadow: 0 0 0 4px var(--live), 0 30px 60px rgba(0,0,0,.5); }
+  .big .canvas { aspect-ratio: 16/9; display: grid; place-items: center; text-align: center; padding: 8%; color: #fff; font-size: 26px; font-weight: 700; line-height: 1.3; text-shadow: 0 3px 16px rgba(0,0,0,.55); }
+  .nxt { border-radius: 16px; overflow: hidden; box-shadow: 0 0 0 4px var(--success); width: 78%; }
+  .nxt .canvas { aspect-ratio: 16/9; display: grid; place-items: center; text-align: center; padding: 8%; color: #fff; font-size: 17px; font-weight: 650; line-height: 1.3; }
+  .strip { display: flex; gap: 12px; overflow: hidden; }
+  .strip .slide { flex: 0 0 172px; }
+  .strip .slide .canvas { font-size: 9.5px; }
+  .controls { display: grid; grid-template-columns: 1fr 2.2fr 1fr; gap: 14px; }
+  .controls .btn { height: 68px; font-size: 22px; border-radius: 18px; }
+  .clears { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-top: 12px; }
+  .clears .btn { height: 52px; flex-direction: column; gap: 2px; font-size: 15px; border-radius: 14px; }
+  .clears .btn small { font-weight: 500; opacity: .75; font-size: 12px; }
+</style>
+</head>
+<body class="dark">
+<div class="app">
+  <header class="toolbar">
+    <div class="brand"><span class="mark">S</span>Selah</div>
+    <div class="seg"><button class="on">Simple</button><button>Producer</button></div>
+    <div class="vsep"></div>
+    <div class="title2"><b>Sunday Worship · 9:00 AM</b><span>You are running slides · Producer: Tomi (booth)</span></div>
+    <div class="spacer"></div>
+    <span class="status"><span class="dot"></span>All screens working</span>
+    <span class="status live"><span class="dot"></span>Live</span>
+    <span class="clock">10:12</span>
+    <div class="avatar" style="background:#008817">KE</div>
+  </header>
+
+  <div class="main">
+    <section class="wrap">
+      <nav class="step-ind" aria-label="Service progress">
+        <div class="st done"><div class="bar"></div><div class="lbl"><span class="n">✓</span>Countdown</div></div>
+        <div class="st done"><div class="bar"></div><div class="lbl"><span class="n">✓</span>Come Thou Fount</div></div>
+        <div class="st cur"><div class="bar"></div><div class="lbl"><span class="n">3</span>Be Thou My Vision</div></div>
+        <div class="st"><div class="bar"></div><div class="lbl"><span class="n">4</span>Romans 8:28–39</div></div>
+        <div class="st"><div class="bar"></div><div class="lbl"><span class="n">5</span>Sermon</div></div>
+        <div class="st"><div class="bar"></div><div class="lbl"><span class="n">6</span>Testimony video</div></div>
+        <div class="st"><div class="bar"></div><div class="lbl"><span class="n">7</span>Amazing Grace</div></div>
+        <div class="st"><div class="bar"></div><div class="lbl"><span class="n">8</span>Holy, Holy, Holy</div></div>
+        <div class="st"><div class="bar"></div><div class="lbl"><span class="n">9</span>Benediction</div></div>
+      </nav>
+
+      <div class="pair">
+        <div>
+          <div class="cap"><span class="usa-tag live">On screen now</span><span class="h">Verse 2 · slide 3 of 10</span></div>
+          <div class="big"><div class="canvas bg-aurora">Be Thou my Wisdom, and Thou my true Word;<br>I ever with Thee and Thou with me, Lord;</div></div>
+        </div>
+        <div>
+          <div class="cap"><span class="usa-tag ok">Next</span><span class="h">Verse 2 · slide 4</span></div>
+          <div class="nxt"><div class="canvas bg-aurora">Thou my great Father, I Thy true son;<br>Thou in me dwelling, and I with Thee one.</div></div>
+          <div class="usa-alert success slim" style="margin-top:16px"><span class="i">✓</span><div><h4 style="font-size:14px">Everything fits</h4><p>Words fit every screen. The copyright line is added for you.</p></div></div>
+        </div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;justify-content:end;gap:10px;min-height:0">
+        <div class="cap" style="margin:0">All slides in this song <span class="h">Tap any slide to show it</span></div>
+        <div class="strip">
+          <div class="slide"><div class="canvas bg-aurora">Be Thou my Vision, O Lord of my heart…</div><div class="meta"><span class="sw" style="background:var(--s-verse)"></span>Verse 1<span class="n">1</span></div></div>
+          <div class="slide"><div class="canvas bg-aurora">Thou my best Thought, by day or by night…</div><div class="meta"><span class="sw" style="background:var(--s-verse)"></span>Verse 1<span class="n">2</span></div></div>
+          <div class="slide live"><div class="canvas bg-aurora">Be Thou my Wisdom, and Thou my true Word…</div><div class="meta"><span class="sw" style="background:var(--s-verse)"></span>Verse 2<span class="n">3</span></div></div>
+          <div class="slide next"><div class="canvas bg-aurora">Thou my great Father, I Thy true son…</div><div class="meta"><span class="sw" style="background:var(--s-verse)"></span>Verse 2<span class="n">4</span></div></div>
+          <div class="slide"><div class="canvas bg-aurora" style="opacity:.65">Music only</div><div class="meta"><span class="sw" style="background:var(--s-intro)"></span>Instrumental<span class="n">5</span></div></div>
+          <div class="slide"><div class="canvas bg-aurora">Riches I heed not, nor man’s empty praise…</div><div class="meta"><span class="sw" style="background:var(--s-verse)"></span>Verse 3<span class="n">6</span></div></div>
+          <div class="slide"><div class="canvas bg-aurora">Thou and Thou only, first in my heart…</div><div class="meta"><span class="sw" style="background:var(--s-verse)"></span>Verse 3<span class="n">7</span></div></div>
+        </div>
+      </div>
+
+      <div>
+        <div class="controls">
+          <button class="btn base">‹ Back</button>
+          <button class="btn success">Next slide <kbd>Space</kbd></button>
+          <button class="btn outline">Next song ›</button>
+        </div>
+        <div class="clears">
+          <button class="btn base">Hide words<small>Esc or F10</small></button>
+          <button class="btn base">Hide background<small>F11</small></button>
+          <button class="btn base">Show logo<small>F9</small></button>
+          <button class="btn secondary">Clear everything<small>F12</small></button>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <footer class="bottombar">
+    <span class="muted">Simple mode · Your admin has turned off advanced controls for this account.</span>
+    <div class="spacer"></div>
+    <span class="muted" style="font-size:12.5px">Something wrong on screen? Press <kbd>Esc</kbd>, then</span>
+    <button class="btn outline">Message the booth</button>
+    <button class="btn unstyled">Quick tips</button>
+  </footer>
+</div>
+</body>
+</html>

@@ -1,0 +1,22 @@
+# Starter ignore list; milestone 1 (M1.1) extends it.
+.DS_Store
+Thumbs.db
+desktop.ini
+*.tmp
+*.log
+/third_party/
+/target/
+bin/
+obj/
+node_modules/
+.vs/
+.idea/
+/artifacts/
+
+# Secrets and signing material never belong in the repository (docs/SECURITY.md §6).
+.env
+.env.*
+*.pfx
+*.p12
+id_rsa*
+id_ed25519*

@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Selah · Plan · USWDS + Apple</title>
+<link rel="stylesheet" href="hybrid.css">
+<style>
+  .main { grid-template-columns: 270px 1fr 370px; }
+  .day { margin: 2px 8px; padding: 10px 12px; border-radius: 10px; cursor: pointer; }
+  .day:hover { background: rgba(118,118,128,.1); }
+  .day.sel { background: var(--primary); color: #fff; }
+  .day .d { font-size: 12px; color: var(--muted); } .day.sel .d { color: rgba(255,255,255,.85); }
+  .day .n { font-weight: 700; margin: 1px 0 6px; }
+  .hero { padding: 18px 24px 16px; display: flex; gap: 16px; align-items: flex-end; }
+  .hero .sub { color: var(--muted); font-size: 13px; margin-top: 4px; }
+  .tablewrap { margin: 0 24px 24px; border-radius: var(--r-l); overflow: hidden; box-shadow: var(--shadow); background: var(--surface); }
+  .it { display: flex; gap: 10px; align-items: center; }
+  .it .ic { width: 30px; height: 30px; border-radius: 8px; display: grid; place-items: center; color: #fff; font-size: 13px; flex: none; }
+  .it b { font-weight: 700; } .it small { display: block; color: var(--muted); font-size: 12px; }
+  .people { display: flex; } .people span { width: 26px; height: 26px; border-radius: 50%; border: 2px solid var(--bg); margin-left: -7px; font-size: 10px; display: grid; place-items: center; font-weight: 700; color: #fff; }
+  .ins { padding: 16px; }
+  .icon-list { list-style: none; margin: 10px 0 0; padding: 0; }
+  .icon-list li { display: grid; grid-template-columns: 26px 1fr auto; gap: 10px; align-items: start; padding: 9px 0; border-top: 1px solid rgba(0,0,0,.08); font-size: 13.5px; }
+  .icon-list .c { width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; font-size: 12px; font-weight: 800; color: #fff; background: #008817; }
+  .icon-list .c.w { background: #e5a000; color: #1b1b1b; }
+  .icon-list small { display: block; color: var(--muted); font-size: 12px; }
+  .ring { width: 86px; height: 86px; border-radius: 50%; background: conic-gradient(#008817 0 86%, var(--base-lighter) 86%); display: grid; place-items: center; flex: none; }
+  .ring div { width: 68px; height: 68px; border-radius: 50%; background: var(--info-bg); display: grid; place-items: center; font: 800 19px var(--font); }
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="toolbar">
+    <div class="brand"><span class="mark">S</span>Selah</div>
+    <div class="seg"><button>Live</button><button class="on">Plan</button><button>Edit</button><button>Library</button></div>
+    <div class="vsep"></div>
+    <div class="title2"><b>Grace Community Church</b><span>Main campus · 3 rooms · 2 sites linked</span></div>
+    <div class="search">⌕ Add a song, passage, video or item <span class="spacer"></span><kbd>Ctrl K</kbd></div>
+    <div class="spacer"></div>
+    <span class="status"><span class="dot"></span>Planning Center synced</span>
+    <span class="status"><span class="dot"></span>CCLI reporting on</span>
+    <div class="avatar">JA</div>
+  </header>
+
+  <div class="main">
+    <aside class="sidebar">
+      <div class="sb-h">Upcoming <button class="btn unstyled" style="height:24px">+ New</button></div>
+      <div class="scroll">
+        <div class="day sel"><div class="d">Sun 2 Nov · 9:00 AM</div><div class="n">Sunday Worship</div><span class="usa-tag ok">Almost ready</span></div>
+        <div class="day"><div class="d">Sun 2 Nov · 11:00 AM</div><div class="n">Sunday Worship (second)</div><span class="usa-tag light">Linked to 9:00</span></div>
+        <div class="day"><div class="d">Wed 5 Nov · 7:00 PM</div><div class="n">Midweek Bible Study</div><span class="usa-tag warn">2 items missing</span></div>
+        <div class="day"><div class="d">Fri 7 Nov · 7:30 PM</div><div class="n">Youth Night</div><span class="usa-tag light">Draft</span></div>
+        <div class="day"><div class="d">Sun 9 Nov · 9:00 AM</div><div class="n">Sunday Worship</div><span class="usa-tag light">From template</span></div>
+        <div class="sb-h" style="margin-top:10px">Service types</div>
+        <div style="padding:0 16px;font-size:13px;line-height:2;color:var(--text-2)">Sunday Worship · Midweek · Youth · Funeral · Wedding · Conference</div>
+      </div>
+    </aside>
+
+    <section class="pane">
+      <div class="hero">
+        <div>
+          <div class="eyebrow">SUNDAY 2 NOVEMBER · 9:00 AM · MAIN AUDITORIUM</div>
+          <h1 class="large-title">Sunday Worship</h1>
+          <div class="sub">Series: <b>Romans: Life in the Spirit</b> · Built from last week’s service · 11 items · 68 minutes planned</div>
+        </div>
+        <div class="spacer"></div>
+        <div class="people"><span style="background:#1a4480">JA</span><span style="background:#008817">KE</span><span style="background:#2378c3">TO</span><span style="background:#c84281">AD</span><span style="background:#71767a">+3</span></div>
+        <button class="btn outline">Print or PDF</button>
+        <button class="btn outline">Rehearse</button>
+        <button class="btn">Go live</button>
+      </div>
+      <div class="scroll">
+        <div class="tablewrap">
+          <table class="usa-table">
+            <thead><tr><th>Time</th><th>Item</th><th>Template or look</th><th>Owner</th><th>Length</th><th>Status</th></tr></thead>
+            <tbody>
+              <tr class="hdr"><td colspan="6">Pre-service</td></tr>
+              <tr><td class="mono muted">8:45</td><td><div class="it"><div class="ic" style="background:#e66f0e">◷</div><div><b>Countdown to service</b><small>Lobby and Main · announcements underneath</small></div></div></td><td>Countdown · Brand</td><td>Tomi</td><td class="mono">15:00</td><td><span class="usa-tag ok">Ready</span></td></tr>
+              <tr class="hdr"><td colspan="6">Worship</td></tr>
+              <tr><td class="mono muted">9:00</td><td><div class="it"><div class="ic" style="background:#5e5ce6">♫</div><div><b>Come Thou Fount</b><small>Key D · Arrangement “Sunday” · chord charts sent</small></div></div></td><td>Sanctuary Lyrics</td><td>Kemi</td><td class="mono">4:30</td><td><span class="usa-tag ok">Ready</span></td></tr>
+              <tr><td class="mono muted">9:05</td><td><div class="it"><div class="ic" style="background:#5e5ce6">♫</div><div><b>Be Thou My Vision</b><small>Key E♭ · Loop Connect setlist linked</small></div></div></td><td>Sanctuary Lyrics</td><td>Kemi</td><td class="mono">5:00</td><td><span class="usa-tag ok">Ready</span></td></tr>
+              <tr><td class="mono muted">9:10</td><td><div class="it"><div class="ic" style="background:#b38c00">¶</div><div><b>Romans 8:28–39</b><small>KJV with Spanish line · reader: Grace O.</small></div></div></td><td>Scripture · Dual</td><td>Tomi</td><td class="mono">3:00</td><td><span class="usa-tag ok">Ready</span></td></tr>
+              <tr class="hdr"><td colspan="6">Word</td></tr>
+              <tr><td class="mono muted">9:15</td><td><div class="it"><div class="ic" style="background:#008817">◉</div><div><b>Sermon: “Held by Grace”</b><small>6 points · 4 verses · notes on stage display</small></div></div></td><td>Sermon Points</td><td>Pastor Ade</td><td class="mono">35:00</td><td><span class="usa-tag warn">Slides due Sat</span></td></tr>
+              <tr><td class="mono muted">9:50</td><td><div class="it"><div class="ic" style="background:#0088a3">▶</div><div><b>Testimony video</b><small>4K · 3:12 · loudness levelled</small></div></div></td><td>Full screen</td><td>Tomi</td><td class="mono">3:12</td><td><span class="usa-tag ok">Downloaded</span></td></tr>
+              <tr class="hdr"><td colspan="6">Response</td></tr>
+              <tr><td class="mono muted">9:54</td><td><div class="it"><div class="ic" style="background:#5e5ce6">♫</div><div><b>Amazing Grace</b><small>Key G · Yorùbá line on stream</small></div></div></td><td>Sanctuary Lyrics</td><td>Kemi</td><td class="mono">5:00</td><td><span class="usa-tag ok">Ready</span></td></tr>
+              <tr><td class="mono muted">9:59</td><td><div class="it"><div class="ic" style="background:#5e5ce6">♫</div><div><b>Holy, Holy, Holy</b><small>Key D</small></div></div></td><td>Sanctuary Lyrics</td><td>Kemi</td><td class="mono">4:00</td><td><span class="usa-tag ok">Ready</span></td></tr>
+              <tr><td class="mono muted">10:03</td><td><div class="it"><div class="ic" style="background:#c84281">▤</div><div><b>Benediction and giving</b><small>QR to giving page · 3 slides</small></div></div></td><td>Brand</td><td>Tomi</td><td class="mono">2:00</td><td><span class="usa-tag ok">Ready</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <aside class="inspector">
+      <div class="scroll ins">
+        <div class="summary-box">
+          <div style="display:flex;gap:14px;align-items:center">
+            <div class="ring"><div>86%</div></div>
+            <div><h3>Ready for Sunday?</h3><div style="font-size:13px;color:var(--text-2)">Almost. One item needs attention. Checked against Main Auditorium’s screens and the 11:00 room.</div></div>
+          </div>
+          <ul class="icon-list">
+            <li><span class="c">✓</span><div>All media is on the booth computer<small>4.2 GB, checked</small></div><span></span></li>
+            <li><span class="c">✓</span><div>Fonts are installed on every computer<small>Booth, backup, lobby</small></div><span></span></li>
+            <li><span class="c">✓</span><div>Words fit all 5 screens<small>3 slides were reflowed for the LED wall</small></div><span></span></li>
+            <li><span class="c">✓</span><div>Song licences and copyright lines<small>CCLI #1234567 · streaming licence on</small></div><span></span></li>
+            <li><span class="c">✓</span><div>Backup computer is in sync<small>Last sync 12 seconds ago</small></div><span></span></li>
+            <li><span class="c w">!</span><div>Sermon slides haven’t been sent<small>Pastor Ade gets a reminder Saturday at 6 PM</small></div><button class="btn outline" style="height:28px;padding:0 10px">Remind now</button></li>
+          </ul>
+        </div>
+        <div class="group-t">Team</div>
+        <div class="group">
+          <div class="row"><span class="avatar" style="width:26px;height:26px;font-size:10px">JA</span><div class="k">Joy A.<small>Producer</small></div><span class="usa-tag ok">Confirmed</span></div>
+          <div class="row"><span class="avatar" style="width:26px;height:26px;font-size:10px;background:#008817">KE</span><div class="k">Kemi E.<small>Lyrics (Simple mode)</small></div><span class="usa-tag ok">Confirmed</span></div>
+          <div class="row"><span class="avatar" style="width:26px;height:26px;font-size:10px;background:#2378c3">TO</span><div class="k">Tomi O.<small>Stream and video</small></div><span class="usa-tag ok">Confirmed</span></div>
+        </div>
+      </div>
+    </aside>
+  </div>
+
+  <footer class="bottombar">
+    <span class="muted" style="font-size:12.5px">Changes sync to the 11:00 service and North campus · Last edited by Joy A. 3 minutes ago</span>
+    <div class="spacer"></div>
+    <button class="btn outline">Save as template</button>
+    <button class="btn">Share with team</button>
+  </footer>
+</div>
+</body>
+</html>

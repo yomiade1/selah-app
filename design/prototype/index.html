@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Selah · USWDS + Apple hybrid</title>
+<link rel="stylesheet" href="hybrid.css">
+<style>
+  body { overflow: auto; }
+  .page { max-width: 1480px; margin: 0 auto; padding: 36px 40px 60px; }
+  .lead { color: var(--text-2); max-width: 900px; font-size: 15px; line-height: 1.6; }
+  .cols { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 18px; margin: 24px 0 8px; }
+  .cols .group { padding: 16px 18px; }
+  .cols h3 { margin: 0 0 8px; font-size: 16px; }
+  .cols ul { margin: 0; padding-left: 18px; font-size: 13.5px; line-height: 1.7; color: var(--text-2); }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(420px, 1fr)); gap: 22px; margin-top: 18px; }
+  a.card { display: block; text-decoration: none; color: inherit; border-radius: var(--r-l); background: var(--surface); overflow: hidden; box-shadow: var(--shadow); transition: transform .12s; }
+  a.card:hover { transform: translateY(-2px); }
+  a.card img { width: 100%; display: block; aspect-ratio: 16/10; object-fit: cover; object-position: top left; border-bottom: 1px solid var(--line); background: #000; }
+  .meta { padding: 14px 16px 16px; }
+  .meta b { font-size: 15px; }
+  .meta p { margin: 5px 0 0; color: var(--muted); font-size: 13px; line-height: 1.5; }
+</style>
+</head>
+<body>
+<div class="page">
+  <div style="display:flex;align-items:center;gap:14px"><div class="brand"><span class="mark">S</span>Selah</div><span class="spacer"></span><span class="usa-tag ok">Chosen direction</span></div>
+  <div class="eyebrow" style="margin-top:22px">DESIGN REFERENCE FOR THE BUILD</div>
+  <h1 class="large-title">USWDS + Apple hybrid</h1>
+  <p class="lead">The same seven screens, content and states as the original prototype, rebuilt with a hybrid design language. It uses the U.S. Web Design System’s accessibility rules and plain-language components, inside Apple’s Human Interface Guidelines structure and materials. Planning and editing use the light appearance. Live, stage and pastor screens use the dark Booth appearance.</p>
+
+  <div class="cols">
+    <div class="group"><h3><span class="usa-tag info">From USWDS</span></h3><ul>
+      <li>Colour tokens (primary #005ea2, state colours) at WCAG AA contrast or better</li>
+      <li>Alerts with a thick left border and an icon; plain-language headings</li>
+      <li>Uppercase status tags, a step indicator, summary boxes, a process list</li>
+      <li>Every form field has a label, and a hint where needed</li>
+      <li>A 4 px blue focus ring on every control; bordered tables</li>
+      <li>Hint text under every setting, and info buttons for longer help</li>
+    </ul></div>
+    <div class="group"><h3><span class="usa-tag" style="background:#1b1b1b">From Apple HIG</span></h3><ul>
+      <li>Translucent toolbar and bottom bar</li>
+      <li>Sidebar source lists with rounded selection</li>
+      <li>Inset grouped lists, switches, segmented controls</li>
+      <li>Large titles with a small eyebrow label above</li>
+      <li>Cards with large rounded corners and soft shadows</li>
+      <li>Light and dark (Booth) appearances; iOS-style phone screens</li>
+    </ul></div>
+    <div class="group"><h3><span class="usa-tag light">Rules for combining them</span></h3><ul>
+      <li>USWDS decides <b>meaning</b>: colour, wording, states, accessibility</li>
+      <li>Apple decides <b>structure and feel</b>: layout, materials, motion</li>
+      <li>Buttons use USWDS colours and weights, with Apple’s rounded shape</li>
+      <li>Touch targets are at least 44 px, which both systems require</li>
+      <li>Type: <b>Inter</b> for interface text, <b>Manrope</b> for headings, 15 px base, with a text-size setting from 90% to 200%</li>
+      <li>No government branding: no .gov banner and no flag</li>
+    </ul></div>
+  </div>
+
+  <div class="grid">
+    <a class="card" href="01-live-producer.html"><img src="png/01-live-producer.png" alt=""><div class="meta"><b>1 · Live, Producer mode</b><p>Booth appearance. Source-list service order, a large title, an alert for the scripture detected in speech, and inset grouped layers.</p></div></a>
+    <a class="card" href="02-live-simple.html"><img src="png/02-live-simple.png" alt=""><div class="meta"><b>2 · Live, Simple mode</b><p>A step indicator shows where you are in the service. Big rounded USWDS buttons and a success alert.</p></div></a>
+    <a class="card" href="03-song-editor.html"><img src="png/03-song-editor.png" alt=""><div class="meta"><b>3 · Song editor</b><p>A four-step flow for adding a song, labelled fields with hints, and inset grouped switches.</p></div></a>
+    <a class="card" href="04-service-planner.html"><img src="png/04-service-planner.png" alt=""><div class="meta"><b>4 · Service planner</b><p>A bordered USWDS table inside an Apple card, with a summary box for the “Ready for Sunday?” check.</p></div></a>
+    <a class="card" href="05-outputs.html"><img src="png/05-outputs.png" alt=""><div class="meta"><b>5 · Screens and outputs</b><p>Sidebar of outputs, range sliders with hints, health in grouped lists.</p></div></a>
+    <a class="card" href="06-stage-display.html"><img src="png/06-stage-display.png" alt=""><div class="meta"><b>6 · Stage display</b><p>Public Sans at stage size, a gold key badge, and the booth message as a USWDS warning alert.</p></div></a>
+    <a class="card" href="08-help-and-settings.html"><img src="png/08-help-and-settings.png" alt=""><div class="meta"><b>8 · Settings, text size and contextual help</b><p>The text-size setting with a live preview, hint text, an info popover, and the offline help panel showing articles for this screen.</p></div></a>
+    <a class="card" href="07-web-remote.html"><img src="png/07-web-remote.png" alt=""><div class="meta"><b>7 · Browser remote and pastor view</b><p>iOS-style phones, with a USWDS process list explaining how to pair.</p></div></a>
+  </div>
+</div>
+</body>
+</html>

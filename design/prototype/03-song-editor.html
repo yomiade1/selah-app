@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Selah · Song editor · USWDS + Apple</title>
+<link rel="stylesheet" href="hybrid.css">
+<style>
+  .main { grid-template-columns: 420px 1fr 340px; }
+  .lyrics { padding: 4px 16px 16px; font-size: 14px; line-height: 2.05; }
+  .sec { padding: 4px 0 8px 14px; border-left: 4px solid var(--line-2); margin-bottom: 12px; background: var(--surface); border-radius: 0 10px 10px 0; box-shadow: var(--shadow); padding-right: 12px; }
+  .sec .hd { display: flex; align-items: center; gap: 8px; padding-top: 6px; }
+  .sec .hd .auto { font-size: 12px; color: var(--muted); }
+  .sec.v { border-left-color: var(--s-verse); } .sec.t { border-left-color: var(--s-tag); }
+  .ch { color: #936f38; font: 700 11px var(--mono); position: relative; top: -13px; display: inline-block; width: 0; white-space: nowrap; }
+  .brk { display: block; height: 0; border-top: 2px dashed var(--primary-light); margin: 2px 0 4px; position: relative; }
+  .brk::after { content: "Slide break"; position: absolute; right: 0; top: -10px; font-size: 10.5px; font-weight: 700; color: var(--primary); background: var(--surface); padding: 0 4px; line-height: 1.4; }
+  .vtag { display: inline-flex; align-items: center; height: 22px; padding: 0 8px; border-radius: 4px; font-size: 12px; font-weight: 700; color: #fff; }
+  .vtag.v { background: var(--s-verse); } .vtag.t { background: var(--s-tag); }
+  .hdr { padding: 14px 20px 10px; display: flex; align-items: center; gap: 12px; }
+  .grid-wrap { padding: 4px 20px 16px; }
+  .fit { position: absolute; bottom: 7px; right: 7px; z-index: 2; font-size: 10px; font-weight: 700; padding: 1px 6px; border-radius: 3px; background: #ecf3ec; color: #19311e; text-shadow: none; }
+  .devices { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; padding: 0 20px 16px; }
+  .dev { background: var(--surface); border-radius: 12px; padding: 8px; box-shadow: var(--shadow); font-size: 12px; color: var(--text-2); }
+  .dev .scr { height: 62px; border-radius: 6px; margin-bottom: 6px; display: grid; place-items: center; color: #fff; font-weight: 650; text-align: center; font-size: 7.5px; line-height: 1.3; padding: 6%; }
+  .ins { padding: 4px 16px 18px; }
+  .arrb { display: flex; flex-wrap: wrap; gap: 6px; padding: 10px; border-radius: 10px; border: 2px dashed var(--line-2); background: var(--surface-2); }
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="toolbar">
+    <div class="brand"><span class="mark">S</span>Selah</div>
+    <div class="seg"><button>Live</button><button>Plan</button><button class="on">Edit</button><button>Library</button></div>
+    <div class="vsep"></div>
+    <div class="title2"><b>Amazing Grace</b><span>Song · saved automatically just now</span></div>
+    <div class="spacer"></div>
+    <span class="status"><span class="dot"></span>Saved · synced to 3 campuses</span>
+    <button class="btn base">Undo <kbd>Ctrl Z</kbd></button>
+    <button class="btn">Add to service</button>
+    <div class="avatar">JA</div>
+  </header>
+
+  <div class="main">
+    <aside class="sidebar">
+      <div style="padding:14px 16px 8px">
+        <nav class="step-ind" aria-label="New song steps">
+          <div class="st done"><div class="bar"></div><div class="lbl"><span class="n">✓</span>Paste</div></div>
+          <div class="st cur"><div class="bar"></div><div class="lbl"><span class="n">2</span>Sections</div></div>
+          <div class="st"><div class="bar"></div><div class="lbl"><span class="n">3</span>Arrange</div></div>
+          <div class="st"><div class="bar"></div><div class="lbl"><span class="n">4</span>Review</div></div>
+        </nav>
+      </div>
+      <div style="padding:6px 16px 10px">
+        <div class="usa-alert success slim"><span class="i">✓</span><div><h4 style="font-size:14px">We found 5 sections</h4><p>Labels, slide breaks and chords were detected. Edit anything and the slides update.</p></div></div>
+      </div>
+      <div class="scroll lyrics">
+        <div class="sec v"><div class="hd"><span class="vtag v">Verse 1</span><span class="auto">Detected automatically</span></div>
+          <span class="ch">G</span>Amazing grace! How <span class="ch">C</span>sweet the <span class="ch">G</span>sound<br>That saved a wretch like <span class="ch">D</span>me!<span class="brk"></span>
+          I <span class="ch">G</span>once was lost, but <span class="ch">C</span>now am <span class="ch">G</span>found;<br>Was <span class="ch">Em</span>blind, but <span class="ch">D</span>now I <span class="ch">G</span>see.</div>
+        <div class="sec v"><div class="hd"><span class="vtag v">Verse 2</span><span class="auto">Detected automatically</span></div>
+          ’Twas grace that taught my heart to fear,<br>And grace my fears relieved;<span class="brk"></span>
+          How precious did that grace appear<br>The hour I first believed.</div>
+        <div class="sec v"><div class="hd"><span class="vtag v">Verse 3</span><span class="auto">Detected automatically</span></div>
+          Through many dangers, toils and snares,<br>I have already come;<span class="brk"></span>
+          ’Tis grace hath brought me safe thus far,<br>And grace will lead me home.</div>
+        <div class="sec v"><div class="hd"><span class="vtag v">Verse 4</span><span class="auto">Detected automatically</span></div>
+          When we’ve been there ten thousand years,<br>Bright shining as the sun,<span class="brk"></span>
+          We’ve no less days to sing God’s praise<br>Than when we’d first begun.</div>
+        <div class="sec t"><div class="hd"><span class="vtag t">Tag</span><span class="auto">Repeats the last line</span></div>
+          Was blind, but now I see.</div>
+      </div>
+    </aside>
+
+    <section class="pane">
+      <div class="hdr">
+        <div><div class="eyebrow">GENERATED SLIDES</div><h1 class="large-title" style="font-size:24px">9 slides · “Sanctuary Lyrics”</h1></div>
+        <div class="spacer"></div>
+        <span class="muted" style="font-size:12.5px;font-weight:600">Preview on</span>
+        <div class="seg"><button class="on">16:9</button><button>LED 32:9</button><button>Stage</button><button>Stream</button></div>
+      </div>
+      <div class="scroll grid-wrap"><div class="slides" id="slides"></div></div>
+      <div class="devices">
+        <div class="dev"><div class="scr bg-dawn">Amazing grace! How sweet the sound<br>That saved a wretch like me!</div>LED wall 32:9 · <b style="color:#008817">fits</b></div>
+        <div class="dev"><div class="scr bg-black" style="font-family:var(--mono);text-align:left;place-items:start;color:#f5f5f7"><span style="color:#ffbe2e">G        C     G</span>Amazing grace! How sweet…</div>Stage · chords above lyrics · <b style="color:#008817">fits</b></div>
+        <div class="dev"><div class="scr bg-photo" style="place-items:end start;text-align:left"><span style="background:rgba(22,46,81,.9);padding:3px 6px;border-left:3px solid #00bde3">Amazing grace! How sweet the sound…</span></div>Stream lower third · <b style="color:#008817">fits</b></div>
+      </div>
+    </section>
+
+    <aside class="inspector">
+      <div style="padding:12px 16px 0"><div class="seg" style="width:100%;display:flex"><button class="on" style="flex:1">Song</button><button style="flex:1">Layout</button><button style="flex:1">Arrange</button><button style="flex:1">Actions</button></div></div>
+      <div class="scroll ins">
+        <label class="usa-label">Title</label>
+        <div class="usa-input ok">Amazing Grace<span class="sfx" style="color:#008817;font-weight:700">✓ CCLI match</span></div>
+        <div class="grid2">
+          <div><label class="usa-label">Author</label><div class="usa-input">John Newton</div></div>
+          <div><label class="usa-label">Key</label><div class="usa-input">G<span class="sfx">capo 0</span></div></div>
+        </div>
+        <div class="grid2">
+          <div><label class="usa-label">CCLI song number</label><div class="usa-input mono">22025</div></div>
+          <div><label class="usa-label">Copyright</label><div class="usa-input">Public Domain</div></div>
+        </div>
+        <label class="usa-label">Copyright line on screen</label>
+        <span class="usa-hint">Shown at the bottom of the slide, as your licence requires.</span>
+        <div class="usa-input">First and last slide<span class="sfx">▾</span></div>
+
+        <div class="group-t">Layout</div>
+        <div class="group">
+          <div class="row"><div class="k">Lines per slide</div><span class="v">2</span></div>
+          <div class="row"><div class="k">Shrink text to fit every screen<small>Recommended</small></div><span class="switch"></span></div>
+          <div class="row"><div class="k">Title slide</div><span class="switch off"></span></div>
+          <div class="row"><div class="k">Blank slide at end</div><span class="switch"></span></div>
+        </div>
+
+        <div class="group-t">Arrangement “Sunday”</div>
+        <div class="arrb"><span class="vtag v">V1</span><span class="vtag v">V2</span><span class="vtag v">V3</span><span class="vtag v">V4</span><span class="vtag t">Tag</span><span class="muted" style="font-size:12px;align-self:center;margin-left:4px">Drag sections here</span></div>
+        <span class="usa-hint" style="margin-top:6px">Other arrangements: Original · Short (V1, V4) · Loop Connect setlist</span>
+
+        <label class="usa-label">Second language line</label>
+        <span class="usa-hint">Shown smaller under each line.</span>
+        <div class="usa-input">Yorùbá · from linked translation<span class="sfx">▾</span></div>
+      </div>
+    </aside>
+  </div>
+
+  <footer class="bottombar">
+    <span class="muted" style="font-size:12.5px">Tip: type <kbd>[C]</kbd> or <kbd>Chorus:</kbd> to start a section · <kbd>Alt Enter</kbd> adds a slide break</span>
+    <div class="spacer"></div>
+    <button class="btn outline">Print chord chart</button>
+    <button class="btn">Continue to Arrange</button>
+  </footer>
+</div>
+<script>
+const v = [
+  ["Verse 1", "v", ["Amazing grace! How sweet the sound<br>That saved a wretch like me!", "I once was lost, but now am found;<br>Was blind, but now I see."]],
+  ["Verse 2", "v", ["’Twas grace that taught my heart to fear,<br>And grace my fears relieved;", "How precious did that grace appear<br>The hour I first believed."]],
+  ["Verse 3", "v", ["Through many dangers, toils and snares,<br>I have already come;", "’Tis grace hath brought me safe thus far,<br>And grace will lead me home."]],
+  ["Verse 4", "v", ["When we’ve been there ten thousand years,<br>Bright shining as the sun,", "We’ve no less days to sing God’s praise<br>Than when we’d first begun."]],
+  ["Tag", "t", ["Was blind, but now I see."]]
+];
+const col = { v: "var(--s-verse)", t: "var(--s-tag)" };
+const el = document.getElementById("slides"); let n = 0;
+v.forEach(([g, c, ls]) => {
+  const h = document.createElement("div"); h.className = "group-h";
+  h.innerHTML = `<span class="bar" style="background:${col[c]}"></span>${g}`; el.appendChild(h);
+  ls.forEach((t, i) => { n++;
+    const d = document.createElement("div"); d.className = "slide";
+    d.innerHTML = `<div class="canvas bg-dawn">${t}${n === 1 || n === 9 ? '<div class="footer-cr" style="font-size:7.5px">“Amazing Grace” · John Newton · Public Domain</div>' : ""}<span class="fit">Fits all screens</span></div><div class="meta"><span class="sw" style="background:${col[c]}"></span>${g}${ls.length > 1 ? " · " + (i + 1) + " of " + ls.length : ""}<span class="n">${n}</span></div>`;
+    el.appendChild(d);
+  });
+});
+</script>
+</body>
+</html>

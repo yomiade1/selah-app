@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Selah · Live (Producer) · USWDS + Apple</title>
+<link rel="stylesheet" href="hybrid.css">
+<style>
+  .main { grid-template-columns: 290px 1fr 430px; }
+  .head { padding: 16px 20px 12px; display: flex; align-items: flex-end; gap: 14px; }
+  .head .sub { color: var(--muted); font-size: 13px; margin-top: 4px; }
+  .arr { display: flex; align-items: center; gap: 10px; padding: 0 20px 12px; }
+  .arr .seg button { padding: 5px 12px; }
+  .grid-wrap { padding: 4px 20px 20px; }
+  .ins { padding: 14px 16px 18px; }
+  .mini { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 12px; }
+  .mini .canvas { font-size: 9px; padding: 6%; }
+  .tiles { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .tile { border-radius: 12px; background: #2c2c2e; padding: 10px 12px; min-height: 62px; display: flex; flex-direction: column; justify-content: space-between; cursor: pointer; }
+  .tile .k { font-size: 11.5px; color: var(--muted); display: flex; justify-content: space-between; }
+  .tile .v { font-weight: 700; font-size: 13.5px; }
+  .tile.on { background: var(--primary); } .tile.on .k { color: rgba(255,255,255,.85); }
+  .tile.timer .v { font: 700 18px var(--mono); }
+  .runtime { padding: 12px 16px; border-top: 1px solid var(--line); display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 12px; color: var(--muted); }
+  .runtime b { display: block; font: 700 16px var(--mono); color: var(--text); }
+  .runtime .over b { color: var(--warning); }
+  .row .x { height: 28px; padding: 0 10px; border-radius: 6px; border: 0; background: rgba(118,118,128,.3); font-size: 12px; font-weight: 700; cursor: pointer; }
+  .row .lb { width: 4px; height: 26px; border-radius: 2px; background: #48484a; }
+  .row.on .lb { background: var(--live); }
+</style>
+</head>
+<body class="dark">
+<div class="app">
+  <header class="toolbar">
+    <div class="brand"><span class="mark">S</span>Selah</div>
+    <div class="seg" role="tablist" aria-label="Mode"><button>Simple</button><button class="on">Producer</button></div>
+    <div class="vsep"></div>
+    <div class="title2"><b>Sunday Worship · 9:00 AM</b><span>Main Auditorium</span></div>
+    <div class="search">⌕ Search songs, scripture, media, commands <span class="spacer"></span><kbd>Ctrl K</kbd></div>
+    <div class="spacer"></div>
+    <span class="status"><span class="dot"></span>Outputs 5 of 5</span>
+    <span class="status"><span class="dot"></span>NDI 2 in</span>
+    <span class="status live"><span class="dot"></span>Streaming 01:12:33</span>
+    <span class="status"><span class="dot live"></span>Recording</span>
+    <span class="clock">10:12:33</span>
+    <div class="avatar">JA</div>
+  </header>
+
+  <div class="main">
+    <aside class="sidebar">
+      <div class="sb-h">Service order <span class="usa-tag ok">Synced</span></div>
+      <div class="scroll">
+        <div class="sb-h" style="padding-top:8px">Pre-service · 8:45</div>
+        <div class="src done"><div class="ic timer">◷</div><div><div class="t">Countdown to service</div><div class="s">Lobby and Main</div></div><span class="mono muted">15:00</span></div>
+        <div class="src done"><div class="ic pres">▤</div><div><div class="t">Announcements loop</div><div class="s">12 slides, every 8 s</div></div><span></span></div>
+        <div class="sb-h">Worship · 9:00</div>
+        <div class="src done"><div class="ic song">♫</div><div><div class="t">Come Thou Fount</div><div class="s">Key D</div></div><span class="mono muted">4:30</span></div>
+        <div class="src live"><div class="ic song">♫</div><div><div class="t">Be Thou My Vision</div><div class="s">Key E♭ · Arrangement “Sunday”</div></div><span class="usa-tag live">Live</span></div>
+        <div class="src next"><div class="ic bible">¶</div><div><div class="t">Romans 8:28–39</div><div class="s">KJV with Spanish line</div></div><span class="usa-tag ok">Next</span></div>
+        <div class="sb-h">Word · 9:25</div>
+        <div class="src"><div class="ic talk">◉</div><div><div class="t">Sermon: “Held by Grace”</div><div class="s">Pastor Ade · 6 points</div></div><span class="mono muted">35:00</span></div>
+        <div class="src"><div class="ic media">▶</div><div><div class="t">Testimony video</div><div class="s">4K · downloaded</div></div><span class="mono muted">3:12</span></div>
+        <div class="sb-h">Response · 10:05</div>
+        <div class="src"><div class="ic song">♫</div><div><div class="t">Amazing Grace</div><div class="s">Key G</div></div><span class="mono muted">5:00</span></div>
+        <div class="src"><div class="ic song">♫</div><div><div class="t">Holy, Holy, Holy</div><div class="s">Key D</div></div><span class="mono muted">4:00</span></div>
+        <div class="src"><div class="ic pres">▤</div><div><div class="t">Benediction and giving</div><div class="s">3 slides · QR code</div></div><span class="mono muted">2:00</span></div>
+      </div>
+      <div class="runtime"><div>Elapsed<b>27:41</b></div><div class="over">Projected end<b>10:14 +4m</b></div></div>
+    </aside>
+
+    <section class="pane">
+      <div class="head">
+        <div>
+          <div class="eyebrow">NOW LIVE · SONG</div>
+          <h1 class="large-title">Be Thou My Vision</h1>
+          <div class="sub">Traditional Irish · tr. Mary Byrne, vers. Eleanor Hull · Public domain · Template “Sanctuary Lyrics”</div>
+        </div>
+        <div class="spacer"></div>
+        <span class="usa-tag ok">CCLI reported</span>
+        <button class="btn outline">Edit</button>
+        <button class="btn outline">Reflow</button>
+      </div>
+      <div class="arr">
+        <span class="muted" style="font-size:12.5px;font-weight:600">Arrangement</span>
+        <div class="seg"><button>Intro</button><button>V1</button><button class="on">V2</button><button>Inst</button><button>V3</button><button>V4</button><button>Tag</button></div>
+        <span class="spacer"></span>
+        <span class="muted" style="font-size:12px">Hotkeys <kbd>1</kbd>–<kbd>4</kbd> verses · <kbd>T</kbd> tag · <kbd>B</kbd> blank</span>
+      </div>
+      <div style="padding:0 20px 14px">
+        <div class="usa-alert slim"><span class="i">i</span><div><h4 style="font-size:14px">Scripture detected in speech</h4><p>“…turn with me to Romans chapter eight.” <b>Romans 8:28</b> is ready to show.</p></div><div class="acts"><button class="btn success">Show now <kbd>Enter</kbd></button><button class="btn base">Dismiss</button></div></div>
+      </div>
+      <div class="scroll grid-wrap"><div class="slides" id="slides"></div></div>
+    </section>
+
+    <aside class="inspector">
+      <div class="scroll ins">
+        <div class="screen program">
+          <div class="hd"><span class="dot live"></span>Program <div class="r">3 projectors · <span class="usa-tag info">Look: Worship</span></div></div>
+          <div class="canvas bg-aurora" id="program"></div>
+        </div>
+        <div class="mini">
+          <div class="screen"><div class="hd"><span class="dot"></span>Stage <div class="r">Chords</div></div><div class="canvas bg-black" style="text-align:left;place-items:start;font:600 8px var(--mono);color:#f5f5f7;text-shadow:none" id="stage"></div></div>
+          <div class="screen"><div class="hd"><span class="dot live"></span>Stream (NDI) <div class="r">Lower third</div></div><div class="canvas bg-photo"><div class="lt" id="lt"></div></div></div>
+        </div>
+        <div class="group-t">Layers</div>
+        <div class="group">
+          <div class="row"><span class="lb"></span><div class="k">Audio<small>Nothing playing</small></div><button class="x">Clear</button></div>
+          <div class="row on"><span class="lb"></span><div class="k">Messages<small>“Parents of room 12…” · 0:45 left</small></div><button class="x">Clear</button></div>
+          <div class="row on"><span class="lb"></span><div class="k">Props<small>Logo bug · stream lower third</small></div><button class="x">Clear</button></div>
+          <div class="row on"><span class="lb"></span><div class="k">Slide<small id="slideLayer">Be Thou My Vision</small></div><button class="x">Clear (F10)</button></div>
+          <div class="row on"><span class="lb"></span><div class="k">Media<small>Aurora Loop 4K · repeats</small></div><button class="x">Clear (F11)</button></div>
+          <div class="row"><span class="lb"></span><div class="k">Video input<small>Camera 2 (NDI) ready</small></div><button class="x">Clear</button></div>
+        </div>
+        <div class="group-t">Looks, timers and macros</div>
+        <div class="tiles">
+          <div class="tile on"><div class="k"><span>Look</span><kbd>⇧1</kbd></div><div class="v">Worship</div></div>
+          <div class="tile"><div class="k"><span>Look</span><kbd>⇧2</kbd></div><div class="v">Sermon</div></div>
+          <div class="tile"><div class="k"><span>Look</span><kbd>⇧3</kbd></div><div class="v">Camera</div></div>
+          <div class="tile timer"><div class="k"><span>Sermon</span><span>▶</span></div><div class="v">35:00</div></div>
+          <div class="tile timer"><div class="k"><span>Service</span><span>↻</span></div><div class="v">27:41</div></div>
+          <div class="tile"><div class="k"><span>Macro</span><kbd>M</kbd></div><div class="v">Go to sermon</div></div>
+        </div>
+      </div>
+    </aside>
+  </div>
+
+  <footer class="bottombar">
+    <button class="btn secondary">Clear all <kbd>F12</kbd></button>
+    <button class="btn base">Clear text <kbd>F10</kbd></button>
+    <button class="btn base">Clear background <kbd>F11</kbd></button>
+    <button class="btn base">Show logo <kbd>F9</kbd></button>
+    <div class="vsep"></div>
+    <button class="btn base" id="prevBtn">Previous</button>
+    <button class="btn success" id="nextBtn">Next <kbd>Space</kbd></button>
+    <button class="btn outline">Next item <kbd>⇧ →</kbd></button>
+    <div class="spacer"></div>
+    <div class="health"><span><span class="dot"></span>Left</span><span><span class="dot"></span>Center</span><span><span class="dot"></span>Right</span><span><span class="dot"></span>Stage TV</span><span><span class="dot"></span>NDI</span><span class="mono muted">60 fps</span><span class="usa-tag ok">Backup linked</span></div>
+  </footer>
+</div>
+<script>
+const S = [
+  { g: "Intro", c: "i", hk: "", lines: [""] },
+  { g: "Verse 1", c: "v", hk: "1", lines: ["Be Thou my Vision, O Lord of my heart;<br>Naught be all else to me, save that Thou art.", "Thou my best Thought, by day or by night,<br>Waking or sleeping, Thy presence my light."] },
+  { g: "Verse 2", c: "v", hk: "2", lines: ["Be Thou my Wisdom, and Thou my true Word;<br>I ever with Thee and Thou with me, Lord;", "Thou my great Father, I Thy true son;<br>Thou in me dwelling, and I with Thee one."] },
+  { g: "Instrumental", c: "i", hk: "", lines: [""] },
+  { g: "Verse 3", c: "v", hk: "3", lines: ["Riches I heed not, nor man’s empty praise,<br>Thou mine Inheritance, now and always:", "Thou and Thou only, first in my heart,<br>High King of Heaven, my Treasure Thou art."] },
+  { g: "Verse 4", c: "v", hk: "4", lines: ["High King of Heaven, my victory won,<br>May I reach Heaven’s joys, O bright Heaven’s Sun!", "Heart of my own heart, whatever befall,<br>Still be my Vision, O Ruler of all."] },
+  { g: "Tag", c: "t", hk: "T", lines: ["Still be my Vision,<br>O Ruler of all."] }
+];
+const colors = { v: "var(--s-verse)", t: "var(--s-tag)", i: "var(--s-intro)" };
+const flat = [], el = document.getElementById("slides");
+S.forEach((sec) => {
+  const h = document.createElement("div"); h.className = "group-h";
+  h.innerHTML = `<span class="bar" style="background:${colors[sec.c]}"></span>${sec.g}${sec.hk ? `<kbd>${sec.hk}</kbd>` : ""}`; el.appendChild(h);
+  sec.lines.forEach((txt, i) => {
+    const idx = flat.length; flat.push({ txt, sec });
+    const d = document.createElement("div"); d.className = "slide"; d.dataset.i = idx; d.tabIndex = 0;
+    d.innerHTML = `<div class="canvas bg-aurora"><span class="badge"></span>${sec.g === "Verse 3" && i === 0 ? '<span class="act-ic">Look: Camera</span>' : ""}${txt || '<span style="opacity:.6;font-weight:500">Background only</span>'}</div><div class="meta"><span class="sw" style="background:${colors[sec.c]}"></span>${sec.g}${sec.lines.length > 1 ? ` · ${i + 1} of ${sec.lines.length}` : ""}<span class="n">${idx + 1}</span></div>`;
+    d.onclick = () => go(idx); el.appendChild(d);
+  });
+});
+let cur = 3;
+const plain = (t) => t.replace(/<br>/g, " ");
+function go(i) {
+  cur = Math.max(0, Math.min(flat.length - 1, i));
+  document.querySelectorAll(".slide").forEach((s) => {
+    const k = +s.dataset.i, b = s.querySelector(".badge");
+    s.classList.toggle("live", k === cur); s.classList.toggle("next", k === cur + 1);
+    b.className = "badge" + (k === cur ? " usa-tag live" : k === cur + 1 ? " usa-tag ok" : "");
+    b.textContent = k === cur ? "Live" : k === cur + 1 ? "Next" : "";
+  });
+  const f = flat[cur], n = flat[cur + 1];
+  document.getElementById("program").innerHTML = (f.txt || "") + '<div class="footer-cr">“Be Thou My Vision” · Public Domain · CCLI Lic. #1234567</div>';
+  document.getElementById("lt").innerHTML = (f.txt ? plain(f.txt) : "—") + "<small>Be Thou My Vision · Public Domain</small>";
+  document.getElementById("stage").innerHTML = `E♭ · ${f.txt ? plain(f.txt).slice(0, 40) + "…" : "(instrumental)"}<br><br><span style="color:#21c834">NEXT</span> ${n && n.txt ? plain(n.txt).slice(0, 32) + "…" : "Romans 8:28"}<br><br><span style="color:#ffbe2e">10:12 · Sermon in 3:00</span>`;
+  document.getElementById("slideLayer").textContent = `Be Thou My Vision · ${f.sec.g}`;
+}
+go(cur);
+document.getElementById("nextBtn").onclick = () => go(cur + 1);
+document.getElementById("prevBtn").onclick = () => go(cur - 1);
+document.addEventListener("keydown", (e) => {
+  if ([" ", "ArrowRight", "ArrowDown"].includes(e.key)) { e.preventDefault(); go(cur + 1); }
+  if (["ArrowLeft", "ArrowUp"].includes(e.key)) { e.preventDefault(); go(cur - 1); }
+});
+</script>
+</body>
+</html>

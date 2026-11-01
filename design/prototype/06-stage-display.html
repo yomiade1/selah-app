@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Selah · Stage display · USWDS + Apple</title>
+<link rel="stylesheet" href="hybrid.css">
+<style>
+  body { background: #000; }
+  .sd { width: 100vw; height: 100vh; min-width: 1280px; min-height: 720px; display: grid; grid-template-rows: 72px 1fr 220px 60px; background: #000; color: #f5f5f7; }
+  .top { display: flex; align-items: center; gap: 22px; padding: 0 36px; background: rgba(28,28,30,.9); }
+  .top .song { font-size: 24px; font-weight: 800; letter-spacing: -.3px; }
+  .key { font: 800 18px var(--font); color: #1b1b1b; background: #ffbe2e; padding: 3px 10px; border-radius: 4px; }
+  .order { display: flex; gap: 6px; }
+  .order span { font-size: 15px; font-weight: 700; padding: 4px 11px; border-radius: 8px; background: #2c2c2e; color: #a1a1a6; }
+  .order span.on { background: #2491ff; color: #fff; }
+  .top .clock { margin-left: auto; font: 800 32px var(--font); font-variant-numeric: tabular-nums; }
+  .now { padding: 30px 50px 0; display: flex; flex-direction: column; justify-content: center; }
+  .line { position: relative; font-size: 64px; font-weight: 800; line-height: 1.05; margin-top: 56px; letter-spacing: -.5px; }
+  .line .c { position: absolute; top: -48px; font: 800 34px var(--font); color: #ffbe2e; }
+  .next { padding: 20px 50px; display: grid; grid-template-columns: 1fr 380px; gap: 30px; background: #111113; }
+  .next .lbl { font-size: 15px; font-weight: 800; letter-spacing: 1px; color: #21c834; margin-bottom: 8px; text-transform: uppercase; }
+  .next .txt { font-size: 36px; font-weight: 650; color: #a1a1a6; line-height: 1.25; }
+  .timer { border-radius: 18px; background: #1c1c1e; padding: 18px 22px; display: flex; flex-direction: column; justify-content: center; }
+  .timer .k { font-size: 15px; color: #a1a1a6; font-weight: 700; }
+  .timer .v { font: 800 66px var(--font); font-variant-numeric: tabular-nums; line-height: 1.05; }
+  .timer .bar { height: 10px; border-radius: 5px; background: #3a3a3c; margin-top: 10px; overflow: hidden; }
+  .timer .bar i { display: block; height: 100%; width: 72%; background: #21c834; }
+  .msg { display: flex; align-items: center; gap: 16px; padding: 0 36px; background: #faf3d1; color: #1b1b1b; font-size: 25px; font-weight: 800; border-left: 12px solid #ffbe2e; }
+  .msg .i { width: 30px; height: 30px; border-radius: 50%; background: #1b1b1b; color: #faf3d1; display: grid; place-items: center; font-size: 18px; }
+</style>
+</head>
+<body>
+<div class="sd">
+  <div class="top">
+    <span class="song">Be Thou My Vision</span>
+    <span class="key">E♭</span>
+    <div class="order"><span>Intro</span><span>V1</span><span class="on">V2</span><span>Inst</span><span>V3</span><span>V4</span><span>Tag</span></div>
+    <span class="clock">10:12:33</span>
+  </div>
+  <div class="now">
+    <div class="line"><span class="c" style="left:0">E♭</span><span class="c" style="left:340px">A♭</span><span class="c" style="left:560px">E♭</span>Be Thou my Wisdom, and Thou my true Word;</div>
+    <div class="line"><span class="c" style="left:120px">Cm</span><span class="c" style="left:480px">B♭</span><span class="c" style="left:850px">E♭</span>I ever with Thee and Thou with me, Lord;</div>
+  </div>
+  <div class="next">
+    <div><div class="lbl">Next · Verse 2</div><div class="txt">Thou my great Father, I Thy true son;<br>Thou in me dwelling, and I with Thee one.</div></div>
+    <div class="timer"><div class="k">Worship set · time left</div><div class="v">03:00</div><div class="bar"><i></i></div></div>
+  </div>
+  <div class="msg"><span class="i">!</span>From the booth: repeat verse 4, then go straight into Romans 8</div>
+</div>
+</body>
+</html>

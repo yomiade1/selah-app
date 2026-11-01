@@ -1,0 +1,46 @@
+name: Problem report
+description: Something went wrong in a Selah test build.
+labels: ["problem"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for telling us. **This repository may be public, so anyone may see this report.** Don't include passwords, stream keys or personal details, and check the support bundle before you attach it.
+  - type: input
+    id: version
+    attributes:
+      label: Selah version
+      description: Help ▸ Report a problem fills this in. You can also find it in Help ▸ About.
+    validations:
+      required: true
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What did you expect to happen?
+  - type: textarea
+    id: steps
+    attributes:
+      label: How can we make it happen again?
+      placeholder: |
+        1.
+        2.
+        3.
+  - type: dropdown
+    id: live
+    attributes:
+      label: Was anything on the screens when it happened?
+      options:
+        - "No"
+        - "Yes, in practice mode"
+        - "Yes, during a live service"
+  - type: textarea
+    id: attachments
+    attributes:
+      label: Support bundle and screenshots
+      description: Drag the support bundle (.zip) from Help ▸ Report a problem here, after you've checked it.

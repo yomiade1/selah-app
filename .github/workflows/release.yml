@@ -1,0 +1,79 @@
+# Tags completed milestones and publishes a test build (ADR-025). Cloud sessions can't push tags,
+# so this runs when the user merges to main. It reads the status table in PROGRESS.md: each
+# milestone marked Done (or "Done, H-checks pending") that has no m<N> tag yet gets one, and the
+# newest gets a prerelease with the Windows installer. Most merges finish in under a minute.
+name: Release
+
+on:
+  push:
+    branches: [main]
+    paths: [PROGRESS.md]
+  workflow_dispatch:
+
+permissions: {}
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  tag:
+    name: tag
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions:
+      contents: write
+    outputs:
+      milestone: ${{ steps.find.outputs.milestone }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Tag newly completed milestones
+        id: find
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          newest=""
+          for n in $(grep -E '^\| M[0-9]+\. [^|]*\| Done' PROGRESS.md | sed -E 's/^\| M([0-9]+)\..*/\1/'); do
+            if git rev-parse -q --verify "refs/tags/m$n" >/dev/null; then continue; fi
+            gh api -X POST "repos/$REPO/git/refs" -f ref="refs/tags/m$n" -f sha="$SHA" >/dev/null
+            echo "Tagged m$n at $SHA"
+            newest="$n"
+          done
+          echo "milestone=$newest" >> "$GITHUB_OUTPUT"
+
+  installer:
+    name: installer
+    needs: tag
+    if: needs.tag.outputs.milestone != ''
+    runs-on: windows-2025
+    timeout-minutes: 45
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+        with:
+          dotnet-version: "10.0.x"
+      - name: Build the installer
+        if: hashFiles('tools/package.ps1') != ''
+        shell: pwsh
+        env:
+          MILESTONE: ${{ needs.tag.outputs.milestone }}
+        run: ./tools/package.ps1 -Channel dev -Version "0.$env:MILESTONE.0"
+      - name: Publish the prerelease
+        if: hashFiles('artifacts/installer/*') != ''
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+          MILESTONE: ${{ needs.tag.outputs.milestone }}
+        run: |
+          $notes = "Test build for milestone $env:MILESTONE. Not signed yet (H-15): if SmartScreen warns you, select More info, then Run anyway. See docs/CLOUD-DEVELOPMENT.md section 4."
+          gh release create "m$env:MILESTONE" (Get-ChildItem artifacts/installer/*).FullName --prerelease --title "Milestone $env:MILESTONE test build" --notes $notes

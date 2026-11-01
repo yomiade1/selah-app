@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Selah · Screens and outputs · USWDS + Apple</title>
+<link rel="stylesheet" href="hybrid.css">
+<style>
+  .main { grid-template-columns: 300px 1fr 360px; }
+  .src .sw { width: 30px; height: 30px; border-radius: 8px; display: grid; place-items: center; color: #fff; font-size: 13px; font-weight: 800; }
+  .stage { flex: 1; position: relative; margin: 0 20px 20px; border-radius: var(--r-l); background: var(--surface); box-shadow: var(--shadow); overflow: hidden; }
+  .stage::before { content: ""; position: absolute; inset: 0; background: repeating-linear-gradient(0deg, transparent 0 23px, rgba(0,0,0,.04) 23px 24px), repeating-linear-gradient(90deg, transparent 0 23px, rgba(0,0,0,.04) 23px 24px); }
+  .lbl { position: absolute; font-size: 12.5px; font-weight: 700; color: var(--text-2); }
+  .canvasfull { position: absolute; left: 6%; top: 10%; width: 68%; height: 38%; display: grid; place-items: center; color: #fff; font-weight: 700; font-size: 24px; text-shadow: 0 2px 10px rgba(0,0,0,.6); border-radius: 4px; }
+  .blend { position: absolute; left: 6%; top: 10%; width: 68%; height: 38%; display: flex; }
+  .proj { flex: 1; position: relative; border: 2px solid var(--primary); margin-left: -4%; display: grid; place-items: start; padding: 6px 8px; color: #fff; font-size: 11px; font-weight: 700; }
+  .proj:first-child { margin-left: 0; }
+  .proj .ov { position: absolute; top: 0; bottom: 0; width: 14%; background: linear-gradient(90deg, rgba(115,179,231,0), rgba(115,179,231,.45)); }
+  .proj .ov.r { right: 0; } .proj .ov.l { left: 0; transform: scaleX(-1); }
+  .handle { position: absolute; width: 14px; height: 14px; border-radius: 50%; background: #fff; border: 3px solid var(--primary); box-shadow: 0 2px 6px rgba(0,0,0,.25); }
+  .led { position: absolute; left: 8%; top: 62%; width: 42%; height: 13%; border: 2px solid #009ec1; display: grid; place-items: center; color: #fff; font-weight: 700; font-size: 13px; }
+  .tv { position: absolute; left: 56%; top: 62%; width: 18%; height: 24%; border: 2px solid #008817; background: #000; font: 600 9px var(--mono); color: #f5f5f7; padding: 8px; }
+  .virt { position: absolute; right: 3%; top: 10%; width: 19%; display: grid; gap: 10px; }
+  .virt div { border-radius: 12px; padding: 10px 12px; font-size: 12px; color: var(--text-2); background: var(--surface-2); border: 2px dashed var(--line-2); }
+  .virt b { display: block; color: var(--text); font-size: 13px; }
+  .ins { padding: 4px 16px 18px; }
+  .range { margin: 4px 0 2px; }
+  .range .track { height: 8px; border-radius: 4px; background: var(--base-lighter); position: relative; }
+  .range .track i { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 4px; background: var(--primary); }
+  .range .track b { position: absolute; top: -8px; width: 24px; height: 24px; border-radius: 50%; background: #fff; box-shadow: 0 1px 4px rgba(0,0,0,.3), 0 0 0 .5px rgba(0,0,0,.1); }
+  .graph { height: 48px; display: flex; align-items: flex-end; gap: 2px; padding: 6px 14px; }
+  .graph i { flex: 1; background: #00a91c; opacity: .75; border-radius: 1px; }
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="toolbar">
+    <div class="brand"><span class="mark">S</span>Selah</div>
+    <div class="seg"><button>Live</button><button>Plan</button><button>Edit</button><button class="on">Screens</button></div>
+    <div class="vsep"></div>
+    <div class="title2"><b>Screens and outputs</b><span>Main Auditorium profile · changes apply right away</span></div>
+    <div class="spacer"></div>
+    <button class="btn outline">Show test pattern</button>
+    <button class="btn outline">Identify screens</button>
+    <span class="status"><span class="dot"></span>All outputs working</span>
+    <div class="avatar">JA</div>
+  </header>
+
+  <div class="main">
+    <aside class="sidebar">
+      <div class="sb-h">Audience <button class="btn unstyled" style="height:24px">+ Add output</button></div>
+      <div class="src sel"><div class="sw" style="background:rgba(255,255,255,.25)">3</div><div><div class="t">Front projection</div><div class="s">3 projectors · blended · 5568×1200</div></div><span class="dot"></span></div>
+      <div class="src"><div class="sw" style="background:#009ec1">▭</div><div><div class="t">LED wall (side)</div><div class="s">3840×1080 · 32:9 · auto-reflow</div></div><span class="dot"></span></div>
+      <div class="src"><div class="sw" style="background:#71767a">▢</div><div><div class="t">Lobby TVs</div><div class="s">NDI · Look “Lobby”</div></div><span class="dot"></span></div>
+      <div class="sb-h">Stage</div>
+      <div class="src"><div class="sw" style="background:#008817">♪</div><div><div class="t">Confidence monitor</div><div class="s">HDMI 4 · “Band and chords”</div></div><span class="dot"></span></div>
+      <div class="src"><div class="sw" style="background:#008817">✎</div><div><div class="t">Pastor’s tablet</div><div class="s">Browser · “Notes and timer”</div></div><span class="dot"></span></div>
+      <div class="sb-h">Broadcast</div>
+      <div class="src"><div class="sw" style="background:#c84281">L3</div><div><div class="t">Stream lower thirds</div><div class="s">NDI fill and key · 1080p60</div></div><span class="dot"></span></div>
+      <div class="src"><div class="sw" style="background:#c84281">SDI</div><div><div class="t">SDI to switcher</div><div class="s">DeckLink Duo 2 · fill 1, key 2</div></div><span class="dot"></span></div>
+      <div class="src"><div class="sw" style="background:#d83933">●</div><div><div class="t">Recording</div><div class="s">Program and camera ISO</div></div><span class="usa-tag live">Rec</span></div>
+    </aside>
+
+    <section class="pane">
+      <div style="padding:16px 20px 12px;display:flex;align-items:flex-end;gap:12px">
+        <div><div class="eyebrow">AUDIENCE OUTPUT</div><h1 class="large-title" style="font-size:24px">Front projection</h1></div>
+        <div class="spacer"></div>
+        <div class="usa-alert slim" style="max-width:520px"><span class="i">i</span><div><p>Drag the round handles to set the overlap between projectors and to adjust corners.</p></div></div>
+      </div>
+      <div class="stage">
+        <span class="lbl" style="left:6%;top:4%">Front projection (3 × 1920×1200)</span>
+        <div class="canvasfull bg-aurora">Be Thou my Wisdom, and Thou my true Word;</div>
+        <div class="blend">
+          <div class="proj"><span class="ov r"></span>Projector A</div>
+          <div class="proj"><span class="ov l"></span><span class="ov r"></span>Projector B</div>
+          <div class="proj"><span class="ov l"></span>Projector C</div>
+        </div>
+        <span class="handle" style="left:calc(6% + 68%*0.31 - 7px);top:calc(48% + 4px)"></span>
+        <span class="handle" style="left:calc(6% + 68%*0.64 - 7px);top:calc(48% + 4px)"></span>
+        <span class="handle" style="left:calc(6% - 7px);top:calc(10% - 7px)"></span>
+        <span class="handle" style="left:calc(74% - 7px);top:calc(10% - 7px)"></span>
+        <span class="handle" style="left:calc(6% - 7px);top:calc(48% - 7px)"></span>
+        <span class="handle" style="left:calc(74% - 7px);top:calc(48% - 7px)"></span>
+        <span class="lbl" style="left:8%;top:57%">LED wall · same words, one line</span>
+        <div class="led bg-ocean">Be Thou my Wisdom, and Thou my true Word;</div>
+        <span class="lbl" style="left:56%;top:57%">Stage monitor</span>
+        <div class="tv">E♭ Be Thou my Wisdom…<br><br><span style="color:#21c834">NEXT</span> Thou my great Father…<br><br><span style="color:#ffbe2e">Sermon in 3:00</span></div>
+        <div class="virt">
+          <div><b>NDI “Selah-Stream”</b>1080p60 · transparency on · 3 receivers</div>
+          <div><b>SDI · DeckLink</b>Fill and key · in sync with switcher</div>
+          <div><b>Recording</b>58 min · 41 GB free</div>
+        </div>
+      </div>
+    </section>
+
+    <aside class="inspector">
+      <div style="padding:12px 16px 0"><div class="seg" style="width:100%;display:flex"><button class="on" style="flex:1">Blend</button><button style="flex:1">Colour</button><button style="flex:1">Health</button></div></div>
+      <div class="scroll ins">
+        <label class="usa-label">Overlap between A and B</label>
+        <span class="usa-hint">In pixels. Typical: 15–25% of one projector’s width.</span>
+        <div class="range"><div class="track"><i style="width:42%"></i><b style="left:calc(42% - 12px)"></b></div></div>
+        <div class="muted mono" style="font-size:12.5px;text-align:right">288 px</div>
+        <label class="usa-label">Overlap between B and C</label>
+        <div class="range"><div class="track"><i style="width:42%"></i><b style="left:calc(42% - 12px)"></b></div></div>
+        <div class="muted mono" style="font-size:12.5px;text-align:right">288 px</div>
+        <div class="group-t">Fine tuning</div>
+        <div class="group">
+          <div class="row"><div class="k">Blend curve (gamma)</div><span class="v mono">2.2</span></div>
+          <div class="row"><div class="k">Black level lift</div><span class="v mono">+3%</span></div>
+          <div class="row"><div class="k">Corner pin<small>4 points · Projector C adjusted</small></div><span class="v">›</span></div>
+          <div class="row"><div class="k">Mask<small>Truss cut-out, top right</small></div><span class="v">›</span></div>
+          <div class="row"><div class="k">Follow the live Look</div><span class="switch"></span></div>
+        </div>
+        <div class="group-t">Health · last 60 seconds</div>
+        <div class="group">
+          <div class="graph" id="g"></div>
+          <div class="row"><div class="k">Frame time</div><span class="v mono">2.1 ms · 0 dropped</span></div>
+          <div class="row"><div class="k">Refresh</div><span class="v mono">60.00 Hz · locked</span></div>
+          <div class="row"><div class="k">Graphics card</div><span class="v mono">RTX 4060 · 31%</span></div>
+        </div>
+        <div class="usa-alert success slim" style="margin-top:16px"><span class="i">✓</span><div><h4 style="font-size:14px">Screens stay on</h4><p>If the app closes or updates, these screens keep showing the last frame.</p></div></div>
+      </div>
+    </aside>
+  </div>
+
+  <footer class="bottombar">
+    <span class="muted" style="font-size:12.5px">This profile turns on automatically when the booth computer sees these displays.</span>
+    <div class="spacer"></div>
+    <button class="btn outline">Export profile</button>
+    <button class="btn">Done</button>
+  </footer>
+</div>
+<script>
+const g = document.getElementById("g");
+for (let i = 0; i < 60; i++) { const b = document.createElement("i"); b.style.height = (30 + Math.round(Math.abs(Math.sin(i * 1.7)) * 25)) + "%"; g.appendChild(b); }
+</script>
+</body>
+</html>
