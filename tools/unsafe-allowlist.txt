@@ -9,3 +9,5 @@ crates/selah-ipc/src/windows.rs
 crates/selah-ipc/src/shm.rs
 # Shift-at-start detection for safe mode on Windows (SAFE-07).
 crates/selah-watchdog/src/keys.rs
+# Hardware video decode: FFmpeg device contexts and frame download have no safe API (M1.7).
+crates/selah-media/src/hw.rs

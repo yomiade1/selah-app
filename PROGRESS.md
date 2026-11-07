@@ -31,13 +31,11 @@ _When a session stops partway through a milestone, write here: the milestone, th
 - **Gate:** `tools/verify.sh` / `tools/verify.ps1` (logic in `tools/verify.py`). Run it in full before
   ticking a WP. Each new WP that adds a check adds a stage there (M1.8: stage 8 UI tests and
   `tools/lint-strings`; M1.9: stage 9 `selah-kb-lint`).
-- **M1.7 (video) needs LLVM/libclang** for the FFmpeg bindings. On this PC a `winget install LLVM.LLVM`
-  was waiting for an administrator prompt; cloud sessions and CI already have clang. The pinned
-  FFmpeg builds are in `third_party/ffmpeg/<platform>/shared/`; macOS needs
-  `tools/build-ffmpeg-macos.sh` (referenced by `tools/setup.sh --fetch`, not written yet) to build a
-  decode-only FFmpeg from the pinned source. Commit a small 1080p H.264 clip for the correctness
-  test (macOS can't generate one). `check-toolchain.py` starts requiring LLVM once
-  `crates/selah-media` exists.
+- **FFmpeg (M1.7 done):** the gate finds the pinned build in `third_party/ffmpeg/<platform>/shared/ffmpeg-*/`
+  and sets `FFMPEG_DIR` and the library path for every cargo stage (`tools/verify.py` `ffmpeg_env`;
+  `tool-env.ps1` and `cloud-setup.sh` do the same for interactive use). macOS builds a decode-only
+  FFmpeg with `tools/build-ffmpeg-macos.sh` (gate stage 1; first run is the `macos` job). Adding a
+  crate can move bindgen onto syn 3 in `Cargo.lock`; pin it back to syn 2 by hand if bindgen fails.
 - **M1.8 (UI) is started:** `design/tokens/tokens.json` (DTCG, contrast pairs) and
   `design/tokens/build.mjs` (Style Dictionary → `app/Selah.UI/Styles/Tokens.g.axaml`, `Tokens.g.cs`,
   `web/tokens/tokens.css`) are committed but not wired: add a root `pnpm tokens` script that runs
@@ -63,7 +61,7 @@ _When a session stops partway through a milestone, write here: the milestone, th
 - [x] **M1.4** Processes and watchdog — evidence: commit `M1.4`; `selah-testkit` continuity tests (engine, core and UI kills recover in < 2 s; 3 crashes → safe mode; single instance) pass 3 runs in a row; redaction tests (SEC-06); permission matrix (SEC-14); settings/live-state tests
 - [x] **M1.5** Engine windows, compositor and test patterns — evidence: commit `M1.5`; `selah-render` `gpu_test_patterns_match_the_cpu_reference_exactly` (WARP; exact match at 1920×1080, 1366×768, 17×9); `selah-testkit` `show_test_pattern_reaches_the_output_within_one_frame` (FrameShown ≤ 1 frame after the command, bars checksum, preview ring); windowed run on an NVIDIA MX350 (DX12) opened the output window (Bgra8Unorm)
 - [x] **M1.6** Text spike — evidence: commit `M1.6`; `golden_text` (en, yo, ko, ar against `tests/golden/reference/`, no missing glyphs, GPU = CPU blending, paragraph cache); references reviewed by eye (tests/golden/CHANGES.md); `tools/verify.ps1` stage 7 green
-- [ ] **M1.7** Video spike — evidence: 
+- [x] **M1.7** Video spike — evidence: commit `M1.7`; `selah-media` (FFmpeg 7.1 via ffmpeg-next, D3D11VA/VideoToolbox with software fallback, NV12 out) and the `selah-render` video layer (`video.wgsl`, NV12 → RGB under text); `selah-testkit` `video` tests (`clip_plays_in_order_with_no_drops_on_a_60_fps_virtual_clock`, `text_composites_over_video_and_gpu_matches_the_cpu_reference`; WARP + software decode); SEC-04 tests in `selah-media` (`opening_an_http_url_is_refused`, `a_local_playlist_cant_reach_the_network`, protocol-prefix refusal); `selah-bench video` on this PC (MX350): 1080p60 H.264 0 drops, composite p99 5.1 ms (D3D11VA); 4K60 HEVC 9 of 180 dropped, p99 16 ms (spike report); gate stages 1–7, 13, 14 green on Windows
 - [ ] **M1.8** UI shell, design tokens and text size — evidence: 
 - [ ] **M1.9** Knowledge base pipeline — evidence: 
 - [x] **M1.10** Quality gate and CI — evidence: commit `M1.10`; `tools/verify.ps1` green on Windows (stages 1–7, 13, 14); `tests/ledger.json` created (rust 54, dotnet 20, web 3, golden 4, e2e 6); `tests/tools/test_ledger.py`; `check-workflows` passes for ci.yml, release.yml and bless-golden.yml. Stage 8 (UI), stage 9 (KB) and `tools/lint-strings` are added by M1.8 and M1.9, which create what they check; first PR run green: guard, linux, windows (PR #1, run 42357662100)

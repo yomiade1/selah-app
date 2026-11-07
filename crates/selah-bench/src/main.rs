@@ -3,9 +3,12 @@
 //!
 //! ```text
 //! selah-bench ipc [--iterations N] [--check] [--json PATH]
+//! selah-bench video --clip PATH [--decode auto|software] [--loops N] [--gpu auto|software]
+//!                   [--check] [--json PATH]
 //! ```
 //! `ipc` starts a child process that serves the core endpoint, then times request/reply round
 //! trips across the real transport (named pipes on Windows, Unix sockets elsewhere).
+//! `video` decodes a clip and composites it under text at the clip's frame rate (M1.7).
 use std::path::PathBuf;
 use std::time::{Duration, Instant};
 
@@ -18,6 +21,10 @@ use serde::Serialize;
 
 /// ARCHITECTURE §12: UI ↔ core round trip p99 ≤ 2 ms.
 const IPC_P99_BUDGET_MS: f64 = 2.0;
+/// ARCHITECTURE §12: output frame time p99 ≤ 8 ms.
+const OUTPUT_P99_BUDGET_MS: f64 = 8.0;
+
+mod video;
 
 #[derive(Serialize)]
 struct IpcReport {
@@ -168,8 +175,69 @@ async fn main() -> Result<()> {
             ipc(iterations, check, json).await
         }
         Some("ipc-serve") => serve(args.next().context("namespace")?).await,
+        Some("video") => {
+            let mut options = video::Options {
+                clip: PathBuf::new(),
+                mode: selah_media::DecodeMode::Auto,
+                loops: 1,
+                gpu: selah_render::gpu::AdapterChoice::from_env(),
+            };
+            let (mut check, mut json) = (false, None);
+            while let Some(arg) = args.next() {
+                match arg.as_str() {
+                    "--clip" => options.clip = PathBuf::from(args.next().context("--clip PATH")?),
+                    "--decode" => {
+                        options.mode = match args.next().as_deref() {
+                            Some("auto") => selah_media::DecodeMode::Auto,
+                            Some("software") => selah_media::DecodeMode::Software,
+                            _ => bail!("--decode auto|software"),
+                        }
+                    }
+                    "--gpu" => {
+                        options.gpu = match args.next().as_deref() {
+                            Some("auto") => selah_render::gpu::AdapterChoice::Auto,
+                            Some("software") => selah_render::gpu::AdapterChoice::Software,
+                            _ => bail!("--gpu auto|software"),
+                        }
+                    }
+                    "--loops" => options.loops = args.next().context("--loops N")?.parse()?,
+                    "--check" => check = true,
+                    "--json" => json = Some(PathBuf::from(args.next().context("--json PATH")?)),
+                    other => bail!("unknown option {other}"),
+                }
+            }
+            if options.clip.as_os_str().is_empty() {
+                bail!("--clip PATH is required");
+            }
+            // Decoding and the GPU wait block: keep them off the async runtime.
+            let report = tokio::task::spawn_blocking(move || video::run(&options)).await??;
+            let text = serde_json::to_string_pretty(&report)?;
+            println!("{text}");
+            if let Some(path) = json {
+                if let Some(parent) = path.parent() {
+                    std::fs::create_dir_all(parent)?;
+                }
+                std::fs::write(
+                    &path,
+                    text + "
+",
+                )?;
+            }
+            if check && !report.pass {
+                bail!(
+                    "video benchmark over budget: {} dropped, {} late, composite p99 {:.2} ms",
+                    report.dropped,
+                    report.late_ticks,
+                    report.composite_p99_ms
+                );
+            }
+            Ok(())
+        }
         _ => {
             eprintln!("usage: selah-bench ipc [--iterations N] [--check] [--json PATH]");
+            eprintln!(
+                "       selah-bench video --clip PATH [--decode auto|software] [--loops N] [--gpu auto|software] [--check] [--json PATH]"
+            );
             std::process::exit(2);
         }
     }

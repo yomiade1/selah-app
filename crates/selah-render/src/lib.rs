@@ -5,6 +5,7 @@ pub mod cpu;
 pub mod gpu;
 pub mod png;
 pub mod text;
+pub mod video;
 
 use selah_proto::v1::Scene;
 
@@ -46,6 +47,10 @@ impl Frame {
 pub trait Compositor {
     fn name(&self) -> &str;
     fn render(&mut self, scene: &Scene, width: u32, height: u32) -> anyhow::Result<Frame>;
+
+    /// The video frame drawn under the text on the next renders (`None` removes it). The video
+    /// layer replaces the test pattern; a cleared scene shows no video.
+    fn set_video(&mut self, frame: Option<video::Nv12Frame>) -> anyhow::Result<()>;
 
     /// The GPU compositor, when this is one (windows can only present GPU output).
     fn as_gpu(&mut self) -> Option<&mut gpu::GpuCompositor> {

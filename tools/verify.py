@@ -94,7 +94,11 @@ def annotate(stage, output):
 def run(stage, label, command, env=None, timeout=1800):
     started = time.monotonic()
     print(f"--- [{stage}] {label}: {' '.join(Path(c).name if i == 0 else c for i, c in enumerate(command))}", flush=True)
-    merged = dict(os.environ, **(env or {}))
+    env = dict(env or {})
+    if env.pop("@ffmpeg", None):
+        # Resolved now: on a fresh runner stage 1 has only just extracted (or built) FFmpeg.
+        env.update(ffmpeg_env())
+    merged = dict(os.environ, **env)
     if command[0] == "@cargo-deny":
         # Resolved now: on a fresh runner stage 1 has only just fetched the pinned binary.
         command = [cargo_deny(), *command[1:]]
@@ -131,9 +135,33 @@ def skia_binaries_url():
     return f"file://{folder}/skia-binaries-{{key}}.tar.gz"
 
 
+def platform_key():
+    machine = platform.machine().lower()
+    arch = "arm64" if machine in {"arm64", "aarch64"} else "x64"
+    return f"{ {'win32': 'windows', 'darwin': 'macos'}.get(sys.platform, 'linux')}-{arch}"
+
+
+def ffmpeg_env():
+    """FFMPEG_DIR for the FFmpeg bindings (selah-media) and the library path to run them.
+
+    The pinned build is extracted (or, on macOS, built by tools/build-ffmpeg-macos.sh) into
+    third_party/ffmpeg/<platform>/shared/ffmpeg-*/ with bin/, include/ and lib/.
+    """
+    found = sorted((ROOT / "third_party" / "ffmpeg" / platform_key() / "shared").glob("ffmpeg-*/include"))
+    if not found:
+        return {}
+    home = found[0].parent
+    env = {"FFMPEG_DIR": str(home)}
+    if WINDOWS:
+        env["PATH"] = f"{home / 'bin'}{os.pathsep}{os.environ.get('PATH', '')}"
+    elif sys.platform != "darwin":
+        env["LD_LIBRARY_PATH"] = f"{home / 'lib'}{os.pathsep}{os.environ.get('LD_LIBRARY_PATH', '')}"
+    return env
+
+
 def stages(args):
     rust_env = {"CARGO_TERM_COLOR": "never", "SELAH_GPU": "software",
-                "SKIA_BINARIES_URL": skia_binaries_url()}
+                "SKIA_BINARIES_URL": skia_binaries_url(), "@ffmpeg": "1"}
     fuzz_seconds = "30" if args.ci else "5"
     plan = []
 
@@ -152,6 +180,9 @@ def stages(args):
     # CI runners and cloud sessions start without the pinned third-party files.
     stage("1", "third-party files", [PY, "tools/third-party.py", "--extract"],
           skip=not (args.ci or args.cloud) and (ROOT / "third_party" / "fonts").is_dir())
+    # No LGPL macOS FFmpeg binary is published: build the decode-only one from the pinned source.
+    stage("1", "ffmpeg for macOS", ["bash", "tools/build-ffmpeg-macos.sh", "--if-missing"],
+          skip=sys.platform != "darwin", timeout=1200)
     stage("2", "rustfmt", [tool("cargo"), "fmt", "--all", "--check"])
     stage("2", "dotnet format", [tool("dotnet"), "format", "app/Selah.sln", "--verify-no-changes"], timeout=900)
     stage("2", "prettier and buf format", pnpm("run", "format:check"))
@@ -161,7 +192,10 @@ def stages(args):
     stage("4", "buf lint", pnpm("exec", "buf", "lint"))
     stage("4", "generated contracts are current", [PY, "tools/check-generated.py"])
     stage("5", "cargo build", [tool("cargo"), "build", "--workspace", "--all-targets", "--locked"], rust_env)
-    stage("5", "windows type-check", [tool("cargo"), "check", "--workspace", "--locked", "--target", "x86_64-pc-windows-gnu"],
+    # The FFmpeg-linked crates are left out: their bindings need the Windows FFmpeg headers, and
+    # the windows CI job builds them natively.
+    stage("5", "windows type-check", [tool("cargo"), "check", "--workspace", "--locked", "--target", "x86_64-pc-windows-gnu",
+                                      "--exclude", "selah-media", "--exclude", "selah-bench", "--exclude", "selah-testkit"],
           rust_env, skip=not args.cloud)
     stage("5", "dotnet build", [tool("dotnet"), "build", "app/Selah.sln", "-c", "Release"], timeout=900)
     stage("5", "web build", pnpm("-r", "run", "build"))

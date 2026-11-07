@@ -18,6 +18,7 @@ golden = []
 
 [dependencies]
 selah-render = { path = "../selah-render" }
+selah-media = { path = "../selah-media", features = ["render"] }
 anyhow.workspace = true
 selah-ipc = { path = "../selah-ipc" }
 selah-proto = { path = "../selah-proto" }
