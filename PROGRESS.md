@@ -26,7 +26,7 @@ Status values: `Not started` · `In progress` · `Blocked` (say on what) · `Don
 _When a session stops partway through a milestone, write here: the milestone, the last finished WP, anything half-done (files, branch state) and the exact next step. Clear it when the milestone is done._
 
 2026-11-07 (local Windows session, H-01 approved): M1.1–M1.6 and M1.10 are committed on
-`codex/m1-foundations` and opened as one PR. M1.7–M1.9 and M1.11–M1.13 remain.
+`codex/m1-foundations` and opened as PR #1 (CI green). M1.7–M1.9 and M1.11–M1.13 remain.
 
 - **Gate:** `tools/verify.sh` / `tools/verify.ps1` (logic in `tools/verify.py`). Run it in full before
   ticking a WP. Each new WP that adds a check adds a stage there (M1.8: stage 8 UI tests and
@@ -66,7 +66,7 @@ _When a session stops partway through a milestone, write here: the milestone, th
 - [ ] **M1.7** Video spike — evidence: 
 - [ ] **M1.8** UI shell, design tokens and text size — evidence: 
 - [ ] **M1.9** Knowledge base pipeline — evidence: 
-- [x] **M1.10** Quality gate and CI — evidence: commit `M1.10`; `tools/verify.ps1` green on Windows (stages 1–7, 13, 14); `tests/ledger.json` created (rust 54, dotnet 20, web 3, golden 4, e2e 6); `tests/tools/test_ledger.py`; `check-workflows` passes for ci.yml, release.yml and bless-golden.yml. Stage 8 (UI), stage 9 (KB) and `tools/lint-strings` are added by M1.8 and M1.9, which create what they check; the first PR run's CI result is in the PR
+- [x] **M1.10** Quality gate and CI — evidence: commit `M1.10`; `tools/verify.ps1` green on Windows (stages 1–7, 13, 14); `tests/ledger.json` created (rust 54, dotnet 20, web 3, golden 4, e2e 6); `tests/tools/test_ledger.py`; `check-workflows` passes for ci.yml, release.yml and bless-golden.yml. Stage 8 (UI), stage 9 (KB) and `tools/lint-strings` are added by M1.8 and M1.9, which create what they check; first PR run green: guard, linux, windows (PR #1, run 42357662100)
 - [ ] **M1.11** Windows installer and updates — evidence: 
 - [ ] **M1.12** Security and safety baseline — evidence: 
 - [ ] **M1.13** Problem reports, diagnostics and spike report — evidence: 
@@ -394,6 +394,9 @@ _Anything done differently from BUILD-PLAN.md or the docs, with the reason and t
 - 2026-11-07, M1.6: golden references were rendered on Windows (WARP) in this local session, not on lavapipe in a cloud session (ADR-023). Text is rasterised by Skia on the CPU, so the frames don't depend on the GPU; Linux and macOS compare within `Tolerance::TEXT` in CI.
 - 2026-11-07, M1.6: slide fonts are pinned to weight 400 because Noto Sans KR's variable font defaults to Thin; templates choose weights from M3.
 - 2026-11-07, M1.8 (started): `color.primary-fill` (Booth `#0050D8`) added and light `color.focus` changed to `#0076D6`, because the documented values failed the 4.5:1 and 3:1 contrast checks; DESIGN-SYSTEM §3 updated.
+
+- 2026-11-07, M1.6: `tests/golden/linux/text-en.png` is a Linux-specific reference (FreeType vs DirectWrite edges on 0.53% of pixels), taken from the linux job's failure report because `bless-golden.yml` can't be dispatched until it's on `main`.
+- 2026-11-07, M1.5: headless `FrameShown` is stamped at the GPU queue submit, the same moment as a swap-chain present with windows (the Windows runner's software rasteriser needs more than a frame to finish 1080p in a debug build).
 
 ## Quarantined tests
 
