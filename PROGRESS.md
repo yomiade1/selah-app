@@ -8,7 +8,7 @@ Status values: `Not started` · `In progress` · `Blocked` (say on what) · `Don
 
 | Milestone | Status | Branch / tag | Started | Finished | Notes |
 |---|---|---|---|---|---|
-| M1. Foundations and risk spikes | Not started | — | — | — | |
+| M1. Foundations and risk spikes | In progress | `codex/m1-foundations` | 2026-11-07 | — | M1.1–M1.4 done (local Windows session, H-01). |
 | M2. Library, songs, scripture and the help system | Not started | — | — | — | |
 | M3. Render engine, templates and the slide editor | Not started | — | — | — | |
 | M4. Live operation, services and stage | Not started | — | — | — | |
@@ -19,13 +19,28 @@ Status values: `Not started` · `In progress` · `Blocked` (say on what) · `Don
 | M9. Cloud, teams and enterprise | Not started | — | — | — | |
 | M10. Launch readiness and v1.0 | Not started | — | — | — | |
 
-**Next action:** following [docs/CLOUD-DEVELOPMENT.md](docs/CLOUD-DEVELOPMENT.md), apply the GitHub settings for the public period (H-03, §2.2), set up the cloud environment (H-25, §2.1), and start a cloud session with `Complete milestone 1`. The repository is public with a clean history (2026-11-01).
+**Next action:** continue M1 at M1.5 (engine windows, wgpu compositor and test patterns). See the resume notes.
 
 ## Resume notes
 
 _When a session stops partway through a milestone, write here: the milestone, the last finished WP, anything half-done (files, branch state) and the exact next step. Clear it when the milestone is done._
 
-(none)
+2026-11-07 (local Windows session, H-01 approved): M1.1–M1.4 are committed on
+`codex/m1-foundations`. No PR is open yet; the branch is pushed.
+
+- `tools/verify.sh` / `verify.ps1` don't exist yet (M1.10), so WP evidence lists the gate
+  stages run by hand: `cargo fmt --check`, `cargo clippy --workspace --all-targets -D warnings`,
+  `cargo test --workspace`, `cargo check` for x86_64-unknown-linux-gnu and aarch64-apple-darwin,
+  `dotnet test app/Selah.sln`, `pnpm -r build/test`, `buf lint`, `buf format`, `cargo deny check`,
+  `tools/check-unsafe.py`, `tools/check-secrets.py`. `tests/ledger.json` starts in M1.10.
+- The Linux gate hasn't run yet: run it in an `ubuntu:24.04` container (Docker Desktop is
+  installed here) or rely on the PR's `linux` job.
+- LLVM/libclang (needed by FFmpeg bindings, M1.7) is not installed: a `winget install LLVM.LLVM`
+  from the earlier session was still waiting, most likely for an administrator (UAC) prompt.
+- The repository-local git email is now the GitHub no-reply address.
+- Next: M1.5 (winit windows, wgpu compositor with WGSL test patterns on lavapipe/WARP/Metal,
+  headless mode, preview rings). The engine already has the `Compositor` trait, a CPU
+  compositor and FrameShown timestamps; M1.5 adds `selah-render::gpu`.
 
 ## Milestone checklists
 
@@ -33,10 +48,10 @@ _When a session stops partway through a milestone, write here: the milestone, th
 
 **Work packages**
 
-- [ ] **M1.1** Repository, toolchain and conventions — evidence: 
-- [ ] **M1.2** Contracts and code generation — evidence: 
-- [ ] **M1.3** IPC layer — evidence: 
-- [ ] **M1.4** Processes and watchdog — evidence: 
+- [x] **M1.1** Repository, toolchain and conventions — evidence: commit `M1.1`; `tools/setup.ps1 -CheckOnly` passes (Rust 1.91.0, .NET 10, Node 22, pnpm 10.20; LLVM pending); `python tools/third-party.py --extract` verifies every pinned file; `tools/generate-media.py` made and decoded 4 clips; `python -m unittest discover -s tests/tools` (20 tests); `cargo deny check` ok; lockfiles committed
+- [x] **M1.2** Contracts and code generation — evidence: commit `M1.2`; `buf lint` and `buf format --exit-code` clean; `tools/codegen.ps1` regenerates TS/Rust/C#; shared wire fixture decoded by `selah-proto` tests, `ContractTests` (C#) and `web/contracts` tests
+- [x] **M1.3** IPC layer — evidence: commit `M1.3`; `selah-ipc` tests (`ten_thousand_round_trips_keep_correlation`, `malformed_and_oversized_frames_close_only_that_connection`, `client_reconnects_after_the_server_restarts`, `pipe_dacl_allows_only_the_current_user`, `a_second_server_cannot_take_over_a_live_endpoint`, ring seqlock tests), `fuzz_smoke`, C# `IpcClientTests`/`PreviewRingReaderTests`; `selah-bench ipc --check`: named pipe p99 0.096 ms
+- [x] **M1.4** Processes and watchdog — evidence: commit `M1.4`; `selah-testkit` continuity tests (engine, core and UI kills recover in < 2 s; 3 crashes → safe mode; single instance) pass 3 runs in a row; redaction tests (SEC-06); permission matrix (SEC-14); settings/live-state tests
 - [ ] **M1.5** Engine windows, compositor and test patterns — evidence: 
 - [ ] **M1.6** Text spike — evidence: 
 - [ ] **M1.7** Video spike — evidence: 
@@ -357,6 +372,12 @@ Copied from `tests/ledger.json` at the end of each milestone. Counts may only go
 _Anything done differently from BUILD-PLAN.md or the docs, with the reason and the ADR number if one was added._
 
 - 2026-10-31, before M1: the plan moved to cloud-first development (ADR-023), lean CI (ADR-024), a pull-request workflow (ADR-025, replacing ADR-019) and secure and safe by default (ADR-026). M1 grew from 10 to 13 WPs (installer, security and safety baseline, problem reports and diagnostics).
+
+- 2026-11-07, M1 (local session): this session runs on the user's Windows PC (H-01) rather than in a cloud session, so the gate was run stage by stage on Windows plus `cargo check` for the Linux and macOS targets; the Linux gate runs in the PR's `linux` job.
+- 2026-11-07, M1.1: no LGPL macOS FFmpeg binary is published, so the lockfile pins the FFmpeg 7.1.2 source and `tools/setup.sh --fetch` builds a decode-only shared FFmpeg on macOS. Without encoders the Mac can't generate test clips, so the video correctness test (M1.7) uses a small committed clip.
+- 2026-11-07, M1.1: `cargo-deny` is pinned as prebuilt release binaries in `tools/third_party.lock.json` instead of being compiled in every CI run.
+- 2026-11-07, M1.3: the cargo-fuzz target needs nightly, so the CI smoke run is a stable test over the same entry point (`SELAH_FUZZ_SECONDS`); coverage-guided runs use `fuzz/` in cloud sessions.
+- 2026-11-07, M1.4: the UI continuity check (M1-A3) uses `selah-fake-ui`, a stand-in that heartbeats, connects and subscribes like the UI, until the Avalonia shell (M1.8) exists. The crate `selah-runtime` (paths, locks, logs, redaction, heartbeats) is new and not yet in ARCHITECTURE §1; it's added with the M1 docs update.
 
 ## Quarantined tests
 
