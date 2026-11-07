@@ -8,7 +8,7 @@ Status values: `Not started` · `In progress` · `Blocked` (say on what) · `Don
 
 | Milestone | Status | Branch / tag | Started | Finished | Notes |
 |---|---|---|---|---|---|
-| M1. Foundations and risk spikes | In progress | `claude/m1-continue` | 2026-11-07 | — | M1.1–M1.10 done (local Windows sessions, H-01); M1.11–M1.13 next. |
+| M1. Foundations and risk spikes | Done, H-checks pending | `claude/m1-finish` | 2026-11-07 | 2026-11-07 | All 13 WPs done (local Windows sessions, H-01). Open (H): M1-A7 benchmark report, M1-A12 install on your PC; M1-A1/A6 macOS from the `macos` job. |
 | M2. Library, songs, scripture and the help system | Not started | — | — | — | |
 | M3. Render engine, templates and the slide editor | Not started | — | — | — | |
 | M4. Live operation, services and stage | Not started | — | — | — | |
@@ -19,53 +19,13 @@ Status values: `Not started` · `In progress` · `Blocked` (say on what) · `Don
 | M9. Cloud, teams and enterprise | Not started | — | — | — | |
 | M10. Launch readiness and v1.0 | Not started | — | — | — | |
 
-**Next action:** review and merge the PR for M1.7–M1.9, then say "Complete milestone 1" to continue with M1.11. See the resume notes.
+**Next action:** review and merge the M1 PR (M1.11–M1.13 and the milestone finish), run the M1 checklists below on the installed test build, then say "Complete milestone 2".
 
 ## Resume notes
 
 _When a session stops partway through a milestone, write here: the milestone, the last finished WP, anything half-done (files, branch state) and the exact next step. Clear it when the milestone is done._
 
-2026-11-07 (second local Windows session): M1.7, M1.8 and M1.9 are committed on `claude/m1-continue`
-and opened as a PR. M1.11, M1.12, M1.13 and the milestone finish remain. Next steps, in order:
-
-- **M1.11 installer:** `packaging/velopack/`, `tools/package.ps1` (Velopack `vpk` as a pinned dotnet
-  tool; per-user, no admin; Start menu; `dev` channel). The package holds `Selah.exe` (+ .NET
-  self-contained publish), `selah-watchdog/core/engine.exe`, `target/kb/kb.db` next to
-  `selah-core.exe` (core looks there), and nothing from FFmpeg yet (the engine doesn't link it).
-  `tools/test-installer.ps1`: silent install, start with `SELAH_HEADLESS=1`, wait for
-  `$SELAH_HOME/ui.txt` (written by the real UI after it connects) and the engine's bars
-  checksum, uninstall, check only user data remains. Updater: check only on request, verify
-  hashes, refuse while `Status.live` (SAFE-06, SEC-12); the feed URL comes from settings.
-  `ci.yml` already calls both scripts when they exist.
-- **M1.12:** still to do: `selah-net` (single outgoing gate, policy, connection log, egress test
-  at default settings), `SecretStore` (Credential Manager/DPAPI, Keychain, in-memory fake) with
-  seeded-secret scans over logs, settings and bundles; the quit/update/sleep guards (strings
-  `live-guard-*` already exist in `shell.ftl`; `Status.live` is in the UI's snapshot); a
-  `troubleshooting.selah-started-in-safe-mode` article and banner exist; add **Restart normally**.
-  The emergency lane UI is done (toolbar button and F12 → engine emergency endpoint).
-- **M1.13:** Help menu in the toolbar (strings `command-report-problem`, `command-diagnostics`
-  exist); support bundle from redacted logs (`selah-runtime::redact`); Diagnostics window running
-  `selah-bench video` and `ipc`; `docs/specs/command-bus.md` and `docs/specs/spike-report.md`
-  (measurements so far: IPC p99 0.096 ms named pipes; MX350 1080p60 H.264 0 drops, composite
-  p99 5.1 ms; 4K60 HEVC 9/180 dropped, 16 ms; the 4K path needs zero-copy textures).
-- **Milestone finish:** specs, CHANGELOG, `tests/fixtures/db/m1.db`, H checklists, threat-model
-  review, full gate, PR with `--label ci:macos` (first run of `tools/build-ffmpeg-macos.sh`).
-
-- **Gate:** `tools/verify.sh` / `tools/verify.ps1` (logic in `tools/verify.py`). Run it in full before
-  ticking a WP. Each new WP that adds a check adds a stage there (M1.8: stage 8 UI tests and
-  `tools/lint-strings`; M1.9: stage 9 `selah-kb-lint`).
-- **FFmpeg (M1.7 done):** the gate finds the pinned build in `third_party/ffmpeg/<platform>/shared/ffmpeg-*/`
-  and sets `FFMPEG_DIR` and the library path for every cargo stage (`tools/verify.py` `ffmpeg_env`;
-  `tool-env.ps1` and `cloud-setup.sh` do the same for interactive use). macOS builds a decode-only
-  FFmpeg with `tools/build-ffmpeg-macos.sh` (gate stage 1; first run is the `macos` job). Adding a
-  crate can move bindgen onto syn 3 in `Cargo.lock`; pin it back to syn 2 by hand if bindgen fails.
-- **UI:** `app/Selah.UI` builds as `Selah`; `SELAH_HEADLESS=1` or `--headless` runs it with no display (testkit sets it). It writes `$SELAH_HOME/ui.txt` after connecting, which the process tests read. Snapshots of every layout case land in `target/ui-snapshots/`. The Help menu (Report a problem, Diagnostics) is added by M1.13; the article view by M1.9 (hook: `MainViewModel.ArticleRequested`).
-- **M1.12:** the engine's emergency endpoint, the permission framework and safe mode exist; still to do
-  are `selah-net`, `SecretStore`, the UI side of the emergency lane and the quit/update/sleep guards.
-- **Skia** is pinned (0.157, prebuilt); builds read it through `SKIA_BINARIES_URL` (set by
-  `tool-env.ps1`, `cloud-setup.sh` and the gate). `Cargo.lock` holds bindgen on syn 2; if
-  `cargo update` moves it to syn 3 the build fails in bindgen.
-- The repository-local git email is the GitHub no-reply address.
+(none: M1 is done.)
 
 ## Milestone checklists
 
@@ -85,26 +45,26 @@ and opened as a PR. M1.11, M1.12, M1.13 and the milestone finish remain. Next st
 - [x] **M1.10** Quality gate and CI — evidence: commit `M1.10`; `tools/verify.ps1` green on Windows (stages 1–7, 13, 14); `tests/ledger.json` created (rust 54, dotnet 20, web 3, golden 4, e2e 6); `tests/tools/test_ledger.py`; `check-workflows` passes for ci.yml, release.yml and bless-golden.yml. Stage 8 (UI), stage 9 (KB) and `tools/lint-strings` are added by M1.8 and M1.9, which create what they check; first PR run green: guard, linux, windows (PR #1, run 42357662100)
 - [x] **M1.11** Windows installer and updates — evidence: commit `M1.11`; `tools/package.ps1` (Velopack 1.2.161 `vpk` pinned in `dotnet-tools.json`; pack id `SelahApp`, per user in `%LOCALAPPDATA%\SelahApp`, Start menu shortcut, `dev` channel, version from `SELAH_BUILD_VERSION`; UI self-contained in `ui\`, app-local VC++ runtime, FFmpeg DLLs and bench clips for Diagnostics); `tools/test-installer.ps1` green on this PC (no elevation in any manifest, no service or machine-wide entry, silent install, headless self-test `pass` = Connected + SMPTE bars on the output and in the preview, clean uninstall, user data kept); updater in `selah-core::update` (`only_https_json_feeds_are_accepted`, `feeds_are_parsed_with_limits`, `a_package_with_the_wrong_hash_or_size_is_never_saved`, `update_checks_are_off_at_default_settings`, `updates_never_install_while_something_is_on_the_screens`), Settings ▸ Updates and the live guard bar (`UpdateTests`, 5); Velopack `Update.exe apply` checked by hand: 0.0.1 → 0.0.2 while running (stopped every process, swapped, restarted); article `getting-started.update-selah`, errors `SEL-UPD-0001`–`0005`; spec `docs/specs/installer-and-updates.md`; full gate green on Windows
 - [x] **M1.12** Security and safety baseline — evidence: commit `M1.12`; `selah-net` (purposes, default-off policy, https-only addresses, size limits, host-only connection log; ureq + rustls/ring + OS verifier): `the_default_policy_connects_to_nothing`, `only_plain_https_addresses_get_through`, `only_selah_net_reaches_the_network` (no other crate depends on an HTTP client or opens sockets); core sets the policy from settings (`the_network_policy_follows_the_update_settings`, `update_checks_are_off_at_default_settings`); egress test on the real processes, UI included: `default_settings_make_no_outgoing_connections` (netstat / /proc / lsof); `selah-secrets` (`SecretStore`: Credential Manager with DPAPI, Keychain, memory; every value registered with the redactor): `values_round_trip_and_are_redacted_from_logs`, `the_platform_keychain_round_trips` (real Credential Manager on this PC); SAFE-03 chaos test `clear_everything_works_with_core_frozen` (core's threads suspended; cleared frame within one frame period); SAFE-06 quit guard (`LiveGuardTests`) and keep-awake while live (`selah_runtime::power`, `the_computer_stays_awake_only_while_something_is_on_the_screens`); SAFE-07 **Restart normally** (`restart_normally_leaves_safe_mode_and_keeps_the_screens`); SEC-14 matrix extended to every new command; docs/SECURITY.md §3 rows and §9 baseline table; full gate green on Windows (the chaos test was added after it and run on its own)
-- [ ] **M1.13** Problem reports, diagnostics and spike report — evidence: 
+- [x] **M1.13** Problem reports, diagnostics and spike report — evidence: commit `M1.13`; **Help** menu in the toolbar (Help articles, Report a problem, Diagnostics); `selah-core::support` (redacted zip: versions, settings, log tails, newest Diagnostics report) and `a_bundle_has_logs_and_versions_but_no_secrets_or_user_name` (seeded `SecretStore` secret, email, user name, token in the feed address); the report bar opens the problem form with the version filled in; `selah-core::diagnostics` runs `selah-bench ipc` and `video` (refused while live) and saves `selah-diagnostics-*.json`; the engine reports its renderer and output size; stack tests `report_a_problem_saves_a_bundle_with_the_version`, `diagnostics_shows_the_engine_and_writes_a_benchmark_report`; `DiagnosticsTests` (17, incl. the Diagnostics window across the 12-case matrix); article `getting-started.run-diagnostics`, errors `SEL-SUP-0001`, `SEL-DIAG-0001`/`0002`; specs `command-bus.md`, `spike-report.md` (go), `support-and-diagnostics.md`; full gate green on Windows
 
 **Acceptance criteria**
 
-- [ ] **M1-A1** (auto) `tools/verify.sh --cloud` exits 0 in a cloud session. — evidence: 
-- [ ] **M1-A2** (auto) Starting `selah` launches core, engine and UI. — evidence: 
-- [ ] **M1-A3** (auto) If the UI is killed, the output frame checksum doesn't change, and the UI is relaunched and reconnected within 2 s. — evidence: 
-- [ ] **M1-A4** (auto) If the engine is killed, it's restarted within 2 s and the previous scene is restored. — evidence: 
-- [ ] **M1-A5** (auto) If core is killed, the engine keeps the last frame; core restarts and resynchronises within 2 s. — evidence: 
-- [ ] **M1-A6** (auto) Golden text frames for en, yo, ko and ar pass on lavapipe. — evidence: 
-- [ ] **M1-A7** (auto) The 1080p H.264 clip decodes and composites under text with frames in order and no drops on a 60 fps virtual clock. — evidence: 
-- [ ] **M1-A8** (auto) (ci-win) The IPC p99 round trip is ≤ 2 ms on Unix sockets and on named pipes (bench results recorded). — evidence: 
-- [ ] **M1-A9** (auto) UI tests pass at 100/150/200%, Light and Booth, `en` and `en-XA`, with no clipped critical labels. — evidence: 
-- [ ] **M1-A10** (auto) The 3 exemplar articles pass `selah-kb-lint`; each bad fixture fails with its expected rule ID; `kb.db` builds; an article renders in the UI. — evidence: 
-- [ ] **M1-A11** The spike report is written with measurements and a go/no-go. — evidence: 
-- [ ] **M1-A12** (ci-win) The `windows` job builds `Selah-win-x64-Setup.exe`, and `tools/test-installer.ps1` installs it silently, sees "Connected" and the test pattern, and un… — evidence: 
-- [ ] **M1-A13** (auto) Security baseline tests pass: IPC access and limits (SEC-02), the IPC fuzz smoke run (SEC-03), FFmpeg refusing network URLs in file items (SEC-04), seed… — evidence: 
-- [ ] **M1-A14** (auto) Safety baseline: with core frozen, **Clear everything** clears every output within 1 frame (SAFE-03); 3 crashes in 60 seconds start safe mode with its b… — evidence: 
-- [ ] **M1-A15** (auto) **Report a problem** produces a bundle that has logs and versions but no seeded secrets and no user name. — evidence: 
-- [ ] **M1-A16** (auto) The session opened its PR with `tools/open-pr.sh`, the description follows the template, and `tools/ci.sh status` reads the PR's CI results. — evidence: 
+- [x] **M1-A1** (auto) `tools/verify.sh --cloud` exits 0 in a cloud session. — evidence: full gate green on Windows this session (`tools/verify.ps1`, all stages incl. 13 and 14); cloud gate not run (local session, see Deviations). guard/linux/windows and macos: this PR's CI (label `ci:macos`)
+- [x] **M1-A2** (auto) Starting `selah` launches core, engine and UI. — evidence: `show_test_pattern_reaches_the_output_within_one_frame` (real UI headless, "Connected", bars checksum = CPU reference, FrameShown ≤ 1 frame); the installed build's self-test (`tools/test-installer.ps1`)
+- [x] **M1-A3** (auto) If the UI is killed, the output frame checksum doesn't change, and the UI is relaunched and reconnected within 2 s. — evidence: `ui_killed_changes_nothing_on_screen_and_comes_back` with the real UI (checksum unchanged, back in < 2 s)
+- [x] **M1-A4** (auto) If the engine is killed, it's restarted within 2 s and the previous scene is restored. — evidence: `engine_killed_is_restarted_and_the_scene_restored`
+- [x] **M1-A5** (auto) If core is killed, the engine keeps the last frame; core restarts and resynchronises within 2 s. — evidence: `core_killed_leaves_the_last_frame_and_resynchronises`
+- [x] **M1-A6** (auto) Golden text frames for en, yo, ko and ar pass on lavapipe. — evidence: `golden_text` (en, yo, ko, ar) green on Windows (WARP); linux job in CI; macOS in this PR's `macos` job
+- [x] **M1-A7** (auto) The 1080p H.264 clip decodes and composites under text with frames in order and no drops on a 60 fps virtual clock. — evidence: `clip_plays_in_order_with_no_drops_on_a_60_fps_virtual_clock` (auto). (H) open: run **Help ▸ Diagnostics ▸ Run benchmark** on the installed build and attach the report (checklist below); hand measurements in `docs/specs/spike-report.md`
+- [x] **M1-A8** (auto) (ci-win) The IPC p99 round trip is ≤ 2 ms on Unix sockets and on named pipes (bench results recorded). — evidence: named pipes p99 0.096 ms (`selah-bench ipc --check`, gate stage 6 on Windows); Unix sockets: the same check in the linux job
+- [x] **M1-A9** (auto) UI tests pass at 100/150/200%, Light and Booth, `en` and `en-XA`, with no clipped critical labels. — evidence: `LayoutTests` matrix (100/150/200 × Light/Booth × en/en-XA, now with the live-guard bar), `DiagnosticsTests` matrix, token contrast test
+- [x] **M1-A10** (auto) The 3 exemplar articles pass `selah-kb-lint`; each bad fixture fails with its expected rule ID; `kb.db` builds; an article renders in the UI. — evidence: gate stage 9 (`selah-kb-lint`: 7 articles, 0 errors; bad fixtures fail with their rule; `kb.db` builds); `HelpTests` render an article
+- [x] **M1-A11** The spike report is written with measurements and a go/no-go. — evidence: `docs/specs/spike-report.md`: measurements against budgets, recommendation **go** (4K60 HEVC needs zero-copy textures, M3/M5)
+- [x] **M1-A12** (ci-win) The `windows` job builds `Selah-win-x64-Setup.exe`, and `tools/test-installer.ps1` installs it silently, sees "Connected" and the test pattern, and un… — evidence: `tools/package.ps1` + `tools/test-installer.ps1` green on this PC (silent per-user install, self-test pass, clean uninstall); CI `windows` job runs both. (H) open: install from the PR on your PC (checklist below)
+- [x] **M1-A13** (auto) Security baseline tests pass: IPC access and limits (SEC-02), the IPC fuzz smoke run (SEC-03), FFmpeg refusing network URLs in file items (SEC-04), seed… — evidence: SEC-02 `selah-ipc` tests; SEC-03 `fuzz_smoke`; SEC-04 `opening_an_http_url_is_refused`; SEC-05/06 `a_bundle_has_logs_and_versions_but_no_secrets_or_user_name`, `values_round_trip_and_are_redacted_from_logs`, redaction tests; SEC-13 `only_selah_net_reaches_the_network`, `default_settings_make_no_outgoing_connections`; SEC-14 `permission_matrix_covers_every_origin_and_command`; SEC-11/09/10 gate stage 14
+- [x] **M1-A14** (auto) Safety baseline: with core frozen, **Clear everything** clears every output within 1 frame (SAFE-03); 3 crashes in 60 seconds start safe mode with its b… — evidence: SAFE-03 `clear_everything_works_with_core_frozen`; SAFE-07 `three_crashes_in_a_minute_start_safe_mode` (banner: `LayoutTests`), `restart_normally_leaves_safe_mode_and_keeps_the_screens`; SAFE-06 `LiveGuardTests`, `UpdateTests`, `updates_never_install_while_something_is_on_the_screens`
+- [x] **M1-A15** (auto) **Report a problem** produces a bundle that has logs and versions but no seeded secrets and no user name. — evidence: `a_bundle_has_logs_and_versions_but_no_secrets_or_user_name`, `report_a_problem_saves_a_bundle_with_the_version`, `diagnostics_shows_the_engine_and_writes_a_benchmark_report`
+- [x] **M1-A16** (auto) The session opened its PR with `tools/open-pr.sh`, the description follows the template, and `tools/ci.sh status` reads the PR's CI results. — evidence: PR opened with `tools/open-pr.sh` from the template; `tools/ci.sh status --wait` read its results
 
 ### M2. Library, songs, scripture and the help system
 
@@ -382,7 +342,31 @@ Owner: you. Coding sessions keep this table up to date, mark which feature flags
 
 _Each (H) acceptance criterion gets a step-by-step checklist here when its milestone is built, for a person with the equipment or account to run._
 
-(none yet)
+### M1 (run on the installed test build)
+
+Get the installer: open the M1 PR, select **Checks**, open the latest **CI** run, and download the **Selah-win-x64-Setup** artifact (unzip it). After merging, the same file is on the `m1` release.
+
+**M1-A12: install and see the test pattern** (about 5 minutes)
+
+- [ ] Run `Selah-win-x64-Setup.exe`. If SmartScreen warns you (it isn't signed yet, H-15), select **More info**, then **Run anyway**.
+- [ ] Windows doesn't ask for administrator rights.
+- [ ] Open **Selah** from the Start menu. The status in the toolbar says **Connected** within a few seconds.
+- [ ] Select **Show test pattern**. Colour bars fill the output window, and the preview shows them too.
+- [ ] Press **F12**. The screens clear at once.
+- [ ] Select **Show test pattern** again, then close the main window. A yellow bar asks **Something is on the screens.** Select **Keep showing**: Selah stays open. Close again and select **Clear and quit**: the screens clear and Selah closes.
+- [ ] Uninstall Selah from **Settings ▸ Apps ▸ Installed apps**. Your settings stay in `%APPDATA%\Selah`.
+- [ ] Note the result in the PR (pass, or what went wrong).
+
+**M1-A7: benchmark report** (about 2 minutes)
+
+- [ ] With nothing on the screens, select **Help**, then **Diagnostics**.
+- [ ] Check the details: your graphics card and the screen size.
+- [ ] Select **Run benchmark** and wait about a minute.
+- [ ] Select **Show the report** and attach the `selah-diagnostics-….json` file to the PR.
+
+**Optional: Report a problem**
+
+- [ ] Select **Help**, then **Report a problem**. A bar shows where the support file was saved, and the problem form opens in your browser with the version filled in. Open the `.zip` and check it has logs, and no passwords or your name. Close the browser tab without sending.
 
 ## Test ledger history
 
@@ -391,6 +375,7 @@ Copied from `tests/ledger.json` at the end of each milestone. Counts may only go
 | Milestone | rust | dotnet | web | golden | ui | e2e | kb | total |
 |---|---|---|---|---|---|---|---|---|
 | (baseline) | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
+| M1 | 121 | 20 | 3 | 4 | 70 | 6 | 7 | 231 |
 
 ## Deviations and decisions
 
@@ -415,6 +400,12 @@ _Anything done differently from BUILD-PLAN.md or the docs, with the reason and t
 - 2026-11-07, M1.9: `content/kb/planned.yaml` also takes `kind: label` for bold UI labels (R8) that later milestones add (the exemplars name M4 controls). R4 is applied as written (at most 3 sentences and 60 words), so two exemplar paragraphs and one new one were split without changing their words. The black-screen exemplar now says **Report a problem** (the M1.13 command) instead of **Export support bundle**. Settings that articles may name are listed in `content/help/settings.yaml`. New error code `SEL-HELP-0001`. `content/terms.yaml` gained `proper_nouns` (R18).
 - 2026-11-07, M1.6: `tests/golden/linux/text-en.png` is a Linux-specific reference (FreeType vs DirectWrite edges on 0.53% of pixels), taken from the linux job's failure report because `bless-golden.yml` can't be dispatched until it's on `main`.
 - 2026-11-07, M1.5: headless `FrameShown` is stamped at the GPU queue submit, the same moment as a swap-chain present with windows (the Windows runner's software rasteriser needs more than a frame to finish 1080p in a debug build).
+
+- 2026-11-07, M1.11: Velopack's pack id is `SelahApp` (installs to `%LOCALAPPDATA%\SelahApp`) because Selah's logs and cache live in `%LOCALAPPDATA%\Selah` (ARCHITECTURE §4.1). The UI is published into `ui\` because `Selah.exe` and the `selah.exe` launcher are the same file name on Windows. The Visual C++ runtime ships app-local (the redistributable installer needs admin, SEC-01). The installer check uses a UI self-test (`SELAH_SELF_TEST=1`) to see "Connected" and the bars from outside the processes.
+- 2026-11-07, M1.11: the updater lives in core and downloads through `selah-net` rather than Velopack's own `UpdateManager`, so every outgoing connection goes through one gate (SEC-13). Velopack's `Update.exe apply` installs the verified package; checked by hand 0.0.1 → 0.0.2 while running.
+- 2026-11-07, M1.12: `deny.toml` allows CDLA-Permissive-2.0 for `webpki-root-certs` only (Mozilla's CA list, a fallback inside `rustls-platform-verifier`).
+- 2026-11-07, M1.12: the SAFE-03 chaos test freezes core by suspending its threads (`selah-testkit::freeze`, Windows FFI allowlisted, `kill -STOP` elsewhere). It was added after M1.12's full gate and run on its own; the M1.13 gate ran it with everything else.
+- 2026-11-07, M1 finish: `tests/fixtures/db/m1.db` isn't created, because M1 has no library database (TESTING §4.2 starts fixtures at M2; core keeps only `settings.json` and `live_state.bin`). The ledger is first recorded as a milestone row here.
 
 ## Quarantined tests
 

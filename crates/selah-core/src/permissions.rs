@@ -21,9 +21,11 @@ pub enum CommandKind {
     InstallUpdate,
     /// Sent to the watchdog, not core; core answers that it can't do it.
     RestartNormally,
+    CreateSupportBundle,
+    RunDiagnostics,
 }
 
-pub const ALL_COMMANDS: [CommandKind; 9] = [
+pub const ALL_COMMANDS: [CommandKind; 11] = [
     CommandKind::Render,
     CommandKind::SetAppearance,
     CommandKind::RecordFeedback,
@@ -33,6 +35,8 @@ pub const ALL_COMMANDS: [CommandKind; 9] = [
     CommandKind::CheckForUpdate,
     CommandKind::InstallUpdate,
     CommandKind::RestartNormally,
+    CommandKind::CreateSupportBundle,
+    CommandKind::RunDiagnostics,
 ];
 
 pub fn kind_of(action: &command::Action) -> CommandKind {
@@ -46,6 +50,8 @@ pub fn kind_of(action: &command::Action) -> CommandKind {
         command::Action::CheckForUpdate(_) => CommandKind::CheckForUpdate,
         command::Action::InstallUpdate(_) => CommandKind::InstallUpdate,
         command::Action::RestartNormally(_) => CommandKind::RestartNormally,
+        command::Action::CreateSupportBundle(_) => CommandKind::CreateSupportBundle,
+        command::Action::RunDiagnostics(_) => CommandKind::RunDiagnostics,
     }
 }
 
@@ -59,7 +65,9 @@ pub fn changes_screens(kind: CommandKind) -> bool {
         | CommandKind::SetUpdateSettings
         | CommandKind::CheckForUpdate
         | CommandKind::InstallUpdate
-        | CommandKind::RestartNormally => false,
+        | CommandKind::RestartNormally
+        | CommandKind::CreateSupportBundle
+        | CommandKind::RunDiagnostics => false,
     }
 }
 
@@ -172,7 +180,9 @@ mod tests {
                 | CommandKind::SetUpdateSettings
                 | CommandKind::CheckForUpdate
                 | CommandKind::InstallUpdate
-                | CommandKind::RestartNormally => {}
+                | CommandKind::RestartNormally
+                | CommandKind::CreateSupportBundle
+                | CommandKind::RunDiagnostics => {}
             }
         }
         let unique: std::collections::HashSet<_> = ALL_COMMANDS.iter().collect();

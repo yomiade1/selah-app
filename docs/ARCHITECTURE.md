@@ -27,7 +27,8 @@ Selah/
 │  ├─ selah-ipc/                 pipes/UDS framing, client/server, shared memory rings, emergency lane
 │  ├─ selah-net/                 the single gate for outgoing network connections (SEC-13)
 │  ├─ selah-secrets/             SecretStore: Credential Manager, Keychain, in-memory fake (SEC-05)
-│  ├─ selah-core/                library: data store, command bus, op log, live state, search
+│  ├─ selah-runtime/             shared plumbing: paths, instance lock, redacted logs, heartbeats, keep-awake
+│  ├─ selah-core/                library: data store, command bus, op log, live state, search, updater, support bundles
 │  ├─ selah-core-host/           binary `selah-core`: hosts core + gateway + integrations
 │  ├─ selah-render/              wgpu compositor, Skia text, templates, transitions, effects
 │  ├─ selah-media/               FFmpeg decode, clocks, audio mixer
@@ -71,7 +72,7 @@ Selah/
 │  ├─ fixtures/                  songs, media (generated), db/m<N>.db, import-corpus/
 │  └─ ledger.json                minimum test counts per suite (ADR-016)
 ├─ server/                       docker-compose for sync server, Postgres, MinIO, Keycloak (M9)
-├─ packaging/                    Velopack, WiX, MSIX, ADMX, macOS pkg (M6, M9)
+├─ packaging/                    Velopack (M1), WiX, MSIX, ADMX, macOS pkg (M6, M9)
 ├─ third_party/                  downloaded SDKs/binaries (git-ignored), see §10
 ├─ .claude/settings.json         session-start hook that sets up cloud sessions (ADR-023)
 └─ .github/                      workflows (ci, release, bless-golden), PR and issue templates (ADR-024, ADR-025)

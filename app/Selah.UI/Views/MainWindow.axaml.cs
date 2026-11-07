@@ -4,6 +4,7 @@ using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Media.Imaging;
 using Avalonia.Platform;
+using Avalonia.Platform.Storage;
 using Avalonia.Threading;
 using Selah.Client;
 using Selah.UI.Services;
@@ -119,6 +120,47 @@ public sealed partial class MainWindow : Window
         if (Model is { } model)
         {
             model.ArticleRequested += (_, id) => ShowHelp(id);
+            model.OpenUrlRequested += (_, url) => _ = OpenUrlAsync(url);
+            model.ShowFileRequested += (_, path) => _ = ShowFileAsync(path);
+        }
+    }
+
+    private DiagnosticsWindow? diagnosticsWindow;
+
+    private void OnOpenDiagnostics(object? sender, RoutedEventArgs e)
+    {
+        if (Model is null)
+        {
+            return;
+        }
+        if (diagnosticsWindow is not null)
+        {
+            diagnosticsWindow.Activate();
+            return;
+        }
+        var diagnostics = Model.CreateDiagnostics();
+        diagnostics.ShowFileRequested += (_, path) => _ = ShowFileAsync(path);
+        diagnosticsWindow = new DiagnosticsWindow { DataContext = diagnostics };
+        diagnosticsWindow.Closed += (_, _) => diagnosticsWindow = null;
+        diagnosticsWindow.Show(this);
+        _ = diagnostics.LoadAsync();
+    }
+
+    /// <summary>Opens the problem-report form in the browser. Only https links from core.</summary>
+    private async Task OpenUrlAsync(string url)
+    {
+        if (Uri.TryCreate(url, UriKind.Absolute, out var uri) && uri.Scheme == Uri.UriSchemeHttps)
+        {
+            await Launcher.LaunchUriAsync(uri);
+        }
+    }
+
+    /// <summary>Shows a saved file's folder in Explorer or the Finder.</summary>
+    private async Task ShowFileAsync(string path)
+    {
+        if (Path.GetDirectoryName(path) is { } folder && Directory.Exists(folder))
+        {
+            await Launcher.LaunchDirectoryInfoAsync(new DirectoryInfo(folder));
         }
     }
 

@@ -25,7 +25,7 @@ public sealed record ConnectionSnapshot(bool Connected, bool EngineConnected, bo
 /// </list>
 /// Events arrive on thread-pool threads; view models marshal them to the UI thread.
 /// </summary>
-public sealed class CoreConnection : IAsyncDisposable, Selah.UI.ViewModels.IHelpSource, Selah.UI.ViewModels.IUpdateService
+public sealed class CoreConnection : IAsyncDisposable, Selah.UI.ViewModels.IHelpSource, Selah.UI.ViewModels.IUpdateService, Selah.UI.ViewModels.IDiagnosticsService
 {
     public static readonly TimeSpan HeartbeatInterval = TimeSpan.FromMilliseconds(250);
     private static readonly TimeSpan RequestTimeout = TimeSpan.FromSeconds(2);
@@ -115,6 +115,30 @@ public sealed class CoreConnection : IAsyncDisposable, Selah.UI.ViewModels.IHelp
         {
             throw new CoreException(error.Code, error.MessageKey);
         }
+    }
+
+    /// <summary>Help ▸ Diagnostics: this computer, the graphics and the screens (M1.13).</summary>
+    public async Task<Diagnostics> GetDiagnosticsAsync()
+    {
+        var reply = await RequestAsync(new Envelope { Query = new Query { GetDiagnostics = new GetDiagnostics() } }, TimeSpan.FromSeconds(5))
+            .ConfigureAwait(false);
+        return reply.Reply?.Diagnostics ?? new Diagnostics();
+    }
+
+    /// <summary>Help ▸ Diagnostics ▸ Run benchmark. It takes about a minute.</summary>
+    public async Task<DiagnosticsReport> RunDiagnosticsAsync(bool quick)
+    {
+        var reply = await RequestAsync(new Envelope { Command = new Command { RunDiagnostics = new RunDiagnostics { Quick = quick } } }, TimeSpan.FromMinutes(5))
+            .ConfigureAwait(false);
+        return reply.Reply?.DiagnosticsReport ?? new DiagnosticsReport();
+    }
+
+    /// <summary>Help ▸ Report a problem: core saves a redacted support bundle (SEC-06).</summary>
+    public async Task<SupportBundle> CreateSupportBundleAsync()
+    {
+        var reply = await RequestAsync(new Envelope { Command = new Command { CreateSupportBundle = new CreateSupportBundle() } }, TimeSpan.FromSeconds(30))
+            .ConfigureAwait(false);
+        return reply.Reply?.SupportBundle ?? new SupportBundle();
     }
 
     /// <summary>Settings ▸ Updates (M1.11).</summary>

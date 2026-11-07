@@ -2149,11 +2149,14 @@ name = "selah-core"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "crc32fast",
+ "flate2",
  "prost",
  "selah-kb",
  "selah-net",
  "selah-proto",
  "selah-runtime",
+ "selah-secrets",
  "semver",
  "serde",
  "serde_json",
@@ -2174,6 +2177,8 @@ dependencies = [
  "selah-net",
  "selah-proto",
  "selah-runtime",
+ "serde",
+ "serde_json",
  "tokio",
  "tracing",
 ]
@@ -2304,11 +2309,13 @@ name = "selah-testkit"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "selah-core",
  "selah-ipc",
  "selah-media",
  "selah-proto",
  "selah-render",
  "selah-runtime",
+ "serde_json",
  "tempfile",
  "tokio",
  "windows-sys 0.61.2",

@@ -1,0 +1,58 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:Selah.UI.ViewModels"
+        xmlns:s="using:Selah.UI.Services"
+        x:Class="Selah.UI.Views.DiagnosticsWindow"
+        x:DataType="vm:DiagnosticsViewModel"
+        Title="{Binding [diagnostics-title], Source={x:Static s:Localizer.Instance}}"
+        Width="720" Height="640" MinWidth="420" MinHeight="360">
+  <!-- Help ▸ Diagnostics (M1.13): details about this computer and Run benchmark. -->
+  <ScrollViewer>
+    <StackPanel Spacing="{DynamicResource Space.5}" Margin="{DynamicResource Space.Text.Large}">
+      <TextBlock Classes="title-1" Text="{Binding [diagnostics-title], Source={x:Static s:Localizer.Instance}}" />
+      <TextBlock Classes="hint" TextWrapping="Wrap" Text="{Binding [diagnostics-intro], Source={x:Static s:Localizer.Instance}}" />
+
+      <Border Name="DiagnosticsDetails" Classes="card">
+        <ItemsControl ItemsSource="{Binding Rows}">
+          <ItemsControl.ItemTemplate>
+            <DataTemplate x:DataType="vm:DiagnosticsRow">
+              <StackPanel Spacing="{DynamicResource Space.1}" Margin="{DynamicResource Space.Item}">
+                <TextBlock Classes="label" TextWrapping="Wrap" Text="{Binding Label}" />
+                <SelectableTextBlock TextWrapping="Wrap" Text="{Binding Value}" />
+              </StackPanel>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+      </Border>
+
+      <WrapPanel ItemSpacing="{DynamicResource Space.3}" LineSpacing="{DynamicResource Space.3}">
+        <Button Name="RunBenchmark" Classes="primary" Command="{Binding RunBenchmarkCommand}"
+                ToolTip.Tip="{Binding [diagnostics-run-hint], Source={x:Static s:Localizer.Instance}}">
+          <TextBlock Text="{Binding [diagnostics-run], Source={x:Static s:Localizer.Instance}}" />
+        </Button>
+        <Button Name="ShowReport" Command="{Binding ShowReportCommand}" IsVisible="{Binding HasReport}">
+          <TextBlock Text="{Binding [diagnostics-show-report], Source={x:Static s:Localizer.Instance}}" />
+        </Button>
+      </WrapPanel>
+      <TextBlock Classes="hint" TextWrapping="Wrap" Text="{Binding [diagnostics-run-hint], Source={x:Static s:Localizer.Instance}}" />
+      <TextBlock Name="DiagnosticsMessage" TextWrapping="Wrap" Text="{Binding Message}"
+                 IsVisible="{Binding Message, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+
+      <Border Name="DiagnosticsResults" Classes="card" IsVisible="{Binding HasReport}">
+        <StackPanel Spacing="{DynamicResource Space.3}">
+          <TextBlock Classes="title-3" Text="{Binding [diagnostics-results], Source={x:Static s:Localizer.Instance}}" />
+          <ItemsControl ItemsSource="{Binding Results}">
+            <ItemsControl.ItemTemplate>
+              <DataTemplate x:DataType="vm:DiagnosticsRow">
+                <StackPanel Spacing="{DynamicResource Space.1}" Margin="{DynamicResource Space.Item}">
+                  <TextBlock Classes="label" TextWrapping="Wrap" Text="{Binding Label}" />
+                  <SelectableTextBlock TextWrapping="Wrap" Text="{Binding Value}" />
+                </StackPanel>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+        </StackPanel>
+      </Border>
+    </StackPanel>
+  </ScrollViewer>
+</Window>

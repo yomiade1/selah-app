@@ -9,6 +9,8 @@ description = "Selah core library: settings, live state, permissions and request
 
 [dependencies]
 anyhow.workspace = true
+crc32fast.workspace = true
+flate2.workspace = true
 prost.workspace = true
 selah-kb = { path = "../selah-kb" }
 selah-net = { path = "../selah-net" }
@@ -22,4 +24,5 @@ thiserror.workspace = true
 tracing.workspace = true
 
 [dev-dependencies]
+selah-secrets = { path = "../selah-secrets" }
 tempfile.workspace = true

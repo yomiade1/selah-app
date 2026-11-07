@@ -17,10 +17,12 @@ public enum LiveGuardKind
 public sealed partial class MainViewModel : ObservableObject
 {
     private readonly CoreConnection? connection;
+    private readonly IDiagnosticsService? diagnostics;
 
-    public MainViewModel(CoreConnection? connection)
+    public MainViewModel(CoreConnection? connection, IDiagnosticsService? diagnostics = null)
     {
         this.connection = connection;
+        this.diagnostics = diagnostics ?? connection;
         Settings = new SettingsViewModel(
             connection is null ? null : connection.SetAppearanceAsync,
             new UpdatesViewModel(connection, () => ConfirmIfLiveAsync(LiveGuardKind.Update)));
@@ -170,6 +172,84 @@ public sealed partial class MainViewModel : ObservableObject
             LastError = Localizer.Instance["error-not-connected"];
         }
     }
+
+    /// <summary>The Report a problem bar under the toolbar (M1.13).</summary>
+    [ObservableProperty]
+    private bool isReportOpen;
+
+    [ObservableProperty]
+    private string? reportMessage;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasReportFile))]
+    private string? reportPath;
+
+    private string? reportUrl;
+
+    public bool HasReportFile => ReportPath is not null;
+
+    /// <summary>Raised to open a web page (the problem-report form) in the browser.</summary>
+    public event EventHandler<string>? OpenUrlRequested;
+
+    /// <summary>Raised to show a saved file in the file manager.</summary>
+    public event EventHandler<string>? ShowFileRequested;
+
+    /// <summary>
+    /// Help ▸ Report a problem (SEC-06): core saves a redacted support bundle, then the form opens
+    /// with the version filled in. The person attaches the file themselves; nothing is sent.
+    /// </summary>
+    [RelayCommand]
+    private async Task ReportProblemAsync()
+    {
+        IsReportOpen = true;
+        ReportPath = null;
+        ReportMessage = Localizer.Instance["report-saving"];
+        if (diagnostics is null)
+        {
+            ReportMessage = Localizer.Instance["error-not-connected"];
+            return;
+        }
+        try
+        {
+            var bundle = await diagnostics.CreateSupportBundleAsync();
+            ReportPath = bundle.Path;
+            reportUrl = bundle.ReportUrl;
+            ReportMessage = Localizer.Instance["report-saved"];
+            OpenUrlRequested?.Invoke(this, bundle.ReportUrl);
+        }
+        catch (CoreException error)
+        {
+            ReportMessage = Localizer.Instance[error.MessageKey];
+        }
+        catch (Exception error) when (error is TimeoutException or IOException or InvalidOperationException or OperationCanceledException)
+        {
+            ReportMessage = Localizer.Instance["error-not-connected"];
+        }
+    }
+
+    [RelayCommand]
+    private void ShowReportFile()
+    {
+        if (ReportPath is { } path)
+        {
+            ShowFileRequested?.Invoke(this, path);
+        }
+    }
+
+    [RelayCommand]
+    private void OpenReportForm()
+    {
+        if (reportUrl is { } url)
+        {
+            OpenUrlRequested?.Invoke(this, url);
+        }
+    }
+
+    [RelayCommand]
+    private void CloseReport() => IsReportOpen = false;
+
+    /// <summary>A view model for a new Help ▸ Diagnostics window.</summary>
+    public DiagnosticsViewModel CreateDiagnostics() => new(diagnostics);
 
     /// <summary><b>Restart normally</b> on the safe-mode banner (SAFE-07).</summary>
     [RelayCommand]

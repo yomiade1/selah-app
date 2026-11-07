@@ -40,3 +40,12 @@ errors:
   - code: SEL-UPD-0005
     message: error-update-install
     fix_article: getting-started.update-selah
+  - code: SEL-SUP-0001
+    message: error-support-bundle
+    fix_article: getting-started.report-a-problem
+  - code: SEL-DIAG-0001
+    message: error-diagnostics-live
+    fix_article: getting-started.run-diagnostics
+  - code: SEL-DIAG-0002
+    message: error-diagnostics-failed
+    fix_article: getting-started.run-diagnostics

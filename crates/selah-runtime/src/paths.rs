@@ -13,6 +13,8 @@ pub struct Paths {
     pub logs: PathBuf,
     /// The library folder (M2).
     pub library: PathBuf,
+    /// Support bundles and Diagnostics reports the person can attach to a problem report.
+    pub support: PathBuf,
 }
 
 impl Paths {
@@ -32,6 +34,7 @@ impl Paths {
             cache: root.join("cache"),
             logs: root.join("logs"),
             library: root.join("library"),
+            support: root.join("support"),
         }
     }
 
@@ -53,6 +56,7 @@ impl Paths {
                 cache: local.join("Selah").join("cache"),
                 logs: local.join("Selah").join("logs"),
                 library: home.join("Documents").join("Selah Library"),
+                support: local.join("Selah").join("support"),
             }
         } else if cfg!(target_os = "macos") {
             Self {
@@ -60,6 +64,7 @@ impl Paths {
                 cache: home.join("Library/Caches/Selah"),
                 logs: home.join("Library/Logs/Selah"),
                 library: home.join("Documents/Selah Library"),
+                support: home.join("Library/Logs/Selah/Support"),
             }
         } else {
             // Linux is a development platform only (ADR-023): follow XDG.
@@ -71,6 +76,7 @@ impl Paths {
                 cache: cache.join("selah"),
                 logs: state.join("selah/logs"),
                 library: home.join("Documents/Selah Library"),
+                support: state.join("selah/support"),
             }
         }
     }

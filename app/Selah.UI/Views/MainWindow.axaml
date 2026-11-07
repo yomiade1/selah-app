@@ -48,6 +48,21 @@
         <Button Name="SettingsButton" Classes="quiet" Click="OnOpenSettings">
           <TextBlock Text="{Binding [command-settings], Source={x:Static s:Localizer.Instance}}" />
         </Button>
+        <!-- Help menu (M1.13): articles, Report a problem, Diagnostics. -->
+        <Button Name="HelpMenuButton" Classes="quiet"
+                ToolTip.Tip="{Binding [command-help-hint], Source={x:Static s:Localizer.Instance}}">
+          <TextBlock Text="{Binding [command-help], Source={x:Static s:Localizer.Instance}}" />
+          <Button.Flyout>
+            <MenuFlyout>
+              <MenuItem Name="HelpArticlesItem" Click="OnOpenHelp"
+                        Header="{Binding [sidebar-help-articles], Source={x:Static s:Localizer.Instance}}" />
+              <MenuItem Name="ReportProblemItem" Command="{Binding ReportProblemCommand}"
+                        Header="{Binding [command-report-problem], Source={x:Static s:Localizer.Instance}}" />
+              <MenuItem Name="DiagnosticsItem" Click="OnOpenDiagnostics"
+                        Header="{Binding [command-diagnostics], Source={x:Static s:Localizer.Instance}}" />
+            </MenuFlyout>
+          </Button.Flyout>
+        </Button>
       </WrapPanel>
     </Border>
 
@@ -68,6 +83,28 @@
         </Button>
         <Button Name="LiveGuardConfirm" Command="{Binding ConfirmLiveGuardCommand}">
           <TextBlock Text="{Binding LiveGuardConfirmText}" />
+        </Button>
+      </WrapPanel>
+    </Border>
+
+    <!-- Help ▸ Report a problem (M1.13): where the support file is, under the toolbar. -->
+    <Border Name="ReportBar" DockPanel.Dock="Top" IsVisible="{Binding IsReportOpen}"
+            Background="{DynamicResource Brush.Surface2}" BorderBrush="{DynamicResource Brush.Line}"
+            BorderThickness="{DynamicResource Line.Bottom}" Padding="{DynamicResource Space.Text.Medium}">
+      <WrapPanel ItemSpacing="{DynamicResource Space.4}" LineSpacing="{DynamicResource Space.3}">
+        <StackPanel Spacing="{DynamicResource Space.1}" VerticalAlignment="Center">
+          <TextBlock Name="ReportMessage" TextWrapping="Wrap" Text="{Binding ReportMessage}" />
+          <SelectableTextBlock Name="ReportPath" Classes="hint" TextWrapping="Wrap" Text="{Binding ReportPath}"
+                               IsVisible="{Binding HasReportFile}" />
+        </StackPanel>
+        <Button Name="ReportShowFile" Command="{Binding ShowReportFileCommand}" IsVisible="{Binding HasReportFile}">
+          <TextBlock Text="{Binding [report-show-file], Source={x:Static s:Localizer.Instance}}" />
+        </Button>
+        <Button Name="ReportOpenForm" Command="{Binding OpenReportFormCommand}" IsVisible="{Binding HasReportFile}">
+          <TextBlock Text="{Binding [report-open-form], Source={x:Static s:Localizer.Instance}}" />
+        </Button>
+        <Button Name="ReportClose" Classes="quiet" Command="{Binding CloseReportCommand}">
+          <TextBlock Text="{Binding [report-close], Source={x:Static s:Localizer.Instance}}" />
         </Button>
       </WrapPanel>
     </Border>

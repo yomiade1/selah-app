@@ -36,6 +36,12 @@ pub enum Work {
     CheckForUpdate { feed_url: String },
     /// Download and verify this release, then install it if nothing is on the screens.
     InstallUpdate { feed_url: String, release: Release },
+    /// Help ▸ Report a problem: save a redacted support bundle (M1.13).
+    CreateSupportBundle,
+    /// Help ▸ Diagnostics: ask the engine for its details, then reply.
+    GetDiagnostics,
+    /// Help ▸ Diagnostics ▸ Run benchmark.
+    RunDiagnostics { quick: bool },
 }
 
 /// The result of handling one request.
@@ -164,7 +170,12 @@ impl CoreService {
             frame_checksum: self.engine.frame_checksum.clone(),
             version: selah_runtime::VERSION.into(),
             live: is_live(self.live.scene()),
+            ..Status::default()
         }
+    }
+
+    pub fn safe_mode(&self) -> bool {
+        self.safe_mode
     }
 
     fn status_event(&self) -> Event {
@@ -348,6 +359,24 @@ impl CoreService {
                     },
                 }
             }
+            command::Action::CreateSupportBundle(_) => Outcome {
+                work: Some(Work::CreateSupportBundle),
+                ..Outcome::default()
+            },
+            command::Action::RunDiagnostics(run) => {
+                // The benchmark loads the GPU and CPU: never during a service (SAFE-06).
+                if self.is_live() {
+                    let error = crate::diagnostics::DiagnosticsError::Live;
+                    return Outcome {
+                        reply: Some(self.error(request, error.code(), error.message_key())),
+                        ..Outcome::default()
+                    };
+                }
+                Outcome {
+                    work: Some(Work::RunDiagnostics { quick: run.quick }),
+                    ..Outcome::default()
+                }
+            }
             // The watchdog owns safe mode; the UI sends this to the watchdog.
             command::Action::RestartNormally(_) => Outcome {
                 reply: Some(self.error(request, codes::UNSUPPORTED, "error-unsupported-request")),
@@ -409,6 +438,12 @@ impl CoreService {
                     }
                     _ => self.error(request, codes::HELP_NOT_FOUND, "error-help-not-found"),
                 }
+            }
+            Some(query::Request::GetDiagnostics(_)) => {
+                return Outcome {
+                    work: Some(Work::GetDiagnostics),
+                    ..Outcome::default()
+                };
             }
             Some(query::Request::GetWatchdogStatus(_)) | None => {
                 self.error(request, codes::UNSUPPORTED, "error-unsupported-request")
@@ -482,6 +517,82 @@ impl CoreService {
             }
             Err(error) => {
                 tracing::warn!(%error, "update not installed");
+                self.error(request, error.code(), error.message_key())
+            }
+        }
+    }
+
+    /// The reply to Help ▸ Report a problem.
+    pub fn finish_support_bundle(
+        &self,
+        request: &Envelope,
+        saved: std::io::Result<std::path::PathBuf>,
+    ) -> Envelope {
+        match saved {
+            Ok(path) => self.reply(
+                request,
+                reply::Result::SupportBundle(selah_proto::v1::SupportBundle {
+                    path: path.to_string_lossy().into_owned(),
+                    report_url: crate::support::report_url(selah_runtime::VERSION),
+                }),
+            ),
+            Err(error) => {
+                tracing::warn!(%error, "support bundle not saved");
+                self.error(
+                    request,
+                    crate::diagnostics::codes::BUNDLE,
+                    "error-support-bundle",
+                )
+            }
+        }
+    }
+
+    /// What Help ▸ Diagnostics shows. `engine` is the engine's own status, if it answered.
+    pub fn diagnostics(&self, engine: Option<&Status>) -> selah_proto::v1::Diagnostics {
+        selah_proto::v1::Diagnostics {
+            version: selah_runtime::VERSION.into(),
+            os: std::env::consts::OS.into(),
+            arch: std::env::consts::ARCH.into(),
+            safe_mode: self.safe_mode,
+            engine_connected: engine.is_some(),
+            renderer: engine.map(|s| s.renderer.clone()).unwrap_or_default(),
+            output_resolution: engine.and_then(|s| s.output_resolution),
+        }
+    }
+
+    pub fn finish_diagnostics(&self, request: &Envelope, engine: Option<&Status>) -> Envelope {
+        self.reply(
+            request,
+            reply::Result::Diagnostics(self.diagnostics(engine)),
+        )
+    }
+
+    /// The reply to Run benchmark.
+    pub fn finish_run_diagnostics(
+        &self,
+        request: &Envelope,
+        result: Result<
+            (std::path::PathBuf, crate::diagnostics::Summary),
+            crate::diagnostics::DiagnosticsError,
+        >,
+    ) -> Envelope {
+        match result {
+            Ok((path, summary)) => self.reply(
+                request,
+                reply::Result::DiagnosticsReport(selah_proto::v1::DiagnosticsReport {
+                    path: path.to_string_lossy().into_owned(),
+                    ipc_p99_ms: summary.ipc_p99_ms,
+                    ipc_pass: summary.ipc_pass,
+                    video_clip: summary.video_clip,
+                    video_decode: summary.video_decode,
+                    video_frames: summary.video_frames,
+                    video_dropped: summary.video_dropped,
+                    video_composite_p99_ms: summary.video_composite_p99_ms,
+                    video_pass: summary.video_pass,
+                }),
+            ),
+            Err(error) => {
+                tracing::warn!(%error, "diagnostics failed");
                 self.error(request, error.code(), error.message_key())
             }
         }

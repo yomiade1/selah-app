@@ -4,6 +4,8 @@
 
 import type { GenEnum, GenFile, GenMessage } from "@bufbuild/protobuf/codegenv2";
 import { enumDesc, fileDesc, messageDesc } from "@bufbuild/protobuf/codegenv2";
+import type { Resolution } from "./common_pb.js";
+import { file_selah_v1_common } from "./common_pb.js";
 import type { Error } from "./errors_pb.js";
 import { file_selah_v1_errors } from "./errors_pb.js";
 import type { Article, GetArticle, HelpForContext, HelpResults, RecordFeedback, SearchHelp } from "./help_pb.js";
@@ -18,7 +20,7 @@ import type { Message } from "@bufbuild/protobuf";
  * Describes the file selah/v1/envelope.proto.
  */
 export const file_selah_v1_envelope: GenFile = /*@__PURE__*/
-  fileDesc("ChdzZWxhaC92MS9lbnZlbG9wZS5wcm90bxIIc2VsYWgudjEiUgoFQWN0b3ISDwoHdXNlcl9pZBgBIAEoCRIRCglkZXZpY2VfaWQYAiABKAkSJQoGb3JpZ2luGAMgASgOMhUuc2VsYWgudjEuQWN0b3JPcmlnaW4ihAIKCEVudmVsb3BlEgoKAmlkGAEgASgEEhYKDmNvcnJlbGF0aW9uX2lkGAIgASgEEh4KBWFjdG9yGAMgASgLMg8uc2VsYWgudjEuQWN0b3ISJAoHY29tbWFuZBgKIAEoCzIRLnNlbGFoLnYxLkNvbW1hbmRIABIgCgVxdWVyeRgLIAEoCzIPLnNlbGFoLnYxLlF1ZXJ5SAASIAoFZXZlbnQYDCABKAsyDy5zZWxhaC52MS5FdmVudEgAEiAKBXJlcGx5GA0gASgLMg8uc2VsYWgudjEuUmVwbHlIABIgCgVlcnJvchgOIAEoCzIPLnNlbGFoLnYxLkVycm9ySABCBgoEYm9keSLrAwoHQ29tbWFuZBIpCgZyZW5kZXIYASABKAsyFy5zZWxhaC52MS5SZW5kZXJDb21tYW5kSAASMQoOc2V0X2FwcGVhcmFuY2UYAiABKAsyFy5zZWxhaC52MS5TZXRBcHBlYXJhbmNlSAASMwoPcmVjb3JkX2ZlZWRiYWNrGAMgASgLMhguc2VsYWgudjEuUmVjb3JkRmVlZGJhY2tIABI2ChFzaG93X3Rlc3RfcGF0dGVybhgEIAEoCzIZLnNlbGFoLnYxLlNob3dUZXN0UGF0dGVybkgAEi8KDWNsZWFyX291dHB1dHMYBSABKAsyFi5zZWxhaC52MS5DbGVhck91dHB1dHNIABI0ChBjaGVja19mb3JfdXBkYXRlGAYgASgLMhguc2VsYWgudjEuQ2hlY2tGb3JVcGRhdGVIABIxCg5pbnN0YWxsX3VwZGF0ZRgHIAEoCzIXLnNlbGFoLnYxLkluc3RhbGxVcGRhdGVIABI6ChNzZXRfdXBkYXRlX3NldHRpbmdzGAggASgLMhsuc2VsYWgudjEuU2V0VXBkYXRlU2V0dGluZ3NIABI1ChByZXN0YXJ0X25vcm1hbGx5GAkgASgLMhkuc2VsYWgudjEuUmVzdGFydE5vcm1hbGx5SABCCAoGYWN0aW9uIhEKD1Jlc3RhcnROb3JtYWxseSI5Cg9TaG93VGVzdFBhdHRlcm4SJgoHcGF0dGVybhgBIAEoDjIVLnNlbGFoLnYxLlRlc3RQYXR0ZXJuIg4KDENsZWFyT3V0cHV0cyLiAgoFUXVlcnkSKQoKZ2V0X3N0YXR1cxgBIAEoCzITLnNlbGFoLnYxLkdldFN0YXR1c0gAEi0KDGdldF9zZXR0aW5ncxgCIAEoCzIVLnNlbGFoLnYxLkdldFNldHRpbmdzSAASKwoLc2VhcmNoX2hlbHAYAyABKAsyFC5zZWxhaC52MS5TZWFyY2hIZWxwSAASKwoLZ2V0X2FydGljbGUYBCABKAsyFC5zZWxhaC52MS5HZXRBcnRpY2xlSAASNAoQaGVscF9mb3JfY29udGV4dBgFIAEoCzIYLnNlbGFoLnYxLkhlbHBGb3JDb250ZXh0SAASKAoJc3Vic2NyaWJlGAYgASgLMhMuc2VsYWgudjEuU3Vic2NyaWJlSAASOgoTZ2V0X3dhdGNoZG9nX3N0YXR1cxgHIAEoCzIbLnNlbGFoLnYxLkdldFdhdGNoZG9nU3RhdHVzSABCCQoHcmVxdWVzdCILCglHZXRTdGF0dXMitgEKBlN0YXR1cxIRCgljb25uZWN0ZWQYASABKAgSEQoJc2FmZV9tb2RlGAIgASgIEhYKDnNjZW5lX3JldmlzaW9uGAMgASgEEhgKEGVuZ2luZV9jb25uZWN0ZWQYBCABKAgSHQoVZW5naW5lX3NjZW5lX3JldmlzaW9uGAUgASgEEhYKDmZyYW1lX2NoZWNrc3VtGAYgASgMEg8KB3ZlcnNpb24YByABKAkSDAoEbGl2ZRgIIAEoCCITChFHZXRXYXRjaGRvZ1N0YXR1cyJLCgtQcm9jZXNzSW5mbxIMCgRyb2xlGAEgASgJEgsKA3BpZBgCIAEoDRIQCghyZXN0YXJ0cxgDIAEoDRIPCgdydW5uaW5nGAQgASgIImcKDldhdGNoZG9nU3RhdHVzEigKCXByb2Nlc3NlcxgBIAMoCzIVLnNlbGFoLnYxLlByb2Nlc3NJbmZvEhEKCXNhZmVfbW9kZRgCIAEoCBIYChBzYWZlX21vZGVfcmVhc29uGAMgASgJIiAKCVN1YnNjcmliZRITCgtldmVudF9uYW1lcxgBIAMoCSIqCglIZWFydGJlYXQSHQoVbW9ub3RvbmljX25hbm9zZWNvbmRzGAEgASgEIssBCgVFdmVudBIrCgtmcmFtZV9zaG93bhgBIAEoCzIULnNlbGFoLnYxLkZyYW1lU2hvd25IABIiCgZzdGF0dXMYAiABKAsyEC5zZWxhaC52MS5TdGF0dXNIABIoCgloZWFydGJlYXQYAyABKAsyEy5zZWxhaC52MS5IZWFydGJlYXRIABI3ChFlbWVyZ2VuY3lfYXBwbGllZBgEIAEoCzIaLnNlbGFoLnYxLkVtZXJnZW5jeUFwcGxpZWRIAEIOCgxub3RpZmljYXRpb24irgIKBVJlcGx5EiIKBnN0YXR1cxgBIAEoCzIQLnNlbGFoLnYxLlN0YXR1c0gAEiYKCHNldHRpbmdzGAIgASgLMhIuc2VsYWgudjEuU2V0dGluZ3NIABItCgxoZWxwX3Jlc3VsdHMYAyABKAsyFS5zZWxhaC52MS5IZWxwUmVzdWx0c0gAEiQKB2FydGljbGUYBCABKAsyES5zZWxhaC52MS5BcnRpY2xlSAASFgoMYWNrbm93bGVkZ2VkGAUgASgISAASMwoPd2F0Y2hkb2dfc3RhdHVzGAYgASgLMhguc2VsYWgudjEuV2F0Y2hkb2dTdGF0dXNIABItCgx1cGRhdGVfY2hlY2sYByABKAsyFS5zZWxhaC52MS5VcGRhdGVDaGVja0gAQggKBnJlc3VsdCqZAgoLQWN0b3JPcmlnaW4SHAoYQUNUT1JfT1JJR0lOX1VOU1BFQ0lGSUVEEAASEwoPQUNUT1JfT1JJR0lOX1VJEAESFAoQQUNUT1JfT1JJR0lOX0FQSRACEhUKEUFDVE9SX09SSUdJTl9NSURJEAMSFgoSQUNUT1JfT1JJR0lOX01BQ1JPEAQSGQoVQUNUT1JfT1JJR0lOX1RJTUVMSU5FEAUSFQoRQUNUT1JfT1JJR0lOX1NZTkMQBhIVChFBQ1RPUl9PUklHSU5fVE9VUhAHEhUKEUFDVE9SX09SSUdJTl9DT1JFEAgSFwoTQUNUT1JfT1JJR0lOX0VOR0lORRAJEhkKFUFDVE9SX09SSUdJTl9XQVRDSERPRxAKQhWqAhJTZWxhaC5Db250cmFjdHMuVjFiBnByb3RvMw", [file_selah_v1_errors, file_selah_v1_help, file_selah_v1_render, file_selah_v1_settings]);
+  fileDesc("ChdzZWxhaC92MS9lbnZlbG9wZS5wcm90bxIIc2VsYWgudjEiUgoFQWN0b3ISDwoHdXNlcl9pZBgBIAEoCRIRCglkZXZpY2VfaWQYAiABKAkSJQoGb3JpZ2luGAMgASgOMhUuc2VsYWgudjEuQWN0b3JPcmlnaW4ihAIKCEVudmVsb3BlEgoKAmlkGAEgASgEEhYKDmNvcnJlbGF0aW9uX2lkGAIgASgEEh4KBWFjdG9yGAMgASgLMg8uc2VsYWgudjEuQWN0b3ISJAoHY29tbWFuZBgKIAEoCzIRLnNlbGFoLnYxLkNvbW1hbmRIABIgCgVxdWVyeRgLIAEoCzIPLnNlbGFoLnYxLlF1ZXJ5SAASIAoFZXZlbnQYDCABKAsyDy5zZWxhaC52MS5FdmVudEgAEiAKBXJlcGx5GA0gASgLMg8uc2VsYWgudjEuUmVwbHlIABIgCgVlcnJvchgOIAEoCzIPLnNlbGFoLnYxLkVycm9ySABCBgoEYm9keSLgBAoHQ29tbWFuZBIpCgZyZW5kZXIYASABKAsyFy5zZWxhaC52MS5SZW5kZXJDb21tYW5kSAASMQoOc2V0X2FwcGVhcmFuY2UYAiABKAsyFy5zZWxhaC52MS5TZXRBcHBlYXJhbmNlSAASMwoPcmVjb3JkX2ZlZWRiYWNrGAMgASgLMhguc2VsYWgudjEuUmVjb3JkRmVlZGJhY2tIABI2ChFzaG93X3Rlc3RfcGF0dGVybhgEIAEoCzIZLnNlbGFoLnYxLlNob3dUZXN0UGF0dGVybkgAEi8KDWNsZWFyX291dHB1dHMYBSABKAsyFi5zZWxhaC52MS5DbGVhck91dHB1dHNIABI0ChBjaGVja19mb3JfdXBkYXRlGAYgASgLMhguc2VsYWgudjEuQ2hlY2tGb3JVcGRhdGVIABIxCg5pbnN0YWxsX3VwZGF0ZRgHIAEoCzIXLnNlbGFoLnYxLkluc3RhbGxVcGRhdGVIABI6ChNzZXRfdXBkYXRlX3NldHRpbmdzGAggASgLMhsuc2VsYWgudjEuU2V0VXBkYXRlU2V0dGluZ3NIABI1ChByZXN0YXJ0X25vcm1hbGx5GAkgASgLMhkuc2VsYWgudjEuUmVzdGFydE5vcm1hbGx5SAASPgoVY3JlYXRlX3N1cHBvcnRfYnVuZGxlGAogASgLMh0uc2VsYWgudjEuQ3JlYXRlU3VwcG9ydEJ1bmRsZUgAEjMKD3J1bl9kaWFnbm9zdGljcxgLIAEoCzIYLnNlbGFoLnYxLlJ1bkRpYWdub3N0aWNzSABCCAoGYWN0aW9uIhEKD1Jlc3RhcnROb3JtYWxseSI5Cg9TaG93VGVzdFBhdHRlcm4SJgoHcGF0dGVybhgBIAEoDjIVLnNlbGFoLnYxLlRlc3RQYXR0ZXJuIg4KDENsZWFyT3V0cHV0cyKXAwoFUXVlcnkSKQoKZ2V0X3N0YXR1cxgBIAEoCzITLnNlbGFoLnYxLkdldFN0YXR1c0gAEi0KDGdldF9zZXR0aW5ncxgCIAEoCzIVLnNlbGFoLnYxLkdldFNldHRpbmdzSAASKwoLc2VhcmNoX2hlbHAYAyABKAsyFC5zZWxhaC52MS5TZWFyY2hIZWxwSAASKwoLZ2V0X2FydGljbGUYBCABKAsyFC5zZWxhaC52MS5HZXRBcnRpY2xlSAASNAoQaGVscF9mb3JfY29udGV4dBgFIAEoCzIYLnNlbGFoLnYxLkhlbHBGb3JDb250ZXh0SAASKAoJc3Vic2NyaWJlGAYgASgLMhMuc2VsYWgudjEuU3Vic2NyaWJlSAASOgoTZ2V0X3dhdGNoZG9nX3N0YXR1cxgHIAEoCzIbLnNlbGFoLnYxLkdldFdhdGNoZG9nU3RhdHVzSAASMwoPZ2V0X2RpYWdub3N0aWNzGAggASgLMhguc2VsYWgudjEuR2V0RGlhZ25vc3RpY3NIAEIJCgdyZXF1ZXN0IgsKCUdldFN0YXR1cyL5AQoGU3RhdHVzEhEKCWNvbm5lY3RlZBgBIAEoCBIRCglzYWZlX21vZGUYAiABKAgSFgoOc2NlbmVfcmV2aXNpb24YAyABKAQSGAoQZW5naW5lX2Nvbm5lY3RlZBgEIAEoCBIdChVlbmdpbmVfc2NlbmVfcmV2aXNpb24YBSABKAQSFgoOZnJhbWVfY2hlY2tzdW0YBiABKAwSDwoHdmVyc2lvbhgHIAEoCRIMCgRsaXZlGAggASgIEhAKCHJlbmRlcmVyGAkgASgJEi8KEW91dHB1dF9yZXNvbHV0aW9uGAogASgLMhQuc2VsYWgudjEuUmVzb2x1dGlvbiITChFHZXRXYXRjaGRvZ1N0YXR1cyJLCgtQcm9jZXNzSW5mbxIMCgRyb2xlGAEgASgJEgsKA3BpZBgCIAEoDRIQCghyZXN0YXJ0cxgDIAEoDRIPCgdydW5uaW5nGAQgASgIImcKDldhdGNoZG9nU3RhdHVzEigKCXByb2Nlc3NlcxgBIAMoCzIVLnNlbGFoLnYxLlByb2Nlc3NJbmZvEhEKCXNhZmVfbW9kZRgCIAEoCBIYChBzYWZlX21vZGVfcmVhc29uGAMgASgJIiAKCVN1YnNjcmliZRITCgtldmVudF9uYW1lcxgBIAMoCSIqCglIZWFydGJlYXQSHQoVbW9ub3RvbmljX25hbm9zZWNvbmRzGAEgASgEIssBCgVFdmVudBIrCgtmcmFtZV9zaG93bhgBIAEoCzIULnNlbGFoLnYxLkZyYW1lU2hvd25IABIiCgZzdGF0dXMYAiABKAsyEC5zZWxhaC52MS5TdGF0dXNIABIoCgloZWFydGJlYXQYAyABKAsyEy5zZWxhaC52MS5IZWFydGJlYXRIABI3ChFlbWVyZ2VuY3lfYXBwbGllZBgEIAEoCzIaLnNlbGFoLnYxLkVtZXJnZW5jeUFwcGxpZWRIAEIOCgxub3RpZmljYXRpb24iygMKBVJlcGx5EiIKBnN0YXR1cxgBIAEoCzIQLnNlbGFoLnYxLlN0YXR1c0gAEiYKCHNldHRpbmdzGAIgASgLMhIuc2VsYWgudjEuU2V0dGluZ3NIABItCgxoZWxwX3Jlc3VsdHMYAyABKAsyFS5zZWxhaC52MS5IZWxwUmVzdWx0c0gAEiQKB2FydGljbGUYBCABKAsyES5zZWxhaC52MS5BcnRpY2xlSAASFgoMYWNrbm93bGVkZ2VkGAUgASgISAASMwoPd2F0Y2hkb2dfc3RhdHVzGAYgASgLMhguc2VsYWgudjEuV2F0Y2hkb2dTdGF0dXNIABItCgx1cGRhdGVfY2hlY2sYByABKAsyFS5zZWxhaC52MS5VcGRhdGVDaGVja0gAEjEKDnN1cHBvcnRfYnVuZGxlGAggASgLMhcuc2VsYWgudjEuU3VwcG9ydEJ1bmRsZUgAEiwKC2RpYWdub3N0aWNzGAkgASgLMhUuc2VsYWgudjEuRGlhZ25vc3RpY3NIABI5ChJkaWFnbm9zdGljc19yZXBvcnQYCiABKAsyGy5zZWxhaC52MS5EaWFnbm9zdGljc1JlcG9ydEgAQggKBnJlc3VsdCIVChNDcmVhdGVTdXBwb3J0QnVuZGxlIjEKDVN1cHBvcnRCdW5kbGUSDAoEcGF0aBgBIAEoCRISCgpyZXBvcnRfdXJsGAIgASgJIhAKDkdldERpYWdub3N0aWNzIqgBCgtEaWFnbm9zdGljcxIPCgd2ZXJzaW9uGAEgASgJEgoKAm9zGAIgASgJEgwKBGFyY2gYAyABKAkSEQoJc2FmZV9tb2RlGAQgASgIEhgKEGVuZ2luZV9jb25uZWN0ZWQYBSABKAgSEAoIcmVuZGVyZXIYBiABKAkSLwoRb3V0cHV0X3Jlc29sdXRpb24YByABKAsyFC5zZWxhaC52MS5SZXNvbHV0aW9uIh8KDlJ1bkRpYWdub3N0aWNzEg0KBXF1aWNrGAEgASgIItIBChFEaWFnbm9zdGljc1JlcG9ydBIMCgRwYXRoGAEgASgJEhIKCmlwY19wOTlfbXMYAiABKAESEAoIaXBjX3Bhc3MYAyABKAgSEgoKdmlkZW9fY2xpcBgEIAEoCRIUCgx2aWRlb19kZWNvZGUYBSABKAkSFAoMdmlkZW9fZnJhbWVzGAYgASgEEhUKDXZpZGVvX2Ryb3BwZWQYByABKAQSHgoWdmlkZW9fY29tcG9zaXRlX3A5OV9tcxgIIAEoARISCgp2aWRlb19wYXNzGAkgASgIKpkCCgtBY3Rvck9yaWdpbhIcChhBQ1RPUl9PUklHSU5fVU5TUEVDSUZJRUQQABITCg9BQ1RPUl9PUklHSU5fVUkQARIUChBBQ1RPUl9PUklHSU5fQVBJEAISFQoRQUNUT1JfT1JJR0lOX01JREkQAxIWChJBQ1RPUl9PUklHSU5fTUFDUk8QBBIZChVBQ1RPUl9PUklHSU5fVElNRUxJTkUQBRIVChFBQ1RPUl9PUklHSU5fU1lOQxAGEhUKEUFDVE9SX09SSUdJTl9UT1VSEAcSFQoRQUNUT1JfT1JJR0lOX0NPUkUQCBIXChNBQ1RPUl9PUklHSU5fRU5HSU5FEAkSGQoVQUNUT1JfT1JJR0lOX1dBVENIRE9HEApCFaoCElNlbGFoLkNvbnRyYWN0cy5WMWIGcHJvdG8z", [file_selah_v1_common, file_selah_v1_errors, file_selah_v1_help, file_selah_v1_render, file_selah_v1_settings]);
 
 /**
  * This is attribution, not proof of identity. The receiver must authenticate
@@ -173,6 +175,18 @@ export type Command = Message<"selah.v1.Command"> & {
      */
     value: RestartNormally;
     case: "restartNormally";
+  } | {
+    /**
+     * @generated from field: selah.v1.CreateSupportBundle create_support_bundle = 10;
+     */
+    value: CreateSupportBundle;
+    case: "createSupportBundle";
+  } | {
+    /**
+     * @generated from field: selah.v1.RunDiagnostics run_diagnostics = 11;
+     */
+    value: RunDiagnostics;
+    case: "runDiagnostics";
   } | { case: undefined; value?: undefined };
 };
 
@@ -282,6 +296,12 @@ export type Query = Message<"selah.v1.Query"> & {
      */
     value: GetWatchdogStatus;
     case: "getWatchdogStatus";
+  } | {
+    /**
+     * @generated from field: selah.v1.GetDiagnostics get_diagnostics = 8;
+     */
+    value: GetDiagnostics;
+    case: "getDiagnostics";
   } | { case: undefined; value?: undefined };
 };
 
@@ -354,6 +374,20 @@ export type Status = Message<"selah.v1.Status"> & {
    * @generated from field: bool live = 8;
    */
   live: boolean;
+
+  /**
+   * Engine only: what draws the frames, e.g. "wgpu Dx12 NVIDIA GeForce MX350" or "cpu".
+   *
+   * @generated from field: string renderer = 9;
+   */
+  renderer: string;
+
+  /**
+   * Engine only: the size of the output frames.
+   *
+   * @generated from field: selah.v1.Resolution output_resolution = 10;
+   */
+  outputResolution?: Resolution;
 };
 
 /**
@@ -559,6 +593,24 @@ export type Reply = Message<"selah.v1.Reply"> & {
      */
     value: UpdateCheck;
     case: "updateCheck";
+  } | {
+    /**
+     * @generated from field: selah.v1.SupportBundle support_bundle = 8;
+     */
+    value: SupportBundle;
+    case: "supportBundle";
+  } | {
+    /**
+     * @generated from field: selah.v1.Diagnostics diagnostics = 9;
+     */
+    value: Diagnostics;
+    case: "diagnostics";
+  } | {
+    /**
+     * @generated from field: selah.v1.DiagnosticsReport diagnostics_report = 10;
+     */
+    value: DiagnosticsReport;
+    case: "diagnosticsReport";
   } | { case: undefined; value?: undefined };
 };
 
@@ -568,6 +620,189 @@ export type Reply = Message<"selah.v1.Reply"> & {
  */
 export const ReplySchema: GenMessage<Reply> = /*@__PURE__*/
   messageDesc(file_selah_v1_envelope, 15);
+
+/**
+ * UI → core: Help ▸ Report a problem (M1.13). Core saves a redacted support bundle (SEC-06).
+ *
+ * @generated from message selah.v1.CreateSupportBundle
+ */
+export type CreateSupportBundle = Message<"selah.v1.CreateSupportBundle"> & {
+};
+
+/**
+ * Describes the message selah.v1.CreateSupportBundle.
+ * Use `create(CreateSupportBundleSchema)` to create a new message.
+ */
+export const CreateSupportBundleSchema: GenMessage<CreateSupportBundle> = /*@__PURE__*/
+  messageDesc(file_selah_v1_envelope, 16);
+
+/**
+ * @generated from message selah.v1.SupportBundle
+ */
+export type SupportBundle = Message<"selah.v1.SupportBundle"> & {
+  /**
+   * Where the .zip was saved.
+   *
+   * @generated from field: string path = 1;
+   */
+  path: string;
+
+  /**
+   * The problem-report form with the version filled in.
+   *
+   * @generated from field: string report_url = 2;
+   */
+  reportUrl: string;
+};
+
+/**
+ * Describes the message selah.v1.SupportBundle.
+ * Use `create(SupportBundleSchema)` to create a new message.
+ */
+export const SupportBundleSchema: GenMessage<SupportBundle> = /*@__PURE__*/
+  messageDesc(file_selah_v1_envelope, 17);
+
+/**
+ * UI → core: Help ▸ Diagnostics.
+ *
+ * @generated from message selah.v1.GetDiagnostics
+ */
+export type GetDiagnostics = Message<"selah.v1.GetDiagnostics"> & {
+};
+
+/**
+ * Describes the message selah.v1.GetDiagnostics.
+ * Use `create(GetDiagnosticsSchema)` to create a new message.
+ */
+export const GetDiagnosticsSchema: GenMessage<GetDiagnostics> = /*@__PURE__*/
+  messageDesc(file_selah_v1_envelope, 18);
+
+/**
+ * @generated from message selah.v1.Diagnostics
+ */
+export type Diagnostics = Message<"selah.v1.Diagnostics"> & {
+  /**
+   * @generated from field: string version = 1;
+   */
+  version: string;
+
+  /**
+   * @generated from field: string os = 2;
+   */
+  os: string;
+
+  /**
+   * @generated from field: string arch = 3;
+   */
+  arch: string;
+
+  /**
+   * @generated from field: bool safe_mode = 4;
+   */
+  safeMode: boolean;
+
+  /**
+   * @generated from field: bool engine_connected = 5;
+   */
+  engineConnected: boolean;
+
+  /**
+   * @generated from field: string renderer = 6;
+   */
+  renderer: string;
+
+  /**
+   * @generated from field: selah.v1.Resolution output_resolution = 7;
+   */
+  outputResolution?: Resolution;
+};
+
+/**
+ * Describes the message selah.v1.Diagnostics.
+ * Use `create(DiagnosticsSchema)` to create a new message.
+ */
+export const DiagnosticsSchema: GenMessage<Diagnostics> = /*@__PURE__*/
+  messageDesc(file_selah_v1_envelope, 19);
+
+/**
+ * UI → core: Help ▸ Diagnostics ▸ Run benchmark. Refused while anything is live.
+ *
+ * @generated from message selah.v1.RunDiagnostics
+ */
+export type RunDiagnostics = Message<"selah.v1.RunDiagnostics"> & {
+  /**
+   * The short run (1080p H.264 clip, fewer round trips), for tests.
+   *
+   * @generated from field: bool quick = 1;
+   */
+  quick: boolean;
+};
+
+/**
+ * Describes the message selah.v1.RunDiagnostics.
+ * Use `create(RunDiagnosticsSchema)` to create a new message.
+ */
+export const RunDiagnosticsSchema: GenMessage<RunDiagnostics> = /*@__PURE__*/
+  messageDesc(file_selah_v1_envelope, 20);
+
+/**
+ * @generated from message selah.v1.DiagnosticsReport
+ */
+export type DiagnosticsReport = Message<"selah.v1.DiagnosticsReport"> & {
+  /**
+   * Where the report (.json) was saved.
+   *
+   * @generated from field: string path = 1;
+   */
+  path: string;
+
+  /**
+   * @generated from field: double ipc_p99_ms = 2;
+   */
+  ipcP99Ms: number;
+
+  /**
+   * @generated from field: bool ipc_pass = 3;
+   */
+  ipcPass: boolean;
+
+  /**
+   * @generated from field: string video_clip = 4;
+   */
+  videoClip: string;
+
+  /**
+   * @generated from field: string video_decode = 5;
+   */
+  videoDecode: string;
+
+  /**
+   * @generated from field: uint64 video_frames = 6;
+   */
+  videoFrames: bigint;
+
+  /**
+   * @generated from field: uint64 video_dropped = 7;
+   */
+  videoDropped: bigint;
+
+  /**
+   * @generated from field: double video_composite_p99_ms = 8;
+   */
+  videoCompositeP99Ms: number;
+
+  /**
+   * @generated from field: bool video_pass = 9;
+   */
+  videoPass: boolean;
+};
+
+/**
+ * Describes the message selah.v1.DiagnosticsReport.
+ * Use `create(DiagnosticsReportSchema)` to create a new message.
+ */
+export const DiagnosticsReportSchema: GenMessage<DiagnosticsReport> = /*@__PURE__*/
+  messageDesc(file_selah_v1_envelope, 21);
 
 /**
  * @generated from enum selah.v1.ActorOrigin
