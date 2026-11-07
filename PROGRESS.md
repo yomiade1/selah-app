@@ -8,7 +8,7 @@ Status values: `Not started` · `In progress` · `Blocked` (say on what) · `Don
 
 | Milestone | Status | Branch / tag | Started | Finished | Notes |
 |---|---|---|---|---|---|
-| M1. Foundations and risk spikes | In progress | `codex/m1-foundations` | 2026-11-07 | — | M1.1–M1.4 done (local Windows session, H-01). |
+| M1. Foundations and risk spikes | In progress | `codex/m1-foundations` | 2026-11-07 | — | M1.1–M1.5 done (local Windows session, H-01). |
 | M2. Library, songs, scripture and the help system | Not started | — | — | — | |
 | M3. Render engine, templates and the slide editor | Not started | — | — | — | |
 | M4. Live operation, services and stage | Not started | — | — | — | |
@@ -19,14 +19,14 @@ Status values: `Not started` · `In progress` · `Blocked` (say on what) · `Don
 | M9. Cloud, teams and enterprise | Not started | — | — | — | |
 | M10. Launch readiness and v1.0 | Not started | — | — | — | |
 
-**Next action:** continue M1 at M1.5 (engine windows, wgpu compositor and test patterns). See the resume notes.
+**Next action:** continue M1 at M1.6 (text spike). See the resume notes.
 
 ## Resume notes
 
 _When a session stops partway through a milestone, write here: the milestone, the last finished WP, anything half-done (files, branch state) and the exact next step. Clear it when the milestone is done._
 
 2026-11-07 (local Windows session, H-01 approved): M1.1–M1.4 are committed on
-`codex/m1-foundations`. No PR is open yet; the branch is pushed.
+`codex/m1-foundations`, and M1.5 too. No PR is open yet; the branch is pushed.
 
 - `tools/verify.sh` / `verify.ps1` don't exist yet (M1.10), so WP evidence lists the gate
   stages run by hand: `cargo fmt --check`, `cargo clippy --workspace --all-targets -D warnings`,
@@ -38,9 +38,8 @@ _When a session stops partway through a milestone, write here: the milestone, th
 - LLVM/libclang (needed by FFmpeg bindings, M1.7) is not installed: a `winget install LLVM.LLVM`
   from the earlier session was still waiting, most likely for an administrator (UAC) prompt.
 - The repository-local git email is now the GitHub no-reply address.
-- Next: M1.5 (winit windows, wgpu compositor with WGSL test patterns on lavapipe/WARP/Metal,
-  headless mode, preview rings). The engine already has the `Compositor` trait, a CPU
-  compositor and FrameShown timestamps; M1.5 adds `selah-render::gpu`.
+- Next: M1.6 (Skia text spike). `design/tokens/tokens.json`, `design/tokens/build.mjs` and the
+  DESIGN-SYSTEM §3 focus/primary-fill change are prepared for M1.8 but not committed yet.
 
 ## Milestone checklists
 
@@ -52,7 +51,7 @@ _When a session stops partway through a milestone, write here: the milestone, th
 - [x] **M1.2** Contracts and code generation — evidence: commit `M1.2`; `buf lint` and `buf format --exit-code` clean; `tools/codegen.ps1` regenerates TS/Rust/C#; shared wire fixture decoded by `selah-proto` tests, `ContractTests` (C#) and `web/contracts` tests
 - [x] **M1.3** IPC layer — evidence: commit `M1.3`; `selah-ipc` tests (`ten_thousand_round_trips_keep_correlation`, `malformed_and_oversized_frames_close_only_that_connection`, `client_reconnects_after_the_server_restarts`, `pipe_dacl_allows_only_the_current_user`, `a_second_server_cannot_take_over_a_live_endpoint`, ring seqlock tests), `fuzz_smoke`, C# `IpcClientTests`/`PreviewRingReaderTests`; `selah-bench ipc --check`: named pipe p99 0.096 ms
 - [x] **M1.4** Processes and watchdog — evidence: commit `M1.4`; `selah-testkit` continuity tests (engine, core and UI kills recover in < 2 s; 3 crashes → safe mode; single instance) pass 3 runs in a row; redaction tests (SEC-06); permission matrix (SEC-14); settings/live-state tests
-- [ ] **M1.5** Engine windows, compositor and test patterns — evidence: 
+- [x] **M1.5** Engine windows, compositor and test patterns — evidence: commit `M1.5`; `selah-render` `gpu_test_patterns_match_the_cpu_reference_exactly` (WARP; exact match at 1920×1080, 1366×768, 17×9); `selah-testkit` `show_test_pattern_reaches_the_output_within_one_frame` (FrameShown ≤ 1 frame after the command, bars checksum, preview ring); windowed run on an NVIDIA MX350 (DX12) opened the output window (Bgra8Unorm)
 - [ ] **M1.6** Text spike — evidence: 
 - [ ] **M1.7** Video spike — evidence: 
 - [ ] **M1.8** UI shell, design tokens and text size — evidence: 

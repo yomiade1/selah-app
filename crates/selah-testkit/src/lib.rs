@@ -117,6 +117,8 @@ impl Stack {
             .env("SELAH_HOME", &home)
             .env("SELAH_HEADLESS", "1")
             .env("SELAH_EXIT_WITH_WATCHDOG", "1")
+            // Software rendering is deterministic and works on machines without a GPU.
+            .env("SELAH_GPU", "software")
             .env("SELAH_LOG", "info")
             .stdin(Stdio::null())
             .stdout(Stdio::null())

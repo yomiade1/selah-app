@@ -12,6 +12,9 @@ name = "selah-fake-ui"
 path = "src/bin/fake_ui.rs"
 test = false
 
+[dev-dependencies]
+selah-render = { path = "../selah-render" }
+
 [dependencies]
 anyhow.workspace = true
 selah-ipc = { path = "../selah-ipc" }

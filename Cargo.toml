@@ -26,6 +26,9 @@ rustix = { version = "1", default-features = false, features = ["std"] }
 windows-sys = "0.61"
 tempfile = "3"
 regex = "1"
+wgpu = { version = "30", default-features = false, features = ["wgsl", "dx12", "metal", "vulkan", "std"] }
+pollster = "1"
+winit = "0.30"
 blake3 = { version = "1", features = ["pure"] }
 
 [profile.release]

@@ -1,6 +1,8 @@
 #![forbid(unsafe_code)]
 //! The compositor interface (ADR-005) and the frame type the engine presents.
+pub mod blit;
 pub mod cpu;
+pub mod gpu;
 
 use selah_proto::v1::Scene;
 
@@ -41,4 +43,14 @@ impl Frame {
 pub trait Compositor: Send {
     fn name(&self) -> &str;
     fn render(&mut self, scene: &Scene, width: u32, height: u32) -> anyhow::Result<Frame>;
+
+    /// The GPU compositor, when this is one (windows can only present GPU output).
+    fn as_gpu(&mut self) -> Option<&mut gpu::GpuCompositor> {
+        None
+    }
+
+    /// When the last frame finished rendering, if the compositor knows.
+    fn last_rendered(&self) -> Option<std::time::Instant> {
+        None
+    }
 }

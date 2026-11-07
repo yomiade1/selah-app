@@ -13,6 +13,8 @@ use selah_ipc::{Connection, Endpoint, Listener, Service};
 use selah_proto::v1::{ActorOrigin, command, envelope, query, render_command};
 
 mod engine;
+mod outputs;
+mod windows;
 
 use engine::{Engine, Mode};
 
@@ -126,30 +128,50 @@ fn main() -> anyhow::Result<()> {
     if selah_runtime::safe_mode() {
         tracing::warn!("starting in safe mode: hardware output drivers stay off (SAFE-07)");
     }
+    let placement = std::env::args()
+        .skip_while(|arg| arg != "--fullscreen")
+        .nth(1)
+        .and_then(|index| index.parse().ok())
+        .map_or(windows::Placement::Windowed, windows::Placement::Fullscreen);
     let runtime = tokio::runtime::Builder::new_multi_thread()
         .enable_all()
         .worker_threads(2)
         .build()?;
-    let engine = Engine::start(mode)?;
-    runtime.block_on(async move {
-        let endpoint = Endpoint::for_current_user(Service::Engine);
-        let _heartbeat = selah_runtime::heartbeat::spawn(engine.actor().clone());
-        let emergency = tokio::spawn(listen(
-            endpoint.sibling(Service::Emergency),
-            engine.clone(),
-            serve_emergency,
-        ));
-        let normal = tokio::spawn(listen(endpoint, engine.clone(), serve_engine));
-        tracing::info!(
-            ?mode,
-            compositor = engine.compositor_name(),
-            "engine is running"
-        );
-        tokio::select! {
-            result = emergency => result??,
-            result = normal => result??,
-            _ = tokio::signal::ctrl_c() => tracing::info!("engine stopping"),
+    let (engine, instance) = Engine::start(mode)?;
+    let servers = {
+        let engine = engine.clone();
+        runtime.spawn(async move {
+            let endpoint = Endpoint::for_current_user(Service::Engine);
+            let _heartbeat = selah_runtime::heartbeat::spawn(engine.actor().clone());
+            let emergency = tokio::spawn(listen(
+                endpoint.sibling(Service::Emergency),
+                engine.clone(),
+                serve_emergency,
+            ));
+            let normal = tokio::spawn(listen(endpoint, engine.clone(), serve_engine));
+            tracing::info!(
+                mode = ?engine.mode(),
+                compositor = engine.compositor_name(),
+                "engine is running"
+            );
+            tokio::select! {
+                result = emergency => result??,
+                result = normal => result??,
+                _ = tokio::signal::ctrl_c() => tracing::info!("engine stopping"),
+            }
+            anyhow::Ok(())
+        })
+    };
+    match (mode, instance) {
+        (Mode::Windowed, Some(instance)) => {
+            // The window loop owns the main thread until the windows close.
+            windows::run(engine, instance, placement)?;
+            Ok(())
         }
-        anyhow::Ok(())
-    })
+        (Mode::Windowed, None) => {
+            tracing::error!("no GPU: output windows can't open, running offscreen");
+            runtime.block_on(servers)?
+        }
+        (Mode::Headless, _) => runtime.block_on(servers)?,
+    }
 }

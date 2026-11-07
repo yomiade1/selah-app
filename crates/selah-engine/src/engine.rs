@@ -15,6 +15,8 @@ use selah_proto::v1::{
 };
 use selah_render::Compositor;
 
+use crate::outputs::{OutputMessage, OutputSurface, PreviewWriter, apply_output_message};
+
 /// 60 Hz output clock.
 pub const FRAME_PERIOD: Duration = Duration::from_nanos(16_666_667);
 
@@ -28,6 +30,8 @@ pub enum Mode {
 
 struct State {
     scene: Scene,
+    /// Window surfaces waiting for the render thread (windowed mode).
+    outputs: Vec<OutputMessage>,
     /// After the emergency lane acts, scenes at or below this revision are stale.
     emergency_floor: Option<u64>,
     dirty: bool,
@@ -37,6 +41,7 @@ struct State {
 }
 
 pub struct Engine {
+    mode: Mode,
     state: Mutex<State>,
     wake: Condvar,
     clients: Mutex<Vec<FrameSender>>,
@@ -60,13 +65,25 @@ fn is_live(scene: &Scene) -> bool {
 }
 
 impl Engine {
-    pub fn start(mode: Mode) -> anyhow::Result<Arc<Self>> {
-        let compositor: Box<dyn Compositor> = Box::new(selah_render::cpu::CpuCompositor);
-        if mode == Mode::Windowed {
-            tracing::info!("output windows arrive with the GPU compositor; rendering offscreen");
-        }
+    /// Start the render thread. Returns the GPU instance too, which windowed mode needs to
+    /// create window surfaces on the main thread.
+    pub fn start(mode: Mode) -> anyhow::Result<(Arc<Self>, Option<wgpu::Instance>)> {
+        let choice = selah_render::gpu::AdapterChoice::from_env();
+        let (compositor, instance): (Box<dyn Compositor>, Option<wgpu::Instance>) =
+            match selah_render::gpu::GpuCompositor::new(choice) {
+                Ok(gpu) => {
+                    let instance = gpu.instance().clone();
+                    (Box::new(gpu), Some(instance))
+                }
+                Err(error) => {
+                    tracing::error!(%error, "no usable GPU; using the CPU compositor (no windows)");
+                    (Box::new(selah_render::cpu::CpuCompositor), None)
+                }
+            };
         let engine = Arc::new(Self {
+            mode,
             state: Mutex::new(State {
+                outputs: Vec::new(),
                 scene: Scene {
                     revision: 0,
                     test_pattern: TestPattern::Unspecified as i32,
@@ -94,7 +111,18 @@ impl Engine {
         std::thread::Builder::new()
             .name("selah-render".into())
             .spawn(move || render.render_loop(compositor))?;
-        Ok(engine)
+        Ok((engine, instance))
+    }
+
+    pub fn mode(&self) -> Mode {
+        self.mode
+    }
+
+    /// Hand a window surface (or a resize) to the render thread.
+    pub fn output(&self, message: OutputMessage) {
+        let mut state = self.lock();
+        state.outputs.push(message);
+        self.wake.notify_all();
     }
 
     pub fn actor(&self) -> &Actor {
@@ -198,23 +226,39 @@ impl Engine {
     }
 
     fn render_loop(self: Arc<Self>, mut compositor: Box<dyn Compositor>) {
+        let mut surfaces: Vec<OutputSurface> = Vec::new();
+        let mut preview = PreviewWriter::open();
         loop {
-            let (scene, received_ns, emergency) = {
+            let (scene, received_ns, emergency, messages, dirty) = {
                 let mut state = self.lock();
-                while !state.dirty {
+                while !state.dirty && state.outputs.is_empty() {
                     state = self
                         .wake
                         .wait_timeout(state, FRAME_PERIOD)
                         .map(|(guard, _)| guard)
                         .unwrap_or_else(|p| p.into_inner().0);
                 }
-                state.dirty = false;
+                let dirty = std::mem::take(&mut state.dirty);
                 (
                     state.scene.clone(),
                     state.received_ns,
                     state.pending_emergency.take(),
+                    std::mem::take(&mut state.outputs),
+                    dirty,
                 )
             };
+            let resized = !messages.is_empty();
+            if let Some(gpu) = compositor.as_gpu() {
+                for message in messages {
+                    apply_output_message(gpu, &mut surfaces, message);
+                }
+            }
+            if !dirty {
+                if resized {
+                    self.present(&mut compositor, &mut surfaces);
+                }
+                continue;
+            }
             let (width, height) = scene
                 .resolution
                 .map(|r| (r.width.clamp(16, 7680), r.height.clamp(16, 4320)))
@@ -226,9 +270,16 @@ impl Engine {
                     continue;
                 }
             };
+            let presented = self.present(&mut compositor, &mut surfaces);
+            // Headless, a frame is "shown" when the GPU has finished it; with windows, when
+            // it has been handed to the swap chain.
+            let shown_at = presented
+                .or_else(|| compositor.last_rendered())
+                .unwrap_or_else(Instant::now);
             let shown = FrameShown {
                 scene_revision: scene.revision,
-                monotonic_nanoseconds: self.now_ns(),
+                monotonic_nanoseconds: shown_at.saturating_duration_since(self.epoch).as_nanos()
+                    as u64,
                 frame_checksum: frame.checksum().to_vec(),
                 command_received_nanoseconds: received_ns,
                 output_index: 0,
@@ -244,7 +295,24 @@ impl Engine {
                 }));
             }
             self.broadcast(event::Notification::FrameShown(shown));
+            preview.publish(&frame, shown_at.saturating_duration_since(self.epoch));
         }
+    }
+
+    /// Show the composited texture on every window. Returns when the last present happened.
+    fn present(
+        &self,
+        compositor: &mut Box<dyn Compositor>,
+        surfaces: &mut [OutputSurface],
+    ) -> Option<Instant> {
+        let gpu = compositor.as_gpu()?;
+        let mut presented = None;
+        for surface in surfaces.iter_mut() {
+            if surface.present(gpu) {
+                presented = Some(Instant::now());
+            }
+        }
+        presented
     }
 
     fn broadcast(&self, notification: event::Notification) {

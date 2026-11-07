@@ -15,3 +15,5 @@ selah-render = { path = "../selah-render" }
 selah-runtime = { path = "../selah-runtime" }
 tokio = { workspace = true, features = ["rt-multi-thread", "macros", "sync", "time", "signal"] }
 tracing.workspace = true
+wgpu.workspace = true
+winit.workspace = true
