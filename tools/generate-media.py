@@ -60,9 +60,31 @@ def generate(ffmpeg, destination):
     (destination / "manifest.json").write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
 
 
+def committed(ffmpeg, destination):
+    """The small clip committed to the repository for the video correctness test (M1-A7).
+
+    macOS has no encoder in its decode-only FFmpeg, so it can't generate clips; this one is
+    committed instead. 1080p60 H.264, 60 frames, a white frame at frame 30, no audio.
+    """
+    version = run([str(ffmpeg), "-version"]).stdout.decode("utf-8")
+    if "--enable-gpl" in version:
+        raise ValueError("fixtures require the pinned LGPL FFmpeg build")
+    destination.mkdir(parents=True, exist_ok=True)
+    target = destination / "h264-1080p60.mp4"
+    video = ("testsrc2=size=1920x1080:rate=60:duration=1,"
+             "drawbox=x=0:y=0:w=iw:h=ih:color=white:t=fill:enable='eq(n,30)'")
+    run([str(ffmpeg), "-hide_banner", "-loglevel", "error", "-nostdin", "-y", "-f", "lavfi",
+         "-i", video, "-c:v", "libopenh264", "-b:v", "1500k", "-g", "60", "-threads", "1",
+         "-pix_fmt", "yuv420p", "-frames:v", "60", "-an", "-map_metadata", "-1",
+         "-fflags", "+bitexact", "-flags:v", "+bitexact", str(target)])
+    print(f"generated {target.relative_to(ROOT)} ({target.stat().st_size} bytes)")
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--ffmpeg", type=Path)
+    parser.add_argument("--committed", action="store_true",
+                        help="regenerate the small committed clip in tests/fixtures/media/committed/")
     args = parser.parse_args()
     ffmpeg = args.ffmpeg
     if ffmpeg is None:
@@ -71,6 +93,9 @@ def main():
         if len(candidates) != 1:
             parser.error("use --ffmpeg to select one extracted pinned FFmpeg binary")
         ffmpeg = candidates[0]
+    if args.committed:
+        committed(ffmpeg.resolve(), ROOT / "tests/fixtures/media/committed")
+        return
     generate(ffmpeg.resolve(), ROOT / "tests/fixtures/media/generated")
 
 

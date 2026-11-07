@@ -1,0 +1,27 @@
+# The error catalogue (KNOWLEDGE-BASE §5, §7.2). Each code has a message in
+# content/i18n/en/errors.ftl and a fix article (planned ones are in content/kb/planned.yaml).
+errors:
+  - code: SEL-OUT-0001
+    message: error-screen-not-connected
+    fix_article: troubleshooting.screens-are-black
+  - code: SEL-OUT-0002
+    message: error-screen-unplugged
+    fix_article: troubleshooting.screens-are-black
+  - code: SEL-APP-0001
+    message: error-safe-mode
+    fix_article: troubleshooting.selah-started-in-safe-mode
+  - code: SEL-SEC-0001
+    message: error-not-permitted
+    fix_article: troubleshooting.you-dont-have-permission
+  - code: SEL-IPC-0001
+    message: error-unsupported-request
+    fix_article: troubleshooting.selah-cant-do-that
+  - code: SEL-IPC-0002
+    message: error-invalid-request
+    fix_article: troubleshooting.selah-cant-do-that
+  - code: SEL-SET-0001
+    message: error-invalid-setting
+    fix_article: troubleshooting.selah-cant-do-that
+  - code: SEL-HELP-0001
+    message: error-help-not-found
+    fix_article: troubleshooting.selah-cant-do-that

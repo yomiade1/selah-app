@@ -116,6 +116,32 @@ async fn follow_engine(shared: Arc<Shared>) {
     }
 }
 
+/// kb.db: `SELAH_KB_DB`, next to the executable (installed), or `target/kb/kb.db` (development,
+/// built by `selah-kb build`, gate stage 9).
+fn help_index() -> Option<(std::path::PathBuf, selah_kb::HelpIndex)> {
+    let mut candidates = Vec::new();
+    if let Some(path) = std::env::var_os("SELAH_KB_DB") {
+        candidates.push(std::path::PathBuf::from(path));
+    }
+    if let Some(dir) = std::env::current_exe()
+        .ok()
+        .and_then(|exe| exe.parent().map(std::path::Path::to_path_buf))
+    {
+        candidates.push(dir.join("kb.db"));
+        candidates.push(dir.join("../kb/kb.db"));
+    }
+    candidates
+        .into_iter()
+        .filter(|path| path.is_file())
+        .find_map(|path| match selah_kb::HelpIndex::open(&path) {
+            Ok(help) => Some((path, help)),
+            Err(error) => {
+                tracing::warn!(path = %path.display(), %error, "kb.db couldn't be opened");
+                None
+            }
+        })
+}
+
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
     let paths = selah_runtime::paths::Paths::from_env();
@@ -133,7 +159,14 @@ async fn main() -> anyhow::Result<()> {
         tracing::warn!("starting in safe mode (SAFE-07)");
     }
     let endpoint = Endpoint::for_current_user(Service::Core);
-    let service = CoreService::new(&paths.config, safe_mode);
+    let mut service = CoreService::new(&paths.config, safe_mode);
+    match help_index() {
+        Some((path, help)) => {
+            tracing::info!(path = %path.display(), "help index loaded");
+            service.set_help(help);
+        }
+        None => tracing::warn!("kb.db not found; help search answers nothing"),
+    }
     let actor = service.actor().clone();
     let shared = Arc::new(Shared {
         service: Mutex::new(service),

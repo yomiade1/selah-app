@@ -1,0 +1,338 @@
+{
+  "blocks": [
+    {
+      "type": "heading",
+      "level": 1,
+      "inlines": [
+        {
+          "type": "text",
+          "text": "Show a song on the screens"
+        }
+      ]
+    },
+    {
+      "type": "paragraph",
+      "inlines": [
+        {
+          "type": "text",
+          "text": "You can show any song that is in today's service. You only need to pick the song and a slide."
+        }
+      ]
+    },
+    {
+      "type": "heading",
+      "level": 2,
+      "inlines": [
+        {
+          "type": "text",
+          "text": "Steps"
+        }
+      ]
+    },
+    {
+      "type": "list",
+      "ordered": true,
+      "items": [
+        [
+          {
+            "type": "paragraph",
+            "inlines": [
+              {
+                "type": "text",
+                "text": "At the top of the screen, find the list of items in the service. Select the song."
+              }
+            ]
+          }
+        ],
+        [
+          {
+            "type": "paragraph",
+            "inlines": [
+              {
+                "type": "text",
+                "text": "Under "
+              },
+              {
+                "type": "label",
+                "text": "All slides in this song"
+              },
+              {
+                "type": "text",
+                "text": ", select the first slide. It shows on the screens with a red border and the tag "
+              },
+              {
+                "type": "label",
+                "text": "On screen now"
+              },
+              {
+                "type": "text",
+                "text": "."
+              }
+            ]
+          }
+        ],
+        [
+          {
+            "type": "paragraph",
+            "inlines": [
+              {
+                "type": "text",
+                "text": "To show the next slide, press "
+              },
+              {
+                "type": "key",
+                "text": "Space"
+              },
+              {
+                "type": "text",
+                "text": " or select "
+              },
+              {
+                "type": "label",
+                "text": "Next slide"
+              },
+              {
+                "type": "text",
+                "text": "."
+              }
+            ]
+          }
+        ],
+        [
+          {
+            "type": "paragraph",
+            "inlines": [
+              {
+                "type": "text",
+                "text": "To go back one slide, press "
+              },
+              {
+                "type": "key",
+                "text": "Left arrow"
+              },
+              {
+                "type": "text",
+                "text": " or select "
+              },
+              {
+                "type": "label",
+                "text": "Back"
+              },
+              {
+                "type": "text",
+                "text": "."
+              }
+            ]
+          }
+        ],
+        [
+          {
+            "type": "paragraph",
+            "inlines": [
+              {
+                "type": "text",
+                "text": "When the song ends, select "
+              },
+              {
+                "type": "label",
+                "text": "Next song"
+              },
+              {
+                "type": "text",
+                "text": "."
+              }
+            ]
+          }
+        ]
+      ],
+      "tasks": false
+    },
+    {
+      "type": "callout",
+      "kind": "tip",
+      "blocks": [
+        {
+          "type": "paragraph",
+          "inlines": [
+            {
+              "type": "text",
+              "text": "The slide with the green border comes next. Look at it before you press "
+            },
+            {
+              "type": "key",
+              "text": "Space"
+            },
+            {
+              "type": "text",
+              "text": "."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "heading",
+      "level": 2,
+      "inlines": [
+        {
+          "type": "text",
+          "text": "If the words do not show"
+        }
+      ]
+    },
+    {
+      "type": "list",
+      "ordered": false,
+      "items": [
+        [
+          {
+            "type": "paragraph",
+            "inlines": [
+              {
+                "type": "text",
+                "text": "Look at the dot next to "
+              },
+              {
+                "type": "label",
+                "text": "All screens working"
+              },
+              {
+                "type": "text",
+                "text": ". If it is not green, ask the booth for help."
+              }
+            ]
+          }
+        ],
+        [
+          {
+            "type": "paragraph",
+            "inlines": [
+              {
+                "type": "text",
+                "text": "If you hid the words, select "
+              },
+              {
+                "type": "label",
+                "text": "Hide words"
+              },
+              {
+                "type": "text",
+                "text": " again. They will come back."
+              }
+            ]
+          }
+        ],
+        [
+          {
+            "type": "paragraph",
+            "inlines": [
+              {
+                "type": "text",
+                "text": "Still stuck? Select "
+              },
+              {
+                "type": "label",
+                "text": "Message the booth"
+              },
+              {
+                "type": "text",
+                "text": ". The person in the booth will help you."
+              }
+            ]
+          }
+        ]
+      ],
+      "tasks": false
+    },
+    {
+      "type": "heading",
+      "level": 2,
+      "inlines": [
+        {
+          "type": "text",
+          "text": "In Producer mode"
+        }
+      ]
+    },
+    {
+      "type": "paragraph",
+      "inlines": [
+        {
+          "type": "text",
+          "text": "The steps are the same. The service list is on the left side of the screen instead of the top."
+        }
+      ]
+    },
+    {
+      "type": "heading",
+      "level": 2,
+      "inlines": [
+        {
+          "type": "text",
+          "text": "Related"
+        }
+      ]
+    },
+    {
+      "type": "list",
+      "ordered": false,
+      "items": [
+        [
+          {
+            "type": "paragraph",
+            "inlines": [
+              {
+                "type": "link",
+                "kind": "kb",
+                "target": "live.go-to-the-next-slide",
+                "inlines": [
+                  {
+                    "type": "text",
+                    "text": "Go to the next slide"
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        [
+          {
+            "type": "paragraph",
+            "inlines": [
+              {
+                "type": "link",
+                "kind": "kb",
+                "target": "live.clear-the-screens",
+                "inlines": [
+                  {
+                    "type": "text",
+                    "text": "Clear the screens"
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        [
+          {
+            "type": "paragraph",
+            "inlines": [
+              {
+                "type": "link",
+                "kind": "kb",
+                "target": "troubleshooting.screens-are-black",
+                "inlines": [
+                  {
+                    "type": "text",
+                    "text": "The screens are black"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      ],
+      "tasks": false
+    }
+  ]
+}

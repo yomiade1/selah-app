@@ -7,17 +7,13 @@ license-file = "../../LICENSE"
 publish.workspace = true
 description = "Test helpers: run the real process stack in isolation, golden frames, fixtures"
 
-[[bin]]
-name = "selah-fake-ui"
-path = "src/bin/fake_ui.rs"
-test = false
-
 [features]
 # Golden-frame tests (gate stage 7).
 golden = []
 
 [dependencies]
 selah-render = { path = "../selah-render" }
+selah-media = { path = "../selah-media", features = ["render"] }
 anyhow.workspace = true
 selah-ipc = { path = "../selah-ipc" }
 selah-proto = { path = "../selah-proto" }

@@ -1,0 +1,110 @@
+# Selah's words (KNOWLEDGE-BASE §3.2, DESIGN-SYSTEM §7). Read by tools/lint-strings.py (UI strings)
+# and selah-kb-lint (help articles). Keep to this simple shape: top-level keys holding a list of
+# strings, or (product_terms) a map of term to a list of banned synonyms.
+
+# R9, R12, R13: words people shouldn't have to read. Matched as whole words, ignoring case.
+banned_words:
+  - click
+  - clicking
+  - tap
+  - utilise
+  - utilize
+  - leverage
+  - configure
+  - navigate to
+  - ensure
+  - prior to
+  - commence
+  - initiate
+  - terminate
+  - abort
+  - execute
+  - modify
+  - populate
+  - sufficient
+  - approximately
+  - additional
+  - assistance
+  - functionality
+  - in order to
+  - therefore
+  - please note
+  - master
+  - slave
+  - e.g.
+  - i.e.
+  - etc.
+  - via
+  - simply
+  - just
+  - easy
+  - easily
+  - obviously
+  - of course
+  - click here
+  - read more
+
+# Selah's product terms and the synonyms that mustn't replace them (DESIGN-SYSTEM §7).
+product_terms:
+  screen:
+    - audience display
+    - projector screen
+  service:
+    - playlist
+    - setlist
+    - running order
+  slide:
+    - page
+  item:
+    - cue
+  template:
+    - theme
+  look:
+    - preset
+  prop:
+    - overlay graphic
+  message:
+    - ticker
+  layer:
+    - stack level
+
+# R2: left out of the reading-level calculation (names and technical labels).
+readability_ignore:
+  - Selah
+  - NDI
+  - Spout
+  - Syphon
+  - DeckLink
+  - AJA
+  - MIDI
+  - OSC
+  - DMX
+  - sACN
+  - SMPTE
+  - USB
+  - HDMI
+  - Wi-Fi
+
+# R18: words that keep their capital in a sentence-case title or heading.
+proper_nouns:
+  - Selah
+  - Simple
+  - Producer
+  - Booth
+  - Light
+  - Windows
+  - Mac
+  - macOS
+  - PowerPoint
+  - ProPresenter
+  - Help
+  - Settings
+  - Screens
+
+# R10: explain the first time, or link to the glossary.
+explain:
+  - NDI
+  - edge blending
+  - corner pin
+  - timecode
+  - safe mode

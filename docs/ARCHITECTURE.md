@@ -193,7 +193,9 @@ The latency budget from command receipt to photons is one frame plus display lat
 ## 7. UI internals
 
 - MVVM with CommunityToolkit.Mvvm. View models subscribe to core events through `Selah.Client`.
-- **Design tokens** come from `design/tokens/tokens.json` and are generated into `Selah.UI/Styles/Tokens.g.axaml` by `Selah.UI.Generators`. Font sizes are `DynamicResource`s recalculated when Text size changes (ADR-009).
+- **Design tokens** come from `design/tokens/tokens.json` and are generated into `Selah.UI/Styles/Tokens.g.axaml` (colours) and `Tokens.g.cs` (sizes) by Style Dictionary (`pnpm tokens`, ADR-022); the gate checks they're current. Font sizes, control heights and spacing are `DynamicResource`s that `TextScale` recalculates when Text size changes (ADR-009).
+- **Strings** are bound through `Localizer` (`{Binding [key], Source={x:Static s:Localizer.Instance}}`); `en-XA` is a Linguini transform of English. Critical labels carry `views:Critical.IsCritical`, which the UI tests check for clipping.
+- **Headless:** `Selah --headless` (or `SELAH_HEADLESS=1`) runs the real UI with Avalonia's headless platform, so the watchdog chaos tests and the installer check use it on machines with no display.
 - **Help components:**
   - `help:Help.Anchor="live.layers"` attached property
   - `HintText`

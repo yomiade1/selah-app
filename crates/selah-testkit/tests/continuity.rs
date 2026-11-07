@@ -75,15 +75,15 @@ async fn core_killed_leaves_the_last_frame_and_resynchronises() {
 
 #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
 async fn ui_killed_changes_nothing_on_screen_and_comes_back() {
-    // M1-A3 (the stand-in UI does what the real one does at the process level)
+    // M1-A3, with the real UI (headless)
     let stack = Stack::start(StackOptions {
-        fake_ui: true,
+        ui: true,
         ..StackOptions::default()
     });
     stack.wait_ready(STARTUP).await;
     stack.show_test_pattern(TestPattern::SmpteBars).await;
     let before = stack.wait_ready(STARTUP).await;
-    let marker = stack.home().join("fake-ui.txt");
+    let marker = stack.home().join("ui.txt");
     let (ui, _) = eventually(STARTUP, "the UI to connect", || async {
         let text = std::fs::read_to_string(&marker).ok()?;
         text.split_whitespace().next()?.parse::<u32>().ok()

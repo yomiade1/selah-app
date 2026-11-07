@@ -64,8 +64,13 @@ pub struct GpuCompositor {
     name: String,
     pub timing: FrameTiming,
     text: Option<crate::text::TextRenderer>,
+    /// What the layer texture holds now (text, width, height), so unchanged text isn't
+    /// uploaded again every frame (video plays under still text).
+    layer_text: Option<(String, u32, u32)>,
     layer: Option<(u32, u32, wgpu::Texture, wgpu::TextureView)>,
     layer_blitter: crate::blit::Blitter,
+    video: crate::video::VideoLayer,
+    video_frame: Option<crate::video::Nv12Frame>,
 }
 
 fn backends() -> wgpu::Backends {
@@ -168,6 +173,7 @@ impl GpuCompositor {
             }],
         });
         let layer_blitter = crate::blit::Blitter::new_layer(&device, TARGET_FORMAT);
+        let video = crate::video::VideoLayer::new(&device, TARGET_FORMAT);
         let name = format!("wgpu {:?} {}", info.backend, info.name);
         tracing::info!(adapter = %info.name, backend = ?info.backend, device_type = ?info.device_type, "GPU compositor ready");
         Ok(Self {
@@ -183,8 +189,11 @@ impl GpuCompositor {
             name,
             timing: FrameTiming::default(),
             text: None,
+            layer_text: None,
             layer: None,
             layer_blitter,
+            video,
+            video_frame: None,
         })
     }
 
@@ -261,6 +270,13 @@ impl GpuCompositor {
         if scene.cleared || scene.text.is_empty() {
             return Ok(false);
         }
+        if self
+            .layer_text
+            .as_ref()
+            .is_some_and(|(text, w, h)| *text == scene.text && *w == width && *h == height)
+        {
+            return Ok(true);
+        }
         if self.text.is_none() {
             self.text = Some(crate::text::TextRenderer::bundled()?);
         }
@@ -313,6 +329,7 @@ impl GpuCompositor {
                 depth_or_array_layers: 1,
             },
         );
+        self.layer_text = Some((scene.text.clone(), width, height));
         Ok(true)
     }
 
@@ -341,12 +358,37 @@ impl Compositor for GpuCompositor {
         self.timing.submitted
     }
 
+    fn set_video(&mut self, frame: Option<crate::video::Nv12Frame>) -> Result<()> {
+        if let Some(frame) = frame.as_ref() {
+            frame.validate()?;
+        }
+        self.video_frame = frame;
+        Ok(())
+    }
+
     fn render(&mut self, scene: &Scene, width: u32, height: u32) -> Result<Frame> {
+        self.composite(scene, width, height)?;
+        self.read_back(width, height)
+    }
+}
+
+impl GpuCompositor {
+    /// Draw the layer stack into the output texture and wait for the GPU, without reading the
+    /// frame back (what windows present, and what the video benchmark times).
+    pub fn composite(&mut self, scene: &Scene, width: u32, height: u32) -> Result<()> {
         let pattern = TestPattern::try_from(scene.test_pattern).unwrap_or(TestPattern::Unspecified);
         let words = [pattern as u32, u32::from(scene.cleared), width, height];
         let bytes: Vec<u8> = words.iter().flat_map(|w| w.to_le_bytes()).collect();
         self.queue.write_buffer(&self.params, 0, &bytes);
         let has_text = self.text_layer(scene, width, height)?;
+        let has_video = match self.video_frame.as_ref() {
+            Some(video) if !scene.cleared => {
+                self.video
+                    .upload(&self.device, &self.queue, video, width, height)?;
+                true
+            }
+            _ => false,
+        };
         self.target(width, height);
         let target = self.target.as_ref().expect("target exists");
 
@@ -373,6 +415,9 @@ impl Compositor for GpuCompositor {
             pass.set_bind_group(0, &self.bind_group, &[]);
             pass.draw(0..3, 0..1);
         }
+        if has_video {
+            self.video.draw(&mut encoder, &target.view);
+        }
         if has_text {
             let (_, _, _, layer) = self.layer.as_ref().expect("layer exists");
             self.layer_blitter
@@ -382,9 +427,15 @@ impl Compositor for GpuCompositor {
         self.timing.submitted = Some(Instant::now());
         self.wait()?;
         self.timing.rendered = Some(Instant::now());
+        Ok(())
+    }
 
-        // Read the frame back for the checksum and the preview ring.
-        let target = self.target.as_ref().expect("target exists");
+    /// Copy the output texture to memory, for the checksum and the preview ring.
+    fn read_back(&mut self, width: u32, height: u32) -> Result<Frame> {
+        let target = self
+            .target
+            .as_ref()
+            .context("nothing has been composited")?;
         let mut copy = self
             .device
             .create_command_encoder(&wgpu::CommandEncoderDescriptor {

@@ -94,7 +94,12 @@ def annotate(stage, output):
 def run(stage, label, command, env=None, timeout=1800):
     started = time.monotonic()
     print(f"--- [{stage}] {label}: {' '.join(Path(c).name if i == 0 else c for i, c in enumerate(command))}", flush=True)
-    merged = dict(os.environ, **(env or {}))
+    env = dict(env or {})
+    if env.pop("@ffmpeg", None):
+        # Resolved now: on a fresh runner stage 1 has only just extracted (or built) FFmpeg.
+        env.update(ffmpeg_env())
+    # Avalonia's build tasks report anonymous usage unless told not to (SEC-13: no telemetry).
+    merged = dict(os.environ, AVALONIA_TELEMETRY_OPTOUT="1", **env)
     if command[0] == "@cargo-deny":
         # Resolved now: on a fresh runner stage 1 has only just fetched the pinned binary.
         command = [cargo_deny(), *command[1:]]
@@ -131,9 +136,33 @@ def skia_binaries_url():
     return f"file://{folder}/skia-binaries-{{key}}.tar.gz"
 
 
+def platform_key():
+    machine = platform.machine().lower()
+    arch = "arm64" if machine in {"arm64", "aarch64"} else "x64"
+    return f"{ {'win32': 'windows', 'darwin': 'macos'}.get(sys.platform, 'linux')}-{arch}"
+
+
+def ffmpeg_env():
+    """FFMPEG_DIR for the FFmpeg bindings (selah-media) and the library path to run them.
+
+    The pinned build is extracted (or, on macOS, built by tools/build-ffmpeg-macos.sh) into
+    third_party/ffmpeg/<platform>/shared/ffmpeg-*/ with bin/, include/ and lib/.
+    """
+    found = sorted((ROOT / "third_party" / "ffmpeg" / platform_key() / "shared").glob("ffmpeg-*/include"))
+    if not found:
+        return {}
+    home = found[0].parent
+    env = {"FFMPEG_DIR": str(home)}
+    if WINDOWS:
+        env["PATH"] = f"{home / 'bin'}{os.pathsep}{os.environ.get('PATH', '')}"
+    elif sys.platform != "darwin":
+        env["LD_LIBRARY_PATH"] = f"{home / 'lib'}{os.pathsep}{os.environ.get('LD_LIBRARY_PATH', '')}"
+    return env
+
+
 def stages(args):
     rust_env = {"CARGO_TERM_COLOR": "never", "SELAH_GPU": "software",
-                "SKIA_BINARIES_URL": skia_binaries_url()}
+                "SKIA_BINARIES_URL": skia_binaries_url(), "@ffmpeg": "1"}
     fuzz_seconds = "30" if args.ci else "5"
     plan = []
 
@@ -152,6 +181,9 @@ def stages(args):
     # CI runners and cloud sessions start without the pinned third-party files.
     stage("1", "third-party files", [PY, "tools/third-party.py", "--extract"],
           skip=not (args.ci or args.cloud) and (ROOT / "third_party" / "fonts").is_dir())
+    # No LGPL macOS FFmpeg binary is published: build the decode-only one from the pinned source.
+    stage("1", "ffmpeg for macOS", ["bash", "tools/build-ffmpeg-macos.sh", "--if-missing"],
+          skip=sys.platform != "darwin", timeout=1200)
     stage("2", "rustfmt", [tool("cargo"), "fmt", "--all", "--check"])
     stage("2", "dotnet format", [tool("dotnet"), "format", "app/Selah.sln", "--verify-no-changes"], timeout=900)
     stage("2", "prettier and buf format", pnpm("run", "format:check"))
@@ -161,20 +193,31 @@ def stages(args):
     stage("4", "buf lint", pnpm("exec", "buf", "lint"))
     stage("4", "generated contracts are current", [PY, "tools/check-generated.py"])
     stage("5", "cargo build", [tool("cargo"), "build", "--workspace", "--all-targets", "--locked"], rust_env)
-    stage("5", "windows type-check", [tool("cargo"), "check", "--workspace", "--locked", "--target", "x86_64-pc-windows-gnu"],
+    # The FFmpeg-linked crates are left out: their bindings need the Windows FFmpeg headers, and
+    # the windows CI job builds them natively.
+    stage("5", "windows type-check", [tool("cargo"), "check", "--workspace", "--locked", "--target", "x86_64-pc-windows-gnu",
+                                      "--exclude", "selah-media", "--exclude", "selah-bench", "--exclude", "selah-testkit"],
           rust_env, skip=not args.cloud)
     stage("5", "dotnet build", [tool("dotnet"), "build", "app/Selah.sln", "-c", "Release"], timeout=900)
     stage("5", "web build", pnpm("-r", "run", "build"))
     stage("6", "cargo test", [tool("cargo"), "test", "--workspace", "--locked"],
           dict(rust_env, SELAH_FUZZ_SECONDS=fuzz_seconds))
-    stage("6", "dotnet test", [tool("dotnet"), "test", "app/Selah.sln", "-c", "Release", "--no-build",
-                               "--blame-hang-timeout", "120s"], timeout=900)
+    stage("6", "dotnet test", [tool("dotnet"), "test", "app/Selah.Client.Tests/Selah.Client.Tests.csproj", "-c", "Release",
+                               "--no-build", "--blame-hang-timeout", "120s"], timeout=900)
     stage("6", "web test", pnpm("-r", "run", "test"))
     stage("6", "python tool tests", [PY, "-m", "unittest", "discover", "-s", "tests/tools"])
     stage("6", "ipc benchmark", [tool("cargo"), "run", "--release", "--locked", "-q", "-p", "selah-bench", "--",
                                  "ipc", "--check", "--json", "target/verify-report/bench-ipc.json"], rust_env)
     stage("7", "golden frames", [tool("cargo"), "test", "--locked", "-p", "selah-testkit", "--features", "golden",
                                  "--test", "golden_text"], rust_env, skip=args.fast)
+    # Stage 8: headless UI tests at 100/150/200%, Light and Booth, en and en-XA (M1-A9).
+    stage("8", "ui tests", [tool("dotnet"), "test", "app/Selah.UI.Tests/Selah.UI.Tests.csproj", "-c", "Release",
+                            "--no-build", "--blame-hang-timeout", "120s"], timeout=900, skip=args.fast)
+    stage("8", "lint strings", [PY, "tools/lint-strings.py"])
+    # Stage 9: the knowledge base lint (KNOWLEDGE-BASE §7.1) and kb.db (target/kb/kb.db).
+    kb_flags = ["--release"] if args.release else []
+    stage("9", "kb lint", [tool("cargo"), "run", "-q", "--locked", "-p", "selah-kb-lint", "--", *kb_flags], rust_env)
+    stage("9", "kb build", [tool("cargo"), "run", "-q", "--locked", "-p", "selah-kb", "--bin", "selah-kb", "--", "build", *kb_flags], rust_env)
     stage("13", "test ledger", [PY, "tools/test-ledger.py", "--check"])
     stage("14", "cargo deny", ["@cargo-deny", "check"])
     stage("14", "dotnet vulnerable packages", [PY, "tools/check-vulnerable.py", "dotnet"])
@@ -210,7 +253,7 @@ def main():
         try:
             output = run(number, label, command, env, timeout)
             results.append((number, label, "passed"))
-            if label in {"cargo test", "dotnet test", "web test", "golden frames"}:
+            if label in {"cargo test", "dotnet test", "web test", "golden frames", "ui tests", "kb lint"}:
                 (REPORT / "counts").mkdir(exist_ok=True)
                 (REPORT / "counts" / f"{label.replace(' ', '-')}.log").write_text(output, encoding="utf-8")
         except Failed as failure:

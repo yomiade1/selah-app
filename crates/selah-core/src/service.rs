@@ -13,7 +13,11 @@ pub mod codes {
     pub const UNSUPPORTED: &str = "SEL-IPC-0001";
     pub const INVALID: &str = "SEL-IPC-0002";
     pub const SETTING: &str = "SEL-SET-0001";
+    pub const HELP_NOT_FOUND: &str = "SEL-HELP-0001";
 }
+
+/// Help results are capped (help.proto SearchHelp).
+const HELP_LIMIT: usize = 10;
 
 /// What core knows about the engine.
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
@@ -41,6 +45,8 @@ pub struct CoreService {
     pub engine: EngineView,
     safe_mode: bool,
     actor: Actor,
+    /// kb.db, when it was found (KNOWLEDGE-BASE §6.4). Help queries answer empty without it.
+    help: Option<selah_kb::HelpIndex>,
 }
 
 impl CoreService {
@@ -50,6 +56,7 @@ impl CoreService {
             live: LiveState::open(config_dir),
             engine: EngineView::default(),
             safe_mode,
+            help: None,
             actor: Actor {
                 user_id: "selah".into(),
                 device_id: "core".into(),
@@ -221,17 +228,71 @@ impl CoreService {
                     ..Outcome::default()
                 };
             }
-            // Help queries are answered by the host, which owns kb.db (M1.9).
-            Some(query::Request::SearchHelp(_))
-            | Some(query::Request::GetArticle(_))
-            | Some(query::Request::HelpForContext(_))
-            | Some(query::Request::GetWatchdogStatus(_))
-            | None => self.error(request, codes::UNSUPPORTED, "error-unsupported-request"),
+            Some(query::Request::SearchHelp(search)) => {
+                let language = language_or_english(&search.language);
+                let found = self
+                    .help
+                    .as_ref()
+                    .map(|help| help.search(&search.query, language, &search.anchors, HELP_LIMIT));
+                self.help_results(request, found)
+            }
+            Some(query::Request::HelpForContext(context)) => {
+                let language = language_or_english(&context.language);
+                let found = self
+                    .help
+                    .as_ref()
+                    .map(|help| help.for_context(&context.anchors, language));
+                self.help_results(request, found)
+            }
+            Some(query::Request::GetArticle(get)) => {
+                let language = language_or_english(&get.language);
+                match self
+                    .help
+                    .as_ref()
+                    .map(|help| help.article(&get.id, language))
+                {
+                    Some(Ok(Some(entry))) => {
+                        self.reply(request, reply::Result::Article(to_article(entry)))
+                    }
+                    Some(Err(error)) => {
+                        tracing::warn!(%error, "help query failed");
+                        self.error(request, codes::HELP_NOT_FOUND, "error-help-not-found")
+                    }
+                    _ => self.error(request, codes::HELP_NOT_FOUND, "error-help-not-found"),
+                }
+            }
+            Some(query::Request::GetWatchdogStatus(_)) | None => {
+                self.error(request, codes::UNSUPPORTED, "error-unsupported-request")
+            }
         };
         Outcome {
             reply: Some(reply),
             ..Outcome::default()
         }
+    }
+
+    /// Use this kb.db for help queries.
+    pub fn set_help(&mut self, help: selah_kb::HelpIndex) {
+        self.help = Some(help);
+    }
+
+    fn help_results(
+        &self,
+        request: &Envelope,
+        found: Option<anyhow::Result<Vec<selah_kb::Entry>>>,
+    ) -> Envelope {
+        let articles = match found {
+            Some(Ok(entries)) => entries.into_iter().map(to_article).collect(),
+            Some(Err(error)) => {
+                tracing::warn!(%error, "help query failed");
+                Vec::new()
+            }
+            None => Vec::new(),
+        };
+        self.reply(
+            request,
+            reply::Result::HelpResults(selah_proto::v1::HelpResults { articles }),
+        )
     }
 
     pub fn on_engine_connection(&mut self, connected: bool) -> Vec<Event> {
@@ -275,6 +336,20 @@ impl CoreService {
             }
             _ => Vec::new(),
         }
+    }
+}
+
+fn language_or_english(language: &str) -> &str {
+    if language.is_empty() { "en" } else { language }
+}
+
+fn to_article(entry: selah_kb::Entry) -> selah_proto::v1::Article {
+    selah_proto::v1::Article {
+        id: entry.id,
+        language: entry.language,
+        title: entry.title,
+        summary: entry.summary,
+        ast_json: entry.ast_json,
     }
 }
 

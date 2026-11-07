@@ -1,0 +1,68 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:Selah.UI.ViewModels"
+             xmlns:views="using:Selah.UI.Views"
+             xmlns:s="using:Selah.UI.Services"
+             x:Class="Selah.UI.Views.SettingsView"
+             x:DataType="vm:SettingsViewModel">
+  <!-- Settings ▸ Appearance (prototype screen 8): appearance, text size with a live preview. -->
+  <ScrollViewer>
+    <StackPanel Spacing="{DynamicResource Space.6}" Margin="{DynamicResource Space.Text.Large}" MaxWidth="760">
+      <TextBlock Classes="title-1" Text="{Binding [settings-title], Source={x:Static s:Localizer.Instance}}" />
+      <TextBlock Classes="title-3" Text="{Binding [settings-section-appearance], Source={x:Static s:Localizer.Instance}}" />
+
+      <Border Classes="card">
+        <StackPanel Spacing="{DynamicResource Space.3}">
+          <TextBlock Name="AppearanceLabel" Classes="label" Text="{Binding [appearance-label], Source={x:Static s:Localizer.Instance}}" />
+          <TextBlock Classes="hint" Text="{Binding [appearance-hint], Source={x:Static s:Localizer.Instance}}" />
+          <ListBox Name="AppearanceChoice" SelectedIndex="{Binding AppearanceIndex}" SelectionMode="AlwaysSelected,Single"
+                   AutomationProperties.LabeledBy="{Binding #AppearanceLabel}">
+            <ListBox.ItemsPanel>
+              <ItemsPanelTemplate>
+                <WrapPanel ItemSpacing="{DynamicResource Space.2}" />
+              </ItemsPanelTemplate>
+            </ListBox.ItemsPanel>
+            <ListBoxItem>
+              <TextBlock TextWrapping="NoWrap" Text="{Binding [appearance-light], Source={x:Static s:Localizer.Instance}}" />
+            </ListBoxItem>
+            <ListBoxItem>
+              <TextBlock TextWrapping="NoWrap" Text="{Binding [appearance-booth], Source={x:Static s:Localizer.Instance}}" />
+            </ListBoxItem>
+            <ListBoxItem>
+              <TextBlock TextWrapping="NoWrap" Text="{Binding [appearance-automatic], Source={x:Static s:Localizer.Instance}}" />
+            </ListBoxItem>
+          </ListBox>
+        </StackPanel>
+      </Border>
+
+      <Border Classes="card">
+        <StackPanel Spacing="{DynamicResource Space.4}">
+          <WrapPanel ItemSpacing="{DynamicResource Space.3}">
+            <TextBlock Name="TextSizeLabel" Classes="label" Text="{Binding [text-size-label], Source={x:Static s:Localizer.Instance}}" />
+            <TextBlock Name="TextSizeName" Classes="label" Foreground="{DynamicResource Brush.Primary}" Text="{Binding TextSizeName}" />
+            <TextBlock Name="TextSizeValue" Classes="hint" VerticalAlignment="Center" Text="{Binding TextSizeValue}" />
+          </WrapPanel>
+          <TextBlock Classes="hint" Text="{Binding [text-size-hint], Source={x:Static s:Localizer.Instance}}" />
+          <Slider Name="TextSizeSlider" Minimum="0" Maximum="{Binding TextSizeMaximum}" TickFrequency="1"
+                  IsSnapToTickEnabled="True" TickPlacement="BottomRight" IsEnabled="{Binding CanChooseTextSize}"
+                  Value="{Binding TextSizeIndex}" AutomationProperties.LabeledBy="{Binding #TextSizeLabel}" />
+          <ToggleSwitch Name="UseComputerTextSize" IsChecked="{Binding UseComputerTextSize}">
+            <TextBlock Text="{Binding [text-size-use-computer], Source={x:Static s:Localizer.Instance}}" />
+          </ToggleSwitch>
+          <TextBlock Classes="hint" Text="{Binding [text-size-use-computer-hint], Source={x:Static s:Localizer.Instance}}" />
+          <TextBlock Classes="hint" Text="{Binding [text-size-shortcuts], Source={x:Static s:Localizer.Instance}}" />
+
+          <!-- The live preview: it uses the app's own type tokens, so it shows the chosen size. -->
+          <TextBlock Classes="caption" Text="{Binding [text-size-preview-label], Source={x:Static s:Localizer.Instance}}" />
+          <Border Name="TextSizePreview" Background="{DynamicResource Brush.Surface2}" CornerRadius="{DynamicResource Radius.Control}"
+                  Padding="{DynamicResource Space.Text.Large}">
+            <StackPanel Spacing="{DynamicResource Space.3}">
+              <TextBlock Classes="title-3" Text="{Binding [text-size-preview-title], Source={x:Static s:Localizer.Instance}}" />
+              <TextBlock Text="{Binding [text-size-preview-body], Source={x:Static s:Localizer.Instance}}" />
+            </StackPanel>
+          </Border>
+        </StackPanel>
+      </Border>
+    </StackPanel>
+  </ScrollViewer>
+</UserControl>

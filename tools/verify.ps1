@@ -10,7 +10,7 @@ $arguments = @('tools/verify.py')
 if ($CI) { $arguments += '--ci' }
 if ($Fast) { $arguments += '--fast' }
 if ($Release) { $arguments += '--release' }
-if ($Only) { $arguments += @('--only') + $Only }
+if ($Only) { $arguments += @('--only') + ($Only -split ',' | ForEach-Object { $_.Trim() } | Where-Object { $_ }) }
 $python = (Get-Command python -ErrorAction SilentlyContinue)
 if (-not $python) { $python = Get-Command py -ErrorAction Stop }
 & $python.Source @arguments

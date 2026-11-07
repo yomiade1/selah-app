@@ -1,0 +1,23 @@
+[package]
+name = "selah-media"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license-file = "../../LICENSE"
+publish.workspace = true
+description = "Media decoding through FFmpeg with a protocol, demuxer and decoder allowlist (SEC-04)"
+
+[dependencies]
+# Bindings to the pinned LGPL FFmpeg 7.1 shared build (FFMPEG_DIR, set by the gate and
+# tools/tool-env.ps1). Only avcodec, avformat and avutil: the macOS build is decode-only.
+ffmpeg-next = { version = "=9.0.0", default-features = false, features = ["codec", "format"] }
+selah-render = { path = "../selah-render", optional = true }
+thiserror.workspace = true
+tracing.workspace = true
+
+[features]
+# `VideoFrame::into_nv12` for the compositor's video layer.
+render = ["dep:selah-render"]
+
+[dev-dependencies]
+tempfile.workspace = true

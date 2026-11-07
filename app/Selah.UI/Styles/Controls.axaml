@@ -1,0 +1,108 @@
+<!-- Selah control styles on top of Fluent: token colours and the scaled type sizes (DESIGN-SYSTEM §3–5). -->
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+  <Style Selector="Window">
+    <Setter Property="Background" Value="{DynamicResource Brush.Bg}" />
+    <Setter Property="Foreground" Value="{DynamicResource Brush.Text}" />
+    <Setter Property="FontFamily" Value="{DynamicResource Font.Ui}" />
+    <Setter Property="FontSize" Value="{DynamicResource Type.Body.Size}" />
+  </Style>
+  <Style Selector="TextBlock">
+    <Setter Property="FontSize" Value="{DynamicResource Type.Body.Size}" />
+    <Setter Property="TextWrapping" Value="Wrap" />
+  </Style>
+  <Style Selector="TextBlock.title-1">
+    <Setter Property="FontFamily" Value="{DynamicResource Font.Display}" />
+    <Setter Property="FontSize" Value="{DynamicResource Type.Title1.Size}" />
+    <Setter Property="FontWeight" Value="ExtraBold" />
+  </Style>
+  <Style Selector="TextBlock.title-2">
+    <Setter Property="FontFamily" Value="{DynamicResource Font.Display}" />
+    <Setter Property="FontSize" Value="{DynamicResource Type.Title2.Size}" />
+    <Setter Property="FontWeight" Value="Bold" />
+  </Style>
+  <Style Selector="TextBlock.title-3">
+    <Setter Property="FontFamily" Value="{DynamicResource Font.Display}" />
+    <Setter Property="FontSize" Value="{DynamicResource Type.Title3.Size}" />
+    <Setter Property="FontWeight" Value="Bold" />
+  </Style>
+  <Style Selector="TextBlock.label">
+    <Setter Property="FontSize" Value="{DynamicResource Type.Label.Size}" />
+    <Setter Property="FontWeight" Value="Bold" />
+  </Style>
+  <Style Selector="TextBlock.hint">
+    <Setter Property="FontSize" Value="{DynamicResource Type.Footnote.Size}" />
+    <Setter Property="Foreground" Value="{DynamicResource Brush.Muted}" />
+  </Style>
+  <Style Selector="TextBlock.caption">
+    <Setter Property="FontSize" Value="{DynamicResource Type.Caption.Size}" />
+    <Setter Property="Foreground" Value="{DynamicResource Brush.Muted}" />
+  </Style>
+  <Style Selector="TextBlock.tag">
+    <Setter Property="FontSize" Value="{DynamicResource Type.Tag.Size}" />
+    <Setter Property="FontWeight" Value="Bold" />
+    <Setter Property="LetterSpacing" Value="{DynamicResource Type.Tag.LetterSpacing}" />
+    <Setter Property="TextWrapping" Value="NoWrap" />
+  </Style>
+
+  <Style Selector="Button">
+    <Setter Property="FontSize" Value="{DynamicResource Type.Button.Size}" />
+    <Setter Property="FontWeight" Value="Bold" />
+    <Setter Property="MinHeight" Value="{DynamicResource Size.ControlHeight}" />
+    <Setter Property="Padding" Value="{DynamicResource Space.Text.Medium}" />
+    <Setter Property="CornerRadius" Value="{DynamicResource Radius.Button}" />
+    <Setter Property="VerticalContentAlignment" Value="Center" />
+  </Style>
+  <Style Selector="Button TextBlock">
+    <Setter Property="FontSize" Value="{DynamicResource Type.Button.Size}" />
+    <Setter Property="TextWrapping" Value="NoWrap" />
+  </Style>
+  <Style Selector="Button.primary">
+    <Setter Property="Background" Value="{DynamicResource Brush.PrimaryFill}" />
+    <Setter Property="Foreground" Value="{DynamicResource Brush.OnPrimary}" />
+  </Style>
+  <Style Selector="Button.primary:pointerover /template/ ContentPresenter">
+    <Setter Property="Background" Value="{DynamicResource Brush.PrimaryDark}" />
+    <Setter Property="Foreground" Value="{DynamicResource Brush.OnPrimary}" />
+  </Style>
+  <!-- Clear everything: a secondary button with an error-colour outline (DESIGN-SYSTEM §10). -->
+  <Style Selector="Button.emergency">
+    <Setter Property="Background" Value="{DynamicResource Brush.Surface}" />
+    <Setter Property="Foreground" Value="{DynamicResource Brush.Live}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource Brush.Live}" />
+    <Setter Property="BorderThickness" Value="{DynamicResource Line.Emphasis}" />
+  </Style>
+  <!-- Links inside help articles: text-like, primary colour, underlined. -->
+  <Style Selector="Button.link">
+    <Setter Property="Background" Value="Transparent" />
+    <Setter Property="Foreground" Value="{DynamicResource Brush.Primary}" />
+    <Setter Property="Padding" Value="0" />
+    <Setter Property="MinHeight" Value="0" />
+    <Setter Property="FontWeight" Value="Normal" />
+    <Setter Property="FontSize" Value="{DynamicResource Type.Body.Size}" />
+  </Style>
+  <Style Selector="Button.quiet">
+    <Setter Property="Background" Value="Transparent" />
+    <Setter Property="Foreground" Value="{DynamicResource Brush.Text}" />
+  </Style>
+  <!-- Focus: a 4 px focus-colour ring, 2 px out, on everything focusable (§5). Never removed. -->
+  <Style Selector=":is(Control)">
+    <Setter Property="FocusAdorner">
+      <FocusAdornerTemplate>
+        <Border BorderBrush="{DynamicResource Brush.Focus}" BorderThickness="{DynamicResource Focus.Thickness}" CornerRadius="{DynamicResource Radius.Control}" Margin="{DynamicResource Focus.Margin}" />
+      </FocusAdornerTemplate>
+    </Setter>
+  </Style>
+
+  <Style Selector="Border.card">
+    <Setter Property="Background" Value="{DynamicResource Brush.Surface}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource Brush.Line}" />
+    <Setter Property="BorderThickness" Value="{DynamicResource Line.Hairline}" />
+    <Setter Property="CornerRadius" Value="{DynamicResource Radius.Card}" />
+    <Setter Property="Padding" Value="{DynamicResource Space.Text.Large}" />
+  </Style>
+  <Style Selector="Border.pill">
+    <Setter Property="CornerRadius" Value="{DynamicResource Radius.Pill}" />
+    <Setter Property="Padding" Value="{DynamicResource Space.Text.Small}" />
+  </Style>
+</Styles>

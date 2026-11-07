@@ -29,7 +29,10 @@ def main():
                           "web/tokens/tokens.css"])
     existing = [p for p in GENERATED if (ROOT / p).exists()]
     diff = subprocess.run(["git", "status", "--porcelain", "--", *existing], cwd=ROOT,
-                          capture_output=True, text=True, check=True).stdout.strip()
+                          capture_output=True, text=True, check=True).stdout
+    # Only changes in the working tree count (column 2, or untracked): a regenerated file that's
+    # already staged is current.
+    diff = "\n".join(line for line in diff.splitlines() if len(line) > 3 and (line[1] != " " or line[:2] == "??"))
     if diff:
         for line in diff.splitlines():
             path = line[3:]

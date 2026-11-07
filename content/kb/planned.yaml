@@ -1,0 +1,37 @@
+# Things the articles mention that later milestones build (KNOWLEDGE-BASE §7.1). A reference to
+# a planned item is a lint warning until its milestone is Done in PROGRESS.md, then an error.
+# kind: article | anchor | setting | error | label (a UI label, R8, not yet in the strings)
+planned:
+  # Articles
+  - { id: live.go-to-the-next-slide, kind: article, milestone: M4 }
+  - { id: live.clear-the-screens, kind: article, milestone: M4 }
+  - { id: screens.set-up-your-screens, kind: article, milestone: M5 }
+  - { id: screens.set-up-edge-blending, kind: article, milestone: M5 }
+  - { id: screens.use-corner-pin, kind: article, milestone: M5 }
+  - { id: screens.match-colours, kind: article, milestone: M5 }
+  - { id: troubleshooting.you-dont-have-permission, kind: article, milestone: M4 }
+  - { id: troubleshooting.selah-cant-do-that, kind: article, milestone: M2 }
+  # Anchors
+  - { id: simple.service-progress, kind: anchor, milestone: M4 }
+  - { id: simple.slide-strip, kind: anchor, milestone: M4 }
+  - { id: simple.now-showing, kind: anchor, milestone: M4 }
+  - { id: live.service-order, kind: anchor, milestone: M4 }
+  - { id: live.slides, kind: anchor, milestone: M4 }
+  - { id: live.program-preview, kind: anchor, milestone: M4 }
+  - { id: screens.output-list, kind: anchor, milestone: M5 }
+  - { id: screens.front-projection, kind: anchor, milestone: M5 }
+  - { id: screens.blend-settings, kind: anchor, milestone: M5 }
+  # Settings
+  - { id: outputs.blend.overlap, kind: setting, milestone: M5 }
+  - { id: outputs.blend.gamma, kind: setting, milestone: M5 }
+  - { id: outputs.blend.black-level, kind: setting, milestone: M5 }
+  # UI labels
+  - { id: All screens working, kind: label, milestone: M4 }
+  - { id: All slides in this song, kind: label, milestone: M4 }
+  - { id: Back, kind: label, milestone: M4 }
+  - { id: Hide words, kind: label, milestone: M4 }
+  - { id: Message the booth, kind: label, milestone: M4 }
+  - { id: Next slide, kind: label, milestone: M4 }
+  - { id: Next song, kind: label, milestone: M4 }
+  - { id: On screen now, kind: label, milestone: M4 }
+  - { id: Screens, kind: label, milestone: M5 }

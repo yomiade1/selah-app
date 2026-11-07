@@ -106,6 +106,9 @@ export_env() {
     "export SELAH_CLOUD=1"
     # skia-bindings reads the pinned Skia build fetched by tools/setup.sh --fetch (SEC-09).
     "export SKIA_BINARIES_URL=\"file://${CLAUDE_PROJECT_DIR:-$PWD}/third_party/skia/linux-x64/skia-binaries-{key}.tar.gz\""
+    # The FFmpeg bindings (selah-media, M1.7) build and run against the pinned FFmpeg.
+    "export FFMPEG_DIR=\"\$(ls -d ${CLAUDE_PROJECT_DIR:-$PWD}/third_party/ffmpeg/linux-x64/shared/ffmpeg-*/ 2>/dev/null | head -1)\""
+    "export LD_LIBRARY_PATH=\"\${FFMPEG_DIR}lib:\${LD_LIBRARY_PATH:-}\""
   )
   # In GitHub Actions (the linux CI job runs this script too), later steps read GITHUB_PATH/GITHUB_ENV.
   if [ -n "${GITHUB_PATH:-}" ] && [ -x "$DOTNET_DIR/dotnet" ]; then echo "$DOTNET_DIR" >> "$GITHUB_PATH"; fi

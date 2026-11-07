@@ -57,6 +57,7 @@ pub fn pattern_pixel(pattern: TestPattern, x: u32, y: u32, width: u32, height: u
 #[derive(Default)]
 pub struct CpuCompositor {
     text: Option<crate::text::TextRenderer>,
+    video: Option<crate::video::Nv12Frame>,
 }
 
 impl CpuCompositor {
@@ -84,9 +85,24 @@ impl Compositor for CpuCompositor {
         "cpu"
     }
 
+    fn set_video(&mut self, frame: Option<crate::video::Nv12Frame>) -> anyhow::Result<()> {
+        if let Some(frame) = frame.as_ref() {
+            frame.validate()?;
+        }
+        self.video = frame;
+        Ok(())
+    }
+
     fn render(&mut self, scene: &Scene, width: u32, height: u32) -> anyhow::Result<Frame> {
         let mut frame = Frame::new(width, height);
         let pattern = TestPattern::try_from(scene.test_pattern).unwrap_or(TestPattern::Unspecified);
+        if !scene.cleared
+            && let Some(video) = self.video.as_ref()
+        {
+            crate::video::draw_cpu(&mut frame, video);
+            self.draw_text(scene, &mut frame)?;
+            return Ok(frame);
+        }
         if scene.cleared || pattern == TestPattern::Unspecified {
             // Cleared outputs are opaque black.
             for pixel in frame.pixels.chunks_exact_mut(4) {

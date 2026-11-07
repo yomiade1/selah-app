@@ -1,0 +1,27 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- The Selah desktop app (ADR-002, ADR-008): Avalonia UI talking to core over IPC. -->
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <AssemblyName>Selah</AssemblyName>
+    <RootNamespace>Selah.UI</RootNamespace>
+    <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
+    <InvariantGlobalization>false</InvariantGlobalization>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Avalonia" Version="12.1.5" />
+    <PackageReference Include="Avalonia.Desktop" Version="12.1.5" />
+    <PackageReference Include="Avalonia.Themes.Fluent" Version="12.1.5" />
+    <!-- Headless mode: watchdog chaos tests and the installer check on machines with no display. -->
+    <PackageReference Include="Avalonia.Headless" Version="12.1.5" />
+    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.2" />
+    <PackageReference Include="Linguini.Bundle" Version="0.11.0" />
+    <ProjectReference Include="../Selah.Client/Selah.Client.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <!-- Bundled UI fonts (ADR-009), from the hash-pinned third_party/ files (tools/third-party.py). -->
+    <AvaloniaResource Include="../../third_party/fonts/inter/*.ttf;../../third_party/fonts/manrope/*.ttf;../../third_party/fonts/jetbrainsmono/*.ttf;../../third_party/fonts/notosanskr/*.ttf;../../third_party/fonts/notonaskharabic/*.ttf" Link="Assets/Fonts/%(Filename)%(Extension)" />
+    <AvaloniaResource Include="Styles/*.axaml" />
+    <!-- UI strings (ADR-010). -->
+    <Content Include="../../content/i18n/**/*.ftl" Link="i18n/%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+</Project>

@@ -1,0 +1,27 @@
+# Syllable counts the heuristic in readability.rs gets wrong (KNOWLEDGE-BASE §7.1): word count
+selah 2
+every 2
+everyone 3
+everything 3
+everywhere 3
+area 3
+idea 3
+video 3
+radio 3
+create 2
+created 3
+being 2
+going 2
+doing 2
+seeing 2
+lyrics 2
+fire 1
+hire 1
+quiet 2
+science 2
+real 1
+really 2
+usual 3
+naturally 4
+iOS 3
+macos 3

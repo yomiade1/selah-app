@@ -37,5 +37,12 @@ function Invoke-Native([string]$Program, [string[]]$Arguments) {
 
 # skia-bindings reads the pinned, hash-checked Skia build instead of downloading it (SEC-09).
 $env:SKIA_BINARIES_URL = 'file://' + $projectRoot.Replace('\', '/') + '/third_party/skia/windows-x64/skia-binaries-{key}.tar.gz'
+# The FFmpeg bindings (selah-media) build against the pinned FFmpeg; its DLLs must be on PATH to run.
+$ffmpegShared = Join-Path $projectRoot 'third_party/ffmpeg/windows-x64/shared'
+$ffmpegHome = Get-ChildItem $ffmpegShared -Directory -Filter 'ffmpeg-*' -ErrorAction SilentlyContinue | Select-Object -First 1
+if ($ffmpegHome) {
+    $env:FFMPEG_DIR = $ffmpegHome.FullName
+    $env:PATH = "$(Join-Path $ffmpegHome.FullName 'bin');$env:PATH"
+}
 $env:DOTNET_CLI_TELEMETRY_OPTOUT = '1'
 $env:DOTNET_NOLOGO = '1'

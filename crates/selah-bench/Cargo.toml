@@ -13,4 +13,6 @@ serde.workspace = true
 serde_json.workspace = true
 selah-ipc = { path = "../selah-ipc" }
 selah-proto = { path = "../selah-proto" }
+selah-media = { path = "../selah-media", features = ["render"] }
+selah-render = { path = "../selah-render" }
 tokio = { workspace = true, features = ["rt-multi-thread", "macros", "time", "process"] }
