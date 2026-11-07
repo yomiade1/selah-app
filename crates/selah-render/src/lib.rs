@@ -3,6 +3,8 @@
 pub mod blit;
 pub mod cpu;
 pub mod gpu;
+pub mod png;
+pub mod text;
 
 use selah_proto::v1::Scene;
 
@@ -39,8 +41,9 @@ impl Frame {
 }
 
 /// Renders a scene for one output. Implementations: [`cpu::CpuCompositor`] (always available)
-/// and the wgpu compositor (`gpu`, M1.5).
-pub trait Compositor: Send {
+/// and the wgpu compositor (`gpu`, M1.5). Not `Send`: Skia's text objects stay on the thread
+/// that made them, so a compositor is created on its render thread.
+pub trait Compositor {
     fn name(&self) -> &str;
     fn render(&mut self, scene: &Scene, width: u32, height: u32) -> anyhow::Result<Frame>;
 

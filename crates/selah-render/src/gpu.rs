@@ -60,6 +60,9 @@ pub struct GpuCompositor {
     target: Option<Target>,
     name: String,
     pub timing: FrameTiming,
+    text: Option<crate::text::TextRenderer>,
+    layer: Option<(u32, u32, wgpu::Texture, wgpu::TextureView)>,
+    layer_blitter: crate::blit::Blitter,
 }
 
 fn backends() -> wgpu::Backends {
@@ -161,6 +164,7 @@ impl GpuCompositor {
                 resource: params.as_entire_binding(),
             }],
         });
+        let layer_blitter = crate::blit::Blitter::new_layer(&device, TARGET_FORMAT);
         let name = format!("wgpu {:?} {}", info.backend, info.name);
         tracing::info!(adapter = %info.name, backend = ?info.backend, device_type = ?info.device_type, "GPU compositor ready");
         Ok(Self {
@@ -175,6 +179,9 @@ impl GpuCompositor {
             target: None,
             name,
             timing: FrameTiming::default(),
+            text: None,
+            layer: None,
+            layer_blitter,
         })
     }
 
@@ -246,6 +253,66 @@ impl GpuCompositor {
         self.target.as_ref().expect("target was just created")
     }
 
+    /// Upload the text layer for `scene` (from the paragraph cache) into the layer texture.
+    fn text_layer(&mut self, scene: &Scene, width: u32, height: u32) -> Result<bool> {
+        if scene.cleared || scene.text.is_empty() {
+            return Ok(false);
+        }
+        if self.text.is_none() {
+            self.text = Some(crate::text::TextRenderer::bundled()?);
+        }
+        let style = crate::text::SlideTextStyle::for_output(height);
+        let frame = self.text.as_mut().expect("text renderer exists").render(
+            &scene.text,
+            &style,
+            width,
+            height,
+        )?;
+        if self
+            .layer
+            .as_ref()
+            .is_none_or(|(w, h, _, _)| *w != width || *h != height)
+        {
+            let texture = self.device.create_texture(&wgpu::TextureDescriptor {
+                label: Some("text-layer"),
+                size: wgpu::Extent3d {
+                    width,
+                    height,
+                    depth_or_array_layers: 1,
+                },
+                mip_level_count: 1,
+                sample_count: 1,
+                dimension: wgpu::TextureDimension::D2,
+                format: TARGET_FORMAT,
+                usage: wgpu::TextureUsages::TEXTURE_BINDING | wgpu::TextureUsages::COPY_DST,
+                view_formats: &[],
+            });
+            let view = texture.create_view(&wgpu::TextureViewDescriptor::default());
+            self.layer = Some((width, height, texture, view));
+        }
+        let (_, _, texture, _) = self.layer.as_ref().expect("layer exists");
+        self.queue.write_texture(
+            wgpu::TexelCopyTextureInfo {
+                texture,
+                mip_level: 0,
+                origin: wgpu::Origin3d::ZERO,
+                aspect: wgpu::TextureAspect::All,
+            },
+            &frame.pixels,
+            wgpu::TexelCopyBufferLayout {
+                offset: 0,
+                bytes_per_row: Some(width * 4),
+                rows_per_image: Some(height),
+            },
+            wgpu::Extent3d {
+                width,
+                height,
+                depth_or_array_layers: 1,
+            },
+        );
+        Ok(true)
+    }
+
     fn wait(&self) -> Result<()> {
         self.device
             .poll(wgpu::PollType::wait_indefinitely())
@@ -272,6 +339,7 @@ impl Compositor for GpuCompositor {
         let words = [pattern as u32, u32::from(scene.cleared), width, height];
         let bytes: Vec<u8> = words.iter().flat_map(|w| w.to_le_bytes()).collect();
         self.queue.write_buffer(&self.params, 0, &bytes);
+        let has_text = self.text_layer(scene, width, height)?;
         self.target(width, height);
         let target = self.target.as_ref().expect("target exists");
 
@@ -297,6 +365,11 @@ impl Compositor for GpuCompositor {
             pass.set_pipeline(&self.pipeline);
             pass.set_bind_group(0, &self.bind_group, &[]);
             pass.draw(0..3, 0..1);
+        }
+        if has_text {
+            let (_, _, _, layer) = self.layer.as_ref().expect("layer exists");
+            self.layer_blitter
+                .draw(&self.device, &mut encoder, layer, &target.view);
         }
         self.queue.submit([encoder.finish()]);
         self.wait()?;

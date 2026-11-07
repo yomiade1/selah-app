@@ -154,6 +154,33 @@
       "extract_to": "source",
       "source": "https://github.com/FFmpeg/FFmpeg/releases/tag/n7.1.2",
       "note": "No LGPL macOS binary build is published; tools/build-ffmpeg-macos.sh builds a decode-only shared FFmpeg from this source."
+    },
+    {
+      "path": "skia/windows-x64/skia-binaries-30669978c3f39a73e8a7-x86_64-pc-windows-msvc-jpegd-jpege-pdf-textlayout.tar.gz",
+      "url": "https://github.com/rust-skia/skia-binaries/releases/download/0.157.0/skia-binaries-30669978c3f39a73e8a7-x86_64-pc-windows-msvc-jpegd-jpege-pdf-textlayout.tar.gz",
+      "sha256": "d81e6c72482cb9997d470d18862dad230c17a1f379f5700e256b3422973b72d9",
+      "license": "BSD-3-Clause",
+      "platform": "windows-x64",
+      "source": "https://github.com/rust-skia/skia-binaries/releases/tag/0.157.0",
+      "note": "Prebuilt Skia for skia-safe 0.157 (textlayout). Builds read it through SKIA_BINARIES_URL=file://\u2026 instead of downloading."
+    },
+    {
+      "path": "skia/linux-x64/skia-binaries-30669978c3f39a73e8a7-x86_64-unknown-linux-gnu-jpegd-jpege-pdf-textlayout.tar.gz",
+      "url": "https://github.com/rust-skia/skia-binaries/releases/download/0.157.0/skia-binaries-30669978c3f39a73e8a7-x86_64-unknown-linux-gnu-jpegd-jpege-pdf-textlayout.tar.gz",
+      "sha256": "17edb23dba94638e21de6f9cf9144b14c3da58b57d9e284c45b5c0f344cfd160",
+      "license": "BSD-3-Clause",
+      "platform": "linux-x64",
+      "source": "https://github.com/rust-skia/skia-binaries/releases/tag/0.157.0",
+      "note": "Prebuilt Skia for skia-safe 0.157 (textlayout). Builds read it through SKIA_BINARIES_URL=file://\u2026 instead of downloading."
+    },
+    {
+      "path": "skia/macos-arm64/skia-binaries-30669978c3f39a73e8a7-aarch64-apple-darwin-jpegd-jpege-pdf-textlayout.tar.gz",
+      "url": "https://github.com/rust-skia/skia-binaries/releases/download/0.157.0/skia-binaries-30669978c3f39a73e8a7-aarch64-apple-darwin-jpegd-jpege-pdf-textlayout.tar.gz",
+      "sha256": "5ca9c0762ceeefc03808518450ae9c31ff8280eded79825ef91d2c89a1866e79",
+      "license": "BSD-3-Clause",
+      "platform": "macos-arm64",
+      "source": "https://github.com/rust-skia/skia-binaries/releases/tag/0.157.0",
+      "note": "Prebuilt Skia for skia-safe 0.157 (textlayout). Builds read it through SKIA_BINARIES_URL=file://\u2026 instead of downloading."
     }
   ]
 }

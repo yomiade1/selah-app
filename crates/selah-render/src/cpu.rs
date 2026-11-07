@@ -55,7 +55,29 @@ pub fn pattern_pixel(pattern: TestPattern, x: u32, y: u32, width: u32, height: u
 }
 
 #[derive(Default)]
-pub struct CpuCompositor;
+pub struct CpuCompositor {
+    text: Option<crate::text::TextRenderer>,
+}
+
+impl CpuCompositor {
+    fn draw_text(&mut self, scene: &Scene, frame: &mut Frame) -> anyhow::Result<()> {
+        if scene.text.is_empty() {
+            return Ok(());
+        }
+        if self.text.is_none() {
+            self.text = Some(crate::text::TextRenderer::bundled()?);
+        }
+        let renderer = self.text.as_mut().expect("text renderer exists");
+        let layer = renderer.render(
+            &scene.text,
+            &crate::text::SlideTextStyle::for_output(frame.height),
+            frame.width,
+            frame.height,
+        )?;
+        crate::text::composite_over(frame, &layer);
+        Ok(())
+    }
+}
 
 impl Compositor for CpuCompositor {
     fn name(&self) -> &str {
@@ -70,6 +92,9 @@ impl Compositor for CpuCompositor {
             for pixel in frame.pixels.chunks_exact_mut(4) {
                 pixel.copy_from_slice(&[0, 0, 0, 255]);
             }
+            if !scene.cleared {
+                self.draw_text(scene, &mut frame)?;
+            }
             return Ok(frame);
         }
         for y in 0..height {
@@ -79,6 +104,7 @@ impl Compositor for CpuCompositor {
                     .copy_from_slice(&pattern_pixel(pattern, x, y, width, height));
             }
         }
+        self.draw_text(scene, &mut frame)?;
         Ok(frame)
     }
 }
@@ -99,7 +125,7 @@ mod tests {
 
     #[test]
     fn bars_have_seven_columns_in_order() {
-        let frame = CpuCompositor
+        let frame = CpuCompositor::default()
             .render(&scene(TestPattern::SmpteBars, false), 70, 30)
             .unwrap();
         for (bar, expected) in BARS.iter().enumerate() {
@@ -111,7 +137,7 @@ mod tests {
 
     #[test]
     fn cleared_scenes_are_black_and_checksums_differ_by_content() {
-        let mut cpu = CpuCompositor;
+        let mut cpu = CpuCompositor::default();
         let black = cpu
             .render(&scene(TestPattern::SmpteBars, true), 16, 9)
             .unwrap();

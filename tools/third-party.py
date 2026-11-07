@@ -18,7 +18,8 @@ import zipfile
 ROOT = Path(__file__).resolve().parents[1]
 ALLOWED_HOSTS = {"raw.githubusercontent.com", "github.com", "ffmpeg.org"}
 MAX_BYTES = 512 * 1024 * 1024
-MAX_SECONDS = 300
+# Generous for slow connections (a 25 MB file at 15 KB/s), but still bounded.
+MAX_SECONDS = 1800
 ARCHIVE_SUFFIXES = (".zip", ".tar.xz", ".tar.gz")
 
 

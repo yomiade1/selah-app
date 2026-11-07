@@ -35,5 +35,7 @@ function Invoke-Native([string]$Program, [string[]]$Arguments) {
     if ($LASTEXITCODE -ne 0) { throw "$Program $($Arguments -join ' ') failed (exit $LASTEXITCODE)." }
 }
 
+# skia-bindings reads the pinned, hash-checked Skia build instead of downloading it (SEC-09).
+$env:SKIA_BINARIES_URL = 'file://' + $projectRoot.Replace('\', '/') + '/third_party/skia/windows-x64/skia-binaries-{key}.tar.gz'
 $env:DOTNET_CLI_TELEMETRY_OPTOUT = '1'
 $env:DOTNET_NOLOGO = '1'

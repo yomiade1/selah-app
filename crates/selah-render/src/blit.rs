@@ -2,6 +2,7 @@
 const SHADER: &str = include_str!("blit.wgsl");
 
 pub struct Blitter {
+    blend: bool,
     pipeline: wgpu::RenderPipeline,
     layout: wgpu::BindGroupLayout,
     sampler: wgpu::Sampler,
@@ -11,6 +12,15 @@ impl Blitter {
     /// A blitter that writes `format`. Use a non-sRGB format (or view) so the composited
     /// values reach the screen unchanged.
     pub fn new(device: &wgpu::Device, format: wgpu::TextureFormat) -> Self {
+        Self::create(device, format, false)
+    }
+
+    /// Draws a premultiplied layer over what's already in the target (source-over).
+    pub fn new_layer(device: &wgpu::Device, format: wgpu::TextureFormat) -> Self {
+        Self::create(device, format, true)
+    }
+
+    fn create(device: &wgpu::Device, format: wgpu::TextureFormat, blend: bool) -> Self {
         let shader = device.create_shader_module(wgpu::ShaderModuleDescriptor {
             label: Some("blit"),
             source: wgpu::ShaderSource::Wgsl(SHADER.into()),
@@ -59,20 +69,28 @@ impl Blitter {
                 compilation_options: Default::default(),
                 targets: &[Some(wgpu::ColorTargetState {
                     format,
-                    blend: None,
+                    blend: blend.then_some(wgpu::BlendState::PREMULTIPLIED_ALPHA_BLENDING),
                     write_mask: wgpu::ColorWrites::ALL,
                 })],
             }),
             multiview_mask: None,
             cache: None,
         });
+        // Layers are drawn at the output's own resolution, so take texels exactly; scaling to a
+        // window uses linear filtering.
+        let filter = if blend {
+            wgpu::FilterMode::Nearest
+        } else {
+            wgpu::FilterMode::Linear
+        };
         let sampler = device.create_sampler(&wgpu::SamplerDescriptor {
             label: Some("blit"),
-            mag_filter: wgpu::FilterMode::Linear,
-            min_filter: wgpu::FilterMode::Linear,
+            mag_filter: filter,
+            min_filter: filter,
             ..Default::default()
         });
         Self {
+            blend,
             pipeline,
             layout,
             sampler,
@@ -107,7 +125,11 @@ impl Blitter {
                 depth_slice: None,
                 resolve_target: None,
                 ops: wgpu::Operations {
-                    load: wgpu::LoadOp::Clear(wgpu::Color::BLACK),
+                    load: if self.blend {
+                        wgpu::LoadOp::Load
+                    } else {
+                        wgpu::LoadOp::Clear(wgpu::Color::BLACK)
+                    },
                     store: wgpu::StoreOp::Store,
                 },
             })],

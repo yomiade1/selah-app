@@ -12,10 +12,12 @@ name = "selah-fake-ui"
 path = "src/bin/fake_ui.rs"
 test = false
 
-[dev-dependencies]
-selah-render = { path = "../selah-render" }
+[features]
+# Golden-frame tests (gate stage 7).
+golden = []
 
 [dependencies]
+selah-render = { path = "../selah-render" }
 anyhow.workspace = true
 selah-ipc = { path = "../selah-ipc" }
 selah-proto = { path = "../selah-proto" }

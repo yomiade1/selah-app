@@ -28,8 +28,15 @@ tempfile = "3"
 regex = "1"
 wgpu = { version = "30", default-features = false, features = ["wgsl", "dx12", "metal", "vulkan", "std"] }
 pollster = "1"
-winit = "0.30"
+# No client-side Wayland decorations (sctk-adwaita): output windows are borderless, and it pulls
+# in an unmaintained font parser (RUSTSEC-2026-0192).
+winit = { version = "0.30", default-features = false, features = ["rwh_06", "x11", "wayland", "wayland-dlopen"] }
+skia-safe = { version = "0", features = ["textlayout"] }
 blake3 = { version = "1", features = ["pure"] }
+
+# Frame checksums hash 8 MB per frame; keep that fast in debug builds and tests too.
+[profile.dev.package.blake3]
+opt-level = 3
 
 [profile.release]
 lto = "thin"

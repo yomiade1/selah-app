@@ -77,7 +77,7 @@ async fn show_test_pattern_reaches_the_output_within_one_frame() {
     );
 
     // The output really shows SMPTE bars: same pixels as the CPU reference.
-    let reference = selah_render::cpu::CpuCompositor
+    let reference = selah_render::cpu::CpuCompositor::default()
         .render(
             &Scene {
                 revision,

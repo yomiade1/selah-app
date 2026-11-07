@@ -28,6 +28,16 @@ pub enum Mode {
     Windowed,
 }
 
+/// A presented frame on its way to the frames thread.
+struct Shown {
+    frame: selah_render::Frame,
+    revision: u64,
+    shown_ns: u64,
+    received_ns: u64,
+    /// The emergency lane caused this frame: (show logo, revision floor).
+    emergency: Option<(bool, u64)>,
+}
+
 struct State {
     scene: Scene,
     /// Window surfaces waiting for the render thread (windowed mode).
@@ -47,7 +57,7 @@ pub struct Engine {
     clients: Mutex<Vec<FrameSender>>,
     epoch: Instant,
     actor: Actor,
-    compositor_name: String,
+    compositor_name: std::sync::OnceLock<String>,
     next_id: AtomicU64,
 }
 
@@ -68,18 +78,6 @@ impl Engine {
     /// Start the render thread. Returns the GPU instance too, which windowed mode needs to
     /// create window surfaces on the main thread.
     pub fn start(mode: Mode) -> anyhow::Result<(Arc<Self>, Option<wgpu::Instance>)> {
-        let choice = selah_render::gpu::AdapterChoice::from_env();
-        let (compositor, instance): (Box<dyn Compositor>, Option<wgpu::Instance>) =
-            match selah_render::gpu::GpuCompositor::new(choice) {
-                Ok(gpu) => {
-                    let instance = gpu.instance().clone();
-                    (Box::new(gpu), Some(instance))
-                }
-                Err(error) => {
-                    tracing::error!(%error, "no usable GPU; using the CPU compositor (no windows)");
-                    (Box::new(selah_render::cpu::CpuCompositor), None)
-                }
-            };
         let engine = Arc::new(Self {
             mode,
             state: Mutex::new(State {
@@ -104,13 +102,34 @@ impl Engine {
             clients: Mutex::new(Vec::new()),
             epoch: Instant::now(),
             actor: origin_actor(),
-            compositor_name: compositor.name().to_owned(),
+            compositor_name: std::sync::OnceLock::new(),
             next_id: AtomicU64::new(1),
         });
         let render = engine.clone();
+        // The compositor lives on the render thread (Skia's text objects can't move threads).
+        let (ready, started) = std::sync::mpsc::channel();
         std::thread::Builder::new()
             .name("selah-render".into())
-            .spawn(move || render.render_loop(compositor))?;
+            .spawn(move || {
+                let choice = selah_render::gpu::AdapterChoice::from_env();
+                let (compositor, instance): (Box<dyn Compositor>, Option<wgpu::Instance>) =
+                    match selah_render::gpu::GpuCompositor::new(choice) {
+                        Ok(gpu) => {
+                            let instance = gpu.instance().clone();
+                            (Box::new(gpu), Some(instance))
+                        }
+                        Err(error) => {
+                            tracing::error!(%error, "no usable GPU; using the CPU compositor (no windows)");
+                            (Box::new(selah_render::cpu::CpuCompositor::default()), None)
+                        }
+                    };
+                let _ = ready.send((compositor.name().to_owned(), instance));
+                render.render_loop(compositor);
+            })?;
+        let (name, instance) = started
+            .recv()
+            .map_err(|_| anyhow::anyhow!("the render thread didn't start"))?;
+        let _ = engine.compositor_name.set(name);
         Ok((engine, instance))
     }
 
@@ -130,7 +149,9 @@ impl Engine {
     }
 
     pub fn compositor_name(&self) -> &str {
-        &self.compositor_name
+        self.compositor_name
+            .get()
+            .map_or("starting", String::as_str)
     }
 
     fn now_ns(&self) -> u64 {
@@ -227,7 +248,13 @@ impl Engine {
 
     fn render_loop(self: Arc<Self>, mut compositor: Box<dyn Compositor>) {
         let mut surfaces: Vec<OutputSurface> = Vec::new();
-        let mut preview = PreviewWriter::open();
+        // Checksums, FrameShown and previews happen on their own thread, in order, so the render
+        // thread is free for the next command as soon as a frame is presented.
+        let (after, frames) = std::sync::mpsc::channel::<Shown>();
+        let engine = self.clone();
+        let _ = std::thread::Builder::new()
+            .name("selah-frames".into())
+            .spawn(move || engine.after_frames(frames));
         loop {
             let (scene, received_ns, emergency, messages, dirty) = {
                 let mut state = self.lock();
@@ -263,6 +290,7 @@ impl Engine {
                 .resolution
                 .map(|r| (r.width.clamp(16, 7680), r.height.clamp(16, 4320)))
                 .unwrap_or((1920, 1080));
+            let render_started = self.now_ns();
             let frame = match compositor.render(&scene, width, height) {
                 Ok(frame) => frame,
                 Err(error) => {
@@ -270,32 +298,51 @@ impl Engine {
                     continue;
                 }
             };
+            tracing::debug!(
+                revision = scene.revision,
+                waited_ms = render_started.saturating_sub(received_ns) as f64 / 1e6,
+                render_ms = (self.now_ns() - render_started) as f64 / 1e6,
+                "frame rendered"
+            );
             let presented = self.present(&mut compositor, &mut surfaces);
             // Headless, a frame is "shown" when the GPU has finished it; with windows, when
             // it has been handed to the swap chain.
             let shown_at = presented
                 .or_else(|| compositor.last_rendered())
                 .unwrap_or_else(Instant::now);
-            let shown = FrameShown {
-                scene_revision: scene.revision,
-                monotonic_nanoseconds: shown_at.saturating_duration_since(self.epoch).as_nanos()
-                    as u64,
-                frame_checksum: frame.checksum().to_vec(),
-                command_received_nanoseconds: received_ns,
+            let floor = self.lock().emergency_floor.unwrap_or(0);
+            let _ = after.send(Shown {
+                frame,
+                revision: scene.revision,
+                shown_ns: shown_at.saturating_duration_since(self.epoch).as_nanos() as u64,
+                received_ns,
+                emergency: emergency.map(|show_logo| (show_logo, floor)),
+            });
+        }
+    }
+
+    /// Runs on the frames thread: checksum, tell core and other clients, publish the preview.
+    fn after_frames(self: Arc<Self>, frames: std::sync::mpsc::Receiver<Shown>) {
+        let mut preview = PreviewWriter::open();
+        while let Ok(shown) = frames.recv() {
+            let message = FrameShown {
+                scene_revision: shown.revision,
+                monotonic_nanoseconds: shown.shown_ns,
+                frame_checksum: shown.frame.checksum().to_vec(),
+                command_received_nanoseconds: shown.received_ns,
                 output_index: 0,
                 frame_period_nanoseconds: FRAME_PERIOD.as_nanos() as u64,
             };
-            self.lock().last = Some(shown.clone());
-            if let Some(show_logo) = emergency {
-                let floor = self.lock().emergency_floor.unwrap_or(0);
+            self.lock().last = Some(message.clone());
+            if let Some((show_logo, floor)) = shown.emergency {
                 self.broadcast(event::Notification::EmergencyApplied(EmergencyApplied {
                     show_logo,
                     scene_revision: floor,
-                    monotonic_nanoseconds: shown.monotonic_nanoseconds,
+                    monotonic_nanoseconds: shown.shown_ns,
                 }));
             }
-            self.broadcast(event::Notification::FrameShown(shown));
-            preview.publish(&frame, shown_at.saturating_duration_since(self.epoch));
+            self.broadcast(event::Notification::FrameShown(message));
+            preview.publish(&shown.frame, Duration::from_nanos(shown.shown_ns));
         }
     }
 

@@ -78,7 +78,8 @@ class ThirdPartyTests(unittest.TestCase):
     def test_slow_download_has_a_total_deadline_and_cleans_up(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
-            with patch.object(third_party.time, "monotonic", side_effect=[0, 301]), \
+            with patch.object(third_party.time, "monotonic",
+                              side_effect=[0, third_party.MAX_SECONDS + 1]), \
                     patch.object(third_party.urllib.request, "urlopen", return_value=Download(b"fixture")):
                 with self.assertRaisesRegex(TimeoutError, "time limit"):
                     third_party.fetch(self.asset(), root)

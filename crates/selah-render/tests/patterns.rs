@@ -23,7 +23,7 @@ fn gpu_test_patterns_match_the_cpu_reference_exactly() {
     let mut gpu = GpuCompositor::new(AdapterChoice::Software)
         .expect("a software GPU adapter (lavapipe, WARP or Metal) must be available");
     eprintln!("adapter: {}", gpu.name());
-    let mut cpu = CpuCompositor;
+    let mut cpu = CpuCompositor::default();
     for (width, height) in [(1920, 1080), (1366, 768), (17, 9)] {
         for (pattern, cleared) in [
             (TestPattern::SmpteBars, false),

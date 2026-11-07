@@ -14,3 +14,4 @@ selah-proto = { path = "../selah-proto" }
 tracing.workspace = true
 wgpu.workspace = true
 pollster.workspace = true
+skia-safe.workspace = true

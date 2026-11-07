@@ -4,6 +4,8 @@
 //! Each [`Stack`] gets its own IPC namespace and its own `SELAH_HOME`, so stacks in parallel
 //! tests never see each other. Binaries come from the same `target/<profile>` folder as the
 //! test, so build the workspace first (`cargo test --workspace` does).
+pub mod golden;
+
 use std::path::{Path, PathBuf};
 use std::process::{Child, Command, Stdio};
 use std::sync::Mutex;
@@ -119,7 +121,10 @@ impl Stack {
             .env("SELAH_EXIT_WITH_WATCHDOG", "1")
             // Software rendering is deterministic and works on machines without a GPU.
             .env("SELAH_GPU", "software")
-            .env("SELAH_LOG", "info")
+            .env(
+                "SELAH_LOG",
+                std::env::var("SELAH_LOG").unwrap_or_else(|_| "info".into()),
+            )
             .stdin(Stdio::null())
             .stdout(Stdio::null())
             .stderr(Stdio::null());
