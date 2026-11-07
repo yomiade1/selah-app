@@ -1,0 +1,25 @@
+# Coverage-guided fuzz targets (SEC-03). Needs nightly and cargo-fuzz:
+#   cargo +nightly fuzz run ipc_frame -- -max_total_time=600
+# Long runs happen in cloud sessions, never in CI (ADR-024); CI runs the stable smoke tests.
+[package]
+name = "selah-fuzz"
+version = "0.0.0"
+edition = "2024"
+publish = false
+
+[package.metadata]
+cargo-fuzz = true
+
+[dependencies]
+libfuzzer-sys = "0.4"
+selah-ipc = { path = "../crates/selah-ipc" }
+
+[[bin]]
+name = "ipc_frame"
+path = "fuzz_targets/ipc_frame.rs"
+test = false
+doc = false
+bench = false
+
+# Kept out of the main workspace so the stable gate never builds it.
+[workspace]
