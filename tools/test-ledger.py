@@ -76,7 +76,7 @@ def main():
     if args.update:
         merged = {suite: max(counts.get(suite, 0), ledger.get(suite, 0)) for suite in SUITES}
         merged["total"] = sum(merged[s] for s in SUITES)
-        LEDGER.write_text(json.dumps(merged, indent=2) + "\n", encoding="utf-8")
+        LEDGER.write_text(json.dumps(merged, indent=2) + "\n", encoding="utf-8", newline="\n")
         print(f"test-ledger: updated {LEDGER.relative_to(ROOT)}: {merged}")
         return 0
     errors = 0
