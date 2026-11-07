@@ -9,14 +9,20 @@ description = "Selah core library: settings, live state, permissions and request
 
 [dependencies]
 anyhow.workspace = true
+crc32fast.workspace = true
+flate2.workspace = true
 prost.workspace = true
 selah-kb = { path = "../selah-kb" }
+selah-net = { path = "../selah-net" }
 selah-proto = { path = "../selah-proto" }
 selah-runtime = { path = "../selah-runtime" }
+semver.workspace = true
 serde.workspace = true
 serde_json.workspace = true
+sha2.workspace = true
 thiserror.workspace = true
 tracing.workspace = true
 
 [dev-dependencies]
+selah-secrets = { path = "../selah-secrets" }
 tempfile.workspace = true

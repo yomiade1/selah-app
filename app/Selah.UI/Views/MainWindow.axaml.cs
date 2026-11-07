@@ -4,6 +4,7 @@ using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Media.Imaging;
 using Avalonia.Platform;
+using Avalonia.Platform.Storage;
 using Avalonia.Threading;
 using Selah.Client;
 using Selah.UI.Services;
@@ -119,6 +120,83 @@ public sealed partial class MainWindow : Window
         if (Model is { } model)
         {
             model.ArticleRequested += (_, id) => ShowHelp(id);
+            model.OpenUrlRequested += (_, url) => _ = OpenUrlAsync(url);
+            model.ShowFileRequested += (_, path) => _ = ShowFileAsync(path);
+        }
+    }
+
+    private DiagnosticsWindow? diagnosticsWindow;
+
+    private void OnOpenDiagnostics(object? sender, RoutedEventArgs e)
+    {
+        if (Model is null)
+        {
+            return;
+        }
+        if (diagnosticsWindow is not null)
+        {
+            diagnosticsWindow.Activate();
+            return;
+        }
+        var diagnostics = Model.CreateDiagnostics();
+        diagnostics.ShowFileRequested += (_, path) => _ = ShowFileAsync(path);
+        diagnosticsWindow = new DiagnosticsWindow { DataContext = diagnostics };
+        diagnosticsWindow.Closed += (_, _) => diagnosticsWindow = null;
+        diagnosticsWindow.Show(this);
+        _ = diagnostics.LoadAsync();
+    }
+
+    /// <summary>Opens the problem-report form in the browser. Only https links from core.</summary>
+    private async Task OpenUrlAsync(string url)
+    {
+        if (Uri.TryCreate(url, UriKind.Absolute, out var uri) && uri.Scheme == Uri.UriSchemeHttps)
+        {
+            await Launcher.LaunchUriAsync(uri);
+        }
+    }
+
+    /// <summary>Shows a saved file's folder in Explorer or the Finder.</summary>
+    private async Task ShowFileAsync(string path)
+    {
+        if (Path.GetDirectoryName(path) is { } folder && Directory.Exists(folder))
+        {
+            await Launcher.LaunchDirectoryInfoAsync(new DirectoryInfo(folder));
+        }
+    }
+
+    private bool closeConfirmed;
+
+    protected override void OnClosing(WindowClosingEventArgs e)
+    {
+        if (RequestClose(e.IsProgrammatic, e.CloseReason == WindowCloseReason.OSShutdown))
+        {
+            e.Cancel = true;
+        }
+        base.OnClosing(e);
+    }
+
+    /// <summary>
+    /// SAFE-06: when the person closes Selah while something is on the screens, ask first
+    /// ("Something is on the screens." with <b>Keep showing</b> and <b>Clear and quit</b>). Returns
+    /// true when the close must wait for their answer. Selah's own closes and the computer shutting
+    /// down aren't held.
+    /// </summary>
+    public bool RequestClose(bool programmatic, bool osShutdown)
+    {
+        if (closeConfirmed || programmatic || osShutdown || Model is not { IsLive: true } model)
+        {
+            return false;
+        }
+        _ = AskThenCloseAsync(model);
+        return true;
+    }
+
+    private async Task AskThenCloseAsync(MainViewModel model)
+    {
+        if (await model.ConfirmIfLiveAsync(LiveGuardKind.Quit))
+        {
+            closeConfirmed = true;
+            Close();
         }
     }
 

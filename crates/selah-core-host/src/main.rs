@@ -8,7 +8,8 @@ use std::sync::atomic::{AtomicU64, Ordering};
 use std::time::Duration;
 
 use anyhow::Context;
-use selah_core::CoreService;
+use selah_core::update::{self, Install};
+use selah_core::{CoreService, Work};
 use selah_ipc::{Client, Connection, Endpoint, FrameSender, Listener, Service};
 use selah_proto::v1::{Command, Envelope, Event, command, envelope};
 use tokio::sync::Mutex;
@@ -18,6 +19,157 @@ struct Shared {
     subscribers: Mutex<Vec<FrameSender>>,
     engine: Client,
     next_event_id: AtomicU64,
+    /// The only way out to the network (SEC-13). Core sets its policy from the settings.
+    net: Arc<selah_net::Net>,
+    /// Velopack's Update.exe, when Selah was installed by Setup.
+    installer: Option<Arc<dyn Install>>,
+    /// Downloaded updates.
+    updates_dir: std::path::PathBuf,
+    paths: selah_runtime::paths::Paths,
+}
+
+/// Ask the engine for its own status (renderer, output size), if it answers.
+async fn engine_status(shared: &Shared) -> Option<selah_proto::v1::Status> {
+    let reply = shared
+        .engine
+        .request(
+            envelope::Body::Query(selah_proto::v1::Query {
+                request: Some(selah_proto::v1::query::Request::GetStatus(
+                    selah_proto::v1::GetStatus {},
+                )),
+            }),
+            Duration::from_secs(1),
+        )
+        .await
+        .ok()?;
+    match reply.body? {
+        envelope::Body::Reply(selah_proto::v1::Reply {
+            result: Some(selah_proto::v1::reply::Result::Status(status)),
+        }) => Some(status),
+        _ => None,
+    }
+}
+
+/// Run slow work away from the request path, then send its reply.
+async fn run_work(shared: Arc<Shared>, request: Envelope, work: Work, sender: FrameSender) {
+    let reply = match work {
+        Work::CheckForUpdate { feed_url } => {
+            let net = shared.net.clone();
+            let result = tokio::task::spawn_blocking(move || {
+                update::check(&net, &feed_url, update::PACKAGE_ID, selah_runtime::VERSION)
+            })
+            .await
+            .unwrap_or_else(|error| Err(update::UpdateError::Feed(error.to_string())));
+            shared
+                .service
+                .lock()
+                .await
+                .finish_update_check(&request, result)
+        }
+        Work::InstallUpdate { feed_url, release } => {
+            let net = shared.net.clone();
+            let folder = shared.updates_dir.clone();
+            let downloaded = tokio::task::spawn_blocking(move || {
+                update::download(&net, &feed_url, &release, &folder)
+            })
+            .await
+            .unwrap_or_else(|error| Err(update::UpdateError::Feed(error.to_string())));
+            let installer = shared.installer.clone();
+            shared.service.lock().await.finish_update_install(
+                &request,
+                downloaded,
+                installer.as_deref(),
+            )
+        }
+        Work::CreateSupportBundle => {
+            let (settings, safe_mode) = {
+                let service = shared.service.lock().await;
+                (service.settings().clone(), service.safe_mode())
+            };
+            let paths = shared.paths.clone();
+            let saved = tokio::task::spawn_blocking(move || {
+                selah_core::support::create(&selah_core::support::BundleInput {
+                    version: selah_runtime::VERSION,
+                    safe_mode,
+                    settings: &settings,
+                    logs_dir: &paths.logs,
+                    support_dir: &paths.support,
+                })
+            })
+            .await
+            .unwrap_or_else(|error| Err(std::io::Error::other(error.to_string())));
+            shared
+                .service
+                .lock()
+                .await
+                .finish_support_bundle(&request, saved)
+        }
+        Work::GetDiagnostics => {
+            let engine = engine_status(&shared).await;
+            shared
+                .service
+                .lock()
+                .await
+                .finish_diagnostics(&request, engine.as_ref())
+        }
+        Work::RunDiagnostics { quick } => {
+            let engine = engine_status(&shared).await;
+            let context = {
+                let service = shared.service.lock().await;
+                serde_json::to_value(DiagnosticsContext::from(
+                    service.diagnostics(engine.as_ref()),
+                ))
+                .unwrap_or_default()
+            };
+            let support = shared.paths.support.clone();
+            let result = tokio::task::spawn_blocking(move || {
+                let exe_dir = std::env::current_exe()
+                    .ok()
+                    .and_then(|exe| exe.parent().map(std::path::Path::to_path_buf))
+                    .unwrap_or_default();
+                let plan = selah_core::diagnostics::plan(&exe_dir, quick)?;
+                std::fs::create_dir_all(&support).map_err(|error| {
+                    selah_core::diagnostics::DiagnosticsError::Failed(error.to_string())
+                })?;
+                selah_core::diagnostics::run(&plan, &support, context)
+            })
+            .await
+            .unwrap_or_else(|error| {
+                Err(selah_core::diagnostics::DiagnosticsError::Failed(
+                    error.to_string(),
+                ))
+            });
+            shared
+                .service
+                .lock()
+                .await
+                .finish_run_diagnostics(&request, result)
+        }
+    };
+    let _ = sender.send(reply).await;
+}
+
+/// What a Diagnostics report records about this computer and Selah.
+#[derive(serde::Serialize)]
+struct DiagnosticsContext {
+    safe_mode: bool,
+    engine_connected: bool,
+    renderer: String,
+    output: String,
+}
+
+impl From<selah_proto::v1::Diagnostics> for DiagnosticsContext {
+    fn from(d: selah_proto::v1::Diagnostics) -> Self {
+        Self {
+            safe_mode: d.safe_mode,
+            engine_connected: d.engine_connected,
+            renderer: d.renderer,
+            output: d
+                .output_resolution
+                .map(|r| format!("{}x{}", r.width, r.height))
+                .unwrap_or_default(),
+        }
+    }
 }
 
 impl Shared {
@@ -67,6 +219,14 @@ async fn serve_connection(shared: Arc<Shared>, connection: Connection) {
             }
         };
         let outcome = shared.service.lock().await.handle(&request);
+        if let Some(work) = outcome.work {
+            tokio::spawn(run_work(
+                shared.clone(),
+                request.clone(),
+                work,
+                sender.clone(),
+            ));
+        }
         if let Some(reply) = outcome.reply
             && sender.send(reply).await.is_err()
         {
@@ -159,7 +319,14 @@ async fn main() -> anyhow::Result<()> {
         tracing::warn!("starting in safe mode (SAFE-07)");
     }
     let endpoint = Endpoint::for_current_user(Service::Core);
-    let mut service = CoreService::new(&paths.config, safe_mode);
+    // SEC-13: one gate for every outgoing connection; offline until a setting allows a purpose.
+    let net = Arc::new(selah_net::Net::https());
+    let mut service = CoreService::with_platform(
+        &paths.config,
+        safe_mode,
+        net.clone(),
+        selah_runtime::power::platform(),
+    );
     match help_index() {
         Some((path, help)) => {
             tracing::info!(path = %path.display(), "help index loaded");
@@ -173,6 +340,11 @@ async fn main() -> anyhow::Result<()> {
         subscribers: Mutex::new(Vec::new()),
         engine: Client::start(endpoint.sibling(Service::Engine), actor.clone()),
         next_event_id: AtomicU64::new(1),
+        net,
+        installer: update::VelopackInstaller::for_this_installation()
+            .map(|installer| Arc::new(installer) as Arc<dyn Install>),
+        updates_dir: paths.cache.join("updates"),
+        paths: paths.clone(),
     });
     let _heartbeat = selah_runtime::heartbeat::spawn(actor);
     tokio::spawn(follow_engine(shared.clone()));

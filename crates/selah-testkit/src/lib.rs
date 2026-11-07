@@ -1,9 +1,11 @@
-#![forbid(unsafe_code)]
-//! Run Selah's real processes in isolation for end-to-end and chaos tests.
+#![deny(unsafe_code)]
+//! Run Selah's real processes in isolation for end-to-end and chaos tests. Only `freeze` (OS
+//! thread suspension on Windows) may use unsafe code (SEC-11).
 //!
 //! Each [`Stack`] gets its own IPC namespace and its own `SELAH_HOME`, so stacks in parallel
 //! tests never see each other. Binaries come from the same `target/<profile>` folder as the
 //! test, so build the workspace first (`cargo test --workspace` does).
+pub mod freeze;
 pub mod golden;
 
 use std::path::{Path, PathBuf};
@@ -177,6 +179,20 @@ impl Stack {
 
     pub fn core(&self) -> &Client {
         &self.core
+    }
+
+    /// The test's client on the engine endpoint.
+    pub fn engine(&self) -> &Client {
+        &self.engine
+    }
+
+    /// The test's client on the watchdog endpoint (its actor is the UI).
+    pub fn watchdog(&self) -> &Client {
+        &self.watchdog_client
+    }
+
+    pub fn watchdog_pid(&self) -> u32 {
+        self.watchdog.id()
     }
 
     async fn ask(client: &Client, request: query::Request) -> Option<Envelope> {

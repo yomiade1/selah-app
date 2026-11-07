@@ -4,6 +4,14 @@ using Selah.Contracts.V1;
 
 namespace Selah.UI.Services;
 
+/// <summary>Core refused a request: its catalogue code and the string key of its plain message.</summary>
+public sealed class CoreException(string code, string messageKey) : InvalidOperationException(code)
+{
+    public string Code { get; } = code;
+
+    public string MessageKey { get; } = messageKey;
+}
+
 /// <summary>A snapshot of what the UI knows about core and the screens.</summary>
 public sealed record ConnectionSnapshot(bool Connected, bool EngineConnected, bool SafeMode, bool Live, ulong Generation);
 
@@ -17,10 +25,11 @@ public sealed record ConnectionSnapshot(bool Connected, bool EngineConnected, bo
 /// </list>
 /// Events arrive on thread-pool threads; view models marshal them to the UI thread.
 /// </summary>
-public sealed class CoreConnection : IAsyncDisposable, Selah.UI.ViewModels.IHelpSource
+public sealed class CoreConnection : IAsyncDisposable, Selah.UI.ViewModels.IHelpSource, Selah.UI.ViewModels.IUpdateService, Selah.UI.ViewModels.IDiagnosticsService
 {
     public static readonly TimeSpan HeartbeatInterval = TimeSpan.FromMilliseconds(250);
     private static readonly TimeSpan RequestTimeout = TimeSpan.FromSeconds(2);
+    private static readonly TimeSpan SlowRequestTimeout = TimeSpan.FromSeconds(60);
 
     private readonly IpcClient core;
     private readonly IpcClient watchdog;
@@ -60,6 +69,18 @@ public sealed class CoreConnection : IAsyncDisposable, Selah.UI.ViewModels.IHelp
         }
     }
 
+    /// <summary>The last status core sent.</summary>
+    public Status CurrentStatus
+    {
+        get
+        {
+            lock (gate)
+            {
+                return status;
+            }
+        }
+    }
+
     public void Start()
     {
         core.Start();
@@ -79,6 +100,68 @@ public sealed class CoreConnection : IAsyncDisposable, Selah.UI.ViewModels.IHelp
     public async Task SetAppearanceAsync(AppearanceSettings appearance)
     {
         await RequestAsync(new Envelope { Command = new Command { SetAppearance = new SetAppearance { Appearance = appearance } } })
+            .ConfigureAwait(false);
+    }
+
+    /// <summary>
+    /// <b>Restart normally</b> (SAFE-07): ask the watchdog to restart core and the UI without
+    /// safe mode. This UI process is closed and started again.
+    /// </summary>
+    public async Task RestartNormallyAsync()
+    {
+        var reply = await watchdog.RequestAsync(
+            new Envelope { Command = new Command { RestartNormally = new RestartNormally() } }, RequestTimeout).ConfigureAwait(false);
+        if (reply.Error is { } error)
+        {
+            throw new CoreException(error.Code, error.MessageKey);
+        }
+    }
+
+    /// <summary>Help ▸ Diagnostics: this computer, the graphics and the screens (M1.13).</summary>
+    public async Task<Diagnostics> GetDiagnosticsAsync()
+    {
+        var reply = await RequestAsync(new Envelope { Query = new Query { GetDiagnostics = new GetDiagnostics() } }, TimeSpan.FromSeconds(5))
+            .ConfigureAwait(false);
+        return reply.Reply?.Diagnostics ?? new Diagnostics();
+    }
+
+    /// <summary>Help ▸ Diagnostics ▸ Run benchmark. It takes about a minute.</summary>
+    public async Task<DiagnosticsReport> RunDiagnosticsAsync(bool quick)
+    {
+        var reply = await RequestAsync(new Envelope { Command = new Command { RunDiagnostics = new RunDiagnostics { Quick = quick } } }, TimeSpan.FromMinutes(5))
+            .ConfigureAwait(false);
+        return reply.Reply?.DiagnosticsReport ?? new DiagnosticsReport();
+    }
+
+    /// <summary>Help ▸ Report a problem: core saves a redacted support bundle (SEC-06).</summary>
+    public async Task<SupportBundle> CreateSupportBundleAsync()
+    {
+        var reply = await RequestAsync(new Envelope { Command = new Command { CreateSupportBundle = new CreateSupportBundle() } }, TimeSpan.FromSeconds(30))
+            .ConfigureAwait(false);
+        return reply.Reply?.SupportBundle ?? new SupportBundle();
+    }
+
+    /// <summary>Settings ▸ Updates (M1.11).</summary>
+    public async Task SetUpdateSettingsAsync(string feedUrl, bool allow)
+    {
+        await RequestAsync(new Envelope
+        {
+            Command = new Command { SetUpdateSettings = new SetUpdateSettings { UpdateFeedUrl = feedUrl, AllowUpdateCheck = allow } },
+        }).ConfigureAwait(false);
+    }
+
+    /// <summary>Only when the person asks (SEC-13). The feed may take a while to answer.</summary>
+    public async Task<UpdateCheck> CheckForUpdateAsync()
+    {
+        var reply = await RequestAsync(new Envelope { Command = new Command { CheckForUpdate = new CheckForUpdate() } }, SlowRequestTimeout)
+            .ConfigureAwait(false);
+        return reply.Reply?.UpdateCheck ?? new UpdateCheck();
+    }
+
+    /// <summary>Core downloads and verifies the package, then the installer restarts Selah.</summary>
+    public async Task InstallUpdateAsync(string version)
+    {
+        await RequestAsync(new Envelope { Command = new Command { InstallUpdate = new InstallUpdate { Version = version } } }, TimeSpan.FromMinutes(15))
             .ConfigureAwait(false);
     }
 
@@ -122,12 +205,14 @@ public sealed class CoreConnection : IAsyncDisposable, Selah.UI.ViewModels.IHelp
         return reply.Reply?.Article;
     }
 
-    private async Task<Envelope> RequestAsync(Envelope message)
+    private Task<Envelope> RequestAsync(Envelope message) => RequestAsync(message, RequestTimeout);
+
+    private async Task<Envelope> RequestAsync(Envelope message, TimeSpan timeout)
     {
-        var reply = await core.RequestAsync(message, RequestTimeout).ConfigureAwait(false);
+        var reply = await core.RequestAsync(message, timeout).ConfigureAwait(false);
         if (reply.Error is { } error)
         {
-            throw new InvalidOperationException(error.Code);
+            throw new CoreException(error.Code, error.MessageKey);
         }
         return reply;
     }
@@ -189,6 +274,7 @@ public sealed class CoreConnection : IAsyncDisposable, Selah.UI.ViewModels.IHelp
             }
             snapshot = next;
         }
+        SelfTest.OnSnapshot(this, next);
         Changed?.Invoke(this, next);
     }
 

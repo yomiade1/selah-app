@@ -1,0 +1,14 @@
+[package]
+name = "selah-net"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license-file = "../../LICENSE"
+publish.workspace = true
+description = "The single gate for outgoing network connections: policy, limits and a connection log (SEC-13)"
+
+[dependencies]
+thiserror.workspace = true
+tracing.workspace = true
+# HTTPS only: rustls with the ring provider and the operating system's certificate verifier.
+ureq = { version = "3.5", default-features = false, features = ["rustls-no-provider", "_ring", "platform-verifier"] }

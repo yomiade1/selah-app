@@ -11,3 +11,9 @@ crates/selah-ipc/src/shm.rs
 crates/selah-watchdog/src/keys.rs
 # Hardware video decode: FFmpeg device contexts and frame download have no safe API (M1.7).
 crates/selah-media/src/hw.rs
+# Windows Credential Manager for SecretStore (SEC-05): CredWriteW/CredReadW/CredDeleteW.
+crates/selah-secrets/src/windows.rs
+# Keep the computer awake while live (SAFE-06): SetThreadExecutionState.
+crates/selah-runtime/src/power.rs
+# Test-only: freeze a process for the SAFE-03 chaos test (SuspendThread/ResumeThread).
+crates/selah-testkit/src/freeze.rs

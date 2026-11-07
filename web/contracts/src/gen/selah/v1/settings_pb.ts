@@ -10,7 +10,7 @@ import type { Message } from "@bufbuild/protobuf";
  * Describes the file selah/v1/settings.proto.
  */
 export const file_selah_v1_settings: GenFile = /*@__PURE__*/
-  fileDesc("ChdzZWxhaC92MS9zZXR0aW5ncy5wcm90bxIIc2VsYWgudjEiegoSQXBwZWFyYW5jZVNldHRpbmdzEigKCmFwcGVhcmFuY2UYASABKA4yFC5zZWxhaC52MS5BcHBlYXJhbmNlEhoKEnRleHRfc2NhbGVfcGVyY2VudBgCIAEoDRIeChZ1c2VfY29tcHV0ZXJfdGV4dF9zaXplGAMgASgIInEKCFNldHRpbmdzEjAKCmFwcGVhcmFuY2UYASABKAsyHC5zZWxhaC52MS5BcHBlYXJhbmNlU2V0dGluZ3MSFwoPdXBkYXRlX2ZlZWRfdXJsGAIgASgJEhoKEmFsbG93X3VwZGF0ZV9jaGVjaxgDIAEoCCINCgtHZXRTZXR0aW5ncyJBCg1TZXRBcHBlYXJhbmNlEjAKCmFwcGVhcmFuY2UYASABKAsyHC5zZWxhaC52MS5BcHBlYXJhbmNlU2V0dGluZ3MqbgoKQXBwZWFyYW5jZRIaChZBUFBFQVJBTkNFX1VOU1BFQ0lGSUVEEAASFAoQQVBQRUFSQU5DRV9MSUdIVBABEhQKEEFQUEVBUkFOQ0VfQk9PVEgQAhIYChRBUFBFQVJBTkNFX0FVVE9NQVRJQxADQhWqAhJTZWxhaC5Db250cmFjdHMuVjFiBnByb3RvMw");
+  fileDesc("ChdzZWxhaC92MS9zZXR0aW5ncy5wcm90bxIIc2VsYWgudjEiegoSQXBwZWFyYW5jZVNldHRpbmdzEigKCmFwcGVhcmFuY2UYASABKA4yFC5zZWxhaC52MS5BcHBlYXJhbmNlEhoKEnRleHRfc2NhbGVfcGVyY2VudBgCIAEoDRIeChZ1c2VfY29tcHV0ZXJfdGV4dF9zaXplGAMgASgIInEKCFNldHRpbmdzEjAKCmFwcGVhcmFuY2UYASABKAsyHC5zZWxhaC52MS5BcHBlYXJhbmNlU2V0dGluZ3MSFwoPdXBkYXRlX2ZlZWRfdXJsGAIgASgJEhoKEmFsbG93X3VwZGF0ZV9jaGVjaxgDIAEoCCINCgtHZXRTZXR0aW5ncyJBCg1TZXRBcHBlYXJhbmNlEjAKCmFwcGVhcmFuY2UYASABKAsyHC5zZWxhaC52MS5BcHBlYXJhbmNlU2V0dGluZ3MiSAoRU2V0VXBkYXRlU2V0dGluZ3MSFwoPdXBkYXRlX2ZlZWRfdXJsGAEgASgJEhoKEmFsbG93X3VwZGF0ZV9jaGVjaxgCIAEoCCIQCg5DaGVja0ZvclVwZGF0ZSJiCgtVcGRhdGVDaGVjaxIRCglhdmFpbGFibGUYASABKAgSDwoHdmVyc2lvbhgCIAEoCRIWCg5ub3Rlc19tYXJrZG93bhgDIAEoCRIXCg9jdXJyZW50X3ZlcnNpb24YBCABKAkiIAoNSW5zdGFsbFVwZGF0ZRIPCgd2ZXJzaW9uGAEgASgJKm4KCkFwcGVhcmFuY2USGgoWQVBQRUFSQU5DRV9VTlNQRUNJRklFRBAAEhQKEEFQUEVBUkFOQ0VfTElHSFQQARIUChBBUFBFQVJBTkNFX0JPT1RIEAISGAoUQVBQRUFSQU5DRV9BVVRPTUFUSUMQA0IVqgISU2VsYWguQ29udHJhY3RzLlYxYgZwcm90bzM");
 
 /**
  * Scale values: 90, 100, 115, 130, 150, 175, 200. Core validates them.
@@ -99,6 +99,100 @@ export type SetAppearance = Message<"selah.v1.SetAppearance"> & {
  */
 export const SetAppearanceSchema: GenMessage<SetAppearance> = /*@__PURE__*/
   messageDesc(file_selah_v1_settings, 3);
+
+/**
+ * UI → core: Settings ▸ Updates. The feed must be an https:// address of a
+ * releases.<channel>.json file; nothing is fetched until the person asks (SEC-12, SEC-13).
+ *
+ * @generated from message selah.v1.SetUpdateSettings
+ */
+export type SetUpdateSettings = Message<"selah.v1.SetUpdateSettings"> & {
+  /**
+   * @generated from field: string update_feed_url = 1;
+   */
+  updateFeedUrl: string;
+
+  /**
+   * @generated from field: bool allow_update_check = 2;
+   */
+  allowUpdateCheck: boolean;
+};
+
+/**
+ * Describes the message selah.v1.SetUpdateSettings.
+ * Use `create(SetUpdateSettingsSchema)` to create a new message.
+ */
+export const SetUpdateSettingsSchema: GenMessage<SetUpdateSettings> = /*@__PURE__*/
+  messageDesc(file_selah_v1_settings, 4);
+
+/**
+ * UI → core: look for a newer version now. Only when the person asks (M1.11).
+ *
+ * @generated from message selah.v1.CheckForUpdate
+ */
+export type CheckForUpdate = Message<"selah.v1.CheckForUpdate"> & {
+};
+
+/**
+ * Describes the message selah.v1.CheckForUpdate.
+ * Use `create(CheckForUpdateSchema)` to create a new message.
+ */
+export const CheckForUpdateSchema: GenMessage<CheckForUpdate> = /*@__PURE__*/
+  messageDesc(file_selah_v1_settings, 5);
+
+/**
+ * @generated from message selah.v1.UpdateCheck
+ */
+export type UpdateCheck = Message<"selah.v1.UpdateCheck"> & {
+  /**
+   * @generated from field: bool available = 1;
+   */
+  available: boolean;
+
+  /**
+   * The newer version, when one is available.
+   *
+   * @generated from field: string version = 2;
+   */
+  version: string;
+
+  /**
+   * @generated from field: string notes_markdown = 3;
+   */
+  notesMarkdown: string;
+
+  /**
+   * @generated from field: string current_version = 4;
+   */
+  currentVersion: string;
+};
+
+/**
+ * Describes the message selah.v1.UpdateCheck.
+ * Use `create(UpdateCheckSchema)` to create a new message.
+ */
+export const UpdateCheckSchema: GenMessage<UpdateCheck> = /*@__PURE__*/
+  messageDesc(file_selah_v1_settings, 6);
+
+/**
+ * UI → core: download, verify and install this version. Refused while anything is on the
+ * screens (SAFE-06, SEC-12); the UI asks the person to clear them first.
+ *
+ * @generated from message selah.v1.InstallUpdate
+ */
+export type InstallUpdate = Message<"selah.v1.InstallUpdate"> & {
+  /**
+   * @generated from field: string version = 1;
+   */
+  version: string;
+};
+
+/**
+ * Describes the message selah.v1.InstallUpdate.
+ * Use `create(InstallUpdateSchema)` to create a new message.
+ */
+export const InstallUpdateSchema: GenMessage<InstallUpdate> = /*@__PURE__*/
+  messageDesc(file_selah_v1_settings, 7);
 
 /**
  * @generated from enum selah.v1.Appearance

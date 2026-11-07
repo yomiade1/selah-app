@@ -2,6 +2,7 @@ syntax = "proto3";
 
 package selah.v1;
 
+import "selah/v1/common.proto";
 import "selah/v1/errors.proto";
 import "selah/v1/help.proto";
 import "selah/v1/render.proto";
@@ -51,8 +52,18 @@ message Command {
     RecordFeedback record_feedback = 3;
     ShowTestPattern show_test_pattern = 4;
     ClearOutputs clear_outputs = 5;
+    CheckForUpdate check_for_update = 6;
+    InstallUpdate install_update = 7;
+    SetUpdateSettings set_update_settings = 8;
+    RestartNormally restart_normally = 9;
+    CreateSupportBundle create_support_bundle = 10;
+    RunDiagnostics run_diagnostics = 11;
   }
 }
+
+// UI → watchdog: leave safe mode (SAFE-07, "Restart normally"). The watchdog restarts core and
+// the UI without safe mode; the engine keeps the screens as they are. Core refuses it.
+message RestartNormally {}
 
 // UI → core: put a test pattern on every output (M1.8 "Show test pattern").
 message ShowTestPattern {
@@ -71,6 +82,7 @@ message Query {
     HelpForContext help_for_context = 5;
     Subscribe subscribe = 6;
     GetWatchdogStatus get_watchdog_status = 7;
+    GetDiagnostics get_diagnostics = 8;
   }
 }
 
@@ -88,6 +100,10 @@ message Status {
   string version = 7;
   // True while something other than nothing or the logo is on the screens (SAFE-06).
   bool live = 8;
+  // Engine only: what draws the frames, e.g. "wgpu Dx12 NVIDIA GeForce MX350" or "cpu".
+  string renderer = 9;
+  // Engine only: the size of the output frames.
+  Resolution output_resolution = 10;
 }
 
 message GetWatchdogStatus {}
@@ -130,5 +146,51 @@ message Reply {
     Article article = 4;
     bool acknowledged = 5;
     WatchdogStatus watchdog_status = 6;
+    UpdateCheck update_check = 7;
+    SupportBundle support_bundle = 8;
+    Diagnostics diagnostics = 9;
+    DiagnosticsReport diagnostics_report = 10;
   }
+}
+
+// UI → core: Help ▸ Report a problem (M1.13). Core saves a redacted support bundle (SEC-06).
+message CreateSupportBundle {}
+
+message SupportBundle {
+  // Where the .zip was saved.
+  string path = 1;
+  // The problem-report form with the version filled in.
+  string report_url = 2;
+}
+
+// UI → core: Help ▸ Diagnostics.
+message GetDiagnostics {}
+
+message Diagnostics {
+  string version = 1;
+  string os = 2;
+  string arch = 3;
+  bool safe_mode = 4;
+  bool engine_connected = 5;
+  string renderer = 6;
+  Resolution output_resolution = 7;
+}
+
+// UI → core: Help ▸ Diagnostics ▸ Run benchmark. Refused while anything is live.
+message RunDiagnostics {
+  // The short run (1080p H.264 clip, fewer round trips), for tests.
+  bool quick = 1;
+}
+
+message DiagnosticsReport {
+  // Where the report (.json) was saved.
+  string path = 1;
+  double ipc_p99_ms = 2;
+  bool ipc_pass = 3;
+  string video_clip = 4;
+  string video_decode = 5;
+  uint64 video_frames = 6;
+  uint64 video_dropped = 7;
+  double video_composite_p99_ms = 8;
+  bool video_pass = 9;
 }

@@ -16,14 +16,27 @@ pub enum CommandKind {
     RecordFeedback,
     ShowTestPattern,
     ClearOutputs,
+    SetUpdateSettings,
+    CheckForUpdate,
+    InstallUpdate,
+    /// Sent to the watchdog, not core; core answers that it can't do it.
+    RestartNormally,
+    CreateSupportBundle,
+    RunDiagnostics,
 }
 
-pub const ALL_COMMANDS: [CommandKind; 5] = [
+pub const ALL_COMMANDS: [CommandKind; 11] = [
     CommandKind::Render,
     CommandKind::SetAppearance,
     CommandKind::RecordFeedback,
     CommandKind::ShowTestPattern,
     CommandKind::ClearOutputs,
+    CommandKind::SetUpdateSettings,
+    CommandKind::CheckForUpdate,
+    CommandKind::InstallUpdate,
+    CommandKind::RestartNormally,
+    CommandKind::CreateSupportBundle,
+    CommandKind::RunDiagnostics,
 ];
 
 pub fn kind_of(action: &command::Action) -> CommandKind {
@@ -33,6 +46,12 @@ pub fn kind_of(action: &command::Action) -> CommandKind {
         command::Action::RecordFeedback(_) => CommandKind::RecordFeedback,
         command::Action::ShowTestPattern(_) => CommandKind::ShowTestPattern,
         command::Action::ClearOutputs(_) => CommandKind::ClearOutputs,
+        command::Action::SetUpdateSettings(_) => CommandKind::SetUpdateSettings,
+        command::Action::CheckForUpdate(_) => CommandKind::CheckForUpdate,
+        command::Action::InstallUpdate(_) => CommandKind::InstallUpdate,
+        command::Action::RestartNormally(_) => CommandKind::RestartNormally,
+        command::Action::CreateSupportBundle(_) => CommandKind::CreateSupportBundle,
+        command::Action::RunDiagnostics(_) => CommandKind::RunDiagnostics,
     }
 }
 
@@ -40,7 +59,15 @@ pub fn kind_of(action: &command::Action) -> CommandKind {
 pub fn changes_screens(kind: CommandKind) -> bool {
     match kind {
         CommandKind::Render | CommandKind::ShowTestPattern | CommandKind::ClearOutputs => true,
-        CommandKind::SetAppearance | CommandKind::RecordFeedback => false,
+        // An update restarts every process, but core refuses it while anything is live.
+        CommandKind::SetAppearance
+        | CommandKind::RecordFeedback
+        | CommandKind::SetUpdateSettings
+        | CommandKind::CheckForUpdate
+        | CommandKind::InstallUpdate
+        | CommandKind::RestartNormally
+        | CommandKind::CreateSupportBundle
+        | CommandKind::RunDiagnostics => false,
     }
 }
 
@@ -149,7 +176,13 @@ mod tests {
                 | CommandKind::SetAppearance
                 | CommandKind::RecordFeedback
                 | CommandKind::ShowTestPattern
-                | CommandKind::ClearOutputs => {}
+                | CommandKind::ClearOutputs
+                | CommandKind::SetUpdateSettings
+                | CommandKind::CheckForUpdate
+                | CommandKind::InstallUpdate
+                | CommandKind::RestartNormally
+                | CommandKind::CreateSupportBundle
+                | CommandKind::RunDiagnostics => {}
             }
         }
         let unique: std::collections::HashSet<_> = ALL_COMMANDS.iter().collect();

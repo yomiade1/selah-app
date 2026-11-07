@@ -7,7 +7,7 @@ audience: [volunteer, producer, it]
 modes: [simple, producer]
 context: [help.report-a-problem]
 settings: []
-error_codes: []
+error_codes: [SEL-SUP-0001]
 summary: Save a support file, then send it to us with a short note about what went wrong.
 popover: ""
 user_need: As a volunteer, I want to tell the Selah team about a problem so that they can fix it.

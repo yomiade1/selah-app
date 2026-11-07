@@ -6,6 +6,9 @@ Detailed specifications are written **as each milestone builds the thing they de
 |---|---|
 | `command-bus.md`: envelope, commands, queries, events, errors, IPC behaviour | M1 |
 | `spike-report.md`: measured results against budgets, go/no-go | M1 |
+| `foundations.md`: toolchains, contracts, IPC, processes, rendering, the gate | M1 |
+| `installer-and-updates.md`: Windows installer, installer check, updater | M1 |
+| `support-and-diagnostics.md`: Report a problem, Diagnostics, Run benchmark | M1 |
 | `data-model.md`: tables, migrations, op log, file layout | M2 |
 | `slide-generation.md`: sections, rules, metric fit, fit report | M2–M3 |
 | `render-pipeline.md`: scene, layers, cache, transitions, effects | M3 |

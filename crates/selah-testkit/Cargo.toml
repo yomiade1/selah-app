@@ -15,8 +15,14 @@ golden = []
 selah-render = { path = "../selah-render" }
 selah-media = { path = "../selah-media", features = ["render"] }
 anyhow.workspace = true
+selah-core = { path = "../selah-core" }
 selah-ipc = { path = "../selah-ipc" }
 selah-proto = { path = "../selah-proto" }
 selah-runtime = { path = "../selah-runtime" }
+serde_json.workspace = true
 tempfile.workspace = true
 tokio = { workspace = true, features = ["rt-multi-thread", "macros", "sync", "time", "process", "fs"] }
+
+[target.'cfg(windows)'.dependencies]
+# Chaos tests freeze a process by suspending its threads (src/freeze.rs).
+windows-sys = { workspace = true, features = ["Win32_Foundation", "Win32_System_Diagnostics_ToolHelp", "Win32_System_Threading"] }

@@ -392,6 +392,8 @@ impl Engine {
                 .unwrap_or_default(),
             version: selah_runtime::VERSION.into(),
             live: is_live(&state.scene),
+            renderer: self.compositor_name().to_owned(),
+            output_resolution: state.scene.resolution,
         }
     }
 

@@ -15,7 +15,7 @@ pub enum SettingsError {
     TextScale(u32),
     #[error("appearance is not set")]
     Appearance,
-    #[error("the update feed must be an https:// address")]
+    #[error("the update feed must be an https:// address of a .json file")]
     FeedUrl,
 }
 
@@ -92,7 +92,9 @@ impl StoredSettings {
         if !TEXT_SCALE_STEPS.contains(&self.text_scale_percent) {
             return Err(SettingsError::TextScale(self.text_scale_percent));
         }
-        if !self.update_feed_url.is_empty() && !self.update_feed_url.starts_with("https://") {
+        if !self.update_feed_url.is_empty()
+            && crate::update::validate_feed_url(&self.update_feed_url).is_err()
+        {
             return Err(SettingsError::FeedUrl);
         }
         Ok(())

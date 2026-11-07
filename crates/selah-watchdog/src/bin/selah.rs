@@ -8,6 +8,12 @@ use std::process::{Command, Stdio};
 
 fn main() {
     let mut args: Vec<String> = std::env::args().skip(1).collect();
+    // The installer (Velopack) runs the main program with `--veloapp-install`, `-updated`,
+    // `-obsolete` or `-uninstall` and waits for it. Selah has nothing to do then, and must not
+    // start: an install or uninstall never puts anything on the screens.
+    if selah_watchdog::is_installer_hook(&args) {
+        return;
+    }
     // --wait (development and the installer test): stay attached and pass the exit code on.
     let wait = args.iter().any(|arg| arg == "--wait");
     args.retain(|arg| arg != "--wait");

@@ -30,3 +30,27 @@ message GetSettings {}
 message SetAppearance {
   AppearanceSettings appearance = 1;
 }
+
+// UI → core: Settings ▸ Updates. The feed must be an https:// address of a
+// releases.<channel>.json file; nothing is fetched until the person asks (SEC-12, SEC-13).
+message SetUpdateSettings {
+  string update_feed_url = 1;
+  bool allow_update_check = 2;
+}
+
+// UI → core: look for a newer version now. Only when the person asks (M1.11).
+message CheckForUpdate {}
+
+message UpdateCheck {
+  bool available = 1;
+  // The newer version, when one is available.
+  string version = 2;
+  string notes_markdown = 3;
+  string current_version = 4;
+}
+
+// UI → core: download, verify and install this version. Refused while anything is on the
+// screens (SAFE-06, SEC-12); the UI asks the person to clear them first.
+message InstallUpdate {
+  string version = 1;
+}
