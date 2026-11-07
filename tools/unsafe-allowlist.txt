@@ -1,0 +1,11 @@
+# Repository-relative Rust source files allowed to contain unsafe code (SEC-11).
+# Each file declares #![allow(unsafe_code)], and every unsafe use has a // SAFETY: comment.
+# tools/check-unsafe.py enforces this. Add a file only for FFI or OS interfaces with no safe API,
+# and say why in the PR.
+
+# Win32 pipe security: owner-only DACL, peer SID checks (SEC-02).
+crates/selah-ipc/src/windows.rs
+# Shared-memory preview rings: mapping a file and atomics on mapped memory (ADR-004).
+crates/selah-ipc/src/shm.rs
+# Shift-at-start detection for safe mode on Windows (SAFE-07).
+crates/selah-watchdog/src/keys.rs

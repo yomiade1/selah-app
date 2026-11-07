@@ -1,0 +1,20 @@
+[package]
+name = "selah-core"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license-file = "../../LICENSE"
+publish.workspace = true
+description = "Selah core library: settings, live state, permissions and request handling"
+
+[dependencies]
+prost.workspace = true
+selah-proto = { path = "../selah-proto" }
+selah-runtime = { path = "../selah-runtime" }
+serde.workspace = true
+serde_json.workspace = true
+thiserror.workspace = true
+tracing.workspace = true
+
+[dev-dependencies]
+tempfile.workspace = true

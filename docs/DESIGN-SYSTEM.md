@@ -34,8 +34,9 @@ Defined once in `design/tokens/tokens.json` (DTCG format) and generated into Ava
 | `color.muted` | `#565C65` | `#A1A1A6` | Hints, meta (still ≥ 4.5:1) |
 | `color.primary` | `#005EA2` | `#2491FF` | Primary actions, selection |
 | `color.primary-dark` | `#1A4480` | `#0050D8` | Hover, pressed |
+| `color.primary-fill` | `#005EA2` | `#0050D8` | Primary button background with `color.on-primary` (white) text. Booth doesn't use `#2491FF` here because white on it is under 4.5:1 |
 | `color.primary-darker` | `#162E51` | `#162E51` | Step numbers, process lists |
-| `color.focus` | `#2491FF` | `#2491FF` | Focus ring (4 px, 2 px offset) |
+| `color.focus` | `#0076D6` | `#2491FF` | Focus ring (4 px, 2 px offset). Light uses blue-50v because `#2491FF` is under 3:1 on `color.bg` |
 | `color.live` | `#D83933` | `#FB5A47` | LIVE state, program outline, destructive |
 | `color.success` | `#00A91C` (text on light: `#008817`) | `#21C834` | Next, ready, healthy |
 | `color.warning` | `#FFBE2E` | `#FFBE2E` | Warnings (text on it: `#1B1B1B`) |

@@ -1,0 +1,13 @@
+syntax = "proto3";
+
+package selah.v1;
+
+option csharp_namespace = "Selah.Contracts.V1";
+
+// Messages are localised using message_key; raw exceptions never cross IPC.
+message Error {
+  string code = 1;
+  string message_key = 2;
+  map<string, string> args = 3;
+  string fix_article_id = 4;
+}

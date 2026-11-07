@@ -1,0 +1,53 @@
+# Render golden frames on one platform for review (ADR-023, TESTING-AND-QUALITY §3 rule 3).
+# Manual only. It never pushes: it uploads the rendered images as an artifact. A session reviews
+# them, copies an image into tests/golden/<platform>/ and records the reason in
+# tests/golden/CHANGES.md in the same commit. Policy: tools/check-workflows.py.
+name: Bless golden
+
+on:
+  workflow_dispatch:
+    inputs:
+      platform:
+        description: Platform to render on
+        type: choice
+        options: [windows, macos, linux]
+        default: windows
+
+permissions: {}
+
+concurrency:
+  group: bless-golden-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  CARGO_TERM_COLOR: never
+  SELAH_CI: "1"
+  SELAH_GPU: software
+
+jobs:
+  render:
+    name: render
+    runs-on: ${{ inputs.platform == 'windows' && 'windows-2025' || (inputs.platform == 'macos' && 'macos-15' || 'ubuntu-24.04') }}
+    timeout-minutes: 30
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Toolchain (Linux)
+        if: runner.os == 'Linux'
+        run: bash tools/cloud-setup.sh
+      - name: Pinned third-party files
+        run: python3 tools/third-party.py --extract
+      - name: Render (blessing writes the references instead of comparing)
+        shell: bash
+        env:
+          SELAH_BLESS_GOLDEN: "1"
+        run: cargo test --locked -p selah-testkit --features golden --test golden_text
+      - name: Upload the rendered frames
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: golden-${{ runner.os }}
+          path: tests/golden/reference/
+          retention-days: 3

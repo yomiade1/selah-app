@@ -2,7 +2,7 @@
 
 A church presentation app for Windows and macOS: powerful enough for broadcast teams, simple enough for a first-time volunteer, and dependable every Sunday.
 
-> Working name. Not yet built. This repository currently holds the plan, the design reference and the build documents.
+> Working name. Milestone 1 is in progress: workspace and contract scaffolding exist, but there is no runnable application or installer yet. See [PROGRESS.md](PROGRESS.md) for validation gaps and next steps.
 
 ## Start here
 

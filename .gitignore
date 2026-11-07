@@ -6,8 +6,6 @@ desktop.ini
 *.log
 /third_party/
 /target/
-bin/
-obj/
 node_modules/
 .vs/
 .idea/
@@ -20,3 +18,19 @@ node_modules/
 *.p12
 id_rsa*
 id_ed25519*
+# Build products and local tool caches
+# .NET build output (Rust src/bin/ folders are source and stay tracked)
+/app/**/bin/
+/app/**/obj/
+/app/**/TestResults/
+**/node_modules/
+/.tools/
+/.cache/
+/.pnpm-store/
+__pycache__/
+*.pyc
+/tests/fixtures/media/generated/
+**/dist/
+/fuzz/target/
+/fuzz/artifacts/
+/fuzz/coverage/

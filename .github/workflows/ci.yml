@@ -98,6 +98,11 @@ jobs:
             target
           key: linux-${{ hashFiles('rust-toolchain.toml', 'Cargo.lock', '**/packages.lock.json', 'pnpm-lock.yaml') }}
           restore-keys: linux-
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: "22"
+      - name: pnpm (pinned by packageManager in package.json)
+        run: corepack enable pnpm
       - name: Toolchain (same script as cloud sessions)
         run: bash tools/cloud-setup.sh
       - name: Gate
@@ -136,6 +141,11 @@ jobs:
       - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
         with:
           dotnet-version: "10.0.x"
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: "22"
+      - name: pnpm (pinned by packageManager in package.json)
+        run: corepack enable pnpm
       - name: Gate
         shell: pwsh
         run: ./tools/verify.ps1 -CI
@@ -188,6 +198,11 @@ jobs:
       - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
         with:
           dotnet-version: "10.0.x"
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: "22"
+      - name: pnpm (pinned by packageManager in package.json)
+        run: corepack enable pnpm
       - name: Gate
         run: bash tools/verify.sh --ci
       - name: Keep the failure report

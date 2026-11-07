@@ -1,0 +1,44 @@
+[workspace]
+resolver = "3"
+members = ["crates/*"]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.91"
+license-file = "LICENSE"
+publish = false
+
+[workspace.dependencies]
+prost = "=0.14.1"
+prost-build = "=0.14.1"
+protoc-bin-vendored = "=3.2.0"
+tokio = { version = "1.47", default-features = false }
+memmap2 = "0.9"
+thiserror = "2"
+anyhow = "1"
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", default-features = false }
+tracing-appender = "0.2"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+rustix = { version = "1", default-features = false, features = ["std"] }
+windows-sys = "0.61"
+tempfile = "3"
+regex = "1"
+wgpu = { version = "30", default-features = false, features = ["wgsl", "dx12", "metal", "vulkan", "std"] }
+pollster = "1"
+# No client-side Wayland decorations (sctk-adwaita): output windows are borderless, and it pulls
+# in an unmaintained font parser (RUSTSEC-2026-0192).
+winit = { version = "0.30", default-features = false, features = ["rwh_06", "x11", "wayland", "wayland-dlopen"] }
+skia-safe = { version = "0", features = ["textlayout"] }
+blake3 = { version = "1", features = ["pure"] }
+
+# Frame checksums hash 8 MB per frame; keep that fast in debug builds and tests too.
+[profile.dev.package.blake3]
+opt-level = 3
+
+[profile.release]
+lto = "thin"
+codegen-units = 1
+strip = "debuginfo"

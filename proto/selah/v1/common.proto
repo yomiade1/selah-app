@@ -1,0 +1,26 @@
+syntax = "proto3";
+
+package selah.v1;
+
+option csharp_namespace = "Selah.Contracts.V1";
+
+// A UUIDv7 represented by exactly 16 bytes. Receivers validate the size.
+message Id {
+  bytes value = 1;
+}
+
+message Timestamp {
+  int64 unix_milliseconds = 1;
+}
+
+message Resolution {
+  uint32 width = 1;
+  uint32 height = 2;
+}
+
+message Color {
+  float red = 1;
+  float green = 2;
+  float blue = 3;
+  float alpha = 4;
+}

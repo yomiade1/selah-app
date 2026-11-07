@@ -1,0 +1,21 @@
+{
+  "name": "selah",
+  "private": true,
+  "version": "0.1.0",
+  "packageManager": "pnpm@10.20.0",
+  "engines": {
+    "node": ">=22 <23"
+  },
+  "scripts": {
+    "contracts:lint": "buf lint",
+    "contracts:generate": "buf generate",
+    "format:check": "prettier --check package.json pnpm-workspace.yaml buf.yaml buf.gen.yaml && buf format proto --diff --exit-code",
+    "format": "prettier --write package.json pnpm-workspace.yaml buf.yaml buf.gen.yaml && buf format proto --write"
+  },
+  "devDependencies": {
+    "@bufbuild/buf": "1.59.0",
+    "@bufbuild/protoc-gen-es": "2.10.0",
+    "prettier": "3.6.2",
+    "style-dictionary": "5.1.1"
+  }
+}
