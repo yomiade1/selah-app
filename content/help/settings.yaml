@@ -7,3 +7,7 @@ settings:
     hint: text-size-hint
   - key: appearance.use-computer-text-size
     hint: text-size-use-computer-hint
+  - key: updates.allow-check
+    hint: updates-allow-hint
+  - key: updates.feed-url
+    hint: updates-feed-hint

@@ -33,6 +33,8 @@ pollster = "1"
 winit = { version = "0.30", default-features = false, features = ["rwh_06", "x11", "wayland", "wayland-dlopen"] }
 skia-safe = { version = "0", features = ["textlayout"] }
 blake3 = { version = "1", features = ["pure"] }
+semver = "1"
+sha2 = "0.10"
 
 # Frame checksums hash 8 MB per frame; keep that fast in debug builds and tests too.
 [profile.dev.package.blake3]

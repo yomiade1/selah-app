@@ -5,5 +5,6 @@ pub mod live;
 pub mod permissions;
 pub mod service;
 pub mod settings;
+pub mod update;
 
-pub use service::{CoreService, Outcome};
+pub use service::{CoreService, Outcome, Work};

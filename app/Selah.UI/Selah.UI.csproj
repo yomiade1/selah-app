@@ -1,6 +1,8 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <!-- The Selah desktop app (ADR-002, ADR-008): Avalonia UI talking to core over IPC. -->
   <PropertyGroup>
+    <!-- The installer publishes self-contained for these (tools/package.ps1); locked restore needs them listed. -->
+    <RuntimeIdentifiers>win-x64</RuntimeIdentifiers>
     <OutputType>WinExe</OutputType>
     <AssemblyName>Selah</AssemblyName>
     <RootNamespace>Selah.UI</RootNamespace>

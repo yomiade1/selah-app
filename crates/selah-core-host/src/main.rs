@@ -8,7 +8,8 @@ use std::sync::atomic::{AtomicU64, Ordering};
 use std::time::Duration;
 
 use anyhow::Context;
-use selah_core::CoreService;
+use selah_core::update::{self, Fetch, Install};
+use selah_core::{CoreService, Work};
 use selah_ipc::{Client, Connection, Endpoint, FrameSender, Listener, Service};
 use selah_proto::v1::{Command, Envelope, Event, command, envelope};
 use tokio::sync::Mutex;
@@ -18,6 +19,61 @@ struct Shared {
     subscribers: Mutex<Vec<FrameSender>>,
     engine: Client,
     next_event_id: AtomicU64,
+    /// The only way out to the network (SEC-13).
+    fetch: Arc<dyn Fetch>,
+    /// Velopack's Update.exe, when Selah was installed by Setup.
+    installer: Option<Arc<dyn Install>>,
+    /// Downloaded updates.
+    updates_dir: std::path::PathBuf,
+}
+
+/// Until `selah-net` exists (M1.12), nothing leaves the computer.
+struct NoNetwork;
+
+impl Fetch for NoNetwork {
+    fn fetch(&self, _url: &str, _limit: u64) -> Result<Vec<u8>, String> {
+        Err("network access is not available in this build".into())
+    }
+}
+
+/// Run slow work away from the request path, then send its reply.
+async fn run_work(shared: Arc<Shared>, request: Envelope, work: Work, sender: FrameSender) {
+    let reply = match work {
+        Work::CheckForUpdate { feed_url } => {
+            let fetch = shared.fetch.clone();
+            let result = tokio::task::spawn_blocking(move || {
+                update::check(
+                    fetch.as_ref(),
+                    &feed_url,
+                    update::PACKAGE_ID,
+                    selah_runtime::VERSION,
+                )
+            })
+            .await
+            .unwrap_or_else(|error| Err(update::UpdateError::Feed(error.to_string())));
+            shared
+                .service
+                .lock()
+                .await
+                .finish_update_check(&request, result)
+        }
+        Work::InstallUpdate { feed_url, release } => {
+            let fetch = shared.fetch.clone();
+            let folder = shared.updates_dir.clone();
+            let downloaded = tokio::task::spawn_blocking(move || {
+                update::download(fetch.as_ref(), &feed_url, &release, &folder)
+            })
+            .await
+            .unwrap_or_else(|error| Err(update::UpdateError::Feed(error.to_string())));
+            let installer = shared.installer.clone();
+            shared.service.lock().await.finish_update_install(
+                &request,
+                downloaded,
+                installer.as_deref(),
+            )
+        }
+    };
+    let _ = sender.send(reply).await;
 }
 
 impl Shared {
@@ -67,6 +123,14 @@ async fn serve_connection(shared: Arc<Shared>, connection: Connection) {
             }
         };
         let outcome = shared.service.lock().await.handle(&request);
+        if let Some(work) = outcome.work {
+            tokio::spawn(run_work(
+                shared.clone(),
+                request.clone(),
+                work,
+                sender.clone(),
+            ));
+        }
         if let Some(reply) = outcome.reply
             && sender.send(reply).await.is_err()
         {
@@ -173,6 +237,10 @@ async fn main() -> anyhow::Result<()> {
         subscribers: Mutex::new(Vec::new()),
         engine: Client::start(endpoint.sibling(Service::Engine), actor.clone()),
         next_event_id: AtomicU64::new(1),
+        fetch: Arc::new(NoNetwork),
+        installer: update::VelopackInstaller::for_this_installation()
+            .map(|installer| Arc::new(installer) as Arc<dyn Install>),
+        updates_dir: paths.cache.join("updates"),
     });
     let _heartbeat = selah_runtime::heartbeat::spawn(actor);
     tokio::spawn(follow_engine(shared.clone()));

@@ -16,14 +16,20 @@ pub enum CommandKind {
     RecordFeedback,
     ShowTestPattern,
     ClearOutputs,
+    SetUpdateSettings,
+    CheckForUpdate,
+    InstallUpdate,
 }
 
-pub const ALL_COMMANDS: [CommandKind; 5] = [
+pub const ALL_COMMANDS: [CommandKind; 8] = [
     CommandKind::Render,
     CommandKind::SetAppearance,
     CommandKind::RecordFeedback,
     CommandKind::ShowTestPattern,
     CommandKind::ClearOutputs,
+    CommandKind::SetUpdateSettings,
+    CommandKind::CheckForUpdate,
+    CommandKind::InstallUpdate,
 ];
 
 pub fn kind_of(action: &command::Action) -> CommandKind {
@@ -33,6 +39,9 @@ pub fn kind_of(action: &command::Action) -> CommandKind {
         command::Action::RecordFeedback(_) => CommandKind::RecordFeedback,
         command::Action::ShowTestPattern(_) => CommandKind::ShowTestPattern,
         command::Action::ClearOutputs(_) => CommandKind::ClearOutputs,
+        command::Action::SetUpdateSettings(_) => CommandKind::SetUpdateSettings,
+        command::Action::CheckForUpdate(_) => CommandKind::CheckForUpdate,
+        command::Action::InstallUpdate(_) => CommandKind::InstallUpdate,
     }
 }
 
@@ -40,7 +49,12 @@ pub fn kind_of(action: &command::Action) -> CommandKind {
 pub fn changes_screens(kind: CommandKind) -> bool {
     match kind {
         CommandKind::Render | CommandKind::ShowTestPattern | CommandKind::ClearOutputs => true,
-        CommandKind::SetAppearance | CommandKind::RecordFeedback => false,
+        // An update restarts every process, but core refuses it while anything is live.
+        CommandKind::SetAppearance
+        | CommandKind::RecordFeedback
+        | CommandKind::SetUpdateSettings
+        | CommandKind::CheckForUpdate
+        | CommandKind::InstallUpdate => false,
     }
 }
 
@@ -149,7 +163,10 @@ mod tests {
                 | CommandKind::SetAppearance
                 | CommandKind::RecordFeedback
                 | CommandKind::ShowTestPattern
-                | CommandKind::ClearOutputs => {}
+                | CommandKind::ClearOutputs
+                | CommandKind::SetUpdateSettings
+                | CommandKind::CheckForUpdate
+                | CommandKind::InstallUpdate => {}
             }
         }
         let unique: std::collections::HashSet<_> = ALL_COMMANDS.iter().collect();

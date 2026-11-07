@@ -48,6 +48,27 @@
       </WrapPanel>
     </Border>
 
+    <!-- SAFE-06: quitting or updating while something is on the screens asks first. It sits under
+         the toolbar, so it never covers the preview or Clear everything (DESIGN-SYSTEM §1). -->
+    <Border Name="LiveGuardBar" DockPanel.Dock="Top" IsVisible="{Binding IsLiveGuardOpen}"
+            Background="{DynamicResource Brush.WarningBg}" BorderBrush="{DynamicResource Brush.Warning}"
+            BorderThickness="{DynamicResource Line.AlertBar}" Padding="{DynamicResource Space.Text.Medium}">
+      <WrapPanel ItemSpacing="{DynamicResource Space.4}" LineSpacing="{DynamicResource Space.3}">
+        <StackPanel Spacing="{DynamicResource Space.1}" VerticalAlignment="Center">
+          <TextBlock Name="LiveGuardTitle" Classes="label" views:Critical.IsCritical="True"
+                     Text="{Binding [live-guard-title], Source={x:Static s:Localizer.Instance}}" />
+          <TextBlock Name="LiveGuardQuestion" TextWrapping="Wrap" Text="{Binding LiveGuardQuestion}" />
+        </StackPanel>
+        <Button Name="LiveGuardKeep" Classes="primary" Command="{Binding CancelLiveGuardCommand}" IsDefault="True" IsCancel="True">
+          <TextBlock views:Critical.IsCritical="True"
+                     Text="{Binding [live-guard-keep], Source={x:Static s:Localizer.Instance}}" />
+        </Button>
+        <Button Name="LiveGuardConfirm" Command="{Binding ConfirmLiveGuardCommand}">
+          <TextBlock Text="{Binding LiveGuardConfirmText}" />
+        </Button>
+      </WrapPanel>
+    </Border>
+
     <!-- Sidebar: an Apple-style source list (skeleton until M2). -->
     <Border Name="Sidebar" DockPanel.Dock="Left" Width="{DynamicResource Size.SidebarWidth}"
             Background="{DynamicResource Brush.Surface2}" BorderBrush="{DynamicResource Brush.Line}"

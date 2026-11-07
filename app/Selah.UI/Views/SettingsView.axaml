@@ -63,6 +63,33 @@
           </Border>
         </StackPanel>
       </Border>
+
+      <!-- Settings ▸ Updates (M1.11): off until the person turns it on; checks only when asked. -->
+      <TextBlock Classes="title-3" Text="{Binding [settings-section-updates], Source={x:Static s:Localizer.Instance}}" />
+      <Border Name="UpdatesCard" Classes="card">
+        <StackPanel Spacing="{DynamicResource Space.3}">
+          <ToggleSwitch Name="AllowUpdateCheck" IsChecked="{Binding Updates.AllowUpdateCheck}">
+            <TextBlock Text="{Binding [updates-allow-label], Source={x:Static s:Localizer.Instance}}" />
+          </ToggleSwitch>
+          <TextBlock Classes="hint" Text="{Binding [updates-allow-hint], Source={x:Static s:Localizer.Instance}}" />
+          <TextBlock Name="UpdateFeedLabel" Classes="label" Text="{Binding [updates-feed-label], Source={x:Static s:Localizer.Instance}}" />
+          <TextBlock Classes="hint" Text="{Binding [updates-feed-hint], Source={x:Static s:Localizer.Instance}}" />
+          <TextBox Name="UpdateFeedUrl" Text="{Binding Updates.FeedUrl}" AutomationProperties.LabeledBy="{Binding #UpdateFeedLabel}" />
+          <WrapPanel ItemSpacing="{DynamicResource Space.3}" LineSpacing="{DynamicResource Space.3}">
+            <Button Name="SaveUpdateFeed" Command="{Binding Updates.SaveAddressCommand}">
+              <TextBlock Text="{Binding [updates-save], Source={x:Static s:Localizer.Instance}}" />
+            </Button>
+            <Button Name="CheckForUpdates" Classes="primary" Command="{Binding Updates.CheckCommand}">
+              <TextBlock Text="{Binding [updates-check], Source={x:Static s:Localizer.Instance}}" />
+            </Button>
+            <Button Name="InstallUpdate" Command="{Binding Updates.InstallCommand}" IsVisible="{Binding Updates.CanInstall}">
+              <TextBlock Text="{Binding [updates-install], Source={x:Static s:Localizer.Instance}}" />
+            </Button>
+          </WrapPanel>
+          <TextBlock Name="UpdateMessage" TextWrapping="Wrap" Text="{Binding Updates.Message}"
+                     IsVisible="{Binding Updates.Message, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+        </StackPanel>
+      </Border>
     </StackPanel>
   </ScrollViewer>
 </UserControl>

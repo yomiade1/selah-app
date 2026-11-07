@@ -51,6 +51,9 @@ message Command {
     RecordFeedback record_feedback = 3;
     ShowTestPattern show_test_pattern = 4;
     ClearOutputs clear_outputs = 5;
+    CheckForUpdate check_for_update = 6;
+    InstallUpdate install_update = 7;
+    SetUpdateSettings set_update_settings = 8;
   }
 }
 
@@ -130,5 +133,6 @@ message Reply {
     Article article = 4;
     bool acknowledged = 5;
     WatchdogStatus watchdog_status = 6;
+    UpdateCheck update_check = 7;
   }
 }

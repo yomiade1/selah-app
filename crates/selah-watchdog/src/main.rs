@@ -165,12 +165,14 @@ fn options() -> Options {
         .ok()
         .and_then(|path| path.parent().map(Path::to_path_buf))
         .unwrap_or_default();
+    // Installed layout (packaging/velopack/README.md): the UI lives in `ui/`, because its
+    // `Selah.exe` would clash with the `selah.exe` launcher on case-insensitive file systems.
     let ui = if has("--no-ui") {
         None
     } else {
         std::env::var_os("SELAH_UI_PATH")
             .map(PathBuf::from)
-            .or_else(|| Some(exe(&dir, "Selah.UI")))
+            .or_else(|| Some(exe(&dir.join("ui"), "Selah")))
             .filter(|path| path.is_file())
     };
     Options {

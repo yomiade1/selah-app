@@ -7,6 +7,7 @@ use selah_proto::v1::{
 use crate::live::{LiveState, is_live};
 use crate::permissions::{self, DENIED_CODE};
 use crate::settings::SettingsStore;
+use crate::update::{self, Release, UpdateError};
 
 /// Error catalogue codes used by core (content/errors/errors.yaml).
 pub mod codes {
@@ -27,6 +28,16 @@ pub struct EngineView {
     pub frame_checksum: Vec<u8>,
 }
 
+/// Slow work the host runs away from the request path (network, disk). When it's done, the host
+/// calls the matching `finish_*` method, which builds the reply.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum Work {
+    /// Read the update feed (M1.11). Only when the person asked and allowed it (SEC-13).
+    CheckForUpdate { feed_url: String },
+    /// Download and verify this release, then install it if nothing is on the screens.
+    InstallUpdate { feed_url: String, release: Release },
+}
+
 /// The result of handling one request.
 #[derive(Debug, Default)]
 pub struct Outcome {
@@ -37,6 +48,8 @@ pub struct Outcome {
     pub broadcast: Vec<Event>,
     /// The requester asked for events.
     pub subscribe: bool,
+    /// Run this, then call `finish_*` for the reply (`reply` is `None` meanwhile).
+    pub work: Option<Work>,
 }
 
 pub struct CoreService {
@@ -47,6 +60,8 @@ pub struct CoreService {
     actor: Actor,
     /// kb.db, when it was found (KNOWLEDGE-BASE §6.4). Help queries answer empty without it.
     help: Option<selah_kb::HelpIndex>,
+    /// The release the last update check offered.
+    available_update: Option<Release>,
 }
 
 impl CoreService {
@@ -57,6 +72,7 @@ impl CoreService {
             engine: EngineView::default(),
             safe_mode,
             help: None,
+            available_update: None,
             actor: Actor {
                 user_id: "selah".into(),
                 device_id: "core".into(),
@@ -71,6 +87,15 @@ impl CoreService {
 
     pub fn scene(&self) -> &Scene {
         self.live.scene()
+    }
+
+    /// Something other than nothing or the logo is on the screens (SAFE-06).
+    pub fn is_live(&self) -> bool {
+        is_live(self.live.scene())
+    }
+
+    pub fn settings(&self) -> &crate::settings::StoredSettings {
+        self.settings.get()
     }
 
     pub fn status(&self) -> Status {
@@ -169,7 +194,7 @@ impl CoreService {
                     reply: ack(self),
                     to_engine: Some(self.resync_command()),
                     broadcast: vec![self.status_event()],
-                    subscribe: false,
+                    ..Outcome::default()
                 }
             }
             command::Action::ClearOutputs(_) => {
@@ -178,7 +203,7 @@ impl CoreService {
                     reply: ack(self),
                     to_engine: Some(self.resync_command()),
                     broadcast: vec![self.status_event()],
-                    subscribe: false,
+                    ..Outcome::default()
                 }
             }
             command::Action::SetAppearance(change) => {
@@ -204,6 +229,60 @@ impl CoreService {
                 reply: ack(self),
                 ..Outcome::default()
             },
+            command::Action::SetUpdateSettings(change) => {
+                let feed = change.update_feed_url.trim().to_owned();
+                let allow = change.allow_update_check;
+                match self.settings.update(|s| {
+                    s.update_feed_url = feed;
+                    s.allow_update_check = allow;
+                    Ok(())
+                }) {
+                    Ok(()) => Outcome {
+                        reply: ack(self),
+                        ..Outcome::default()
+                    },
+                    Err(_) => Outcome {
+                        reply: Some(self.error(request, codes::SETTING, "error-invalid-setting")),
+                        ..Outcome::default()
+                    },
+                }
+            }
+            command::Action::CheckForUpdate(_) => {
+                // SEC-13: no connection unless the person turned checks on and gave a feed.
+                let settings = self.settings.get();
+                if !settings.allow_update_check || settings.update_feed_url.is_empty() {
+                    return self.update_error(request, &UpdateError::Off);
+                }
+                Outcome {
+                    work: Some(Work::CheckForUpdate {
+                        feed_url: settings.update_feed_url.clone(),
+                    }),
+                    ..Outcome::default()
+                }
+            }
+            command::Action::InstallUpdate(install) => {
+                // SAFE-06, SEC-12: never while something is on the screens.
+                if self.is_live() {
+                    return self.update_error(request, &UpdateError::Live);
+                }
+                let settings = self.settings.get();
+                if !settings.allow_update_check || settings.update_feed_url.is_empty() {
+                    return self.update_error(request, &UpdateError::Off);
+                }
+                match self.available_update.as_ref() {
+                    Some(release) if release.version.to_string() == install.version => Outcome {
+                        work: Some(Work::InstallUpdate {
+                            feed_url: settings.update_feed_url.clone(),
+                            release: release.clone(),
+                        }),
+                        ..Outcome::default()
+                    },
+                    _ => Outcome {
+                        reply: Some(self.error(request, codes::INVALID, "error-invalid-request")),
+                        ..Outcome::default()
+                    },
+                }
+            }
             // Denied above for every client; kept for exhaustiveness.
             command::Action::Render(_) => Outcome {
                 reply: Some(self.error(request, DENIED_CODE, "error-not-permitted")),
@@ -268,6 +347,73 @@ impl CoreService {
         Outcome {
             reply: Some(reply),
             ..Outcome::default()
+        }
+    }
+
+    fn update_error(&self, request: &Envelope, error: &UpdateError) -> Outcome {
+        tracing::warn!(%error, "update refused or failed");
+        Outcome {
+            reply: Some(self.error(request, error.code(), error.message_key())),
+            ..Outcome::default()
+        }
+    }
+
+    /// The reply to a finished update check.
+    pub fn finish_update_check(
+        &mut self,
+        request: &Envelope,
+        result: Result<Option<Release>, UpdateError>,
+    ) -> Envelope {
+        match result {
+            Ok(found) => {
+                let check = selah_proto::v1::UpdateCheck {
+                    available: found.is_some(),
+                    version: found
+                        .as_ref()
+                        .map(|r| r.version.to_string())
+                        .unwrap_or_default(),
+                    notes_markdown: found
+                        .as_ref()
+                        .map(|r| r.notes_markdown.clone())
+                        .unwrap_or_default(),
+                    current_version: selah_runtime::VERSION.into(),
+                };
+                tracing::info!(available = %check.version, "update check finished");
+                self.available_update = found;
+                self.reply(request, reply::Result::UpdateCheck(check))
+            }
+            Err(error) => {
+                tracing::warn!(%error, "update check failed");
+                self.error(request, error.code(), error.message_key())
+            }
+        }
+    }
+
+    /// The reply to a finished download: install it, unless something went on the screens
+    /// while it downloaded (SAFE-06, SEC-12).
+    pub fn finish_update_install(
+        &mut self,
+        request: &Envelope,
+        downloaded: Result<std::path::PathBuf, UpdateError>,
+        installer: Option<&dyn update::Install>,
+    ) -> Envelope {
+        let result = downloaded.and_then(|package| {
+            if self.is_live() {
+                return Err(UpdateError::Live);
+            }
+            let installer = installer
+                .ok_or_else(|| UpdateError::Install("Selah wasn't installed by Setup".into()))?;
+            installer.install(&package).map_err(UpdateError::Install)
+        });
+        match result {
+            Ok(()) => {
+                tracing::warn!("installing an update; Selah will restart");
+                self.reply(request, reply::Result::Acknowledged(true))
+            }
+            Err(error) => {
+                tracing::warn!(%error, "update not installed");
+                self.error(request, error.code(), error.message_key())
+            }
         }
     }
 
@@ -427,6 +573,154 @@ mod tests {
         });
         assert!(core.scene().revision > floor);
         assert!(!core.status().live);
+    }
+
+    fn command(action: command::Action) -> envelope::Body {
+        envelope::Body::Command(Command {
+            action: Some(action),
+        })
+    }
+
+    fn error_code(outcome: &Outcome) -> String {
+        match outcome.reply.as_ref().and_then(|r| r.body.as_ref()) {
+            Some(envelope::Body::Error(error)) => error.code.clone(),
+            other => panic!("expected an error, got {other:?}"),
+        }
+    }
+
+    fn allow_updates(core: &mut CoreService) {
+        let outcome = core.handle(&request(
+            ActorOrigin::Ui,
+            command(command::Action::SetUpdateSettings(
+                selah_proto::v1::SetUpdateSettings {
+                    update_feed_url: "https://updates.example.invalid/releases.dev.json".into(),
+                    allow_update_check: true,
+                },
+            )),
+        ));
+        assert!(
+            outcome
+                .reply
+                .is_some_and(|r| matches!(r.body, Some(envelope::Body::Reply(_))))
+        );
+    }
+
+    fn release() -> Release {
+        Release {
+            version: semver::Version::new(9, 0, 0),
+            file_name: "SelahApp-9.0.0-dev-full.nupkg".into(),
+            sha256: [0; 32],
+            size: 1,
+            notes_markdown: String::new(),
+        }
+    }
+
+    struct RecordingInstaller(std::sync::Mutex<Vec<std::path::PathBuf>>);
+
+    impl update::Install for RecordingInstaller {
+        fn install(&self, package: &std::path::Path) -> Result<(), String> {
+            self.0.lock().unwrap().push(package.to_owned());
+            Ok(())
+        }
+    }
+
+    #[test]
+    fn update_checks_are_off_at_default_settings() {
+        // sec: SEC-13 (no outgoing connection unless the person allows it)
+        let dir = tempfile::tempdir().unwrap();
+        let mut core = CoreService::new(dir.path(), false);
+        let outcome = core.handle(&request(
+            ActorOrigin::Ui,
+            command(command::Action::CheckForUpdate(Default::default())),
+        ));
+        assert!(outcome.work.is_none());
+        assert_eq!(error_code(&outcome), update::codes::OFF);
+        allow_updates(&mut core);
+        let outcome = core.handle(&request(
+            ActorOrigin::Ui,
+            command(command::Action::CheckForUpdate(Default::default())),
+        ));
+        assert_eq!(
+            outcome.work,
+            Some(Work::CheckForUpdate {
+                feed_url: "https://updates.example.invalid/releases.dev.json".into()
+            })
+        );
+        assert!(outcome.reply.is_none());
+    }
+
+    #[test]
+    fn a_plain_http_feed_is_refused() {
+        // sec: SEC-12
+        let dir = tempfile::tempdir().unwrap();
+        let mut core = CoreService::new(dir.path(), false);
+        let outcome = core.handle(&request(
+            ActorOrigin::Ui,
+            command(command::Action::SetUpdateSettings(
+                selah_proto::v1::SetUpdateSettings {
+                    update_feed_url: "http://updates.example.invalid/releases.dev.json".into(),
+                    allow_update_check: true,
+                },
+            )),
+        ));
+        assert_eq!(error_code(&outcome), codes::SETTING);
+        assert!(!core.settings().allow_update_check);
+    }
+
+    #[test]
+    fn updates_never_install_while_something_is_on_the_screens() {
+        // safe: SAFE-06; sec: SEC-12
+        let dir = tempfile::tempdir().unwrap();
+        let mut core = CoreService::new(dir.path(), false);
+        allow_updates(&mut core);
+        let check = request(
+            ActorOrigin::Ui,
+            command(command::Action::CheckForUpdate(Default::default())),
+        );
+        core.finish_update_check(&check, Ok(Some(release())));
+        let install = || {
+            request(
+                ActorOrigin::Ui,
+                command(command::Action::InstallUpdate(
+                    selah_proto::v1::InstallUpdate {
+                        version: "9.0.0".into(),
+                    },
+                )),
+            )
+        };
+
+        // Live: refused before anything is downloaded.
+        core.handle(&request(ActorOrigin::Ui, show_bars()));
+        let outcome = core.handle(&install());
+        assert!(outcome.work.is_none());
+        assert_eq!(error_code(&outcome), update::codes::LIVE);
+
+        // Cleared: the download may start...
+        core.handle(&request(
+            ActorOrigin::Ui,
+            command(command::Action::ClearOutputs(ClearOutputs {})),
+        ));
+        let outcome = core.handle(&install());
+        assert!(matches!(outcome.work, Some(Work::InstallUpdate { .. })));
+
+        // ...but if something went on the screens meanwhile, it isn't installed.
+        let installer = RecordingInstaller(Default::default());
+        core.handle(&request(ActorOrigin::Ui, show_bars()));
+        let reply =
+            core.finish_update_install(&install(), Ok("pkg.nupkg".into()), Some(&installer));
+        assert!(
+            matches!(reply.body, Some(envelope::Body::Error(ref e)) if e.code == update::codes::LIVE)
+        );
+        assert!(installer.0.lock().unwrap().is_empty());
+
+        core.handle(&request(
+            ActorOrigin::Ui,
+            command(command::Action::ClearOutputs(ClearOutputs {})),
+        ));
+        let reply =
+            core.finish_update_install(&install(), Ok("pkg.nupkg".into()), Some(&installer));
+        assert!(matches!(reply.body, Some(envelope::Body::Reply(_))));
+        assert_eq!(installer.0.lock().unwrap().len(), 1);
     }
 
     #[test]

@@ -50,6 +50,8 @@ public sealed class LayoutTests : IDisposable
         var model = new MainViewModel(null);
         // Everything critical showing: connected, live, and in safe mode.
         model.Apply(new ConnectionSnapshot(Connected: true, EngineConnected: true, SafeMode: true, Live: true, Generation: 1));
+        // And the "Something is on the screens" question (SAFE-06), which must not push them out.
+        _ = model.ConfirmIfLiveAsync(LiveGuardKind.Quit);
         return model;
     }
 

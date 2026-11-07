@@ -17,3 +17,5 @@ anchors:
     description: Help, Report a problem.
   - id: help.diagnostics
     description: Help, Diagnostics.
+  - id: settings.updates
+    description: Settings, Updates.
