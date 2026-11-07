@@ -95,6 +95,9 @@ def run(stage, label, command, env=None, timeout=1800):
     started = time.monotonic()
     print(f"--- [{stage}] {label}: {' '.join(Path(c).name if i == 0 else c for i, c in enumerate(command))}", flush=True)
     merged = dict(os.environ, **(env or {}))
+    if command[0] == "@cargo-deny":
+        # Resolved now: on a fresh runner stage 1 has only just fetched the pinned binary.
+        command = [cargo_deny(), *command[1:]]
     try:
         # One stream, so lines keep their order (cargo prints "Running" on stderr and results
         # on stdout; the ledger needs both in order).
@@ -173,7 +176,7 @@ def stages(args):
     stage("7", "golden frames", [tool("cargo"), "test", "--locked", "-p", "selah-testkit", "--features", "golden",
                                  "--test", "golden_text"], rust_env, skip=args.fast)
     stage("13", "test ledger", [PY, "tools/test-ledger.py", "--check"])
-    stage("14", "cargo deny", [cargo_deny(), "check"])
+    stage("14", "cargo deny", ["@cargo-deny", "check"])
     stage("14", "dotnet vulnerable packages", [PY, "tools/check-vulnerable.py", "dotnet"])
     stage("14", "pnpm audit", [PY, "tools/check-vulnerable.py", "pnpm"])
     stage("14", "secret scan", [PY, "tools/check-secrets.py"])
