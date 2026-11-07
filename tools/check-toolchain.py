@@ -7,6 +7,8 @@ import shutil
 import subprocess
 import sys
 
+ROOT = Path(__file__).resolve().parents[1]
+
 def run(name, *args):
     program = shutil.which(name)
     if not program:
@@ -35,8 +37,13 @@ def check():
         ("Node 22 LTS", lambda: run("node", "--version").startswith("v22.")),
         ("pnpm 10.20.0", lambda: run("pnpm", "--version") == "10.20.0"),
         ("Python 3.11+", lambda: sys.version_info >= (3, 11)),
-        ("LLVM / libclang", lambda: bool(run("clang", "--version"))),
     ]
+    # libclang is needed only to generate the FFmpeg bindings (selah-media, M1.7). Until that
+    # crate exists a missing LLVM is reported but doesn't fail the check.
+    if (ROOT / "crates/selah-media").is_dir():
+        checks.append(("LLVM / libclang", lambda: bool(run("clang", "--version"))))
+    elif not shutil.which("clang"):
+        print("NOTE LLVM / libclang: not installed; required from M1.7 (FFmpeg bindings)")
     errors = []
     for label, probe in checks:
         try:

@@ -8,7 +8,7 @@ Status values: `Not started` · `In progress` · `Blocked` (say on what) · `Don
 
 | Milestone | Status | Branch / tag | Started | Finished | Notes |
 |---|---|---|---|---|---|
-| M1. Foundations and risk spikes | In progress | `codex/m1-foundations` | 2026-11-07 | — | M1.1–M1.5 done (local Windows session, H-01). |
+| M1. Foundations and risk spikes | In progress | `codex/m1-foundations` | 2026-11-07 | — | M1.1–M1.6 and M1.10 done (local Windows session, H-01); M1.7–M1.9, M1.11–M1.13 next. |
 | M2. Library, songs, scripture and the help system | Not started | — | — | — | |
 | M3. Render engine, templates and the slide editor | Not started | — | — | — | |
 | M4. Live operation, services and stage | Not started | — | — | — | |
@@ -19,27 +19,37 @@ Status values: `Not started` · `In progress` · `Blocked` (say on what) · `Don
 | M9. Cloud, teams and enterprise | Not started | — | — | — | |
 | M10. Launch readiness and v1.0 | Not started | — | — | — | |
 
-**Next action:** continue M1 at M1.6 (text spike). See the resume notes.
+**Next action:** review and merge the M1 PR (M1.1–M1.6, M1.10), then say "Complete milestone 1" to continue with M1.7. See the resume notes.
 
 ## Resume notes
 
 _When a session stops partway through a milestone, write here: the milestone, the last finished WP, anything half-done (files, branch state) and the exact next step. Clear it when the milestone is done._
 
-2026-11-07 (local Windows session, H-01 approved): M1.1–M1.4 are committed on
-`codex/m1-foundations`, and M1.5 too. No PR is open yet; the branch is pushed.
+2026-11-07 (local Windows session, H-01 approved): M1.1–M1.6 and M1.10 are committed on
+`codex/m1-foundations` and opened as one PR. M1.7–M1.9 and M1.11–M1.13 remain.
 
-- `tools/verify.sh` / `verify.ps1` don't exist yet (M1.10), so WP evidence lists the gate
-  stages run by hand: `cargo fmt --check`, `cargo clippy --workspace --all-targets -D warnings`,
-  `cargo test --workspace`, `cargo check` for x86_64-unknown-linux-gnu and aarch64-apple-darwin,
-  `dotnet test app/Selah.sln`, `pnpm -r build/test`, `buf lint`, `buf format`, `cargo deny check`,
-  `tools/check-unsafe.py`, `tools/check-secrets.py`. `tests/ledger.json` starts in M1.10.
-- The Linux gate hasn't run yet: run it in an `ubuntu:24.04` container (Docker Desktop is
-  installed here) or rely on the PR's `linux` job.
-- LLVM/libclang (needed by FFmpeg bindings, M1.7) is not installed: a `winget install LLVM.LLVM`
-  from the earlier session was still waiting, most likely for an administrator (UAC) prompt.
-- The repository-local git email is now the GitHub no-reply address.
-- Next: M1.6 (Skia text spike). `design/tokens/tokens.json`, `design/tokens/build.mjs` and the
-  DESIGN-SYSTEM §3 focus/primary-fill change are prepared for M1.8 but not committed yet.
+- **Gate:** `tools/verify.sh` / `tools/verify.ps1` (logic in `tools/verify.py`). Run it in full before
+  ticking a WP. Each new WP that adds a check adds a stage there (M1.8: stage 8 UI tests and
+  `tools/lint-strings`; M1.9: stage 9 `selah-kb-lint`).
+- **M1.7 (video) needs LLVM/libclang** for the FFmpeg bindings. On this PC a `winget install LLVM.LLVM`
+  was waiting for an administrator prompt; cloud sessions and CI already have clang. The pinned
+  FFmpeg builds are in `third_party/ffmpeg/<platform>/shared/`; macOS needs
+  `tools/build-ffmpeg-macos.sh` (referenced by `tools/setup.sh --fetch`, not written yet) to build a
+  decode-only FFmpeg from the pinned source. Commit a small 1080p H.264 clip for the correctness
+  test (macOS can't generate one). `check-toolchain.py` starts requiring LLVM once
+  `crates/selah-media` exists.
+- **M1.8 (UI) is started:** `design/tokens/tokens.json` (DTCG, contrast pairs) and
+  `design/tokens/build.mjs` (Style Dictionary → `app/Selah.UI/Styles/Tokens.g.axaml`, `Tokens.g.cs`,
+  `web/tokens/tokens.css`) are committed but not wired: add a root `pnpm tokens` script that runs
+  `node design/tokens/build.mjs`, create `app/Selah.UI`, and `tools/check-generated.py` then checks
+  the outputs. DESIGN-SYSTEM §3 gained `color.primary-fill` and a darker light-mode focus colour
+  (contrast). Replace `selah-fake-ui` in the M1-A3 test with the real UI when it exists.
+- **M1.12:** the engine's emergency endpoint, the permission framework and safe mode exist; still to do
+  are `selah-net`, `SecretStore`, the UI side of the emergency lane and the quit/update/sleep guards.
+- **Skia** is pinned (0.157, prebuilt); builds read it through `SKIA_BINARIES_URL` (set by
+  `tool-env.ps1`, `cloud-setup.sh` and the gate). `Cargo.lock` holds bindgen on syn 2; if
+  `cargo update` moves it to syn 3 the build fails in bindgen.
+- The repository-local git email is the GitHub no-reply address.
 
 ## Milestone checklists
 
@@ -52,11 +62,11 @@ _When a session stops partway through a milestone, write here: the milestone, th
 - [x] **M1.3** IPC layer — evidence: commit `M1.3`; `selah-ipc` tests (`ten_thousand_round_trips_keep_correlation`, `malformed_and_oversized_frames_close_only_that_connection`, `client_reconnects_after_the_server_restarts`, `pipe_dacl_allows_only_the_current_user`, `a_second_server_cannot_take_over_a_live_endpoint`, ring seqlock tests), `fuzz_smoke`, C# `IpcClientTests`/`PreviewRingReaderTests`; `selah-bench ipc --check`: named pipe p99 0.096 ms
 - [x] **M1.4** Processes and watchdog — evidence: commit `M1.4`; `selah-testkit` continuity tests (engine, core and UI kills recover in < 2 s; 3 crashes → safe mode; single instance) pass 3 runs in a row; redaction tests (SEC-06); permission matrix (SEC-14); settings/live-state tests
 - [x] **M1.5** Engine windows, compositor and test patterns — evidence: commit `M1.5`; `selah-render` `gpu_test_patterns_match_the_cpu_reference_exactly` (WARP; exact match at 1920×1080, 1366×768, 17×9); `selah-testkit` `show_test_pattern_reaches_the_output_within_one_frame` (FrameShown ≤ 1 frame after the command, bars checksum, preview ring); windowed run on an NVIDIA MX350 (DX12) opened the output window (Bgra8Unorm)
-- [ ] **M1.6** Text spike — evidence: 
+- [x] **M1.6** Text spike — evidence: commit `M1.6`; `golden_text` (en, yo, ko, ar against `tests/golden/reference/`, no missing glyphs, GPU = CPU blending, paragraph cache); references reviewed by eye (tests/golden/CHANGES.md); `tools/verify.ps1` stage 7 green
 - [ ] **M1.7** Video spike — evidence: 
 - [ ] **M1.8** UI shell, design tokens and text size — evidence: 
 - [ ] **M1.9** Knowledge base pipeline — evidence: 
-- [ ] **M1.10** Quality gate and CI — evidence: 
+- [x] **M1.10** Quality gate and CI — evidence: commit `M1.10`; `tools/verify.ps1` green on Windows (stages 1–7, 13, 14); `tests/ledger.json` created (rust 54, dotnet 20, web 3, golden 4, e2e 6); `tests/tools/test_ledger.py`; `check-workflows` passes for ci.yml, release.yml and bless-golden.yml. Stage 8 (UI), stage 9 (KB) and `tools/lint-strings` are added by M1.8 and M1.9, which create what they check; the first PR run's CI result is in the PR
 - [ ] **M1.11** Windows installer and updates — evidence: 
 - [ ] **M1.12** Security and safety baseline — evidence: 
 - [ ] **M1.13** Problem reports, diagnostics and spike report — evidence: 
@@ -377,6 +387,13 @@ _Anything done differently from BUILD-PLAN.md or the docs, with the reason and t
 - 2026-11-07, M1.1: `cargo-deny` is pinned as prebuilt release binaries in `tools/third_party.lock.json` instead of being compiled in every CI run.
 - 2026-11-07, M1.3: the cargo-fuzz target needs nightly, so the CI smoke run is a stable test over the same entry point (`SELAH_FUZZ_SECONDS`); coverage-guided runs use `fuzz/` in cloud sessions.
 - 2026-11-07, M1.4: the UI continuity check (M1-A3) uses `selah-fake-ui`, a stand-in that heartbeats, connects and subscribes like the UI, until the Avalonia shell (M1.8) exists. The crate `selah-runtime` (paths, locks, logs, redaction, heartbeats) is new and not yet in ARCHITECTURE §1; it's added with the M1 docs update.
+
+- 2026-11-07, M1.10 before M1.7–M1.9: the gate was built out of order so this PR's CI runs it (without `tools/verify.sh`, CI runs only the policy checks), and because M1.7 is blocked on LLVM on this PC.
+- 2026-11-07, M1.10: the gate's stages live in `tools/verify.py`; `verify.sh` and `verify.ps1` are thin wrappers, so the platforms can't drift. CI jobs gained a pinned `actions/setup-node` (Node 22) and `corepack enable pnpm`, which the toolchain check needs.
+- 2026-11-07, M1.10: `bless-golden.yml` renders on the chosen platform and uploads the frames as an artifact instead of pushing to the PR branch (the CI policy requires `persist-credentials: false` and read-only permissions); a session reviews and commits the image with its reason.
+- 2026-11-07, M1.6: golden references were rendered on Windows (WARP) in this local session, not on lavapipe in a cloud session (ADR-023). Text is rasterised by Skia on the CPU, so the frames don't depend on the GPU; Linux and macOS compare within `Tolerance::TEXT` in CI.
+- 2026-11-07, M1.6: slide fonts are pinned to weight 400 because Noto Sans KR's variable font defaults to Thin; templates choose weights from M3.
+- 2026-11-07, M1.8 (started): `color.primary-fill` (Booth `#0050D8`) added and light `color.focus` changed to `#0076D6`, because the documented values failed the 4.5:1 and 3:1 contrast checks; DESIGN-SYSTEM §3 updated.
 
 ## Quarantined tests
 
