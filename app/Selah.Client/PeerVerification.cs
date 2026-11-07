@@ -45,7 +45,7 @@ public static class PeerVerification
             throw new PlatformNotSupportedException("Unix socket peer checks need Linux or macOS.");
         }
 
-        if (peerUid != NativeMethods.getuid())
+        if (peerUid != NativeMethods.CurrentUid())
         {
             throw new UnauthorizedAccessException("The Selah socket belongs to another user.");
         }

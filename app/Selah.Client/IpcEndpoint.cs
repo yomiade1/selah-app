@@ -93,7 +93,7 @@ public static class RuntimeDirectory
 
             var xdg = Environment.GetEnvironmentVariable("XDG_RUNTIME_DIR");
             return string.IsNullOrEmpty(xdg)
-                ? $"/tmp/selah-{NativeMethods.getuid()}"
+                ? $"/tmp/selah-{NativeMethods.CurrentUid()}"
                 : System.IO.Path.Combine(xdg, "selah");
         }
     }
@@ -101,8 +101,29 @@ public static class RuntimeDirectory
 
 internal static partial class NativeMethods
 {
+    /// <summary>The current user's uid (Unix only).</summary>
+    internal static uint CurrentUid()
+    {
+        if (OperatingSystem.IsLinux())
+        {
+            // "libc" doesn't load on glibc (libc.so is a linker script), so read it from /proc.
+            foreach (var line in File.ReadLines("/proc/self/status"))
+            {
+                if (line.StartsWith("Uid:", StringComparison.Ordinal))
+                {
+                    var fields = line.Split((char[])['\t', ' '], StringSplitOptions.RemoveEmptyEntries);
+                    return uint.Parse(fields[1], System.Globalization.CultureInfo.InvariantCulture);
+                }
+            }
+
+            throw new InvalidOperationException("Couldn't read the current user id.");
+        }
+
+        return getuid();
+    }
+
     [DllImport("libc", EntryPoint = "getuid")]
 #pragma warning disable SYSLIB1054 // LibraryImport needs unsafe blocks, which Selah disallows (SEC-11).
-    internal static extern uint getuid();
+    private static extern uint getuid();
 #pragma warning restore SYSLIB1054
 }
