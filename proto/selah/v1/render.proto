@@ -1,0 +1,64 @@
+syntax = "proto3";
+
+package selah.v1;
+
+import "selah/v1/common.proto";
+
+option csharp_namespace = "Selah.Contracts.V1";
+
+enum TestPattern {
+  TEST_PATTERN_UNSPECIFIED = 0;
+  TEST_PATTERN_SMPTE_BARS = 1;
+  TEST_PATTERN_GRID = 2;
+  TEST_PATTERN_GRADIENT = 3;
+}
+
+message Scene {
+  uint64 revision = 1;
+  TestPattern test_pattern = 2;
+  string text = 3;
+  bool cleared = 4;
+  Resolution resolution = 5;
+}
+
+message RenderCommand {
+  oneof action {
+    Scene set_scene = 1;
+    ClearEverything clear_everything = 2;
+    ShowLogo show_logo = 3;
+  }
+}
+
+message ClearEverything {}
+
+message ShowLogo {}
+
+// The emergency endpoint accepts only these actions, never normal commands.
+message EmergencyCommand {
+  oneof action {
+    ClearEverything clear_everything = 1;
+    ShowLogo show_logo = 2;
+  }
+}
+
+message FrameShown {
+  uint64 scene_revision = 1;
+  // Engine monotonic clock when the frame was presented.
+  uint64 monotonic_nanoseconds = 2;
+  // BLAKE3 of the output's pixels.
+  bytes frame_checksum = 3;
+  // Engine monotonic clock when the command that produced this frame arrived.
+  uint64 command_received_nanoseconds = 4;
+  uint32 output_index = 5;
+  // Frame period of the output's clock (for "within one frame" checks).
+  uint64 frame_period_nanoseconds = 6;
+}
+
+// Engine → core after the emergency lane cleared the screens or showed the logo (SAFE-03).
+// Core records it and raises its own revision above scene_revision, so a scene sent before
+// core heard about it can't bring the old content back.
+message EmergencyApplied {
+  bool show_logo = 1;
+  uint64 scene_revision = 2;
+  uint64 monotonic_nanoseconds = 3;
+}

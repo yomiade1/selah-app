@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+  </PropertyGroup>
+  <ItemGroup>
+    <Content Include="../../tests/fixtures/proto/status-query.hex" Link="fixtures/status-query.hex" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="../../tests/fixtures/ipc/preview-ring.bin" Link="fixtures/preview-ring.bin" CopyToOutputDirectory="PreserveNewest" />
+    <ProjectReference Include="../Selah.Client/Selah.Client.csproj" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />
+    <PackageReference Include="xunit" Version="2.9.3" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.8.2" PrivateAssets="all" />
+  </ItemGroup>
+</Project>

@@ -1,0 +1,32 @@
+syntax = "proto3";
+
+package selah.v1;
+
+option csharp_namespace = "Selah.Contracts.V1";
+
+enum Appearance {
+  APPEARANCE_UNSPECIFIED = 0;
+  APPEARANCE_LIGHT = 1;
+  APPEARANCE_BOOTH = 2;
+  APPEARANCE_AUTOMATIC = 3;
+}
+
+// Scale values: 90, 100, 115, 130, 150, 175, 200. Core validates them.
+message AppearanceSettings {
+  Appearance appearance = 1;
+  uint32 text_scale_percent = 2;
+  bool use_computer_text_size = 3;
+}
+
+// Network access remains off until explicitly requested.
+message Settings {
+  AppearanceSettings appearance = 1;
+  string update_feed_url = 2;
+  bool allow_update_check = 3;
+}
+
+message GetSettings {}
+
+message SetAppearance {
+  AppearanceSettings appearance = 1;
+}

@@ -1,0 +1,7 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <PackageReference Include="Google.Protobuf" Version="3.33.0" />
+    <PackageReference Include="Grpc.Tools" Version="2.76.0" PrivateAssets="All" />
+    <Protobuf Include="../../proto/selah/v1/*.proto" ProtoRoot="../../proto" GrpcServices="None" />
+  </ItemGroup>
+</Project>

@@ -1,0 +1,134 @@
+syntax = "proto3";
+
+package selah.v1;
+
+import "selah/v1/errors.proto";
+import "selah/v1/help.proto";
+import "selah/v1/render.proto";
+import "selah/v1/settings.proto";
+
+option csharp_namespace = "Selah.Contracts.V1";
+
+enum ActorOrigin {
+  ACTOR_ORIGIN_UNSPECIFIED = 0;
+  ACTOR_ORIGIN_UI = 1;
+  ACTOR_ORIGIN_API = 2;
+  ACTOR_ORIGIN_MIDI = 3;
+  ACTOR_ORIGIN_MACRO = 4;
+  ACTOR_ORIGIN_TIMELINE = 5;
+  ACTOR_ORIGIN_SYNC = 6;
+  ACTOR_ORIGIN_TOUR = 7;
+  ACTOR_ORIGIN_CORE = 8;
+  ACTOR_ORIGIN_ENGINE = 9;
+  ACTOR_ORIGIN_WATCHDOG = 10;
+}
+
+// This is attribution, not proof of identity. The receiver must authenticate
+// the transport peer and bind the actor to that identity before authorising.
+message Actor {
+  string user_id = 1;
+  string device_id = 2;
+  ActorOrigin origin = 3;
+}
+
+message Envelope {
+  uint64 id = 1;
+  uint64 correlation_id = 2;
+  Actor actor = 3;
+  oneof body {
+    Command command = 10;
+    Query query = 11;
+    Event event = 12;
+    Reply reply = 13;
+    Error error = 14;
+  }
+}
+
+message Command {
+  oneof action {
+    RenderCommand render = 1;
+    SetAppearance set_appearance = 2;
+    RecordFeedback record_feedback = 3;
+    ShowTestPattern show_test_pattern = 4;
+    ClearOutputs clear_outputs = 5;
+  }
+}
+
+// UI → core: put a test pattern on every output (M1.8 "Show test pattern").
+message ShowTestPattern {
+  TestPattern pattern = 1;
+}
+
+// UI → core: clear every output through the normal path. The emergency lane is separate.
+message ClearOutputs {}
+
+message Query {
+  oneof request {
+    GetStatus get_status = 1;
+    GetSettings get_settings = 2;
+    SearchHelp search_help = 3;
+    GetArticle get_article = 4;
+    HelpForContext help_for_context = 5;
+    Subscribe subscribe = 6;
+    GetWatchdogStatus get_watchdog_status = 7;
+  }
+}
+
+message GetStatus {}
+
+message Status {
+  bool connected = 1;
+  bool safe_mode = 2;
+  uint64 scene_revision = 3;
+  // Core's view of the engine; the engine answers GetStatus with its own view.
+  bool engine_connected = 4;
+  uint64 engine_scene_revision = 5;
+  // Checksum of the last frame shown on output 0 (BLAKE3 of its pixels).
+  bytes frame_checksum = 6;
+  string version = 7;
+  // True while something other than nothing or the logo is on the screens (SAFE-06).
+  bool live = 8;
+}
+
+message GetWatchdogStatus {}
+
+message ProcessInfo {
+  string role = 1;
+  uint32 pid = 2;
+  uint32 restarts = 3;
+  bool running = 4;
+}
+
+message WatchdogStatus {
+  repeated ProcessInfo processes = 1;
+  bool safe_mode = 2;
+  string safe_mode_reason = 3;
+}
+
+message Subscribe {
+  repeated string event_names = 1;
+}
+
+message Heartbeat {
+  uint64 monotonic_nanoseconds = 1;
+}
+
+message Event {
+  oneof notification {
+    FrameShown frame_shown = 1;
+    Status status = 2;
+    Heartbeat heartbeat = 3;
+    EmergencyApplied emergency_applied = 4;
+  }
+}
+
+message Reply {
+  oneof result {
+    Status status = 1;
+    Settings settings = 2;
+    HelpResults help_results = 3;
+    Article article = 4;
+    bool acknowledged = 5;
+    WatchdogStatus watchdog_status = 6;
+  }
+}

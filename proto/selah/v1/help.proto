@@ -1,0 +1,40 @@
+syntax = "proto3";
+
+package selah.v1;
+
+option csharp_namespace = "Selah.Contracts.V1";
+
+message SearchHelp {
+  string query = 1;
+  string language = 2;
+  string role = 3;
+  string mode = 4;
+  repeated string anchors = 5;
+}
+
+message GetArticle {
+  string id = 1;
+  string language = 2;
+}
+
+message HelpForContext {
+  repeated string anchors = 1;
+  string language = 2;
+}
+
+message RecordFeedback {
+  string article_id = 1;
+  bool helpful = 2;
+}
+
+message Article {
+  string id = 1;
+  string language = 2;
+  string title = 3;
+  string summary = 4;
+  string ast_json = 5;
+}
+
+message HelpResults {
+  repeated Article articles = 1;
+}
