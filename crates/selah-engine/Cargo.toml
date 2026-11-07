@@ -1,0 +1,17 @@
+[package]
+name = "selah-engine"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license-file = "../../LICENSE"
+publish.workspace = true
+description = "The selah-engine process: compositor, outputs and the emergency lane"
+
+[dependencies]
+anyhow.workspace = true
+selah-ipc = { path = "../selah-ipc" }
+selah-proto = { path = "../selah-proto" }
+selah-render = { path = "../selah-render" }
+selah-runtime = { path = "../selah-runtime" }
+tokio = { workspace = true, features = ["rt-multi-thread", "macros", "sync", "time", "signal"] }
+tracing.workspace = true

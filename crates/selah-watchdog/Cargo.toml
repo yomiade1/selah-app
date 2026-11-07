@@ -1,0 +1,33 @@
+[package]
+name = "selah-watchdog"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license-file = "../../LICENSE"
+publish.workspace = true
+description = "Process supervisor and the `selah` launcher"
+
+[[bin]]
+name = "selah-watchdog"
+path = "src/main.rs"
+
+[[bin]]
+name = "selah"
+path = "src/bin/selah.rs"
+
+[lib]
+path = "src/lib.rs"
+
+[dependencies]
+anyhow.workspace = true
+selah-ipc = { path = "../selah-ipc" }
+selah-proto = { path = "../selah-proto" }
+selah-runtime = { path = "../selah-runtime" }
+tokio = { workspace = true, features = ["rt-multi-thread", "macros", "sync", "time", "process", "signal"] }
+tracing.workspace = true
+
+[target.'cfg(windows)'.dependencies]
+windows-sys = { workspace = true, features = ["Win32_UI_Input_KeyboardAndMouse"] }
+
+[dev-dependencies]
+tempfile.workspace = true

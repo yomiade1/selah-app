@@ -1,0 +1,14 @@
+[package]
+name = "selah-render"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license-file = "../../LICENSE"
+publish.workspace = true
+description = "Selah compositor: layer stack, test patterns, text and video layers"
+
+[dependencies]
+anyhow.workspace = true
+blake3.workspace = true
+selah-proto = { path = "../selah-proto" }
+tracing.workspace = true

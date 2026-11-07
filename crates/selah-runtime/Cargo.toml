@@ -1,0 +1,21 @@
+[package]
+name = "selah-runtime"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license-file = "../../LICENSE"
+publish.workspace = true
+description = "Shared process plumbing: paths, single-instance lock, redacted JSON logs, heartbeats"
+
+[dependencies]
+anyhow.workspace = true
+regex.workspace = true
+selah-ipc = { path = "../selah-ipc" }
+selah-proto = { path = "../selah-proto" }
+tokio = { workspace = true, features = ["time", "rt"] }
+tracing.workspace = true
+tracing-appender.workspace = true
+tracing-subscriber = { workspace = true, features = ["fmt", "json", "env-filter", "std", "registry"] }
+
+[dev-dependencies]
+tempfile.workspace = true

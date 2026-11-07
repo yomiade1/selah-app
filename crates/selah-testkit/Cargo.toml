@@ -1,0 +1,21 @@
+[package]
+name = "selah-testkit"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license-file = "../../LICENSE"
+publish.workspace = true
+description = "Test helpers: run the real process stack in isolation, golden frames, fixtures"
+
+[[bin]]
+name = "selah-fake-ui"
+path = "src/bin/fake_ui.rs"
+test = false
+
+[dependencies]
+anyhow.workspace = true
+selah-ipc = { path = "../selah-ipc" }
+selah-proto = { path = "../selah-proto" }
+selah-runtime = { path = "../selah-runtime" }
+tempfile.workspace = true
+tokio = { workspace = true, features = ["rt-multi-thread", "macros", "sync", "time", "process", "fs"] }
