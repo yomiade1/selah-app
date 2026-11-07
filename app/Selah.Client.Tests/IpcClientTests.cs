@@ -133,7 +133,9 @@ public sealed class IpcClientTests
     {
         if (!OperatingSystem.IsWindows())
         {
-            var dir = Path.Combine(Path.GetTempPath(), $"selah-cs-{Environment.ProcessId}");
+            // /tmp, not the temp folder: on macOS that is a long /var/folders/… path, and a Unix
+            // socket path must fit in 104 bytes there (Selah itself uses /tmp/selah-<uid>).
+            var dir = Path.Combine("/tmp", $"selah-cs-{Environment.ProcessId}");
             Directory.CreateDirectory(dir);
             Environment.SetEnvironmentVariable("SELAH_RUNTIME_DIR", dir);
         }
