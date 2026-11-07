@@ -54,6 +54,9 @@ def current_counts():
     counts["rust"], counts["e2e"] = rust_counts(read("cargo-test.log"))
     counts["dotnet"] = sum(int(n) for n in re.findall(r"Passed:\s+(\d+)", read("dotnet-test.log")))
     counts["web"] = sum(int(n) for n in re.findall(r"^# pass (\d+)", read("web-test.log"), re.M))
+    ui_log = COUNTS / "ui-tests.log"
+    if ui_log.is_file():
+        counts["ui"] = sum(int(n) for n in re.findall(r"Passed:\s+(\d+)", ui_log.read_text(encoding="utf-8", errors="replace")))
     golden_log = COUNTS / "golden-frames.log"
     if golden_log.is_file():
         counts["golden"] = sum(int(m) for m in RESULT.findall(golden_log.read_text(encoding="utf-8")))

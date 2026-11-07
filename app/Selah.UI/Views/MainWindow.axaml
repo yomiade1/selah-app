@@ -1,0 +1,99 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:Selah.UI.ViewModels"
+        xmlns:views="using:Selah.UI.Views"
+        xmlns:s="using:Selah.UI.Services"
+        x:Class="Selah.UI.Views.MainWindow"
+        x:DataType="vm:MainViewModel"
+        Title="{Binding [app-name], Source={x:Static s:Localizer.Instance}}"
+        Width="1280" Height="800" MinWidth="640" MinHeight="480">
+  <DockPanel>
+    <!-- Safe mode (SAFE-07, DESIGN-SYSTEM §10): a warning alert that can't be dismissed. -->
+    <Border Name="SafeModeBanner" DockPanel.Dock="Top" IsVisible="{Binding IsSafeMode}"
+            Background="{DynamicResource Brush.WarningBg}" BorderBrush="{DynamicResource Brush.Warning}"
+            BorderThickness="{DynamicResource Line.AlertBar}" Padding="{DynamicResource Space.Text.Medium}">
+      <WrapPanel ItemSpacing="{DynamicResource Space.4}" LineSpacing="{DynamicResource Space.3}">
+        <TextBlock Name="SafeModeMessage" Classes="label" VerticalAlignment="Center" views:Critical.IsCritical="True"
+                   Text="{Binding [safe-mode-message], Source={x:Static s:Localizer.Instance}}" />
+        <Button Name="SafeModeLearnWhy" Click="OnSafeModeLearnWhy"
+                Content="{Binding [safe-mode-learn-why], Source={x:Static s:Localizer.Instance}}" />
+      </WrapPanel>
+    </Border>
+
+    <!-- Toolbar. Clear everything is always here, and wraps to a new line rather than shrink. -->
+    <Border Name="Toolbar" DockPanel.Dock="Top" MinHeight="{DynamicResource Size.ToolbarHeight}"
+            Background="{DynamicResource Brush.Surface}" BorderBrush="{DynamicResource Brush.Line}"
+            BorderThickness="{DynamicResource Line.Bottom}" Padding="{DynamicResource Space.Text.Medium}">
+      <WrapPanel ItemSpacing="{DynamicResource Space.4}" LineSpacing="{DynamicResource Space.3}" VerticalAlignment="Center">
+        <TextBlock Classes="title-3" VerticalAlignment="Center" TextWrapping="NoWrap"
+                   Text="{Binding [app-name], Source={x:Static s:Localizer.Instance}}" />
+        <Border Name="StatusPill" Classes="pill" VerticalAlignment="Center"
+                Background="{DynamicResource Brush.Surface2}" BorderBrush="{DynamicResource Brush.Line2}"
+                BorderThickness="{DynamicResource Line.Hairline}">
+          <TextBlock Name="StatusText" Classes="label" TextWrapping="NoWrap" views:Critical.IsCritical="True"
+                     Text="{Binding StatusText}" />
+        </Border>
+        <Button Name="ShowTestPatternButton" Classes="primary" Command="{Binding ShowTestPatternCommand}"
+                ToolTip.Tip="{Binding [command-show-test-pattern-hint], Source={x:Static s:Localizer.Instance}}">
+          <TextBlock Text="{Binding [command-show-test-pattern], Source={x:Static s:Localizer.Instance}}" />
+        </Button>
+        <Button Name="ClearEverythingButton" Classes="emergency" Command="{Binding ClearEverythingCommand}"
+                ToolTip.Tip="{Binding [command-clear-everything-hint], Source={x:Static s:Localizer.Instance}}">
+          <TextBlock views:Critical.IsCritical="True"
+                     Text="{Binding [command-clear-everything], Source={x:Static s:Localizer.Instance}}" />
+        </Button>
+        <Button Name="SettingsButton" Classes="quiet" Click="OnOpenSettings">
+          <TextBlock Text="{Binding [command-settings], Source={x:Static s:Localizer.Instance}}" />
+        </Button>
+      </WrapPanel>
+    </Border>
+
+    <!-- Sidebar: an Apple-style source list (skeleton until M2). -->
+    <Border Name="Sidebar" DockPanel.Dock="Left" Width="{DynamicResource Size.SidebarWidth}"
+            Background="{DynamicResource Brush.Surface2}" BorderBrush="{DynamicResource Brush.Line}"
+            BorderThickness="{DynamicResource Line.Right}" Padding="{DynamicResource Space.Text.Medium}">
+      <ScrollViewer>
+        <StackPanel Spacing="{DynamicResource Space.3}">
+          <TextBlock Classes="caption" Text="{Binding [sidebar-heading-plan], Source={x:Static s:Localizer.Instance}}" />
+          <TextBlock Text="{Binding [sidebar-services], Source={x:Static s:Localizer.Instance}}" />
+          <TextBlock Text="{Binding [sidebar-library], Source={x:Static s:Localizer.Instance}}" />
+          <TextBlock Text="{Binding [sidebar-media], Source={x:Static s:Localizer.Instance}}" />
+          <TextBlock Classes="caption" Text="{Binding [sidebar-heading-help], Source={x:Static s:Localizer.Instance}}" />
+          <TextBlock Text="{Binding [sidebar-help-articles], Source={x:Static s:Localizer.Instance}}" />
+        </StackPanel>
+      </ScrollViewer>
+    </Border>
+
+    <!-- Inspector skeleton. -->
+    <Border Name="Inspector" DockPanel.Dock="Right" Width="{DynamicResource Size.InspectorWidth}"
+            Background="{DynamicResource Brush.Surface}" BorderBrush="{DynamicResource Brush.Line}"
+            BorderThickness="{DynamicResource Line.Left}" Padding="{DynamicResource Space.Text.Medium}">
+      <StackPanel Spacing="{DynamicResource Space.3}">
+        <TextBlock Classes="title-3" Text="{Binding [inspector-heading], Source={x:Static s:Localizer.Instance}}" />
+        <TextBlock Classes="hint" Text="{Binding [inspector-empty], Source={x:Static s:Localizer.Instance}}" />
+      </StackPanel>
+    </Border>
+
+    <!-- Program preview: never covered while live (DESIGN-SYSTEM §1). -->
+    <Grid RowDefinitions="Auto,*,Auto" Margin="{DynamicResource Space.Text.Medium}">
+      <WrapPanel ItemSpacing="{DynamicResource Space.3}">
+        <TextBlock Classes="title-2" Text="{Binding [preview-on-screen], Source={x:Static s:Localizer.Instance}}" />
+        <Border Name="LiveTag" Classes="pill" IsVisible="{Binding IsLive}" VerticalAlignment="Center"
+                Background="{DynamicResource Brush.Live}">
+          <TextBlock Classes="tag" Foreground="{DynamicResource Brush.OnPrimary}" views:Critical.IsCritical="True"
+                     Text="{Binding [preview-live], Source={x:Static s:Localizer.Instance}}" />
+        </Border>
+      </WrapPanel>
+      <Border Grid.Row="1" Classes="card" Margin="{DynamicResource Space.Text.Small}">
+        <Viewbox Stretch="Uniform">
+          <Grid Width="480" Height="270">
+            <Rectangle Fill="{DynamicResource Brush.PreviewBg}" />
+            <Image Name="PreviewImage" Stretch="Uniform" />
+          </Grid>
+        </Viewbox>
+      </Border>
+      <TextBlock Grid.Row="2" Classes="hint" IsVisible="{Binding !IsLive}"
+                 Text="{Binding [preview-nothing], Source={x:Static s:Localizer.Instance}}" />
+    </Grid>
+  </DockPanel>
+</Window>

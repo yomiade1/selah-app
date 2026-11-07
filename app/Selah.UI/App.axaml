@@ -1,0 +1,20 @@
+<Application xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="Selah.UI.App"
+             RequestedThemeVariant="Light">
+  <Application.Resources>
+    <ResourceDictionary>
+      <ResourceDictionary.MergedDictionaries>
+        <ResourceInclude Source="avares://Selah/Styles/Tokens.g.axaml" />
+      </ResourceDictionary.MergedDictionaries>
+      <!-- ADR-009: Inter for the interface, Manrope for headings, JetBrains Mono for values. -->
+      <FontFamily x:Key="Font.Ui">avares://Selah/Assets/Fonts#Inter, avares://Selah/Assets/Fonts#Noto Sans KR, avares://Selah/Assets/Fonts#Noto Naskh Arabic</FontFamily>
+      <FontFamily x:Key="Font.Display">avares://Selah/Assets/Fonts#Manrope, avares://Selah/Assets/Fonts#Inter</FontFamily>
+      <FontFamily x:Key="Font.Mono">avares://Selah/Assets/Fonts#JetBrains Mono</FontFamily>
+    </ResourceDictionary>
+  </Application.Resources>
+  <Application.Styles>
+    <FluentTheme />
+    <StyleInclude Source="avares://Selah/Styles/Controls.axaml" />
+  </Application.Styles>
+</Application>

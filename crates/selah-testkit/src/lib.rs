@@ -37,6 +37,24 @@ pub fn bin(name: &str) -> PathBuf {
     path
 }
 
+/// The real Avalonia UI (`app/Selah.UI`, built by `dotnet build app/Selah.sln -c Release`, gate
+/// stage 5). `SELAH_UI_BINARY` overrides it (the installer check points at the installed app).
+pub fn ui_binary() -> PathBuf {
+    if let Some(path) = std::env::var_os("SELAH_UI_BINARY") {
+        return PathBuf::from(path);
+    }
+    let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("../..");
+    let path = root
+        .join("app/Selah.UI/bin/Release/net10.0")
+        .join(format!("Selah{}", std::env::consts::EXE_SUFFIX));
+    assert!(
+        path.is_file(),
+        "{} is missing: build the UI first (dotnet build app/Selah.sln -c Release)",
+        path.display()
+    );
+    path
+}
+
 /// Kill a process by id (the test didn't spawn it, so it has no handle).
 pub fn kill_pid(pid: u32) {
     if pid == 0 {
@@ -68,8 +86,9 @@ pub fn test_actor() -> Actor {
 
 #[derive(Clone, Debug, Default)]
 pub struct StackOptions {
-    /// Start the stand-in UI (`selah-fake-ui`).
-    pub fake_ui: bool,
+    /// Start the real UI, headless. It writes `$SELAH_HOME/ui.txt` (`<pid> <generation>`) each
+    /// time it connects to core and subscribes.
+    pub ui: bool,
     pub safe_mode: bool,
 }
 
@@ -100,7 +119,7 @@ fn unique_namespace() -> String {
 }
 
 impl Stack {
-    /// Start watchdog → engine (headless) → core (→ fake UI). Must run inside a tokio runtime.
+    /// Start watchdog → engine (headless) → core (→ UI, headless). Must run inside a tokio runtime.
     pub fn start(options: StackOptions) -> Self {
         let namespace = unique_namespace();
         let guard = tempfile::tempdir().expect("temporary SELAH_HOME");
@@ -131,8 +150,10 @@ impl Stack {
         if options.safe_mode {
             command.arg("--safe-mode");
         }
-        if options.fake_ui {
-            command.env("SELAH_UI_PATH", bin("selah-fake-ui"));
+        if options.ui {
+            command
+                .env("SELAH_UI_PATH", ui_binary())
+                .env("AVALONIA_TELEMETRY_OPTOUT", "1");
         } else {
             command.arg("--no-ui");
         }

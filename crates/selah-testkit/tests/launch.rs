@@ -12,7 +12,7 @@ use selah_testkit::{Stack, StackOptions, eventually};
 #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
 async fn show_test_pattern_reaches_the_output_within_one_frame() {
     let stack = Stack::start(StackOptions {
-        fake_ui: true,
+        ui: true,
         ..StackOptions::default()
     });
     stack.wait_ready(Duration::from_secs(30)).await;
@@ -28,6 +28,14 @@ async fn show_test_pattern_reaches_the_output_within_one_frame() {
     })
     .await;
     assert_eq!(processes, ["engine", "core", "ui"]);
+    // The UI connected to core and subscribed to status (what it shows as "Connected").
+    let marker = stack.home().join("ui.txt");
+    eventually(Duration::from_secs(20), "the UI to connect", || async {
+        std::fs::read_to_string(&marker)
+            .ok()
+            .filter(|text| !text.is_empty())
+    })
+    .await;
 
     let mut events = stack.core().events();
     let subscribed = stack

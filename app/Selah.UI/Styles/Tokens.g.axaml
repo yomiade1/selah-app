@@ -1,0 +1,76 @@
+<!-- Generated from design/tokens/tokens.json by design/tokens/build.mjs. Do not edit. -->
+<ResourceDictionary xmlns="https://github.com/avaloniaui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+  <ResourceDictionary.ThemeDictionaries>
+    <ResourceDictionary x:Key="Light">
+        <SolidColorBrush x:Key="Brush.Bg" Color="#F2F2F7" />
+        <SolidColorBrush x:Key="Brush.Surface" Color="#FFFFFF" />
+        <SolidColorBrush x:Key="Brush.Surface2" Color="#F7F8F9" />
+        <SolidColorBrush x:Key="Brush.Line" Color="#DFE1E2" />
+        <SolidColorBrush x:Key="Brush.Line2" Color="#C6CACE" />
+        <SolidColorBrush x:Key="Brush.Text" Color="#1B1B1B" />
+        <SolidColorBrush x:Key="Brush.Text2" Color="#3D4551" />
+        <SolidColorBrush x:Key="Brush.Muted" Color="#565C65" />
+        <SolidColorBrush x:Key="Brush.Primary" Color="#005EA2" />
+        <SolidColorBrush x:Key="Brush.PrimaryDark" Color="#1A4480" />
+        <SolidColorBrush x:Key="Brush.PrimaryDarker" Color="#162E51" />
+        <SolidColorBrush x:Key="Brush.PrimaryFill" Color="#005EA2" />
+        <SolidColorBrush x:Key="Brush.PrimaryLighter" Color="#D9E8F6" />
+        <SolidColorBrush x:Key="Brush.OnPrimary" Color="#FFFFFF" />
+        <SolidColorBrush x:Key="Brush.Focus" Color="#0076D6" />
+        <SolidColorBrush x:Key="Brush.Live" Color="#D83933" />
+        <SolidColorBrush x:Key="Brush.LiveBg" Color="#F8DFE2" />
+        <SolidColorBrush x:Key="Brush.Success" Color="#00A91C" />
+        <SolidColorBrush x:Key="Brush.SuccessText" Color="#008817" />
+        <SolidColorBrush x:Key="Brush.SuccessBg" Color="#ECF3EC" />
+        <SolidColorBrush x:Key="Brush.Warning" Color="#FFBE2E" />
+        <SolidColorBrush x:Key="Brush.OnWarning" Color="#1B1B1B" />
+        <SolidColorBrush x:Key="Brush.WarningBg" Color="#FAF3D1" />
+        <SolidColorBrush x:Key="Brush.Info" Color="#00BDE3" />
+        <SolidColorBrush x:Key="Brush.InfoBg" Color="#E7F6F8" />
+        <SolidColorBrush x:Key="Brush.Emergency" Color="#9C3D10" />
+        <SolidColorBrush x:Key="Brush.OnEmergency" Color="#FFFFFF" />
+        <SolidColorBrush x:Key="Brush.PreviewBg" Color="#000000" />
+        <SolidColorBrush x:Key="Brush.Section.Verse" Color="#2378C3" />
+        <SolidColorBrush x:Key="Brush.Section.Chorus" Color="#C84281" />
+        <SolidColorBrush x:Key="Brush.Section.Bridge" Color="#E66F0E" />
+        <SolidColorBrush x:Key="Brush.Section.Tag" Color="#009EC1" />
+        <SolidColorBrush x:Key="Brush.Section.Other" Color="#71767A" />
+    </ResourceDictionary>
+    <ResourceDictionary x:Key="Dark">
+        <SolidColorBrush x:Key="Brush.Bg" Color="#000000" />
+        <SolidColorBrush x:Key="Brush.Surface" Color="#1C1C1E" />
+        <SolidColorBrush x:Key="Brush.Surface2" Color="#2C2C2E" />
+        <SolidColorBrush x:Key="Brush.Line" Color="#3A3A3C" />
+        <SolidColorBrush x:Key="Brush.Line2" Color="#48484A" />
+        <SolidColorBrush x:Key="Brush.Text" Color="#F5F5F7" />
+        <SolidColorBrush x:Key="Brush.Text2" Color="#D1D1D6" />
+        <SolidColorBrush x:Key="Brush.Muted" Color="#A1A1A6" />
+        <SolidColorBrush x:Key="Brush.Primary" Color="#2491FF" />
+        <SolidColorBrush x:Key="Brush.PrimaryDark" Color="#0050D8" />
+        <SolidColorBrush x:Key="Brush.PrimaryDarker" Color="#162E51" />
+        <SolidColorBrush x:Key="Brush.PrimaryFill" Color="#0050D8" />
+        <SolidColorBrush x:Key="Brush.PrimaryLighter" Color="#0B2A4A" />
+        <SolidColorBrush x:Key="Brush.OnPrimary" Color="#FFFFFF" />
+        <SolidColorBrush x:Key="Brush.Focus" Color="#2491FF" />
+        <SolidColorBrush x:Key="Brush.Live" Color="#FB5A47" />
+        <SolidColorBrush x:Key="Brush.LiveBg" Color="#3A1714" />
+        <SolidColorBrush x:Key="Brush.Success" Color="#21C834" />
+        <SolidColorBrush x:Key="Brush.SuccessText" Color="#21C834" />
+        <SolidColorBrush x:Key="Brush.SuccessBg" Color="#0E2A12" />
+        <SolidColorBrush x:Key="Brush.Warning" Color="#FFBE2E" />
+        <SolidColorBrush x:Key="Brush.OnWarning" Color="#1B1B1B" />
+        <SolidColorBrush x:Key="Brush.WarningBg" Color="#33290F" />
+        <SolidColorBrush x:Key="Brush.Info" Color="#00BDE3" />
+        <SolidColorBrush x:Key="Brush.InfoBg" Color="#06282F" />
+        <SolidColorBrush x:Key="Brush.Emergency" Color="#9C3D10" />
+        <SolidColorBrush x:Key="Brush.OnEmergency" Color="#FFFFFF" />
+        <SolidColorBrush x:Key="Brush.PreviewBg" Color="#000000" />
+        <SolidColorBrush x:Key="Brush.Section.Verse" Color="#2378C3" />
+        <SolidColorBrush x:Key="Brush.Section.Chorus" Color="#C84281" />
+        <SolidColorBrush x:Key="Brush.Section.Bridge" Color="#E66F0E" />
+        <SolidColorBrush x:Key="Brush.Section.Tag" Color="#009EC1" />
+        <SolidColorBrush x:Key="Brush.Section.Other" Color="#71767A" />
+    </ResourceDictionary>
+  </ResourceDictionary.ThemeDictionaries>
+</ResourceDictionary>

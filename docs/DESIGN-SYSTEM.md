@@ -42,6 +42,7 @@ Defined once in `design/tokens/tokens.json` (DTCG format) and generated into Ava
 | `color.warning` | `#FFBE2E` | `#FFBE2E` | Warnings (text on it: `#1B1B1B`) |
 | `color.info` | `#00BDE3` | `#00BDE3` | Info alerts, summary box |
 | `color.emergency` | `#9C3D10` | `#9C3D10` | Severe system alerts |
+| `color.preview-bg` | `#000000` | `#000000` | Behind the program preview (an empty screen is black) |
 | Section colours | verse `#2378C3`, chorus `#C84281`, bridge `#E66F0E`, tag `#009EC1`, intro/other `#71767A` | same | Song sections (always paired with a text label) |
 
 Rules:

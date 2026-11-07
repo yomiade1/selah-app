@@ -98,7 +98,8 @@ def run(stage, label, command, env=None, timeout=1800):
     if env.pop("@ffmpeg", None):
         # Resolved now: on a fresh runner stage 1 has only just extracted (or built) FFmpeg.
         env.update(ffmpeg_env())
-    merged = dict(os.environ, **env)
+    # Avalonia's build tasks report anonymous usage unless told not to (SEC-13: no telemetry).
+    merged = dict(os.environ, AVALONIA_TELEMETRY_OPTOUT="1", **env)
     if command[0] == "@cargo-deny":
         # Resolved now: on a fresh runner stage 1 has only just fetched the pinned binary.
         command = [cargo_deny(), *command[1:]]
@@ -201,14 +202,18 @@ def stages(args):
     stage("5", "web build", pnpm("-r", "run", "build"))
     stage("6", "cargo test", [tool("cargo"), "test", "--workspace", "--locked"],
           dict(rust_env, SELAH_FUZZ_SECONDS=fuzz_seconds))
-    stage("6", "dotnet test", [tool("dotnet"), "test", "app/Selah.sln", "-c", "Release", "--no-build",
-                               "--blame-hang-timeout", "120s"], timeout=900)
+    stage("6", "dotnet test", [tool("dotnet"), "test", "app/Selah.Client.Tests/Selah.Client.Tests.csproj", "-c", "Release",
+                               "--no-build", "--blame-hang-timeout", "120s"], timeout=900)
     stage("6", "web test", pnpm("-r", "run", "test"))
     stage("6", "python tool tests", [PY, "-m", "unittest", "discover", "-s", "tests/tools"])
     stage("6", "ipc benchmark", [tool("cargo"), "run", "--release", "--locked", "-q", "-p", "selah-bench", "--",
                                  "ipc", "--check", "--json", "target/verify-report/bench-ipc.json"], rust_env)
     stage("7", "golden frames", [tool("cargo"), "test", "--locked", "-p", "selah-testkit", "--features", "golden",
                                  "--test", "golden_text"], rust_env, skip=args.fast)
+    # Stage 8: headless UI tests at 100/150/200%, Light and Booth, en and en-XA (M1-A9).
+    stage("8", "ui tests", [tool("dotnet"), "test", "app/Selah.UI.Tests/Selah.UI.Tests.csproj", "-c", "Release",
+                            "--no-build", "--blame-hang-timeout", "120s"], timeout=900, skip=args.fast)
+    stage("8", "lint strings", [PY, "tools/lint-strings.py"])
     stage("13", "test ledger", [PY, "tools/test-ledger.py", "--check"])
     stage("14", "cargo deny", ["@cargo-deny", "check"])
     stage("14", "dotnet vulnerable packages", [PY, "tools/check-vulnerable.py", "dotnet"])
@@ -244,7 +249,7 @@ def main():
         try:
             output = run(number, label, command, env, timeout)
             results.append((number, label, "passed"))
-            if label in {"cargo test", "dotnet test", "web test", "golden frames"}:
+            if label in {"cargo test", "dotnet test", "web test", "golden frames", "ui tests"}:
                 (REPORT / "counts").mkdir(exist_ok=True)
                 (REPORT / "counts" / f"{label.replace(' ', '-')}.log").write_text(output, encoding="utf-8")
         except Failed as failure:

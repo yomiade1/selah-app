@@ -9,6 +9,7 @@
   "scripts": {
     "contracts:lint": "buf lint",
     "contracts:generate": "buf generate",
+    "tokens": "node design/tokens/build.mjs",
     "format:check": "prettier --check package.json pnpm-workspace.yaml buf.yaml buf.gen.yaml && buf format proto --diff --exit-code",
     "format": "prettier --write package.json pnpm-workspace.yaml buf.yaml buf.gen.yaml && buf format proto --write"
   },
