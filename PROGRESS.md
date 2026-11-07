@@ -407,6 +407,8 @@ _Anything done differently from BUILD-PLAN.md or the docs, with the reason and t
 - 2026-11-07, M1.12: the SAFE-03 chaos test freezes core by suspending its threads (`selah-testkit::freeze`, Windows FFI allowlisted, `kill -STOP` elsewhere). It was added after M1.12's full gate and run on its own; the M1.13 gate ran it with everything else.
 - 2026-11-07, M1 finish: `tests/fixtures/db/m1.db` isn't created, because M1 has no library database (TESTING §4.2 starts fixtures at M2; core keeps only `settings.json` and `live_state.bin`). The ledger is first recorded as a milestone row here.
 
+- 2026-11-07, M1 finish: `tests/golden/macos/text-en.png` and `text-yo.png` are macOS references (CoreText edges), taken from the `macos` job's failure report and reviewed by eye. `bless-golden.yml` failed on macOS (run 42411409570) because it doesn't build the decode-only macOS FFmpeg that gate stage 1 builds; follow-up: add that step before the next macOS blessing.
+
 ## Quarantined tests
 
 _Tests temporarily isolated because they're flaky, each with the reason, an owner and the milestone that must fix it. Quarantine blocks milestone completion._

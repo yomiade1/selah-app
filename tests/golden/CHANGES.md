@@ -29,3 +29,13 @@ platform-specific images in `tests/golden/<platform>/`.
 - Rendered on: the PR's `linux` CI job (ubuntu-24.04, lavapipe), run 42356005112, taken from its
   failure report because `bless-golden.yml` can't be dispatched until it's on `main`. Reviewed by
   eye.
+
+## 2026-11-07 — macos (text-en, text-yo)
+
+- Reason: on macOS, Skia draws glyphs with CoreText, which anti-aliases slightly heavier than
+  DirectWrite. English and Yorùbá have the same layout, line breaks and tone marks as the
+  reference but differ on edge pixels (0.63% and 0.55%, limit 0.5%). Korean and Arabic are
+  within tolerance of the reference.
+- Rendered on: the PR's `macos` CI job (macos-15, software rendering), run 42410558009, taken
+  from its failure report. `bless-golden.yml` can't render on macOS yet because it doesn't build
+  the macOS FFmpeg (follow-up in PROGRESS.md). Reviewed by eye against the reference.
