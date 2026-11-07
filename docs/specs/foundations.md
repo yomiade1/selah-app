@@ -77,8 +77,10 @@ fixture is decoded by all three. Field numbers are only ever added.
   alpha.
 - Output windows: winit, on the main thread; the render thread blits the composite to each swap
   chain (Fifo, non-sRGB) and presents. `--fullscreen N` puts output 1 on display N.
-- `FrameShown` is stamped when the frame is presented (headless: when the GPU finished it), and
-  carries the time the command arrived, so "within one frame" is measured on the output.
+- `FrameShown` is stamped when the frame is handed over for display (the swap-chain present with
+  windows, the GPU queue submit when headless) and carries the time the command arrived, so
+  "within one frame" is measured the same way in both modes. Readback, checksums and previews run
+  on a separate frames thread and never delay the next command.
 
 ## Quality gate (M1.10)
 

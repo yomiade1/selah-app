@@ -44,7 +44,10 @@ struct Target {
 /// Timing of the last frame, for FrameShown and the benchmark.
 #[derive(Clone, Copy, Debug, Default)]
 pub struct FrameTiming {
-    /// When the GPU finished drawing the frame (the "present" moment offscreen).
+    /// When the frame was handed to the GPU queue: the headless equivalent of a swap-chain
+    /// present, and what FrameShown reports when there are no windows.
+    pub submitted: Option<Instant>,
+    /// When the GPU finished drawing it.
     pub rendered: Option<Instant>,
 }
 
@@ -334,6 +337,10 @@ impl Compositor for GpuCompositor {
         self.timing.rendered
     }
 
+    fn last_submitted(&self) -> Option<Instant> {
+        self.timing.submitted
+    }
+
     fn render(&mut self, scene: &Scene, width: u32, height: u32) -> Result<Frame> {
         let pattern = TestPattern::try_from(scene.test_pattern).unwrap_or(TestPattern::Unspecified);
         let words = [pattern as u32, u32::from(scene.cleared), width, height];
@@ -372,6 +379,7 @@ impl Compositor for GpuCompositor {
                 .draw(&self.device, &mut encoder, layer, &target.view);
         }
         self.queue.submit([encoder.finish()]);
+        self.timing.submitted = Some(Instant::now());
         self.wait()?;
         self.timing.rendered = Some(Instant::now());
 

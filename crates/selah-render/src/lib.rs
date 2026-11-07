@@ -56,4 +56,9 @@ pub trait Compositor {
     fn last_rendered(&self) -> Option<std::time::Instant> {
         None
     }
+
+    /// When the last frame was handed to the GPU queue, if the compositor knows.
+    fn last_submitted(&self) -> Option<std::time::Instant> {
+        None
+    }
 }

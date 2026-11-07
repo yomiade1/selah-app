@@ -305,9 +305,10 @@ impl Engine {
                 "frame rendered"
             );
             let presented = self.present(&mut compositor, &mut surfaces);
-            // Headless, a frame is "shown" when the GPU has finished it; with windows, when
-            // it has been handed to the swap chain.
+            // A frame is "shown" when it's handed over for display: the swap-chain present with
+            // windows, the GPU queue submit when headless (the same moment in both modes).
             let shown_at = presented
+                .or_else(|| compositor.last_submitted())
                 .or_else(|| compositor.last_rendered())
                 .unwrap_or_else(Instant::now);
             let floor = self.lock().emergency_floor.unwrap_or(0);

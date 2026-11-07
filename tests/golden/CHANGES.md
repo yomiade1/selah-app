@@ -20,3 +20,12 @@ platform-specific images in `tests/golden/<platform>/`.
   Windows (DirectWrite) on 0.53% of the English frame's pixels; hinting is where the platforms'
   rasterisers differ most, and slide text is large enough not to need it.
 - Rendered on: Windows x64, WARP (`SELAH_GPU=software`).
+
+## 2026-11-07 — linux (text-en)
+
+- Reason: on Linux, Skia draws glyphs with FreeType; on Windows, with DirectWrite. The English
+  frame has the same layout and line breaks on both but differs in anti-aliased glyph edges on
+  0.53% of pixels (limit 0.5%). The other three languages are within tolerance of the reference.
+- Rendered on: the PR's `linux` CI job (ubuntu-24.04, lavapipe), run 42356005112, taken from its
+  failure report because `bless-golden.yml` can't be dispatched until it's on `main`. Reviewed by
+  eye.
