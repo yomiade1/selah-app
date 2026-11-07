@@ -8,7 +8,9 @@ publish.workspace = true
 description = "Selah core library: settings, live state, permissions and request handling"
 
 [dependencies]
+anyhow.workspace = true
 prost.workspace = true
+selah-kb = { path = "../selah-kb" }
 selah-proto = { path = "../selah-proto" }
 selah-runtime = { path = "../selah-runtime" }
 serde.workspace = true

@@ -1,0 +1,19 @@
+# Help anchors (KNOWLEDGE-BASE §5, §7.2): places in the UI where help is offered. Articles list
+# them in `context`. Anchors that later milestones build are in content/kb/planned.yaml.
+anchors:
+  - id: shell.status
+    description: The connection status in the toolbar.
+  - id: shell.show-test-pattern
+    description: The Show test pattern button in the toolbar.
+  - id: shell.clear-everything
+    description: The Clear everything button in the toolbar.
+  - id: shell.safe-mode-banner
+    description: The banner shown while Selah is in safe mode.
+  - id: settings.appearance
+    description: Settings, Appearance.
+  - id: settings.text-size
+    description: Settings, Text size.
+  - id: help.report-a-problem
+    description: Help, Report a problem.
+  - id: help.diagnostics
+    description: Help, Diagnostics.

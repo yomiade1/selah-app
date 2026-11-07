@@ -59,7 +59,9 @@
           <TextBlock Text="{Binding [sidebar-library], Source={x:Static s:Localizer.Instance}}" />
           <TextBlock Text="{Binding [sidebar-media], Source={x:Static s:Localizer.Instance}}" />
           <TextBlock Classes="caption" Text="{Binding [sidebar-heading-help], Source={x:Static s:Localizer.Instance}}" />
-          <TextBlock Text="{Binding [sidebar-help-articles], Source={x:Static s:Localizer.Instance}}" />
+          <Button Name="HelpArticlesButton" Classes="quiet" Click="OnOpenHelp" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left">
+            <TextBlock Text="{Binding [sidebar-help-articles], Source={x:Static s:Localizer.Instance}}" />
+          </Button>
         </StackPanel>
       </ScrollViewer>
     </Border>

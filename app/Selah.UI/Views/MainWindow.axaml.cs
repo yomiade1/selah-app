@@ -86,6 +86,42 @@ public sealed partial class MainWindow : Window
         window.Show(this);
     }
 
+    private HelpWindow? helpWindow;
+
+    private void OnOpenHelp(object? sender, RoutedEventArgs e) => ShowHelp(null);
+
+    /// <summary>Open the help window (one at a time), optionally on an article.</summary>
+    public void ShowHelp(string? articleId)
+    {
+        if (Model is null)
+        {
+            return;
+        }
+        if (helpWindow is null)
+        {
+            helpWindow = new HelpWindow { DataContext = Model.Help };
+            helpWindow.Closed += (_, _) => helpWindow = null;
+            helpWindow.Show(this);
+        }
+        else
+        {
+            helpWindow.Activate();
+        }
+        if (articleId is not null)
+        {
+            _ = Model.Help.OpenAsync(articleId);
+        }
+    }
+
+    protected override void OnDataContextChanged(EventArgs e)
+    {
+        base.OnDataContextChanged(e);
+        if (Model is { } model)
+        {
+            model.ArticleRequested += (_, id) => ShowHelp(id);
+        }
+    }
+
     private void OnSafeModeLearnWhy(object? sender, RoutedEventArgs e) =>
         Model?.OpenArticleCommand.Execute("troubleshooting.selah-started-in-safe-mode");
 

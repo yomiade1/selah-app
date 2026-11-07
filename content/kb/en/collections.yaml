@@ -1,0 +1,10 @@
+# Collections of articles (KNOWLEDGE-BASE §4). Articles join one in their `collections` field.
+collections:
+  - id: volunteer-handbook
+    title: Volunteer handbook
+  - id: producer-guide
+    title: Producer guide
+  - id: admin-guide
+    title: Admin and IT guide
+  - id: moving-from-another-app
+    title: Moving from another app

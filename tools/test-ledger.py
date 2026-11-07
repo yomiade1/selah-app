@@ -57,6 +57,10 @@ def current_counts():
     ui_log = COUNTS / "ui-tests.log"
     if ui_log.is_file():
         counts["ui"] = sum(int(n) for n in re.findall(r"Passed:\s+(\d+)", ui_log.read_text(encoding="utf-8", errors="replace")))
+    kb_log = COUNTS / "kb-lint.log"
+    if kb_log.is_file():
+        clean = re.search(r"selah-kb-lint: (\d+) articles, 0 error", kb_log.read_text(encoding="utf-8", errors="replace"))
+        counts["kb"] = int(clean.group(1)) if clean else 0
     golden_log = COUNTS / "golden-frames.log"
     if golden_log.is_file():
         counts["golden"] = sum(int(m) for m in RESULT.findall(golden_log.read_text(encoding="utf-8")))

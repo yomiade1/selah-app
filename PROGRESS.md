@@ -8,7 +8,7 @@ Status values: `Not started` · `In progress` · `Blocked` (say on what) · `Don
 
 | Milestone | Status | Branch / tag | Started | Finished | Notes |
 |---|---|---|---|---|---|
-| M1. Foundations and risk spikes | In progress | `codex/m1-foundations` | 2026-11-07 | — | M1.1–M1.6 and M1.10 done (local Windows session, H-01); M1.7–M1.9, M1.11–M1.13 next. |
+| M1. Foundations and risk spikes | In progress | `claude/m1-continue` | 2026-11-07 | — | M1.1–M1.10 done (local Windows sessions, H-01); M1.11–M1.13 next. |
 | M2. Library, songs, scripture and the help system | Not started | — | — | — | |
 | M3. Render engine, templates and the slide editor | Not started | — | — | — | |
 | M4. Live operation, services and stage | Not started | — | — | — | |
@@ -19,14 +19,37 @@ Status values: `Not started` · `In progress` · `Blocked` (say on what) · `Don
 | M9. Cloud, teams and enterprise | Not started | — | — | — | |
 | M10. Launch readiness and v1.0 | Not started | — | — | — | |
 
-**Next action:** review and merge the M1 PR (M1.1–M1.6, M1.10), then say "Complete milestone 1" to continue with M1.7. See the resume notes.
+**Next action:** review and merge the PR for M1.7–M1.9, then say "Complete milestone 1" to continue with M1.11. See the resume notes.
 
 ## Resume notes
 
 _When a session stops partway through a milestone, write here: the milestone, the last finished WP, anything half-done (files, branch state) and the exact next step. Clear it when the milestone is done._
 
-2026-11-07 (local Windows session, H-01 approved): M1.1–M1.6 and M1.10 are committed on
-`codex/m1-foundations` and opened as PR #1 (CI green). M1.7–M1.9 and M1.11–M1.13 remain.
+2026-11-07 (second local Windows session): M1.7, M1.8 and M1.9 are committed on `claude/m1-continue`
+and opened as a PR. M1.11, M1.12, M1.13 and the milestone finish remain. Next steps, in order:
+
+- **M1.11 installer:** `packaging/velopack/`, `tools/package.ps1` (Velopack `vpk` as a pinned dotnet
+  tool; per-user, no admin; Start menu; `dev` channel). The package holds `Selah.exe` (+ .NET
+  self-contained publish), `selah-watchdog/core/engine.exe`, `target/kb/kb.db` next to
+  `selah-core.exe` (core looks there), and nothing from FFmpeg yet (the engine doesn't link it).
+  `tools/test-installer.ps1`: silent install, start with `SELAH_HEADLESS=1`, wait for
+  `$SELAH_HOME/ui.txt` (written by the real UI after it connects) and the engine's bars
+  checksum, uninstall, check only user data remains. Updater: check only on request, verify
+  hashes, refuse while `Status.live` (SAFE-06, SEC-12); the feed URL comes from settings.
+  `ci.yml` already calls both scripts when they exist.
+- **M1.12:** still to do: `selah-net` (single outgoing gate, policy, connection log, egress test
+  at default settings), `SecretStore` (Credential Manager/DPAPI, Keychain, in-memory fake) with
+  seeded-secret scans over logs, settings and bundles; the quit/update/sleep guards (strings
+  `live-guard-*` already exist in `shell.ftl`; `Status.live` is in the UI's snapshot); a
+  `troubleshooting.selah-started-in-safe-mode` article and banner exist; add **Restart normally**.
+  The emergency lane UI is done (toolbar button and F12 → engine emergency endpoint).
+- **M1.13:** Help menu in the toolbar (strings `command-report-problem`, `command-diagnostics`
+  exist); support bundle from redacted logs (`selah-runtime::redact`); Diagnostics window running
+  `selah-bench video` and `ipc`; `docs/specs/command-bus.md` and `docs/specs/spike-report.md`
+  (measurements so far: IPC p99 0.096 ms named pipes; MX350 1080p60 H.264 0 drops, composite
+  p99 5.1 ms; 4K60 HEVC 9/180 dropped, 16 ms; the 4K path needs zero-copy textures).
+- **Milestone finish:** specs, CHANGELOG, `tests/fixtures/db/m1.db`, H checklists, threat-model
+  review, full gate, PR with `--label ci:macos` (first run of `tools/build-ffmpeg-macos.sh`).
 
 - **Gate:** `tools/verify.sh` / `tools/verify.ps1` (logic in `tools/verify.py`). Run it in full before
   ticking a WP. Each new WP that adds a check adds a stage there (M1.8: stage 8 UI tests and
@@ -58,7 +81,7 @@ _When a session stops partway through a milestone, write here: the milestone, th
 - [x] **M1.6** Text spike — evidence: commit `M1.6`; `golden_text` (en, yo, ko, ar against `tests/golden/reference/`, no missing glyphs, GPU = CPU blending, paragraph cache); references reviewed by eye (tests/golden/CHANGES.md); `tools/verify.ps1` stage 7 green
 - [x] **M1.7** Video spike — evidence: commit `M1.7`; `selah-media` (FFmpeg 7.1 via ffmpeg-next, D3D11VA/VideoToolbox with software fallback, NV12 out) and the `selah-render` video layer (`video.wgsl`, NV12 → RGB under text); `selah-testkit` `video` tests (`clip_plays_in_order_with_no_drops_on_a_60_fps_virtual_clock`, `text_composites_over_video_and_gpu_matches_the_cpu_reference`; WARP + software decode); SEC-04 tests in `selah-media` (`opening_an_http_url_is_refused`, `a_local_playlist_cant_reach_the_network`, protocol-prefix refusal); `selah-bench video` on this PC (MX350): 1080p60 H.264 0 drops, composite p99 5.1 ms (D3D11VA); 4K60 HEVC 9 of 180 dropped, p99 16 ms (spike report); gate stages 1–7, 13, 14 green on Windows
 - [x] **M1.8** UI shell, design tokens and text size — evidence: commit `M1.8`; `app/Selah.UI` (Avalonia 12.1.5: toolbar, sidebar, preview from the engine's ring, inspector, safe-mode banner, Light/Booth, bundled Inter/Manrope/JetBrains Mono, Settings ▸ Appearance with 7-step text size, "Use my computer's text size", live preview, Ctrl/Cmd + − 0, F12 Clear everything over the emergency lane); tokens generated by `pnpm tokens` and checked by `check-generated`; Fluent strings `content/i18n/en/*.ftl` with the `en-XA` pseudo-locale; `app/Selah.UI.Tests` (41 headless tests: layout matrix 100/150/200% × Light/Booth × en/en-XA with no clipped critical labels, token contrast, strings, shortcuts, breakpoints); `tools/lint-strings.py` + `content/terms.yaml`; the real UI (headless) now runs in the M1-A2/M1-A3 process tests in place of `selah-fake-ui` (3 runs green, UI back in < 2 s); gate stage 8 added; full gate green on Windows
-- [ ] **M1.9** Knowledge base pipeline — evidence: 
+- [x] **M1.9** Knowledge base pipeline — evidence: commit `M1.9`; `selah-kb` (front matter, Markdown → AST, `kb.db` with FTS5 + trigram + anchors + collections + synonyms, `HelpIndex` search/article/context) and `selah-kb-lint` (R1–R4, R5/R6/R10 warnings, R7–R9, R11–R13, R16–R18, KB-SCHEMA/ID/LINK/ANCHOR/SETTING/ERROR/LENGTH/HTML/IMAGE/PLANNED/REVIEW/ORPHAN, release mode); `crates/selah-kb-lint/tests/lint.rs` (the exemplars and 2 new articles have no errors; 22 bad fixtures each fail with their rule; planned items warn until their milestone is Done; kb.db builds and finds "why are my screens black", "put lyrics up" and the typo "blnding"; the AST fixture is current); core answers SearchHelp/GetArticle/HelpForContext (`crates/selah-core/tests/help.rs`); `content/terms.yaml`, `content/help/anchors.yaml`, `content/help/settings.yaml`, `content/errors/errors.yaml` (SEL-OUT-0001/0002, SEL-APP-0001 …), `content/kb/planned.yaml`, `content/kb/_templates/` (7 types); articles `troubleshooting.selah-started-in-safe-mode` and `getting-started.report-a-problem`; the UI help window renders the AST natively (`HelpTests`, 100%/Light and 200%/Booth); gate stage 9 (`selah-kb-lint`, `selah-kb build`)
 - [x] **M1.10** Quality gate and CI — evidence: commit `M1.10`; `tools/verify.ps1` green on Windows (stages 1–7, 13, 14); `tests/ledger.json` created (rust 54, dotnet 20, web 3, golden 4, e2e 6); `tests/tools/test_ledger.py`; `check-workflows` passes for ci.yml, release.yml and bless-golden.yml. Stage 8 (UI), stage 9 (KB) and `tools/lint-strings` are added by M1.8 and M1.9, which create what they check; first PR run green: guard, linux, windows (PR #1, run 42357662100)
 - [ ] **M1.11** Windows installer and updates — evidence: 
 - [ ] **M1.12** Security and safety baseline — evidence: 
@@ -389,6 +412,7 @@ _Anything done differently from BUILD-PLAN.md or the docs, with the reason and t
 - 2026-11-07, M1.8 (started): `color.primary-fill` (Booth `#0050D8`) added and light `color.focus` changed to `#0076D6`, because the documented values failed the 4.5:1 and 3:1 contrast checks; DESIGN-SYSTEM §3 updated.
 
 - 2026-11-07, M1.8: Avalonia 12 (latest stable, ADR-009 says "latest stable at M1"); its headless test package needs xUnit v3, so `Selah.UI.Tests` uses xUnit v3 while `Selah.Client.Tests` stays on xUnit 2. Tokens are generated by Style Dictionary (ADR-022), not `Selah.UI.Generators`; ARCHITECTURE updated. `selah-fake-ui` is replaced by the real UI run headless. New token `color.preview-bg` (DESIGN-SYSTEM §3).
+- 2026-11-07, M1.9: `content/kb/planned.yaml` also takes `kind: label` for bold UI labels (R8) that later milestones add (the exemplars name M4 controls). R4 is applied as written (at most 3 sentences and 60 words), so two exemplar paragraphs and one new one were split without changing their words. The black-screen exemplar now says **Report a problem** (the M1.13 command) instead of **Export support bundle**. Settings that articles may name are listed in `content/help/settings.yaml`. New error code `SEL-HELP-0001`. `content/terms.yaml` gained `proper_nouns` (R18).
 - 2026-11-07, M1.6: `tests/golden/linux/text-en.png` is a Linux-specific reference (FreeType vs DirectWrite edges on 0.53% of pixels), taken from the linux job's failure report because `bless-golden.yml` can't be dispatched until it's on `main`.
 - 2026-11-07, M1.5: headless `FrameShown` is stamped at the GPU queue submit, the same moment as a swap-chain present with windows (the Windows runner's software rasteriser needs more than a frame to finish 1080p in a debug build).
 

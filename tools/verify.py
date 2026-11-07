@@ -214,6 +214,10 @@ def stages(args):
     stage("8", "ui tests", [tool("dotnet"), "test", "app/Selah.UI.Tests/Selah.UI.Tests.csproj", "-c", "Release",
                             "--no-build", "--blame-hang-timeout", "120s"], timeout=900, skip=args.fast)
     stage("8", "lint strings", [PY, "tools/lint-strings.py"])
+    # Stage 9: the knowledge base lint (KNOWLEDGE-BASE §7.1) and kb.db (target/kb/kb.db).
+    kb_flags = ["--release"] if args.release else []
+    stage("9", "kb lint", [tool("cargo"), "run", "-q", "--locked", "-p", "selah-kb-lint", "--", *kb_flags], rust_env)
+    stage("9", "kb build", [tool("cargo"), "run", "-q", "--locked", "-p", "selah-kb", "--bin", "selah-kb", "--", "build", *kb_flags], rust_env)
     stage("13", "test ledger", [PY, "tools/test-ledger.py", "--check"])
     stage("14", "cargo deny", ["@cargo-deny", "check"])
     stage("14", "dotnet vulnerable packages", [PY, "tools/check-vulnerable.py", "dotnet"])
@@ -249,7 +253,7 @@ def main():
         try:
             output = run(number, label, command, env, timeout)
             results.append((number, label, "passed"))
-            if label in {"cargo test", "dotnet test", "web test", "golden frames", "ui tests"}:
+            if label in {"cargo test", "dotnet test", "web test", "golden frames", "ui tests", "kb lint"}:
                 (REPORT / "counts").mkdir(exist_ok=True)
                 (REPORT / "counts" / f"{label.replace(' ', '-')}.log").write_text(output, encoding="utf-8")
         except Failed as failure:

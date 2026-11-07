@@ -1,0 +1,9 @@
+# Setting keys that articles may explain (`settings` in front matter, KNOWLEDGE-BASE §7.2).
+# Each has a hint string in content/i18n/en/*.ftl. Planned settings are in content/kb/planned.yaml.
+settings:
+  - key: appearance.theme
+    hint: appearance-hint
+  - key: appearance.text-size
+    hint: text-size-hint
+  - key: appearance.use-computer-text-size
+    hint: text-size-use-computer-hint

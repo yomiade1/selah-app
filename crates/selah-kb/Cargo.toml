@@ -1,0 +1,19 @@
+[package]
+name = "selah-kb"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license-file = "../../LICENSE"
+publish.workspace = true
+description = "Knowledge base: parse, validate and lint articles, build kb.db, answer help queries"
+
+[dependencies]
+anyhow.workspace = true
+# The Markdown subset (KNOWLEDGE-BASE §6.3), with GFM callouts and tables.
+pulldown-cmark = { version = "0.13", default-features = false }
+# kb.db with FTS5 (bundled SQLite: the same build everywhere, FTS5 and trigram included).
+rusqlite = { version = "0.41", features = ["bundled"] }
+serde.workspace = true
+serde_json.workspace = true
+# Front matter and content/*.yaml (serde_yaml is unmaintained).
+yaml-rust2 = "0.13"

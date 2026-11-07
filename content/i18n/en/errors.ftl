@@ -8,3 +8,4 @@ error-invalid-request = Selah couldn't read that request. Restart Selah if this 
 error-screen-not-connected = A screen is not connected. Check its cable, then try again.
 error-screen-unplugged = A screen was unplugged. Plug it back in. Selah will use it again.
 error-safe-mode = Selah started in safe mode. Some features are off.
+error-help-not-found = Selah couldn't find that help article.

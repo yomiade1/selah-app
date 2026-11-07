@@ -47,3 +47,11 @@ live-guard-update = Do you want to stop showing it and update?
 live-guard-keep = Keep showing
 live-guard-clear-and-quit = Clear and quit
 live-guard-clear-and-update = Clear and update
+
+## Help window (M1.9)
+help-title = Help
+help-search-label = Search help
+help-search-hint = Type a few words, like "black screen".
+help-search-button = Search
+help-no-results = No articles match. Try other words.
+help-not-available = Help isn't available right now. Try again in a moment.

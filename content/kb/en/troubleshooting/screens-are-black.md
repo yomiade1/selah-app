@@ -36,7 +36,7 @@ Try these in order. Most problems are fixed by step 1 or 2.
 
 - Select **Show test pattern**. If you can't see the pattern, the problem is the cable or the screen. It is not Selah.
 - Ask the person who looks after your equipment.
-- Or select **Help**, then **Export support bundle**. Send the file to our support team.
+- Or select **Help**, then **Report a problem**. Send the file to our support team.
 
 > [!NOTE]
 > Selah keeps showing the last picture even if the app closes. If the screens went black and the app is still open, the problem is likely the cable or the screen.

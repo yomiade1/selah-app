@@ -1,0 +1,16 @@
+[package]
+name = "selah-kb-lint"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license-file = "../../LICENSE"
+publish.workspace = true
+description = "Plain-language and reference lint for the knowledge base (gate stage 9)"
+
+[dependencies]
+anyhow.workspace = true
+selah-kb = { path = "../selah-kb" }
+
+[dev-dependencies]
+serde_json.workspace = true
+tempfile.workspace = true

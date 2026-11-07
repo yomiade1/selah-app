@@ -17,7 +17,7 @@ public sealed record ConnectionSnapshot(bool Connected, bool EngineConnected, bo
 /// </list>
 /// Events arrive on thread-pool threads; view models marshal them to the UI thread.
 /// </summary>
-public sealed class CoreConnection : IAsyncDisposable
+public sealed class CoreConnection : IAsyncDisposable, Selah.UI.ViewModels.IHelpSource
 {
     public static readonly TimeSpan HeartbeatInterval = TimeSpan.FromMilliseconds(250);
     private static readonly TimeSpan RequestTimeout = TimeSpan.FromSeconds(2);
@@ -105,6 +105,21 @@ public sealed class CoreConnection : IAsyncDisposable
                 return false;
             }
         }
+    }
+
+    /// <summary>Help search (KNOWLEDGE-BASE §6.4); anchors on screen lift their articles.</summary>
+    public async Task<IReadOnlyList<Article>> SearchHelpAsync(string query, IEnumerable<string> anchors)
+    {
+        var search = new SearchHelp { Query = query, Language = Localizer.Instance.Language == Localizer.PseudoLocale ? "en" : Localizer.Instance.Language };
+        search.Anchors.AddRange(anchors);
+        var reply = await RequestAsync(new Envelope { Query = new Query { SearchHelp = search } }).ConfigureAwait(false);
+        return reply.Reply?.HelpResults?.Articles.ToList() ?? [];
+    }
+
+    public async Task<Article?> GetArticleAsync(string id)
+    {
+        var reply = await RequestAsync(new Envelope { Query = new Query { GetArticle = new GetArticle { Id = id, Language = "en" } } }).ConfigureAwait(false);
+        return reply.Reply?.Article;
     }
 
     private async Task<Envelope> RequestAsync(Envelope message)

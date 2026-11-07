@@ -84,6 +84,9 @@ public sealed partial class TextScale : ObservableObject
         resources["Space.Text.Small"] = new Thickness(Tokens.Space3 * f, Tokens.Space2 * f);
         resources["Space.Text.Medium"] = new Thickness(Tokens.Space5 * f, Tokens.Space3 * f);
         resources["Space.Text.Large"] = new Thickness(Tokens.Space7 * f, Tokens.Space5 * f);
+        resources["Space.Item"] = new Thickness(0, 0, 0, Tokens.Space3 * f);
+        resources["Space.Cell"] = new Thickness(0, 0, Tokens.Space4 * f, Tokens.Space3 * f);
+        resources["Space.Key"] = new Thickness(Tokens.Space2 * f, 0);
         double[] spaces = [Tokens.Space1, Tokens.Space2, Tokens.Space3, Tokens.Space4, Tokens.Space5, Tokens.Space6, Tokens.Space7, Tokens.Space8, Tokens.Space9, Tokens.Space10];
         for (var i = 0; i < spaces.Length; i++)
         {

@@ -85,6 +85,22 @@ readability_ignore:
   - HDMI
   - Wi-Fi
 
+# R18: words that keep their capital in a sentence-case title or heading.
+proper_nouns:
+  - Selah
+  - Simple
+  - Producer
+  - Booth
+  - Light
+  - Windows
+  - Mac
+  - macOS
+  - PowerPoint
+  - ProPresenter
+  - Help
+  - Settings
+  - Screens
+
 # R10: explain the first time, or link to the glossary.
 explain:
   - NDI

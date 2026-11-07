@@ -14,6 +14,7 @@ public sealed partial class MainViewModel : ObservableObject
     {
         this.connection = connection;
         Settings = new SettingsViewModel(connection is null ? null : connection.SetAppearanceAsync);
+        Help = new HelpViewModel(connection);
         Localizer.Instance.PropertyChanged += (_, _) => OnPropertyChanged(nameof(StatusText));
         if (connection is not null)
         {
@@ -25,6 +26,8 @@ public sealed partial class MainViewModel : ObservableObject
     }
 
     public SettingsViewModel Settings { get; }
+
+    public HelpViewModel Help { get; }
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(StatusText))]
