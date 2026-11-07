@@ -14,10 +14,13 @@ public static class PeerVerification
     [SupportedOSPlatform("windows")]
     public static void VerifyPipeServer(NamedPipeClientStream pipe)
     {
-        var current = WindowsIdentity.GetCurrent().User
-            ?? throw new UnauthorizedAccessException("The current user has no SID.");
+        using var identity = WindowsIdentity.GetCurrent();
+        var user = identity.User ?? throw new UnauthorizedAccessException("The current user has no SID.");
+        // Objects made by an elevated process are owned by the Administrators group (the token's
+        // default owner) rather than the user, so accept either: both are "made by us".
+        var defaultOwner = identity.Owner;
         var owner = pipe.GetAccessControl().GetOwner(typeof(SecurityIdentifier)) as SecurityIdentifier;
-        if (owner is null || !owner.Equals(current))
+        if (owner is null || !(owner.Equals(user) || (defaultOwner is not null && owner.Equals(defaultOwner))))
         {
             throw new UnauthorizedAccessException("The Selah pipe belongs to another user.");
         }

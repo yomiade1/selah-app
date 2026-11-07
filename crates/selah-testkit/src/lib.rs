@@ -240,10 +240,14 @@ impl Stack {
     pub async fn wait_ready(&self, timeout: Duration) -> Status {
         let deadline = Instant::now() + timeout;
         loop {
+            // The test's own clients must be connected too, or a later "is it still up?" check
+            // can catch one of them still in its reconnect backoff.
             if let Some(status) = self.core_status().await
                 && status.engine_connected
                 && status.engine_scene_revision == status.scene_revision
                 && !status.frame_checksum.is_empty()
+                && self.engine_status().await.is_some()
+                && self.watchdog_status().await.is_some()
             {
                 return status;
             }
