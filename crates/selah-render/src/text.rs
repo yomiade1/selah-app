@@ -195,6 +195,9 @@ impl TextRenderer {
     fn paragraph(&self, text: &str, style: &SlideTextStyle) -> skia_safe::textlayout::Paragraph {
         let mut paragraph_style = ParagraphStyle::new();
         paragraph_style.set_text_align(TextAlign::Center);
+        // No hinting: slide text is large, and hinting is where DirectWrite (Windows), FreeType
+        // (Linux) and CoreText (macOS) differ most, so this keeps frames alike everywhere.
+        paragraph_style.turn_hinting_off();
         paragraph_style.set_text_direction(if is_rtl(text) {
             TextDirection::RTL
         } else {

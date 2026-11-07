@@ -224,10 +224,10 @@ async fn pipe_dacl_allows_only_the_current_user() {
         1,
         "unexpected extra ACEs: {sddl}"
     );
-    assert!(
-        sddl.contains(&format!(";;;{sid})")),
-        "ACE is not for the current user: {sddl}"
-    );
+    // Windows prints some SIDs as aliases (the built-in administrator is "LA"), so compare with
+    // the expected descriptor printed the same way. GA becomes FA once applied to a pipe.
+    let expected = selah_ipc::windows::normalize_sddl(&format!("D:P(A;;FA;;;{sid})")).unwrap();
+    assert_eq!(sddl, expected, "the ACE is not for the current user");
 }
 
 #[cfg(unix)]

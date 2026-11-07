@@ -13,3 +13,10 @@ platform-specific images in `tests/golden/<platform>/`.
   uses the regular weight.
 - Rendered on: Windows x64, WARP (`SELAH_GPU=software`). Text is rasterised by Skia on the CPU,
   so the frames don't depend on the GPU; other platforms compare within `Tolerance::TEXT`.
+
+## 2026-11-07 — reference (text-en, text-yo, text-ko, text-ar)
+
+- Reason: slide text is now drawn without font hinting. CI showed Linux (FreeType) differing from
+  Windows (DirectWrite) on 0.53% of the English frame's pixels; hinting is where the platforms'
+  rasterisers differ most, and slide text is large enough not to need it.
+- Rendered on: Windows x64, WARP (`SELAH_GPU=software`).

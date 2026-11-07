@@ -202,6 +202,42 @@ pub fn pipe_server_pid(handle: BorrowedHandle<'_>) -> io::Result<u32> {
     Ok(pid)
 }
 
+/// Write `sddl` the way Windows prints it (for example the built-in administrator's SID
+/// becomes `LA`), so a descriptor can be compared with an expected one.
+pub fn normalize_sddl(sddl: &str) -> io::Result<String> {
+    let text = wide(sddl);
+    let mut descriptor: PSECURITY_DESCRIPTOR = ptr::null_mut();
+    // SAFETY: `text` is NUL-terminated and outlives the call; Windows allocates the descriptor.
+    if unsafe {
+        ConvertStringSecurityDescriptorToSecurityDescriptorW(
+            text.as_ptr(),
+            SDDL_REVISION_1,
+            &mut descriptor,
+            ptr::null_mut(),
+        )
+    } == 0
+    {
+        return Err(last_error());
+    }
+    let mut out: *mut u16 = ptr::null_mut();
+    // SAFETY: `descriptor` is valid until freed below; `out` receives a LocalAlloc string.
+    let ok = unsafe {
+        ConvertSecurityDescriptorToStringSecurityDescriptorW(
+            descriptor,
+            SDDL_REVISION_1,
+            DACL_SECURITY_INFORMATION,
+            &mut out,
+            ptr::null_mut(),
+        )
+    };
+    // SAFETY: the descriptor came from ConvertStringSecurityDescriptorToSecurityDescriptorW.
+    unsafe { LocalFree(descriptor) };
+    if ok == 0 {
+        return Err(last_error());
+    }
+    Ok(take_local_wide(out))
+}
+
 /// The DACL of a kernel object in SDDL form, for tests and diagnostics.
 pub fn dacl_sddl(handle: BorrowedHandle<'_>) -> io::Result<String> {
     let mut descriptor: PSECURITY_DESCRIPTOR = ptr::null_mut();
