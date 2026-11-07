@@ -137,8 +137,15 @@ def stages(args):
     def stage(number, label, command, env=None, skip=False, timeout=1800):
         plan.append((number, label, command, env, skip, timeout))
 
-    setup = [PY, "tools/check-toolchain.py"]
-    stage("1", "toolchain", setup)
+    fresh = args.ci or args.cloud
+    # A fresh runner or cloud session has rustup but not yet the pinned toolchain: install the
+    # one rust-toolchain.toml names, so the check below tests the pin rather than the image.
+    channel = re.search(r'channel\s*=\s*"([^"]+)"', (ROOT / "rust-toolchain.toml").read_text()).group(1)
+    stage("1", "rust toolchain", [tool("rustup"), "toolchain", "install", channel, "--profile", "minimal",
+                                  "--component", "clippy", "--component", "rustfmt"], skip=not fresh)
+    stage("1", "toolchain", [PY, "tools/check-toolchain.py"])
+    # Lockfile enforced (SEC-09). Locally this is quick when node_modules is current.
+    stage("1", "web dependencies", pnpm("install", "--frozen-lockfile"))
     # CI runners and cloud sessions start without the pinned third-party files.
     stage("1", "third-party files", [PY, "tools/third-party.py", "--extract"],
           skip=not (args.ci or args.cloud) and (ROOT / "third_party" / "fonts").is_dir())
