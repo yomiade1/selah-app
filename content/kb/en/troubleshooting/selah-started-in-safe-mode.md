@@ -29,7 +29,7 @@ In safe mode, Selah turns off the parts that are most likely to cause trouble. Y
 ## Try these in order
 
 1. Keep going if you are in a service. You can still show slides and clear the screens.
-2. When the service ends, close Selah. Then open it again. It starts the normal way.
+2. When the service ends, select **Restart normally** in the yellow bar. Selah starts again with everything on. What's on the screens stays there.
 3. If it starts in safe mode again, select **Help**, then **Report a problem**. Send the file to our support team.
 
 ## What is off in safe mode

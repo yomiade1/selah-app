@@ -39,6 +39,7 @@ inspector-empty = Select an item to see its details.
 safe-mode-message = Selah started in safe mode. Some features are off.
 safe-mode-learn-why = Learn why
 safe-mode-restart = Restart normally
+safe-mode-restart-hint = Starts Selah again with everything on. What's on the screens stays there.
 
 ## Something is on the screens (SAFE-06)
 live-guard-title = Something is on the screens.

@@ -1,9 +1,11 @@
-#![forbid(unsafe_code)]
-//! Process plumbing shared by core, engine and watchdog.
+#![deny(unsafe_code)]
+//! Process plumbing shared by core, engine and watchdog. Only `power` (an OS call with no safe
+//! API) may use unsafe code (SEC-11, tools/unsafe-allowlist.txt).
 pub mod heartbeat;
 pub mod instance;
 pub mod logging;
 pub mod paths;
+pub mod power;
 pub mod redact;
 
 /// The product version, shown in the UI, logs and support bundles, and compared by the updater.

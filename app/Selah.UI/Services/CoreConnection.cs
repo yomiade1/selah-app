@@ -103,6 +103,20 @@ public sealed class CoreConnection : IAsyncDisposable, Selah.UI.ViewModels.IHelp
             .ConfigureAwait(false);
     }
 
+    /// <summary>
+    /// <b>Restart normally</b> (SAFE-07): ask the watchdog to restart core and the UI without
+    /// safe mode. This UI process is closed and started again.
+    /// </summary>
+    public async Task RestartNormallyAsync()
+    {
+        var reply = await watchdog.RequestAsync(
+            new Envelope { Command = new Command { RestartNormally = new RestartNormally() } }, RequestTimeout).ConfigureAwait(false);
+        if (reply.Error is { } error)
+        {
+            throw new CoreException(error.Code, error.MessageKey);
+        }
+    }
+
     /// <summary>Settings ▸ Updates (M1.11).</summary>
     public async Task SetUpdateSettingsAsync(string feedUrl, bool allow)
     {

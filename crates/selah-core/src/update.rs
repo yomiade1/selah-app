@@ -10,9 +10,11 @@
 //! - Nothing installs while something is on the screens. Core refuses, and checks again just
 //!   before handing the verified package to the installer.
 //!
-//! The network is reached only through [`Fetch`], which `selah-net` implements (SEC-13).
+//! The network is reached only through `selah-net` (SEC-13). Core allows its update purposes
+//! only while update checks are on ([`policy_for`]).
 use std::path::{Path, PathBuf};
 
+use selah_net::{Net, Policy, Purpose};
 use serde::Deserialize;
 use sha2::{Digest, Sha256};
 
@@ -74,10 +76,16 @@ impl UpdateError {
     }
 }
 
-/// Fetch a URL's body, refusing anything over `limit` bytes. `selah-net` implements this with
-/// its policy and connection log; tests use fakes.
-pub trait Fetch: Send + Sync {
-    fn fetch(&self, url: &str, limit: u64) -> Result<Vec<u8>, String>;
+/// The network policy for these settings: the update purposes only while the person allows
+/// update checks and has given a feed (SEC-13). Everything else stays off.
+pub fn policy_for(settings: &crate::settings::StoredSettings) -> Policy {
+    if settings.allow_update_check && !settings.update_feed_url.is_empty() {
+        Policy::default()
+            .allow(Purpose::UpdateCheck)
+            .allow(Purpose::UpdateDownload)
+    } else {
+        Policy::default()
+    }
 }
 
 /// Starts the platform installer with a verified package.
@@ -216,15 +224,15 @@ pub fn package_url(feed_url: &str, file_name: &str) -> String {
 
 /// Look for a newer release. Runs only when the person asks.
 pub fn check(
-    fetch: &dyn Fetch,
+    net: &Net,
     feed_url: &str,
     package_id: &str,
     current: &str,
 ) -> Result<Option<Release>, UpdateError> {
     validate_feed_url(feed_url)?;
-    let bytes = fetch
-        .fetch(feed_url, FEED_LIMIT)
-        .map_err(UpdateError::Feed)?;
+    let bytes = net
+        .get(Purpose::UpdateCheck, feed_url, FEED_LIMIT)
+        .map_err(|error| UpdateError::Feed(error.to_string()))?;
     let releases = parse_feed(&bytes, package_id)?;
     Ok(newest(&releases, current))
 }
@@ -247,14 +255,16 @@ pub fn verify(bytes: &[u8], release: &Release) -> Result<(), UpdateError> {
 
 /// Download and verify a release into `folder`. Returns the verified file.
 pub fn download(
-    fetch: &dyn Fetch,
+    net: &Net,
     feed_url: &str,
     release: &Release,
     folder: &Path,
 ) -> Result<PathBuf, UpdateError> {
     validate_feed_url(feed_url)?;
     let url = package_url(feed_url, &release.file_name);
-    let bytes = fetch.fetch(&url, release.size).map_err(UpdateError::Feed)?;
+    let bytes = net
+        .get(Purpose::UpdateDownload, &url, release.size)
+        .map_err(|error| UpdateError::Feed(error.to_string()))?;
     verify(&bytes, release)?;
     let path = folder.join(&release.file_name);
     selah_runtime::paths::write_atomic(&path, &bytes)
@@ -307,20 +317,37 @@ mod tests {
 
     use super::*;
 
-    struct FakeFetch {
+    type Calls = std::sync::Arc<Mutex<Vec<(String, u64)>>>;
+
+    struct FakeTransport {
         responses: Vec<(String, Vec<u8>)>,
-        calls: Mutex<Vec<(String, u64)>>,
+        calls: Calls,
     }
 
-    impl Fetch for FakeFetch {
-        fn fetch(&self, url: &str, limit: u64) -> Result<Vec<u8>, String> {
+    impl selah_net::Transport for FakeTransport {
+        fn get(&self, url: &str, limit: u64) -> Result<Vec<u8>, selah_net::NetError> {
             self.calls.lock().unwrap().push((url.to_owned(), limit));
             self.responses
                 .iter()
                 .find(|(u, _)| u == url)
                 .map(|(_, body)| body.clone())
-                .ok_or_else(|| "not found".into())
+                .ok_or_else(|| selah_net::NetError::Failed("not found".into()))
         }
+    }
+
+    /// A gate that allows the update purposes, over a fake transport.
+    fn net(responses: Vec<(String, Vec<u8>)>) -> (Net, Calls) {
+        let calls = Calls::default();
+        let net = Net::new(Box::new(FakeTransport {
+            responses,
+            calls: calls.clone(),
+        }));
+        net.set_policy(
+            Policy::default()
+                .allow(Purpose::UpdateCheck)
+                .allow(Purpose::UpdateDownload),
+        );
+        (net, calls)
     }
 
     fn hex(bytes: &[u8]) -> String {
@@ -419,16 +446,10 @@ mod tests {
         let package = package_url(FEED_URL, &release.file_name);
         let dir = tempfile::tempdir().unwrap();
 
-        let tampered = FakeFetch {
-            responses: vec![(package.clone(), b"the fake package".to_vec())],
-            calls: Mutex::default(),
-        };
+        let (tampered, _) = net(vec![(package.clone(), b"the fake package".to_vec())]);
         let error = download(&tampered, FEED_URL, &release, dir.path()).unwrap_err();
         assert_eq!(error.code(), codes::VERIFY);
-        let short = FakeFetch {
-            responses: vec![(package.clone(), b"short".to_vec())],
-            calls: Mutex::default(),
-        };
+        let (short, _) = net(vec![(package.clone(), b"short".to_vec())]);
         assert_eq!(
             download(&short, FEED_URL, &release, dir.path())
                 .unwrap_err()
@@ -437,33 +458,41 @@ mod tests {
         );
         assert_eq!(std::fs::read_dir(dir.path()).unwrap().count(), 0);
 
-        let honest = FakeFetch {
-            responses: vec![(package.clone(), good.to_vec())],
-            calls: Mutex::default(),
-        };
+        let (honest, calls) = net(vec![(package.clone(), good.to_vec())]);
         let saved = download(&honest, FEED_URL, &release, dir.path()).unwrap();
         assert_eq!(std::fs::read(saved).unwrap(), good);
         // The download is limited to the size the feed promised.
-        assert_eq!(
-            honest.calls.lock().unwrap().as_slice(),
-            &[(package, release.size)]
-        );
+        assert_eq!(calls.lock().unwrap().as_slice(), &[(package, release.size)]);
     }
 
     #[test]
     fn check_reads_only_the_feed() {
         let bytes = feed(&[("0.0.4", "Full", b"four")]);
-        let fetch = FakeFetch {
-            responses: vec![(FEED_URL.into(), bytes)],
-            calls: Mutex::default(),
-        };
-        let found = check(&fetch, FEED_URL, PACKAGE_ID, "0.0.3")
+        let (gate, calls) = net(vec![(FEED_URL.into(), bytes)]);
+        let found = check(&gate, FEED_URL, PACKAGE_ID, "0.0.3")
             .unwrap()
             .unwrap();
         assert_eq!(found.notes_markdown, "Notes for 0.0.4");
         assert_eq!(
-            fetch.calls.lock().unwrap().as_slice(),
+            calls.lock().unwrap().as_slice(),
             &[(FEED_URL.to_owned(), FEED_LIMIT)]
         );
+        // The connection log names the host and purpose only.
+        let log = gate.connections();
+        assert_eq!(log[0].host, "updates.example.invalid");
+        assert_eq!(log[0].purpose, Purpose::UpdateCheck);
+    }
+
+    #[test]
+    fn the_network_policy_follows_the_update_settings() {
+        // sec: SEC-13
+        let mut settings = crate::settings::StoredSettings::default();
+        assert!(policy_for(&settings).is_offline());
+        settings.allow_update_check = true;
+        assert!(policy_for(&settings).is_offline(), "no feed, no connection");
+        settings.update_feed_url = FEED_URL.into();
+        assert!(policy_for(&settings).allows(Purpose::UpdateCheck));
+        settings.allow_update_check = false;
+        assert!(policy_for(&settings).is_offline());
     }
 }

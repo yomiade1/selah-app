@@ -19,9 +19,11 @@ pub enum CommandKind {
     SetUpdateSettings,
     CheckForUpdate,
     InstallUpdate,
+    /// Sent to the watchdog, not core; core answers that it can't do it.
+    RestartNormally,
 }
 
-pub const ALL_COMMANDS: [CommandKind; 8] = [
+pub const ALL_COMMANDS: [CommandKind; 9] = [
     CommandKind::Render,
     CommandKind::SetAppearance,
     CommandKind::RecordFeedback,
@@ -30,6 +32,7 @@ pub const ALL_COMMANDS: [CommandKind; 8] = [
     CommandKind::SetUpdateSettings,
     CommandKind::CheckForUpdate,
     CommandKind::InstallUpdate,
+    CommandKind::RestartNormally,
 ];
 
 pub fn kind_of(action: &command::Action) -> CommandKind {
@@ -42,6 +45,7 @@ pub fn kind_of(action: &command::Action) -> CommandKind {
         command::Action::SetUpdateSettings(_) => CommandKind::SetUpdateSettings,
         command::Action::CheckForUpdate(_) => CommandKind::CheckForUpdate,
         command::Action::InstallUpdate(_) => CommandKind::InstallUpdate,
+        command::Action::RestartNormally(_) => CommandKind::RestartNormally,
     }
 }
 
@@ -54,7 +58,8 @@ pub fn changes_screens(kind: CommandKind) -> bool {
         | CommandKind::RecordFeedback
         | CommandKind::SetUpdateSettings
         | CommandKind::CheckForUpdate
-        | CommandKind::InstallUpdate => false,
+        | CommandKind::InstallUpdate
+        | CommandKind::RestartNormally => false,
     }
 }
 
@@ -166,7 +171,8 @@ mod tests {
                 | CommandKind::ClearOutputs
                 | CommandKind::SetUpdateSettings
                 | CommandKind::CheckForUpdate
-                | CommandKind::InstallUpdate => {}
+                | CommandKind::InstallUpdate
+                | CommandKind::RestartNormally => {}
             }
         }
         let unique: std::collections::HashSet<_> = ALL_COMMANDS.iter().collect();

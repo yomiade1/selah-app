@@ -18,7 +18,7 @@ import type { Message } from "@bufbuild/protobuf";
  * Describes the file selah/v1/envelope.proto.
  */
 export const file_selah_v1_envelope: GenFile = /*@__PURE__*/
-  fileDesc("ChdzZWxhaC92MS9lbnZlbG9wZS5wcm90bxIIc2VsYWgudjEiUgoFQWN0b3ISDwoHdXNlcl9pZBgBIAEoCRIRCglkZXZpY2VfaWQYAiABKAkSJQoGb3JpZ2luGAMgASgOMhUuc2VsYWgudjEuQWN0b3JPcmlnaW4ihAIKCEVudmVsb3BlEgoKAmlkGAEgASgEEhYKDmNvcnJlbGF0aW9uX2lkGAIgASgEEh4KBWFjdG9yGAMgASgLMg8uc2VsYWgudjEuQWN0b3ISJAoHY29tbWFuZBgKIAEoCzIRLnNlbGFoLnYxLkNvbW1hbmRIABIgCgVxdWVyeRgLIAEoCzIPLnNlbGFoLnYxLlF1ZXJ5SAASIAoFZXZlbnQYDCABKAsyDy5zZWxhaC52MS5FdmVudEgAEiAKBXJlcGx5GA0gASgLMg8uc2VsYWgudjEuUmVwbHlIABIgCgVlcnJvchgOIAEoCzIPLnNlbGFoLnYxLkVycm9ySABCBgoEYm9keSK0AwoHQ29tbWFuZBIpCgZyZW5kZXIYASABKAsyFy5zZWxhaC52MS5SZW5kZXJDb21tYW5kSAASMQoOc2V0X2FwcGVhcmFuY2UYAiABKAsyFy5zZWxhaC52MS5TZXRBcHBlYXJhbmNlSAASMwoPcmVjb3JkX2ZlZWRiYWNrGAMgASgLMhguc2VsYWgudjEuUmVjb3JkRmVlZGJhY2tIABI2ChFzaG93X3Rlc3RfcGF0dGVybhgEIAEoCzIZLnNlbGFoLnYxLlNob3dUZXN0UGF0dGVybkgAEi8KDWNsZWFyX291dHB1dHMYBSABKAsyFi5zZWxhaC52MS5DbGVhck91dHB1dHNIABI0ChBjaGVja19mb3JfdXBkYXRlGAYgASgLMhguc2VsYWgudjEuQ2hlY2tGb3JVcGRhdGVIABIxCg5pbnN0YWxsX3VwZGF0ZRgHIAEoCzIXLnNlbGFoLnYxLkluc3RhbGxVcGRhdGVIABI6ChNzZXRfdXBkYXRlX3NldHRpbmdzGAggASgLMhsuc2VsYWgudjEuU2V0VXBkYXRlU2V0dGluZ3NIAEIICgZhY3Rpb24iOQoPU2hvd1Rlc3RQYXR0ZXJuEiYKB3BhdHRlcm4YASABKA4yFS5zZWxhaC52MS5UZXN0UGF0dGVybiIOCgxDbGVhck91dHB1dHMi4gIKBVF1ZXJ5EikKCmdldF9zdGF0dXMYASABKAsyEy5zZWxhaC52MS5HZXRTdGF0dXNIABItCgxnZXRfc2V0dGluZ3MYAiABKAsyFS5zZWxhaC52MS5HZXRTZXR0aW5nc0gAEisKC3NlYXJjaF9oZWxwGAMgASgLMhQuc2VsYWgudjEuU2VhcmNoSGVscEgAEisKC2dldF9hcnRpY2xlGAQgASgLMhQuc2VsYWgudjEuR2V0QXJ0aWNsZUgAEjQKEGhlbHBfZm9yX2NvbnRleHQYBSABKAsyGC5zZWxhaC52MS5IZWxwRm9yQ29udGV4dEgAEigKCXN1YnNjcmliZRgGIAEoCzITLnNlbGFoLnYxLlN1YnNjcmliZUgAEjoKE2dldF93YXRjaGRvZ19zdGF0dXMYByABKAsyGy5zZWxhaC52MS5HZXRXYXRjaGRvZ1N0YXR1c0gAQgkKB3JlcXVlc3QiCwoJR2V0U3RhdHVzIrYBCgZTdGF0dXMSEQoJY29ubmVjdGVkGAEgASgIEhEKCXNhZmVfbW9kZRgCIAEoCBIWCg5zY2VuZV9yZXZpc2lvbhgDIAEoBBIYChBlbmdpbmVfY29ubmVjdGVkGAQgASgIEh0KFWVuZ2luZV9zY2VuZV9yZXZpc2lvbhgFIAEoBBIWCg5mcmFtZV9jaGVja3N1bRgGIAEoDBIPCgd2ZXJzaW9uGAcgASgJEgwKBGxpdmUYCCABKAgiEwoRR2V0V2F0Y2hkb2dTdGF0dXMiSwoLUHJvY2Vzc0luZm8SDAoEcm9sZRgBIAEoCRILCgNwaWQYAiABKA0SEAoIcmVzdGFydHMYAyABKA0SDwoHcnVubmluZxgEIAEoCCJnCg5XYXRjaGRvZ1N0YXR1cxIoCglwcm9jZXNzZXMYASADKAsyFS5zZWxhaC52MS5Qcm9jZXNzSW5mbxIRCglzYWZlX21vZGUYAiABKAgSGAoQc2FmZV9tb2RlX3JlYXNvbhgDIAEoCSIgCglTdWJzY3JpYmUSEwoLZXZlbnRfbmFtZXMYASADKAkiKgoJSGVhcnRiZWF0Eh0KFW1vbm90b25pY19uYW5vc2Vjb25kcxgBIAEoBCLLAQoFRXZlbnQSKwoLZnJhbWVfc2hvd24YASABKAsyFC5zZWxhaC52MS5GcmFtZVNob3duSAASIgoGc3RhdHVzGAIgASgLMhAuc2VsYWgudjEuU3RhdHVzSAASKAoJaGVhcnRiZWF0GAMgASgLMhMuc2VsYWgudjEuSGVhcnRiZWF0SAASNwoRZW1lcmdlbmN5X2FwcGxpZWQYBCABKAsyGi5zZWxhaC52MS5FbWVyZ2VuY3lBcHBsaWVkSABCDgoMbm90aWZpY2F0aW9uIq4CCgVSZXBseRIiCgZzdGF0dXMYASABKAsyEC5zZWxhaC52MS5TdGF0dXNIABImCghzZXR0aW5ncxgCIAEoCzISLnNlbGFoLnYxLlNldHRpbmdzSAASLQoMaGVscF9yZXN1bHRzGAMgASgLMhUuc2VsYWgudjEuSGVscFJlc3VsdHNIABIkCgdhcnRpY2xlGAQgASgLMhEuc2VsYWgudjEuQXJ0aWNsZUgAEhYKDGFja25vd2xlZGdlZBgFIAEoCEgAEjMKD3dhdGNoZG9nX3N0YXR1cxgGIAEoCzIYLnNlbGFoLnYxLldhdGNoZG9nU3RhdHVzSAASLQoMdXBkYXRlX2NoZWNrGAcgASgLMhUuc2VsYWgudjEuVXBkYXRlQ2hlY2tIAEIICgZyZXN1bHQqmQIKC0FjdG9yT3JpZ2luEhwKGEFDVE9SX09SSUdJTl9VTlNQRUNJRklFRBAAEhMKD0FDVE9SX09SSUdJTl9VSRABEhQKEEFDVE9SX09SSUdJTl9BUEkQAhIVChFBQ1RPUl9PUklHSU5fTUlESRADEhYKEkFDVE9SX09SSUdJTl9NQUNSTxAEEhkKFUFDVE9SX09SSUdJTl9USU1FTElORRAFEhUKEUFDVE9SX09SSUdJTl9TWU5DEAYSFQoRQUNUT1JfT1JJR0lOX1RPVVIQBxIVChFBQ1RPUl9PUklHSU5fQ09SRRAIEhcKE0FDVE9SX09SSUdJTl9FTkdJTkUQCRIZChVBQ1RPUl9PUklHSU5fV0FUQ0hET0cQCkIVqgISU2VsYWguQ29udHJhY3RzLlYxYgZwcm90bzM", [file_selah_v1_errors, file_selah_v1_help, file_selah_v1_render, file_selah_v1_settings]);
+  fileDesc("ChdzZWxhaC92MS9lbnZlbG9wZS5wcm90bxIIc2VsYWgudjEiUgoFQWN0b3ISDwoHdXNlcl9pZBgBIAEoCRIRCglkZXZpY2VfaWQYAiABKAkSJQoGb3JpZ2luGAMgASgOMhUuc2VsYWgudjEuQWN0b3JPcmlnaW4ihAIKCEVudmVsb3BlEgoKAmlkGAEgASgEEhYKDmNvcnJlbGF0aW9uX2lkGAIgASgEEh4KBWFjdG9yGAMgASgLMg8uc2VsYWgudjEuQWN0b3ISJAoHY29tbWFuZBgKIAEoCzIRLnNlbGFoLnYxLkNvbW1hbmRIABIgCgVxdWVyeRgLIAEoCzIPLnNlbGFoLnYxLlF1ZXJ5SAASIAoFZXZlbnQYDCABKAsyDy5zZWxhaC52MS5FdmVudEgAEiAKBXJlcGx5GA0gASgLMg8uc2VsYWgudjEuUmVwbHlIABIgCgVlcnJvchgOIAEoCzIPLnNlbGFoLnYxLkVycm9ySABCBgoEYm9keSLrAwoHQ29tbWFuZBIpCgZyZW5kZXIYASABKAsyFy5zZWxhaC52MS5SZW5kZXJDb21tYW5kSAASMQoOc2V0X2FwcGVhcmFuY2UYAiABKAsyFy5zZWxhaC52MS5TZXRBcHBlYXJhbmNlSAASMwoPcmVjb3JkX2ZlZWRiYWNrGAMgASgLMhguc2VsYWgudjEuUmVjb3JkRmVlZGJhY2tIABI2ChFzaG93X3Rlc3RfcGF0dGVybhgEIAEoCzIZLnNlbGFoLnYxLlNob3dUZXN0UGF0dGVybkgAEi8KDWNsZWFyX291dHB1dHMYBSABKAsyFi5zZWxhaC52MS5DbGVhck91dHB1dHNIABI0ChBjaGVja19mb3JfdXBkYXRlGAYgASgLMhguc2VsYWgudjEuQ2hlY2tGb3JVcGRhdGVIABIxCg5pbnN0YWxsX3VwZGF0ZRgHIAEoCzIXLnNlbGFoLnYxLkluc3RhbGxVcGRhdGVIABI6ChNzZXRfdXBkYXRlX3NldHRpbmdzGAggASgLMhsuc2VsYWgudjEuU2V0VXBkYXRlU2V0dGluZ3NIABI1ChByZXN0YXJ0X25vcm1hbGx5GAkgASgLMhkuc2VsYWgudjEuUmVzdGFydE5vcm1hbGx5SABCCAoGYWN0aW9uIhEKD1Jlc3RhcnROb3JtYWxseSI5Cg9TaG93VGVzdFBhdHRlcm4SJgoHcGF0dGVybhgBIAEoDjIVLnNlbGFoLnYxLlRlc3RQYXR0ZXJuIg4KDENsZWFyT3V0cHV0cyLiAgoFUXVlcnkSKQoKZ2V0X3N0YXR1cxgBIAEoCzITLnNlbGFoLnYxLkdldFN0YXR1c0gAEi0KDGdldF9zZXR0aW5ncxgCIAEoCzIVLnNlbGFoLnYxLkdldFNldHRpbmdzSAASKwoLc2VhcmNoX2hlbHAYAyABKAsyFC5zZWxhaC52MS5TZWFyY2hIZWxwSAASKwoLZ2V0X2FydGljbGUYBCABKAsyFC5zZWxhaC52MS5HZXRBcnRpY2xlSAASNAoQaGVscF9mb3JfY29udGV4dBgFIAEoCzIYLnNlbGFoLnYxLkhlbHBGb3JDb250ZXh0SAASKAoJc3Vic2NyaWJlGAYgASgLMhMuc2VsYWgudjEuU3Vic2NyaWJlSAASOgoTZ2V0X3dhdGNoZG9nX3N0YXR1cxgHIAEoCzIbLnNlbGFoLnYxLkdldFdhdGNoZG9nU3RhdHVzSABCCQoHcmVxdWVzdCILCglHZXRTdGF0dXMitgEKBlN0YXR1cxIRCgljb25uZWN0ZWQYASABKAgSEQoJc2FmZV9tb2RlGAIgASgIEhYKDnNjZW5lX3JldmlzaW9uGAMgASgEEhgKEGVuZ2luZV9jb25uZWN0ZWQYBCABKAgSHQoVZW5naW5lX3NjZW5lX3JldmlzaW9uGAUgASgEEhYKDmZyYW1lX2NoZWNrc3VtGAYgASgMEg8KB3ZlcnNpb24YByABKAkSDAoEbGl2ZRgIIAEoCCITChFHZXRXYXRjaGRvZ1N0YXR1cyJLCgtQcm9jZXNzSW5mbxIMCgRyb2xlGAEgASgJEgsKA3BpZBgCIAEoDRIQCghyZXN0YXJ0cxgDIAEoDRIPCgdydW5uaW5nGAQgASgIImcKDldhdGNoZG9nU3RhdHVzEigKCXByb2Nlc3NlcxgBIAMoCzIVLnNlbGFoLnYxLlByb2Nlc3NJbmZvEhEKCXNhZmVfbW9kZRgCIAEoCBIYChBzYWZlX21vZGVfcmVhc29uGAMgASgJIiAKCVN1YnNjcmliZRITCgtldmVudF9uYW1lcxgBIAMoCSIqCglIZWFydGJlYXQSHQoVbW9ub3RvbmljX25hbm9zZWNvbmRzGAEgASgEIssBCgVFdmVudBIrCgtmcmFtZV9zaG93bhgBIAEoCzIULnNlbGFoLnYxLkZyYW1lU2hvd25IABIiCgZzdGF0dXMYAiABKAsyEC5zZWxhaC52MS5TdGF0dXNIABIoCgloZWFydGJlYXQYAyABKAsyEy5zZWxhaC52MS5IZWFydGJlYXRIABI3ChFlbWVyZ2VuY3lfYXBwbGllZBgEIAEoCzIaLnNlbGFoLnYxLkVtZXJnZW5jeUFwcGxpZWRIAEIOCgxub3RpZmljYXRpb24irgIKBVJlcGx5EiIKBnN0YXR1cxgBIAEoCzIQLnNlbGFoLnYxLlN0YXR1c0gAEiYKCHNldHRpbmdzGAIgASgLMhIuc2VsYWgudjEuU2V0dGluZ3NIABItCgxoZWxwX3Jlc3VsdHMYAyABKAsyFS5zZWxhaC52MS5IZWxwUmVzdWx0c0gAEiQKB2FydGljbGUYBCABKAsyES5zZWxhaC52MS5BcnRpY2xlSAASFgoMYWNrbm93bGVkZ2VkGAUgASgISAASMwoPd2F0Y2hkb2dfc3RhdHVzGAYgASgLMhguc2VsYWgudjEuV2F0Y2hkb2dTdGF0dXNIABItCgx1cGRhdGVfY2hlY2sYByABKAsyFS5zZWxhaC52MS5VcGRhdGVDaGVja0gAQggKBnJlc3VsdCqZAgoLQWN0b3JPcmlnaW4SHAoYQUNUT1JfT1JJR0lOX1VOU1BFQ0lGSUVEEAASEwoPQUNUT1JfT1JJR0lOX1VJEAESFAoQQUNUT1JfT1JJR0lOX0FQSRACEhUKEUFDVE9SX09SSUdJTl9NSURJEAMSFgoSQUNUT1JfT1JJR0lOX01BQ1JPEAQSGQoVQUNUT1JfT1JJR0lOX1RJTUVMSU5FEAUSFQoRQUNUT1JfT1JJR0lOX1NZTkMQBhIVChFBQ1RPUl9PUklHSU5fVE9VUhAHEhUKEUFDVE9SX09SSUdJTl9DT1JFEAgSFwoTQUNUT1JfT1JJR0lOX0VOR0lORRAJEhkKFUFDVE9SX09SSUdJTl9XQVRDSERPRxAKQhWqAhJTZWxhaC5Db250cmFjdHMuVjFiBnByb3RvMw", [file_selah_v1_errors, file_selah_v1_help, file_selah_v1_render, file_selah_v1_settings]);
 
 /**
  * This is attribution, not proof of identity. The receiver must authenticate
@@ -167,6 +167,12 @@ export type Command = Message<"selah.v1.Command"> & {
      */
     value: SetUpdateSettings;
     case: "setUpdateSettings";
+  } | {
+    /**
+     * @generated from field: selah.v1.RestartNormally restart_normally = 9;
+     */
+    value: RestartNormally;
+    case: "restartNormally";
   } | { case: undefined; value?: undefined };
 };
 
@@ -176,6 +182,22 @@ export type Command = Message<"selah.v1.Command"> & {
  */
 export const CommandSchema: GenMessage<Command> = /*@__PURE__*/
   messageDesc(file_selah_v1_envelope, 2);
+
+/**
+ * UI → watchdog: leave safe mode (SAFE-07, "Restart normally"). The watchdog restarts core and
+ * the UI without safe mode; the engine keeps the screens as they are. Core refuses it.
+ *
+ * @generated from message selah.v1.RestartNormally
+ */
+export type RestartNormally = Message<"selah.v1.RestartNormally"> & {
+};
+
+/**
+ * Describes the message selah.v1.RestartNormally.
+ * Use `create(RestartNormallySchema)` to create a new message.
+ */
+export const RestartNormallySchema: GenMessage<RestartNormally> = /*@__PURE__*/
+  messageDesc(file_selah_v1_envelope, 3);
 
 /**
  * UI → core: put a test pattern on every output (M1.8 "Show test pattern").
@@ -194,7 +216,7 @@ export type ShowTestPattern = Message<"selah.v1.ShowTestPattern"> & {
  * Use `create(ShowTestPatternSchema)` to create a new message.
  */
 export const ShowTestPatternSchema: GenMessage<ShowTestPattern> = /*@__PURE__*/
-  messageDesc(file_selah_v1_envelope, 3);
+  messageDesc(file_selah_v1_envelope, 4);
 
 /**
  * UI → core: clear every output through the normal path. The emergency lane is separate.
@@ -209,7 +231,7 @@ export type ClearOutputs = Message<"selah.v1.ClearOutputs"> & {
  * Use `create(ClearOutputsSchema)` to create a new message.
  */
 export const ClearOutputsSchema: GenMessage<ClearOutputs> = /*@__PURE__*/
-  messageDesc(file_selah_v1_envelope, 4);
+  messageDesc(file_selah_v1_envelope, 5);
 
 /**
  * @generated from message selah.v1.Query
@@ -268,7 +290,7 @@ export type Query = Message<"selah.v1.Query"> & {
  * Use `create(QuerySchema)` to create a new message.
  */
 export const QuerySchema: GenMessage<Query> = /*@__PURE__*/
-  messageDesc(file_selah_v1_envelope, 5);
+  messageDesc(file_selah_v1_envelope, 6);
 
 /**
  * @generated from message selah.v1.GetStatus
@@ -281,7 +303,7 @@ export type GetStatus = Message<"selah.v1.GetStatus"> & {
  * Use `create(GetStatusSchema)` to create a new message.
  */
 export const GetStatusSchema: GenMessage<GetStatus> = /*@__PURE__*/
-  messageDesc(file_selah_v1_envelope, 6);
+  messageDesc(file_selah_v1_envelope, 7);
 
 /**
  * @generated from message selah.v1.Status
@@ -339,7 +361,7 @@ export type Status = Message<"selah.v1.Status"> & {
  * Use `create(StatusSchema)` to create a new message.
  */
 export const StatusSchema: GenMessage<Status> = /*@__PURE__*/
-  messageDesc(file_selah_v1_envelope, 7);
+  messageDesc(file_selah_v1_envelope, 8);
 
 /**
  * @generated from message selah.v1.GetWatchdogStatus
@@ -352,7 +374,7 @@ export type GetWatchdogStatus = Message<"selah.v1.GetWatchdogStatus"> & {
  * Use `create(GetWatchdogStatusSchema)` to create a new message.
  */
 export const GetWatchdogStatusSchema: GenMessage<GetWatchdogStatus> = /*@__PURE__*/
-  messageDesc(file_selah_v1_envelope, 8);
+  messageDesc(file_selah_v1_envelope, 9);
 
 /**
  * @generated from message selah.v1.ProcessInfo
@@ -384,7 +406,7 @@ export type ProcessInfo = Message<"selah.v1.ProcessInfo"> & {
  * Use `create(ProcessInfoSchema)` to create a new message.
  */
 export const ProcessInfoSchema: GenMessage<ProcessInfo> = /*@__PURE__*/
-  messageDesc(file_selah_v1_envelope, 9);
+  messageDesc(file_selah_v1_envelope, 10);
 
 /**
  * @generated from message selah.v1.WatchdogStatus
@@ -411,7 +433,7 @@ export type WatchdogStatus = Message<"selah.v1.WatchdogStatus"> & {
  * Use `create(WatchdogStatusSchema)` to create a new message.
  */
 export const WatchdogStatusSchema: GenMessage<WatchdogStatus> = /*@__PURE__*/
-  messageDesc(file_selah_v1_envelope, 10);
+  messageDesc(file_selah_v1_envelope, 11);
 
 /**
  * @generated from message selah.v1.Subscribe
@@ -428,7 +450,7 @@ export type Subscribe = Message<"selah.v1.Subscribe"> & {
  * Use `create(SubscribeSchema)` to create a new message.
  */
 export const SubscribeSchema: GenMessage<Subscribe> = /*@__PURE__*/
-  messageDesc(file_selah_v1_envelope, 11);
+  messageDesc(file_selah_v1_envelope, 12);
 
 /**
  * @generated from message selah.v1.Heartbeat
@@ -445,7 +467,7 @@ export type Heartbeat = Message<"selah.v1.Heartbeat"> & {
  * Use `create(HeartbeatSchema)` to create a new message.
  */
 export const HeartbeatSchema: GenMessage<Heartbeat> = /*@__PURE__*/
-  messageDesc(file_selah_v1_envelope, 12);
+  messageDesc(file_selah_v1_envelope, 13);
 
 /**
  * @generated from message selah.v1.Event
@@ -486,7 +508,7 @@ export type Event = Message<"selah.v1.Event"> & {
  * Use `create(EventSchema)` to create a new message.
  */
 export const EventSchema: GenMessage<Event> = /*@__PURE__*/
-  messageDesc(file_selah_v1_envelope, 13);
+  messageDesc(file_selah_v1_envelope, 14);
 
 /**
  * @generated from message selah.v1.Reply
@@ -545,7 +567,7 @@ export type Reply = Message<"selah.v1.Reply"> & {
  * Use `create(ReplySchema)` to create a new message.
  */
 export const ReplySchema: GenMessage<Reply> = /*@__PURE__*/
-  messageDesc(file_selah_v1_envelope, 14);
+  messageDesc(file_selah_v1_envelope, 15);
 
 /**
  * @generated from enum selah.v1.ActorOrigin

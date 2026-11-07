@@ -17,6 +17,9 @@
                    Text="{Binding [safe-mode-message], Source={x:Static s:Localizer.Instance}}" />
         <Button Name="SafeModeLearnWhy" Click="OnSafeModeLearnWhy"
                 Content="{Binding [safe-mode-learn-why], Source={x:Static s:Localizer.Instance}}" />
+        <Button Name="SafeModeRestart" Command="{Binding RestartNormallyCommand}"
+                ToolTip.Tip="{Binding [safe-mode-restart-hint], Source={x:Static s:Localizer.Instance}}"
+                Content="{Binding [safe-mode-restart], Source={x:Static s:Localizer.Instance}}" />
       </WrapPanel>
     </Border>
 

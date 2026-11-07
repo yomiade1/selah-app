@@ -11,6 +11,7 @@ description = "Selah core library: settings, live state, permissions and request
 anyhow.workspace = true
 prost.workspace = true
 selah-kb = { path = "../selah-kb" }
+selah-net = { path = "../selah-net" }
 selah-proto = { path = "../selah-proto" }
 selah-runtime = { path = "../selah-runtime" }
 semver.workspace = true

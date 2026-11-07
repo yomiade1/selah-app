@@ -122,6 +122,42 @@ public sealed partial class MainWindow : Window
         }
     }
 
+    private bool closeConfirmed;
+
+    protected override void OnClosing(WindowClosingEventArgs e)
+    {
+        if (RequestClose(e.IsProgrammatic, e.CloseReason == WindowCloseReason.OSShutdown))
+        {
+            e.Cancel = true;
+        }
+        base.OnClosing(e);
+    }
+
+    /// <summary>
+    /// SAFE-06: when the person closes Selah while something is on the screens, ask first
+    /// ("Something is on the screens." with <b>Keep showing</b> and <b>Clear and quit</b>). Returns
+    /// true when the close must wait for their answer. Selah's own closes and the computer shutting
+    /// down aren't held.
+    /// </summary>
+    public bool RequestClose(bool programmatic, bool osShutdown)
+    {
+        if (closeConfirmed || programmatic || osShutdown || Model is not { IsLive: true } model)
+        {
+            return false;
+        }
+        _ = AskThenCloseAsync(model);
+        return true;
+    }
+
+    private async Task AskThenCloseAsync(MainViewModel model)
+    {
+        if (await model.ConfirmIfLiveAsync(LiveGuardKind.Quit))
+        {
+            closeConfirmed = true;
+            Close();
+        }
+    }
+
     private void OnSafeModeLearnWhy(object? sender, RoutedEventArgs e) =>
         Model?.OpenArticleCommand.Execute("troubleshooting.selah-started-in-safe-mode");
 

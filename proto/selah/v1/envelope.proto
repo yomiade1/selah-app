@@ -54,8 +54,13 @@ message Command {
     CheckForUpdate check_for_update = 6;
     InstallUpdate install_update = 7;
     SetUpdateSettings set_update_settings = 8;
+    RestartNormally restart_normally = 9;
   }
 }
+
+// UI → watchdog: leave safe mode (SAFE-07, "Restart normally"). The watchdog restarts core and
+// the UI without safe mode; the engine keeps the screens as they are. Core refuses it.
+message RestartNormally {}
 
 // UI → core: put a test pattern on every output (M1.8 "Show test pattern").
 message ShowTestPattern {

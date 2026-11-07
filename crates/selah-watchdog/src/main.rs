@@ -15,7 +15,7 @@ use std::time::{Duration, Instant};
 use anyhow::Context;
 use selah_ipc::{Connection, Endpoint, Listener, Service};
 use selah_proto::v1::{
-    ActorOrigin, ProcessInfo, Reply, WatchdogStatus, envelope, event, query, reply,
+    ActorOrigin, ProcessInfo, Reply, WatchdogStatus, command, envelope, event, query, reply,
 };
 use selah_watchdog::EXIT_ALREADY_RUNNING;
 use selah_watchdog::policy::{self, CrashLog};
@@ -64,6 +64,8 @@ struct Supervised {
 struct Shared {
     heartbeats: HashMap<Role, Instant>,
     status: WatchdogStatus,
+    /// The UI asked to leave safe mode ("Restart normally", SAFE-07).
+    restart_normally: bool,
 }
 
 type SharedState = Arc<Mutex<Shared>>;
@@ -122,6 +124,39 @@ async fn serve(shared: SharedState, connection: Connection) {
                     if let Some(role) = role {
                         lock(&shared).heartbeats.insert(role, Instant::now());
                     }
+                }
+            }
+            Some(envelope::Body::Command(command))
+                if matches!(command.action, Some(command::Action::RestartNormally(_))) =>
+            {
+                // Only the person, through the UI, may ask (the pipe already admits only this
+                // user's processes, SEC-02).
+                let from_ui = message
+                    .actor
+                    .as_ref()
+                    .and_then(|actor| Role::from_origin(actor.origin))
+                    == Some(Role::Ui);
+                let answer = if from_ui {
+                    lock(&shared).restart_normally = true;
+                    tracing::info!("restart normally requested");
+                    envelope::Body::Reply(Reply {
+                        result: Some(reply::Result::Acknowledged(true)),
+                    })
+                } else {
+                    envelope::Body::Error(selah_proto::v1::Error {
+                        code: "SEL-SEC-0001".into(),
+                        message_key: "error-not-permitted".into(),
+                        ..Default::default()
+                    })
+                };
+                let reply = selah_proto::v1::Envelope {
+                    id: message.id,
+                    correlation_id: message.id,
+                    actor: Some(watchdog_actor()),
+                    body: Some(answer),
+                };
+                if sender.send(reply).await.is_err() {
+                    return;
                 }
             }
             Some(envelope::Body::Query(query))
@@ -295,6 +330,23 @@ async fn main() -> anyhow::Result<()> {
         }
         if quit {
             break;
+        }
+        let restart_normally = std::mem::take(&mut lock(&shared).restart_normally);
+        if restart_normally && safe_mode {
+            safe_mode = false;
+            safe_reason.clear();
+            crashes = CrashLog::default();
+            tracing::warn!("leaving safe mode: restarting core and the UI normally");
+            // The engine keeps the screens as they are; it picks up normal mode on its next start.
+            for process in processes.iter_mut().filter(|p| p.role != Role::Engine) {
+                if let Some(child) = process.child.as_mut() {
+                    let _ = child.start_kill();
+                    let _ = child.wait().await;
+                }
+                process.child = None;
+                process.not_before = None;
+                process.recent_crashes = CrashLog::default();
+            }
         }
         if enter_safe_mode && !safe_mode {
             safe_mode = true;

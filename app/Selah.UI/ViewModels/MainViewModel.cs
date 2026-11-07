@@ -171,6 +171,24 @@ public sealed partial class MainViewModel : ObservableObject
         }
     }
 
+    /// <summary><b>Restart normally</b> on the safe-mode banner (SAFE-07).</summary>
+    [RelayCommand]
+    private async Task RestartNormallyAsync()
+    {
+        if (connection is null)
+        {
+            return;
+        }
+        try
+        {
+            await connection.RestartNormallyAsync();
+        }
+        catch (Exception error) when (error is TimeoutException or IOException or InvalidOperationException or OperationCanceledException)
+        {
+            LastError = Localizer.Instance["error-not-connected"];
+        }
+    }
+
     /// <summary>Raised when something asks for a help article (the article view opens it).</summary>
     public event EventHandler<string>? ArticleRequested;
 

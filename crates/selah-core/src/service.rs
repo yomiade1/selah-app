@@ -62,22 +62,78 @@ pub struct CoreService {
     help: Option<selah_kb::HelpIndex>,
     /// The release the last update check offered.
     available_update: Option<Release>,
+    /// The only way out to the network (SEC-13). Its policy follows the settings.
+    net: std::sync::Arc<selah_net::Net>,
+    /// Keeps the computer awake while live (SAFE-06).
+    keep_awake: Box<dyn selah_runtime::power::KeepAwake>,
+    awake: Option<bool>,
+}
+
+/// Used by [`CoreService::new`]: every request fails, so tests can never reach the network.
+struct NoTransport;
+
+impl selah_net::Transport for NoTransport {
+    fn get(&self, _url: &str, _limit: u64) -> Result<Vec<u8>, selah_net::NetError> {
+        Err(selah_net::NetError::Failed(
+            "no network in this build".into(),
+        ))
+    }
 }
 
 impl CoreService {
+    /// Core with no network and no keep-awake (tests). The host uses [`CoreService::with_platform`].
     pub fn new(config_dir: &std::path::Path, safe_mode: bool) -> Self {
-        Self {
+        Self::with_platform(
+            config_dir,
+            safe_mode,
+            std::sync::Arc::new(selah_net::Net::new(Box::new(NoTransport))),
+            Box::new(selah_runtime::power::NoKeepAwake),
+        )
+    }
+
+    pub fn with_platform(
+        config_dir: &std::path::Path,
+        safe_mode: bool,
+        net: std::sync::Arc<selah_net::Net>,
+        keep_awake: Box<dyn selah_runtime::power::KeepAwake>,
+    ) -> Self {
+        let mut service = Self {
             settings: SettingsStore::open(config_dir),
             live: LiveState::open(config_dir),
             engine: EngineView::default(),
             safe_mode,
             help: None,
             available_update: None,
+            net,
+            keep_awake,
+            awake: None,
             actor: Actor {
                 user_id: "selah".into(),
                 device_id: "core".into(),
                 origin: ActorOrigin::Core as i32,
             },
+        };
+        service.apply_settings_side_effects();
+        // The live-state snapshot may say something is on the screens (core restarted).
+        service.sync_keep_awake();
+        service
+    }
+
+    /// The network gate, for slow work the host runs.
+    pub fn net(&self) -> std::sync::Arc<selah_net::Net> {
+        self.net.clone()
+    }
+
+    fn apply_settings_side_effects(&self) {
+        self.net.set_policy(update::policy_for(self.settings.get()));
+    }
+
+    /// SAFE-06: the computer doesn't sleep while something is on the screens.
+    fn sync_keep_awake(&mut self) {
+        let live = self.is_live();
+        if self.awake != Some(live) {
+            self.awake = Some(live);
+            self.keep_awake.set(live);
         }
     }
 
@@ -149,6 +205,12 @@ impl CoreService {
     }
 
     pub fn handle(&mut self, request: &Envelope) -> Outcome {
+        let outcome = self.handle_inner(request);
+        self.sync_keep_awake();
+        outcome
+    }
+
+    fn handle_inner(&mut self, request: &Envelope) -> Outcome {
         match request.body.as_ref() {
             Some(envelope::Body::Command(command)) => match command.action.as_ref() {
                 Some(action) => self.command(request, action),
@@ -237,10 +299,13 @@ impl CoreService {
                     s.allow_update_check = allow;
                     Ok(())
                 }) {
-                    Ok(()) => Outcome {
-                        reply: ack(self),
-                        ..Outcome::default()
-                    },
+                    Ok(()) => {
+                        self.apply_settings_side_effects();
+                        Outcome {
+                            reply: ack(self),
+                            ..Outcome::default()
+                        }
+                    }
                     Err(_) => Outcome {
                         reply: Some(self.error(request, codes::SETTING, "error-invalid-setting")),
                         ..Outcome::default()
@@ -283,6 +348,11 @@ impl CoreService {
                     },
                 }
             }
+            // The watchdog owns safe mode; the UI sends this to the watchdog.
+            command::Action::RestartNormally(_) => Outcome {
+                reply: Some(self.error(request, codes::UNSUPPORTED, "error-unsupported-request")),
+                ..Outcome::default()
+            },
             // Denied above for every client; kept for exhaustiveness.
             command::Action::Render(_) => Outcome {
                 reply: Some(self.error(request, DENIED_CODE, "error-not-permitted")),
@@ -448,6 +518,12 @@ impl CoreService {
 
     /// Handle an event from the engine. Returns events for subscribers.
     pub fn on_engine_event(&mut self, event: &Event) -> Vec<Event> {
+        let events = self.on_engine_event_inner(event);
+        self.sync_keep_awake();
+        events
+    }
+
+    fn on_engine_event_inner(&mut self, event: &Event) -> Vec<Event> {
         match event.notification.as_ref() {
             Some(event::Notification::FrameShown(frame)) => {
                 let changed = self.engine.frame_checksum != frame.frame_checksum
@@ -624,18 +700,68 @@ mod tests {
         }
     }
 
+    #[derive(Clone, Default)]
+    struct RecordingKeepAwake(std::sync::Arc<std::sync::Mutex<Vec<bool>>>);
+
+    impl selah_runtime::power::KeepAwake for RecordingKeepAwake {
+        fn set(&mut self, awake: bool) {
+            self.0.lock().unwrap().push(awake);
+        }
+    }
+
+    #[test]
+    fn the_computer_stays_awake_only_while_something_is_on_the_screens() {
+        // safe: SAFE-06
+        let dir = tempfile::tempdir().unwrap();
+        let keep = RecordingKeepAwake::default();
+        let net = std::sync::Arc::new(selah_net::Net::new(Box::new(NoTransport)));
+        let mut core =
+            CoreService::with_platform(dir.path(), false, net.clone(), Box::new(keep.clone()));
+        core.handle(&request(ActorOrigin::Ui, show_bars()));
+        core.handle(&request(ActorOrigin::Ui, show_bars()));
+        core.handle(&request(
+            ActorOrigin::Ui,
+            command(command::Action::ClearOutputs(ClearOutputs {})),
+        ));
+        core.handle(&request(ActorOrigin::Ui, show_bars()));
+        // The emergency lane clears the screens: sleep is allowed again.
+        core.on_engine_event(&Event {
+            notification: Some(event::Notification::EmergencyApplied(
+                selah_proto::v1::EmergencyApplied {
+                    show_logo: false,
+                    scene_revision: 99,
+                    monotonic_nanoseconds: 1,
+                },
+            )),
+        });
+        assert_eq!(
+            *keep.0.lock().unwrap(),
+            vec![false, true, false, true, false]
+        );
+
+        // After a restart with something still live, core keeps the computer awake at once.
+        core.handle(&request(ActorOrigin::Ui, show_bars()));
+        drop(core);
+        let after = RecordingKeepAwake::default();
+        let _core = CoreService::with_platform(dir.path(), false, net, Box::new(after.clone()));
+        assert_eq!(*after.0.lock().unwrap(), vec![true]);
+    }
+
     #[test]
     fn update_checks_are_off_at_default_settings() {
         // sec: SEC-13 (no outgoing connection unless the person allows it)
         let dir = tempfile::tempdir().unwrap();
         let mut core = CoreService::new(dir.path(), false);
+        assert!(core.net().policy().is_offline());
         let outcome = core.handle(&request(
             ActorOrigin::Ui,
             command(command::Action::CheckForUpdate(Default::default())),
         ));
         assert!(outcome.work.is_none());
         assert_eq!(error_code(&outcome), update::codes::OFF);
+        assert!(core.net().connections().is_empty());
         allow_updates(&mut core);
+        assert!(core.net().policy().allows(selah_net::Purpose::UpdateCheck));
         let outcome = core.handle(&request(
             ActorOrigin::Ui,
             command(command::Action::CheckForUpdate(Default::default())),
