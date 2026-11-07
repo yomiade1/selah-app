@@ -1,0 +1,159 @@
+{
+  "schema_version": 1,
+  "assets": [
+    {
+      "path": "fonts/inter/Inter[opsz,wght].ttf",
+      "url": "https://raw.githubusercontent.com/google/fonts/86aced91de05cd4f96a06838124cca45be337b2b/ofl/inter/Inter%5Bopsz%2Cwght%5D.ttf",
+      "sha256": "29160a80ff49ddcab2c97711247e08b1fab27a484a329ce8b813d820dc559031",
+      "license": "OFL-1.1",
+      "source": "https://github.com/google/fonts/tree/86aced91de05cd4f96a06838124cca45be337b2b/ofl/inter"
+    },
+    {
+      "path": "fonts/inter/OFL.txt",
+      "url": "https://raw.githubusercontent.com/google/fonts/86aced91de05cd4f96a06838124cca45be337b2b/ofl/inter/OFL.txt",
+      "sha256": "5b9321a4298cfeb6b34354164a1c3afc3db114569984c502b9b35d988fd58c57",
+      "license": "OFL-1.1",
+      "source": "https://github.com/google/fonts/tree/86aced91de05cd4f96a06838124cca45be337b2b/ofl/inter"
+    },
+    {
+      "path": "fonts/manrope/Manrope[wght].ttf",
+      "url": "https://raw.githubusercontent.com/google/fonts/86aced91de05cd4f96a06838124cca45be337b2b/ofl/manrope/Manrope%5Bwght%5D.ttf",
+      "sha256": "3ae11c49db0455a3cc33e37d380f20fdb8c7f8b41dc07625c177e3d87a9d6ae6",
+      "license": "OFL-1.1",
+      "source": "https://github.com/google/fonts/tree/86aced91de05cd4f96a06838124cca45be337b2b/ofl/manrope"
+    },
+    {
+      "path": "fonts/manrope/OFL.txt",
+      "url": "https://raw.githubusercontent.com/google/fonts/86aced91de05cd4f96a06838124cca45be337b2b/ofl/manrope/OFL.txt",
+      "sha256": "58172e0c0fac2cda8a37b348164bb55e44b0e69051e557e92b1d3f6910141f7b",
+      "license": "OFL-1.1",
+      "source": "https://github.com/google/fonts/tree/86aced91de05cd4f96a06838124cca45be337b2b/ofl/manrope"
+    },
+    {
+      "path": "fonts/jetbrainsmono/JetBrainsMono[wght].ttf",
+      "url": "https://raw.githubusercontent.com/google/fonts/86aced91de05cd4f96a06838124cca45be337b2b/ofl/jetbrainsmono/JetBrainsMono%5Bwght%5D.ttf",
+      "sha256": "48715a42ec242c21e9f02692891e147d022299a52e48d5e413e1a942193ffeda",
+      "license": "OFL-1.1",
+      "source": "https://github.com/google/fonts/tree/86aced91de05cd4f96a06838124cca45be337b2b/ofl/jetbrainsmono"
+    },
+    {
+      "path": "fonts/jetbrainsmono/OFL.txt",
+      "url": "https://raw.githubusercontent.com/google/fonts/86aced91de05cd4f96a06838124cca45be337b2b/ofl/jetbrainsmono/OFL.txt",
+      "sha256": "b2fe5e8987594e9ffd1d2ca52a2f5d73eb8335243893c5d6254b5ad69269591d",
+      "license": "OFL-1.1",
+      "source": "https://github.com/google/fonts/tree/86aced91de05cd4f96a06838124cca45be337b2b/ofl/jetbrainsmono"
+    },
+    {
+      "path": "fonts/notosans/NotoSans[wdth,wght].ttf",
+      "url": "https://raw.githubusercontent.com/google/fonts/86aced91de05cd4f96a06838124cca45be337b2b/ofl/notosans/NotoSans%5Bwdth%2Cwght%5D.ttf",
+      "sha256": "bfb7bb691513f12e734dc346c03a03f784912432d7e3fa8e56efcf906fe86b3d",
+      "license": "OFL-1.1",
+      "source": "https://github.com/google/fonts/tree/86aced91de05cd4f96a06838124cca45be337b2b/ofl/notosans"
+    },
+    {
+      "path": "fonts/notosans/OFL.txt",
+      "url": "https://raw.githubusercontent.com/google/fonts/86aced91de05cd4f96a06838124cca45be337b2b/ofl/notosans/OFL.txt",
+      "sha256": "cee9892f9f0cc8fe882c9e9537ee6a89621d86ee7ceaf70b02e2b2b1c25c061a",
+      "license": "OFL-1.1",
+      "source": "https://github.com/google/fonts/tree/86aced91de05cd4f96a06838124cca45be337b2b/ofl/notosans"
+    },
+    {
+      "path": "fonts/notoserif/NotoSerif[wdth,wght].ttf",
+      "url": "https://raw.githubusercontent.com/google/fonts/86aced91de05cd4f96a06838124cca45be337b2b/ofl/notoserif/NotoSerif%5Bwdth%2Cwght%5D.ttf",
+      "sha256": "4d8e6761424656867019081a1a01336f3cb086982682698714054fc33f782713",
+      "license": "OFL-1.1",
+      "source": "https://github.com/google/fonts/tree/86aced91de05cd4f96a06838124cca45be337b2b/ofl/notoserif"
+    },
+    {
+      "path": "fonts/notoserif/OFL.txt",
+      "url": "https://raw.githubusercontent.com/google/fonts/86aced91de05cd4f96a06838124cca45be337b2b/ofl/notoserif/OFL.txt",
+      "sha256": "cee9892f9f0cc8fe882c9e9537ee6a89621d86ee7ceaf70b02e2b2b1c25c061a",
+      "license": "OFL-1.1",
+      "source": "https://github.com/google/fonts/tree/86aced91de05cd4f96a06838124cca45be337b2b/ofl/notoserif"
+    },
+    {
+      "path": "fonts/notosanskr/NotoSansKR[wght].ttf",
+      "url": "https://raw.githubusercontent.com/google/fonts/86aced91de05cd4f96a06838124cca45be337b2b/ofl/notosanskr/NotoSansKR%5Bwght%5D.ttf",
+      "sha256": "194018e6b2b293a7964f037b25c0249ce1418bc9ab3c971060a03aa57861e252",
+      "license": "OFL-1.1",
+      "source": "https://github.com/google/fonts/tree/86aced91de05cd4f96a06838124cca45be337b2b/ofl/notosanskr"
+    },
+    {
+      "path": "fonts/notosanskr/OFL.txt",
+      "url": "https://raw.githubusercontent.com/google/fonts/86aced91de05cd4f96a06838124cca45be337b2b/ofl/notosanskr/OFL.txt",
+      "sha256": "1c05c68c34f9708415aada51f17e1b0092d2cea709bf4a94cd38114f9e73d7d9",
+      "license": "OFL-1.1",
+      "source": "https://github.com/google/fonts/tree/86aced91de05cd4f96a06838124cca45be337b2b/ofl/notosanskr"
+    },
+    {
+      "path": "fonts/notonaskharabic/NotoNaskhArabic[wght].ttf",
+      "url": "https://raw.githubusercontent.com/google/fonts/86aced91de05cd4f96a06838124cca45be337b2b/ofl/notonaskharabic/NotoNaskhArabic%5Bwght%5D.ttf",
+      "sha256": "67b5a525a661b607971fbd3f96a81b89d3a768e74534fca84f18ac97e6fab72f",
+      "license": "OFL-1.1",
+      "source": "https://github.com/google/fonts/tree/86aced91de05cd4f96a06838124cca45be337b2b/ofl/notonaskharabic"
+    },
+    {
+      "path": "fonts/notonaskharabic/OFL.txt",
+      "url": "https://raw.githubusercontent.com/google/fonts/86aced91de05cd4f96a06838124cca45be337b2b/ofl/notonaskharabic/OFL.txt",
+      "sha256": "a7a5a25eb188bf1cd96982030d53e23c33485c69b1044a562254226857ee13af",
+      "license": "OFL-1.1",
+      "source": "https://github.com/google/fonts/tree/86aced91de05cd4f96a06838124cca45be337b2b/ofl/notonaskharabic"
+    },
+    {
+      "path": "ffmpeg/windows-x64/ffmpeg-n7.1.2-7-g24c44c34dc-win64-lgpl-shared-7.1.zip",
+      "url": "https://github.com/BtbN/FFmpeg-Builds/releases/download/autobuild-2025-10-31-13-40/ffmpeg-n7.1.2-7-g24c44c34dc-win64-lgpl-shared-7.1.zip",
+      "sha256": "0a65ca92d0ac2a7bcbda1fd7d0e5d511fc2eade57d44fde67a8051955af054c3",
+      "license": "LGPL-3.0-or-later",
+      "platform": "windows-x64",
+      "source": "https://github.com/BtbN/FFmpeg-Builds/releases/tag/autobuild-2025-10-31-13-40"
+    },
+    {
+      "path": "ffmpeg/linux-x64/ffmpeg-n7.1.2-7-g24c44c34dc-linux64-lgpl-shared-7.1.tar.xz",
+      "url": "https://github.com/BtbN/FFmpeg-Builds/releases/download/autobuild-2025-10-31-13-40/ffmpeg-n7.1.2-7-g24c44c34dc-linux64-lgpl-shared-7.1.tar.xz",
+      "sha256": "55e56e250caeaac64dc755cd5caa7e3f51f4f8bf45455d666911b5618cead0e3",
+      "license": "LGPL-3.0-or-later",
+      "platform": "linux-x64",
+      "source": "https://github.com/BtbN/FFmpeg-Builds/releases/tag/autobuild-2025-10-31-13-40"
+    },
+    {
+      "path": "tools/cargo-deny/windows-x64/cargo-deny-0.20.2-x86_64-pc-windows-msvc.tar.gz",
+      "url": "https://github.com/EmbarkStudios/cargo-deny/releases/download/0.20.2/cargo-deny-0.20.2-x86_64-pc-windows-msvc.tar.gz",
+      "sha256": "975a22143262fd27476d19ee00c7af67978426e40e1dee94eed6bbade1cf87dc",
+      "license": "MIT OR Apache-2.0",
+      "platform": "windows-x64",
+      "extract_to": "bin",
+      "source": "https://github.com/EmbarkStudios/cargo-deny/releases/tag/0.20.2",
+      "dev_only": true
+    },
+    {
+      "path": "tools/cargo-deny/linux-x64/cargo-deny-0.20.2-x86_64-unknown-linux-musl.tar.gz",
+      "url": "https://github.com/EmbarkStudios/cargo-deny/releases/download/0.20.2/cargo-deny-0.20.2-x86_64-unknown-linux-musl.tar.gz",
+      "sha256": "9f12ed4c49936e09b48bf862b595cde2fe64fcbd9d74dfacac6131ca824c8d5f",
+      "license": "MIT OR Apache-2.0",
+      "platform": "linux-x64",
+      "extract_to": "bin",
+      "source": "https://github.com/EmbarkStudios/cargo-deny/releases/tag/0.20.2",
+      "dev_only": true
+    },
+    {
+      "path": "tools/cargo-deny/macos-arm64/cargo-deny-0.20.2-aarch64-apple-darwin.tar.gz",
+      "url": "https://github.com/EmbarkStudios/cargo-deny/releases/download/0.20.2/cargo-deny-0.20.2-aarch64-apple-darwin.tar.gz",
+      "sha256": "fe67d82a10d8597a3549364cb733a3f9cc1bfff9031b7ae46384a9f2a72090c3",
+      "license": "MIT OR Apache-2.0",
+      "platform": "macos-arm64",
+      "extract_to": "bin",
+      "source": "https://github.com/EmbarkStudios/cargo-deny/releases/tag/0.20.2",
+      "dev_only": true
+    },
+    {
+      "path": "ffmpeg/macos-arm64/FFmpeg-n7.1.2.tar.gz",
+      "url": "https://github.com/FFmpeg/FFmpeg/archive/refs/tags/n7.1.2.tar.gz",
+      "sha256": "8cb1bb8cfa9aeae13279b4da42ae8307ae6777456d4270f2e603c95aa08ca8ef",
+      "license": "LGPL-2.1-or-later",
+      "platform": "macos-arm64",
+      "extract_to": "source",
+      "source": "https://github.com/FFmpeg/FFmpeg/releases/tag/n7.1.2",
+      "note": "No LGPL macOS binary build is published; tools/build-ffmpeg-macos.sh builds a decode-only shared FFmpeg from this source."
+    }
+  ]
+}
