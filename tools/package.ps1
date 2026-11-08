@@ -68,6 +68,15 @@ if (-not (Test-Path (Join-Path $clips 'hevc-2160p60.mp4'))) {
 }
 Copy-Item (Join-Path $clips 'hevc-2160p60.mp4'), (Join-Path $clips 'h264-1080p60.mp4') $bench
 
+# The slide fonts (selah-render SLIDE_FONTS), in fonts/ next to the programs where
+# selah_render::text::fonts_dir looks: the engine and selah-bench video draw text with them.
+$fonts = Join-Path $stage 'fonts'
+foreach ($family in 'notosans', 'notosanskr', 'notonaskharabic') {
+    $dest = Join-Path $fonts $family
+    New-Item -ItemType Directory -Force $dest | Out-Null
+    Copy-Item (Join-Path $root "third_party/fonts/$family/*.ttf") $dest
+}
+
 # The Visual C++ runtime, deployed next to the programs (app-local), because installing the
 # redistributable needs administrator rights (SEC-01).
 $vswhere = Join-Path ${env:ProgramFiles(x86)} 'Microsoft Visual Studio/Installer/vswhere.exe'

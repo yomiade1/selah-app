@@ -28,6 +28,7 @@ the Windows runner (M1-A12).
 | `selah.exe` | The launcher the shortcut runs. It starts the watchdog. Shift held at start means safe mode. |
 | `selah-watchdog.exe`, `selah-core.exe`, `selah-engine.exe` | The processes (ADR-001). |
 | `selah-bench.exe`, `bench\*.mp4` | **Help ▸ Diagnostics ▸ Run benchmark** and its synthetic clips. |
+| `fonts\` | The slide fonts (Noto Sans, Noto Sans KR, Noto Naskh Arabic), where the engine and `selah-bench video` look for them. |
 | `kb.db` | The help index, next to `selah-core.exe` where core looks for it. |
 | `ui\Selah.exe` and the .NET files | The Avalonia UI, self-contained. It has its own folder because `Selah.exe` and `selah.exe` would be the same file on Windows. |
 | `avcodec-*.dll`, `avformat-*.dll`, `avutil-*.dll`, `swresample-*.dll` | FFmpeg 7 LGPL shared libraries (used by `selah-bench`). |

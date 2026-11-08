@@ -23,6 +23,7 @@ Versions: `0.0.<run number>` for PR builds (`ci.yml`), `0.<N>.0` for milestone b
 | `ui/` | `dotnet publish app/Selah.UI` (the UI's `Selah.exe` can't sit next to the `selah.exe` launcher) |
 | `avcodec`, `avformat`, `avutil`, `swresample` DLLs | the pinned FFmpeg 7.1 LGPL shared build |
 | `bench/hevc-2160p60.mp4`, `bench/h264-1080p60.mp4` | `tests/fixtures/media/generated/` (synthetic) |
+| `fonts/notosans/`, `fonts/notosanskr/`, `fonts/notonaskharabic/` | `third_party/fonts/` (the slide fonts the engine and `selah-bench video` draw text with) |
 | `msvcp140.dll`, `vcruntime140.dll`, `vcruntime140_1.dll` | the build machine's Visual C++ redistributable folder (app-local; the redistributable installer needs admin) |
 | `licences/` | `LICENSE`, FFmpeg's `LICENSE.txt`, the fonts' `OFL.txt` |
 
