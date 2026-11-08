@@ -63,8 +63,18 @@ try {
     if ($install.ExitCode -ne 0) { Fail "Setup.exe exited with $($install.ExitCode)." }
 
     $current = Join-Path $root 'current'
-    foreach ($file in 'selah.exe', 'selah-watchdog.exe', 'selah-core.exe', 'selah-engine.exe', 'selah-bench.exe', 'kb.db', 'ui/Selah.exe', 'vcruntime140.dll') {
-        if (-not (Test-Path (Join-Path $current $file))) { Fail "The installed copy has no $file." }
+    foreach ($file in 'selah.exe', 'selah-watchdog.exe', 'selah-core.exe', 'selah-engine.exe', 'selah-bench.exe', 'kb.db', 'ui/Selah.exe', 'vcruntime140.dll', 'fonts/notosans/NotoSans[wdth,wght].ttf', 'bench/h264-1080p60.mp4') {
+        if (-not (Test-Path -LiteralPath (Join-Path $current $file))) { Fail "The installed copy has no $file." }
+    }
+
+    # Help > Diagnostics > Run benchmark uses the installed selah-bench, fonts and clips; run its
+    # quick form here so a missing file fails the check, not the person's benchmark.
+    Write-Output 'installer: running the installed benchmark (ipc, then 1080p video)'
+    foreach ($benchArgs in @(@('ipc', '--iterations', '500'), @('video', '--clip', (Join-Path $current 'bench/h264-1080p60.mp4')))) {
+        $ErrorActionPreference = 'Continue' # its progress goes to stderr
+        $benchOut = & (Join-Path $current 'selah-bench.exe') @benchArgs 2>&1
+        $ErrorActionPreference = 'Stop'
+        if ($LASTEXITCODE -ne 0) { Fail "The installed selah-bench $($benchArgs[0]) failed: $($benchOut | Select-Object -Last 1)" }
     }
     if (-not (Test-Path $shortcut)) { Fail 'There is no Start menu shortcut.' }
     if (-not (Test-Path $uninstallKey)) { Fail 'Selah is not listed in Installed apps for this user.' }
