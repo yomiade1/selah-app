@@ -67,6 +67,7 @@ covers every origin × command.
 | `GetEditorBuffer`, `ListEditorBuffers` | `EditorBufferReply` / `EditorBufferList` |
 | `ListOps` | `OpList` paginated strictly by `seq > after_seq` (optional `doc_id` filter) |
 | `GetPolicySetting` | `GetPolicySettingReply { found, setting }` (effective value, winning policy level, lock flag) |
+| `SearchSongs`, `SearchMedia`, `SearchScripture`, `SearchLibrary` | `SongSearchResults` / `MediaSearchResults` / `ScriptureSearchResults` / `LibrarySearchResults` (bounded `1..=200` per page, synonyms, trigram typo tolerance, `SEL-LIB-0001`/`0002` on invalid args or missing Bible translation) |
 | `GetWatchdogStatus` | `WatchdogStatus` (watchdog only; core answers `SEL-IPC-0001`) |
 
 ## Events

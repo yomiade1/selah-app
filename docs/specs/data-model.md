@@ -63,9 +63,7 @@ original database is retained; there is no empty-library fallback.
 
 `library/migrations/002_command_bus.sql` extends the schema to version `2` with `undo_entries` (reversible forward/inverse snapshots grouped by `undo_group` with monotonic `undone` generations), `command_idempotency` (per-actor/envelope-ID replay table), supporting indexes, and `editor_buffers.doc_type`.
 
-FTS5 `songs_fts` and `media_fts` are created with unicode61 and diacritic folding.
-M2.3 supplies index maintenance, search and ranking. Future milestone tables
-(looks, outputs, sync state and church articles) are added by future migrations.
+`library/migrations/003_search.sql` extends the schema to version `3` with `songs_trigram`, `media_trigram`, `search_synonyms` and `search_meta`. Existing `songs_fts` and `media_fts` use unicode61 and diacritic folding. M2.3 maintains FTS5 and trigram indexes inside document transactions and backfills pre-M2.3 databases (such as `schema-v1.db`) once on open; see [search.md](search.md). Future milestone tables (looks, outputs, sync state and church articles) are added by future migrations.
 
 Each document has its complete protobuf snapshot in `data`. Searchable metadata
 has scalar columns. Ordered children also have protobuf snapshots with a parent

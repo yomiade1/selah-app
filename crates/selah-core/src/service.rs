@@ -2,9 +2,9 @@
 use prost::Message;
 use selah_proto::v1::{
     Actor, ActorOrigin, Command, Envelope, Event, GetPolicySettingReply, LibraryChanged,
-    MediaItemList, PolicySetting, PresentationList, RenderCommand, Reply, Scene, SongList, Status,
-    TagList, TemplateList, TestPattern, UndoStateChanged, command, envelope, event, query,
-    render_command, reply,
+    MediaItemList, MediaKind, PolicySetting, PresentationList, RenderCommand, Reply, Scene,
+    SearchScope, SongList, Status, TagList, TemplateList, TestPattern, UndoStateChanged, command,
+    envelope, event, query, render_command, reply,
 };
 
 use crate::library::{
@@ -810,6 +810,50 @@ impl CoreService {
                     }),
                 ),
                 Err(error) => self.bus_error(request, &CommandBusError::Invalid(error.to_string())),
+            },
+            Some(query::Request::SearchSongs(q)) => {
+                match self.library.search_songs(&q.query, q.limit, q.offset) {
+                    Ok(results) => self.reply(request, reply::Result::SongSearchResults(results)),
+                    Err(error) => self.bus_error(request, &error),
+                }
+            }
+            Some(query::Request::SearchMedia(q)) => match MediaKind::try_from(q.kind) {
+                Ok(kind) => match self.library.search_media(&q.query, kind, q.limit, q.offset) {
+                    Ok(results) => self.reply(request, reply::Result::MediaSearchResults(results)),
+                    Err(error) => self.bus_error(request, &error),
+                },
+                Err(_) => self.bus_error(
+                    request,
+                    &CommandBusError::Invalid("unknown media kind".into()),
+                ),
+            },
+            Some(query::Request::SearchScripture(q)) => {
+                match self
+                    .library
+                    .search_scripture(&q.query, &q.translation, q.limit, q.offset)
+                {
+                    Ok(results) => {
+                        self.reply(request, reply::Result::ScriptureSearchResults(results))
+                    }
+                    Err(error) => self.bus_error(request, &error),
+                }
+            }
+            Some(query::Request::SearchLibrary(q)) => match SearchScope::try_from(q.scope) {
+                Ok(scope) => {
+                    match self
+                        .library
+                        .search_library(&q.query, scope, &q.translation, q.limit)
+                    {
+                        Ok(results) => {
+                            self.reply(request, reply::Result::LibrarySearchResults(results))
+                        }
+                        Err(error) => self.bus_error(request, &error),
+                    }
+                }
+                Err(_) => self.bus_error(
+                    request,
+                    &CommandBusError::Invalid("unknown search scope".into()),
+                ),
             },
             Some(query::Request::GetWatchdogStatus(_)) | None => {
                 self.error(request, codes::UNSUPPORTED, "error-unsupported-request")
@@ -1756,5 +1800,176 @@ mod tests {
                 .unwrap(),
             1
         );
+    }
+
+    #[test]
+    fn search_queries_round_trip_through_core_service_and_map_errors() {
+        let dir = tempfile::tempdir().unwrap();
+        let mut core = CoreService::new(dir.path(), false);
+
+        let song = song_fixture("Amazing Grace");
+        core.handle(&request_with_id(
+            401,
+            ActorOrigin::Ui,
+            command_with_group(
+                command::Action::SaveSong(selah_proto::v1::SaveSong {
+                    song: Some(song.clone()),
+                }),
+                None,
+            ),
+        ));
+
+        let payload = b"synthetic-search-image";
+        let blob = core
+            .library()
+            .media_store()
+            .unwrap()
+            .import_reader(payload.as_slice(), "png", 1024)
+            .unwrap();
+        let media = selah_proto::v1::MediaItem {
+            id: Some(crate::library::new_id()),
+            name: "Grace Sunset Background".into(),
+            kind: MediaKind::Image as i32,
+            content_hash: blob.content_hash,
+            extension: blob.extension,
+            size_bytes: blob.size_bytes,
+            tags: vec!["Worship".into()],
+            ..Default::default()
+        };
+        core.handle(&request_with_id(
+            402,
+            ActorOrigin::Ui,
+            command_with_group(
+                command::Action::SaveMediaItem(selah_proto::v1::SaveMediaItem {
+                    media_item: Some(media),
+                }),
+                None,
+            ),
+        ));
+
+        crate::library::write_bible_database(
+            &core.library().paths().bibles.join("KJV.db"),
+            "KJV",
+            "King James Version",
+            "en",
+            &[crate::library::BibleVerseRecord {
+                book_num: 49,
+                book_code: "EPH",
+                book_name: "Ephesians",
+                chapter: 2,
+                verse: 8,
+                text: "For by grace are ye saved through faith.",
+            }],
+        )
+        .unwrap();
+
+        let songs_out = core.handle(&request_with_id(
+            403,
+            ActorOrigin::Ui,
+            envelope::Body::Query(Query {
+                request: Some(query::Request::SearchSongs(selah_proto::v1::SearchSongs {
+                    query: "amzing grace".into(),
+                    limit: 10,
+                    offset: 0,
+                })),
+            }),
+        ));
+        assert!(matches!(
+            songs_out.reply.and_then(|r| r.body),
+            Some(envelope::Body::Reply(Reply {
+                result: Some(reply::Result::SongSearchResults(r))
+            })) if r.total == 1 && r.hits[0].song.as_ref().unwrap().title == "Amazing Grace"
+        ));
+
+        let media_out = core.handle(&request_with_id(
+            404,
+            ActorOrigin::Ui,
+            envelope::Body::Query(Query {
+                request: Some(query::Request::SearchMedia(selah_proto::v1::SearchMedia {
+                    query: "backdrop".into(),
+                    kind: MediaKind::Image as i32,
+                    limit: 10,
+                    offset: 0,
+                })),
+            }),
+        ));
+        assert!(matches!(
+            media_out.reply.and_then(|r| r.body),
+            Some(envelope::Body::Reply(Reply {
+                result: Some(reply::Result::MediaSearchResults(r))
+            })) if r.total == 1 && r.hits[0].media_item.as_ref().unwrap().name == "Grace Sunset Background"
+        ));
+
+        let bible_out = core.handle(&request_with_id(
+            405,
+            ActorOrigin::Ui,
+            envelope::Body::Query(Query {
+                request: Some(query::Request::SearchScripture(
+                    selah_proto::v1::SearchScripture {
+                        query: "grace".into(),
+                        translation: "KJV".into(),
+                        limit: 10,
+                        offset: 0,
+                    },
+                )),
+            }),
+        ));
+        assert!(matches!(
+            bible_out.reply.and_then(|r| r.body),
+            Some(envelope::Body::Reply(Reply {
+                result: Some(reply::Result::ScriptureSearchResults(r))
+            })) if r.total == 1 && r.hits[0].book == "EPH"
+        ));
+
+        let library_out = core.handle(&request_with_id(
+            406,
+            ActorOrigin::Ui,
+            envelope::Body::Query(Query {
+                request: Some(query::Request::SearchLibrary(
+                    selah_proto::v1::SearchLibrary {
+                        query: "grace".into(),
+                        scope: SearchScope::All as i32,
+                        translation: String::new(),
+                        limit: 10,
+                    },
+                )),
+            }),
+        ));
+        assert!(matches!(
+            library_out.reply.and_then(|r| r.body),
+            Some(envelope::Body::Reply(Reply {
+                result: Some(reply::Result::LibrarySearchResults(r))
+            })) if r.songs.len() == 1 && r.media.len() == 1 && r.scripture.len() == 1
+        ));
+
+        // Missing translation -> SEL-LIB-0001; invalid limit -> SEL-LIB-0002
+        let missing = core.handle(&request_with_id(
+            407,
+            ActorOrigin::Ui,
+            envelope::Body::Query(Query {
+                request: Some(query::Request::SearchScripture(
+                    selah_proto::v1::SearchScripture {
+                        query: "grace".into(),
+                        translation: "MISSING".into(),
+                        limit: 10,
+                        offset: 0,
+                    },
+                )),
+            }),
+        ));
+        assert_eq!(error_code(&missing), codes::LIB_NOT_FOUND);
+
+        let bad_limit = core.handle(&request_with_id(
+            408,
+            ActorOrigin::Ui,
+            envelope::Body::Query(Query {
+                request: Some(query::Request::SearchSongs(selah_proto::v1::SearchSongs {
+                    query: "grace".into(),
+                    limit: 0,
+                    offset: 0,
+                })),
+            }),
+        ));
+        assert_eq!(error_code(&bad_limit), codes::LIB_INVALID);
     }
 }

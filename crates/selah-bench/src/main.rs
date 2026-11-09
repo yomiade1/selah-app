@@ -3,11 +3,13 @@
 //!
 //! ```text
 //! selah-bench ipc [--iterations N] [--check] [--json PATH]
+//! selah-bench search [--songs N] [--iterations N] [--check] [--json PATH]
 //! selah-bench video --clip PATH [--decode auto|software] [--loops N] [--gpu auto|software]
 //!                   [--check] [--json PATH]
 //! ```
 //! `ipc` starts a child process that serves the core endpoint, then times request/reply round
 //! trips across the real transport (named pipes on Windows, Unix sockets elsewhere).
+//! `search` seeds a 10,000-song corpus and measures ranked/trigram/synonym search latency (M2.3).
 //! `video` decodes a clip and composites it under text at the clip's frame rate (M1.7).
 use std::path::PathBuf;
 use std::time::{Duration, Instant};
@@ -24,6 +26,7 @@ const IPC_P99_BUDGET_MS: f64 = 2.0;
 /// ARCHITECTURE §12: output frame time p99 ≤ 8 ms.
 const OUTPUT_P99_BUDGET_MS: f64 = 8.0;
 
+mod search;
 mod video;
 
 #[derive(Serialize)]
@@ -175,6 +178,47 @@ async fn main() -> Result<()> {
             ipc(iterations, check, json).await
         }
         Some("ipc-serve") => serve(args.next().context("namespace")?).await,
+        Some("search") => {
+            let mut songs = 10_000_usize;
+            let mut iterations = 200_usize;
+            let mut check = false;
+            let mut json = None;
+            while let Some(arg) = args.next() {
+                match arg.as_str() {
+                    "--songs" => songs = args.next().context("--songs N")?.parse()?,
+                    "--iterations" => {
+                        iterations = args.next().context("--iterations N")?.parse()?
+                    }
+                    "--check" => check = true,
+                    "--json" => json = Some(PathBuf::from(args.next().context("--json PATH")?)),
+                    other => bail!("unknown option {other}"),
+                }
+            }
+            if songs == 0 || iterations == 0 {
+                bail!("--songs and --iterations must be at least 1");
+            }
+            let report = tokio::task::spawn_blocking(move || {
+                search::run(&search::Options { songs, iterations })
+            })
+            .await??;
+            let text = serde_json::to_string_pretty(&report)?;
+            println!("{text}");
+            if let Some(path) = json {
+                if let Some(parent) = path.parent() {
+                    std::fs::create_dir_all(parent)?;
+                }
+                std::fs::write(&path, text + "\n")?;
+            }
+            if check && !report.pass {
+                bail!(
+                    "search p95 {:.2} ms (amzing grace p95 {:.2} ms) exceeds {:.1} ms budget",
+                    report.p95_ms,
+                    report.amzing_grace_p95_ms,
+                    search::SEARCH_P95_BUDGET_MS
+                );
+            }
+            Ok(())
+        }
         Some("video") => {
             let mut options = video::Options {
                 clip: PathBuf::new(),
@@ -235,6 +279,9 @@ async fn main() -> Result<()> {
         }
         _ => {
             eprintln!("usage: selah-bench ipc [--iterations N] [--check] [--json PATH]");
+            eprintln!(
+                "       selah-bench search [--songs N] [--iterations N] [--check] [--json PATH]"
+            );
             eprintln!(
                 "       selah-bench video --clip PATH [--decode auto|software] [--loops N] [--gpu auto|software] [--check] [--json PATH]"
             );

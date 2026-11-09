@@ -341,3 +341,85 @@ message UndoStateChanged {
   Id doc_id = 2;
   UndoState document = 3;
 }
+
+// Queries validate limit between 1 and 200.
+message SearchSongs {
+  string query = 1;
+  uint32 limit = 2;
+  uint32 offset = 3;
+}
+
+message SongSearchHit {
+  Song song = 1;
+  double score = 2;
+  string snippet = 3;
+  repeated string matched_fields = 4;
+}
+
+message SongSearchResults {
+  repeated SongSearchHit hits = 1;
+  uint32 total = 2;
+}
+
+message SearchMedia {
+  string query = 1;
+  MediaKind kind = 2;
+  uint32 limit = 3;
+  uint32 offset = 4;
+}
+
+message MediaSearchHit {
+  MediaItem media_item = 1;
+  double score = 2;
+  string snippet = 3;
+  repeated string matched_fields = 4;
+}
+
+message MediaSearchResults {
+  repeated MediaSearchHit hits = 1;
+  uint32 total = 2;
+}
+
+message SearchScripture {
+  string query = 1;
+  // Empty searches every installed Bible database under library/bibles/.
+  string translation = 2;
+  uint32 limit = 3;
+  uint32 offset = 4;
+}
+
+message ScriptureVerseHit {
+  string translation = 1;
+  string book = 2;
+  string book_name = 3;
+  uint32 chapter = 4;
+  uint32 verse = 5;
+  string text = 6;
+  double score = 7;
+}
+
+message ScriptureSearchResults {
+  repeated ScriptureVerseHit hits = 1;
+  uint32 total = 2;
+}
+
+enum SearchScope {
+  SEARCH_SCOPE_UNSPECIFIED = 0;
+  SEARCH_SCOPE_ALL = 1;
+  SEARCH_SCOPE_SONGS = 2;
+  SEARCH_SCOPE_MEDIA = 3;
+  SEARCH_SCOPE_SCRIPTURE = 4;
+}
+
+message SearchLibrary {
+  string query = 1;
+  SearchScope scope = 2;
+  string translation = 3;
+  uint32 limit = 4;
+}
+
+message LibrarySearchResults {
+  repeated SongSearchHit songs = 1;
+  repeated MediaSearchHit media = 2;
+  repeated ScriptureVerseHit scripture = 3;
+}

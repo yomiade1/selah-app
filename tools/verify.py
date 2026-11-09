@@ -221,6 +221,8 @@ def stages(args):
     stage("6", "python tool tests", [PY, "-m", "unittest", "discover", "-s", "tests/tools"])
     stage("6", "ipc benchmark", [tool("cargo"), "run", "--release", "--locked", "-q", "-p", "selah-bench", "--",
                                  "ipc", "--check", "--json", "target/verify-report/bench-ipc.json"], rust_env)
+    stage("6", "search benchmark", [tool("cargo"), "run", "--release", "--locked", "-q", "-p", "selah-bench", "--",
+                                    "search", "--check", "--json", "target/verify-report/bench-search.json"], rust_env)
     stage("7", "golden frames", [tool("cargo"), "test", "--locked", "-p", "selah-testkit", "--features", "golden",
                                  "--test", "golden_text"], rust_env, skip=args.fast)
     # Stage 8: headless UI tests at 100/150/200%, Light and Booth, en and en-XA (M1-A9).

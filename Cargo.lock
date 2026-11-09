@@ -2135,12 +2135,14 @@ name = "selah-bench"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "selah-core",
  "selah-ipc",
  "selah-media",
  "selah-proto",
  "selah-render",
  "serde",
  "serde_json",
+ "tempfile",
  "tokio",
 ]
 

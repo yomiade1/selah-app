@@ -7,12 +7,16 @@ mod ops;
 mod policy;
 mod repository;
 mod schema;
+mod search;
 
 pub use media::{MediaBlob, MediaStore};
 pub use ops::{CommandBusError, CommandMeta, ExecutionOutcome, MutationEventInfo};
 pub use policy::{EffectiveSetting, PolicyLevel};
 pub use repository::{Document, DocumentKind};
 pub use schema::CURRENT_SCHEMA_VERSION;
+pub use search::{
+    BibleVerseRecord, MAX_SEARCH_LIMIT, MAX_SEARCH_QUERY_BYTES, write_bible_database,
+};
 
 use std::path::{Path, PathBuf};
 
@@ -123,6 +127,7 @@ impl Library {
         schema::check_history(&db)?;
         db.execute_batch("PRAGMA foreign_keys = ON; PRAGMA journal_mode = WAL; PRAGMA synchronous = FULL; PRAGMA trusted_schema = OFF;")?;
         schema::migrate(&mut db)?;
+        search::ensure_search_ready(&mut db)?;
         Ok(Self {
             db,
             paths,
@@ -139,6 +144,7 @@ impl Library {
         let mut db = Connection::open_in_memory()?;
         db.execute_batch("PRAGMA foreign_keys = ON; PRAGMA trusted_schema = OFF;")?;
         schema::migrate(&mut db)?;
+        search::ensure_search_ready(&mut db)?;
         Ok(Self {
             db,
             paths,

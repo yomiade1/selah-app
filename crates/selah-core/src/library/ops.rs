@@ -1330,6 +1330,10 @@ mod tests {
                  DELETE FROM ops;
                  DELETE FROM command_idempotency;
                  DELETE FROM songs;
+                 DELETE FROM songs_fts;
+                 DELETE FROM songs_trigram;
+                 DELETE FROM media_fts;
+                 DELETE FROM media_trigram;
                  DELETE FROM templates;
                  DELETE FROM presentations;
                  DELETE FROM tags;

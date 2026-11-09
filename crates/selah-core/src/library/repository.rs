@@ -209,31 +209,31 @@ impl Document for Song {
     }
     fn write(&self, tx: &Transaction<'_>) -> anyhow::Result<()> {
         let id = required_id(&self.id)?;
-        tx.execute("INSERT INTO songs VALUES (?1, ?2, ?3, ?4, ?5, ?6) ON CONFLICT(id) DO UPDATE SET title=excluded.title, authors=excluded.authors, ccli_number=excluded.ccli_number, tags=excluded.tags, data=excluded.data", params![id, self.title, self.authors.join("\n"), self.ccli_number, self.tags.join("\n"), self.encode_to_vec()])?;
-        tx.execute("DELETE FROM song_sections WHERE song_id=?1", [id])?;
-        tx.execute("DELETE FROM song_arrangements WHERE song_id=?1", [id])?;
+        tx.prepare_cached("INSERT INTO songs VALUES (?1, ?2, ?3, ?4, ?5, ?6) ON CONFLICT(id) DO UPDATE SET title=excluded.title, authors=excluded.authors, ccli_number=excluded.ccli_number, tags=excluded.tags, data=excluded.data")?
+            .execute(params![id, self.title, self.authors.join("\n"), self.ccli_number, self.tags.join("\n"), self.encode_to_vec()])?;
+        tx.prepare_cached("DELETE FROM song_sections WHERE song_id=?1")?
+            .execute([id])?;
+        tx.prepare_cached("DELETE FROM song_arrangements WHERE song_id=?1")?
+            .execute([id])?;
         for (position, section) in self.sections.iter().enumerate() {
-            tx.execute(
-                "INSERT INTO song_sections VALUES (?1, ?2, ?3, ?4)",
-                params![
+            tx.prepare_cached("INSERT INTO song_sections VALUES (?1, ?2, ?3, ?4)")?
+                .execute(params![
                     required_id(&section.id)?,
                     id,
                     position as i64,
                     section.encode_to_vec()
-                ],
-            )?;
+                ])?;
         }
         for (position, arrangement) in self.arrangements.iter().enumerate() {
-            tx.execute(
-                "INSERT INTO song_arrangements VALUES (?1, ?2, ?3, ?4)",
-                params![
+            tx.prepare_cached("INSERT INTO song_arrangements VALUES (?1, ?2, ?3, ?4)")?
+                .execute(params![
                     required_id(&arrangement.id)?,
                     id,
                     position as i64,
                     arrangement.encode_to_vec()
-                ],
-            )?;
+                ])?;
         }
+        super::search::index_song_in_tx(tx, self)?;
         Ok(())
     }
 }
@@ -273,6 +273,7 @@ impl Document for MediaItem {
                 params![id, tag],
             )?;
         }
+        super::search::index_media_in_tx(tx, self)?;
         Ok(())
     }
 }
@@ -486,6 +487,25 @@ impl Library {
         tx.commit()?;
         Ok(changed)
     }
+
+    /// Storage primitive for fast bulk inserts (for example benchmarks and importers).
+    pub fn save_songs_batch(&mut self, songs: &[Song]) -> anyhow::Result<()> {
+        for song in songs {
+            ensure!(
+                song.encoded_len() <= MAX_DOCUMENT_BYTES,
+                "document is too large"
+            );
+            song.validate()?;
+        }
+        let tx = self
+            .db
+            .transaction_with_behavior(rusqlite::TransactionBehavior::Immediate)?;
+        for song in songs {
+            song.write(&tx)?;
+        }
+        tx.commit()?;
+        Ok(())
+    }
 }
 
 pub(super) fn read_snapshot_in_tx(
@@ -502,6 +522,11 @@ pub(super) fn delete_in_tx(
     kind: DocumentKind,
     id: &[u8],
 ) -> anyhow::Result<bool> {
+    match kind {
+        DocumentKind::Song => super::search::remove_song_from_index_in_tx(tx, id)?,
+        DocumentKind::Media => super::search::remove_media_from_index_in_tx(tx, id)?,
+        _ => {}
+    }
     let sql = format!("DELETE FROM {} WHERE id=?1", kind.table());
     Ok(tx.execute(&sql, [id])? != 0)
 }

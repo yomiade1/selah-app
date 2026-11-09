@@ -9,6 +9,7 @@ import {
 import {
     DocumentType,
     LibraryChangeKind,
+    SearchScope,
 } from "../dist/gen/selah/v1/library_pb.js";
 import { PolicyLevel } from "../dist/gen/selah/v1/settings_pb.js";
 
@@ -160,5 +161,79 @@ test("M2 command, query and event envelopes round trip", () => {
     assert.deepEqual(
         fromBinary(EnvelopeSchema, toBinary(EnvelopeSchema, libraryEvent)),
         libraryEvent,
+    );
+});
+
+test("M2 search queries and results round-trip", () => {
+    const docId = new Uint8Array([
+        0x01, 0x92, 0x70, 0x00, 0x00, 0x00, 0x70, 0x00, 0x80, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x01,
+    ]);
+
+    const searchLibraryQuery = create(EnvelopeSchema, {
+        id: 1005n,
+        body: {
+            case: "query",
+            value: {
+                request: {
+                    case: "searchLibrary",
+                    value: {
+                        query: "amzing grace",
+                        scope: SearchScope.ALL,
+                        translation: "KJV",
+                        limit: 20,
+                    },
+                },
+            },
+        },
+    });
+    assert.deepEqual(
+        fromBinary(
+            EnvelopeSchema,
+            toBinary(EnvelopeSchema, searchLibraryQuery),
+        ),
+        searchLibraryQuery,
+    );
+
+    const searchReply = create(EnvelopeSchema, {
+        id: 1006n,
+        correlationId: 1005n,
+        body: {
+            case: "reply",
+            value: {
+                result: {
+                    case: "librarySearchResults",
+                    value: {
+                        songs: [
+                            {
+                                song: {
+                                    id: { value: docId },
+                                    title: "Amazing Grace",
+                                    publicDomain: true,
+                                },
+                                score: 42.5,
+                                snippet: "Amazing grace how sweet the sound",
+                                matchedFields: ["title", "lyrics"],
+                            },
+                        ],
+                        scripture: [
+                            {
+                                translation: "KJV",
+                                book: "EPH",
+                                bookName: "Ephesians",
+                                chapter: 2,
+                                verse: 8,
+                                text: "For by grace are ye saved through faith",
+                                score: 15.0,
+                            },
+                        ],
+                    },
+                },
+            },
+        },
+    });
+    assert.deepEqual(
+        fromBinary(EnvelopeSchema, toBinary(EnvelopeSchema, searchReply)),
+        searchReply,
     );
 });

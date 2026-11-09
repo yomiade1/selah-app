@@ -150,7 +150,7 @@ The library folder contains `library.db`, `media/<blake3[0..2]>/<blake3>.<ext>`,
 
 ### 4.2 Main tables (library.db)
 
-`songs`, `song_sections`, `song_arrangements`, `templates`, `template_variants`, `media_items`, `media_tags`, `presentations`, `slides`, `services`, `service_items`, `service_types`, `looks`, `look_rules`, `props`, `messages`, `timers`, `macros`, `macro_actions`, `stage_layouts`, `clear_groups`, `display_profiles`, `outputs`, `settings`, `org_articles` (M9), `ops`, `sync_state` (M9), plus FTS5 tables `songs_fts`, `media_fts`.
+`songs`, `song_sections`, `song_arrangements`, `templates`, `template_variants`, `media_items`, `media_tags`, `presentations`, `slides`, `services`, `service_items`, `service_types`, `looks`, `look_rules`, `props`, `messages`, `timers`, `macros`, `macro_actions`, `stage_layouts`, `clear_groups`, `display_profiles`, `outputs`, `settings`, `org_articles` (M9), `ops`, `sync_state` (M9), plus FTS5/trigram search tables `songs_fts`, `songs_trigram`, `media_fts`, `media_trigram`, `search_synonyms`.
 
 `ops(seq INTEGER PRIMARY KEY, op_id BLOB UNIQUE, ts INTEGER, actor BLOB, origin TEXT, doc_type TEXT, doc_id BLOB, command BLOB, inverse BLOB, undo_group BLOB, sync_status INTEGER)`
 
@@ -274,7 +274,7 @@ The build step, run by `selah-kb build`, validates `content/kb/**` and `content/
 | Slide change to next vsync | ≤ 1 frame | e2e frame timestamps (M4) |
 | Output frame time | p99 ≤ 8 ms at 1080p60, 2 outputs + 4K60 video | `selah-bench` on reference hardware (H-23) |
 | UI ↔ core round trip | p99 ≤ 2 ms | IPC bench (M1) |
-| Song search, 10k songs | ≤ 50 ms | criterion bench (M2) |
+| Song search, 10k songs | ≤ 50 ms | `selah-bench search` (M2) |
 | Cold start to usable UI | ≤ 4 s | startup trace (M10) |
 | Restart after crash | ≤ 2 s, last frame held | chaos tests (M1, M10) |
 

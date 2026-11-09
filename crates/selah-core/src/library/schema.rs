@@ -5,6 +5,7 @@ use rusqlite::{Connection, TransactionBehavior, params};
 const MIGRATIONS: &[&str] = &[
     include_str!("migrations/001_library.sql"),
     include_str!("migrations/002_command_bus.sql"),
+    include_str!("migrations/003_search.sql"),
 ];
 
 pub const CURRENT_SCHEMA_VERSION: u32 = MIGRATIONS.len() as u32;
