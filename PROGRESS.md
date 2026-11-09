@@ -9,7 +9,7 @@ Status values: `Not started` · `In progress` · `Blocked` (say on what) · `Don
 | Milestone | Status | Branch / tag | Started | Finished | Notes |
 |---|---|---|---|---|---|
 | M1. Foundations and risk spikes | Done, H-checks pending | `claude/m1-finish` | 2026-11-07 | 2026-11-07 | All 13 WPs done (local Windows sessions, H-01). Open (H): M1-A7 benchmark report, M1-A12 install on your PC; M1-A1/A6 macOS from the `macos` job. |
-| M2. Library, songs, scripture and the help system | Not started | — | — | — | |
+| M2. Library, songs, scripture and the help system | In progress | `codex/m2-library` | 2026-11-09 | — | M2.1 done; M2.2–M2.9 remain. |
 | M3. Render engine, templates and the slide editor | Not started | — | — | — | |
 | M4. Live operation, services and stage | Not started | — | — | — | |
 | M5. Screens, video and audio I/O | Not started | — | — | — | |
@@ -19,13 +19,29 @@ Status values: `Not started` · `In progress` · `Blocked` (say on what) · `Don
 | M9. Cloud, teams and enterprise | Not started | — | — | — | |
 | M10. Launch readiness and v1.0 | Not started | — | — | — | |
 
-**Next action:** review and merge the M1 PR (M1.11–M1.13 and the milestone finish), run the M1 checklists below on the installed test build, then say "Complete milestone 2".
+**Next action:** continue Milestone 2 at M2.2 (command bus, op log, undo/redo and autosave). M1 is merged; its human checklists below remain open.
 
 ## Resume notes
 
 _When a session stops partway through a milestone, write here: the milestone, the last finished WP, anything half-done (files, branch state) and the exact next step. Clear it when the milestone is done._
 
-(none: M1 is done.)
+M2 branch: `codex/m2-library`, based on `origin/main` at `87b78f7` (M1 merged;
+no open agent PR at session start). M2.1 adds data-only protobuf contracts,
+typed SQLite repositories, immutable checksum-checked migrations, UUIDv7 IDs,
+bounded BLAKE3 media storage and user/machine/organisation policy values. See
+`docs/specs/data-model.md` and ADR-027 for the migration-library compatibility
+decision. The new `schema-v1.db` fixture has invented content and must remain
+immutable. `m2.db` is still due at milestone completion.
+
+Start the next WP at M2.2: wire the library into core/host, add authorised
+commands and queries to the envelope and permission matrix, persist commands
+with inverses atomically with mutations, undo groups and editor buffers, then
+deliver op events and crash recovery tests. The current repository API is a
+storage primitive, not an exposed command path. Search indexes exist but are
+not maintained until M2.3. Media probe/decoding and backup/restore remain M2.6;
+the library editor and contextual help remain M2.7–M2.9. M1's `settings.json`
+is unchanged; integrate policy through authorised commands before UI exposure.
+H-06 and H-18 remain open; no Bible text or new articles ship in M2.1.
 
 ## Milestone checklists
 
@@ -70,7 +86,7 @@ _When a session stops partway through a milestone, write here: the milestone, th
 
 **Work packages**
 
-- [ ] **M2.1** Data model, store and migrations — evidence: 
+- [x] **M2.1** Data model, store and migrations — evidence: commit `M2.1`; `proto/selah/v1/{library,service}.proto` + TS/Rust/C# generated contracts (`buf lint`, `buf breaking --against .git#tag=m1`, `check-generated` pass); `selah-core::library` (UUIDv7, SQLite STRICT/WAL/FULL/trusted_schema=0, checksummed append-only migrations + `schema-v1.db` fixture, sealed typed repositories, BLAKE3 `MediaStore`, 3-tier policy settings); `selah-core` library integration tests (17) + unit test; `docs/specs/data-model.md`, ADR-027, `docs/SECURITY.md`; full `tools/verify.ps1` gate green on Windows; ledger updated (rust 139, total 249)
 - [ ] **M2.2** Command bus, op log, undo/redo and autosave — evidence: 
 - [ ] **M2.3** Search — evidence: 
 - [ ] **M2.4** Songs: paste-to-sections, chords and slide splitting — evidence: 
@@ -380,6 +396,9 @@ Copied from `tests/ledger.json` at the end of each milestone. Counts may only go
 ## Deviations and decisions
 
 _Anything done differently from BUILD-PLAN.md or the docs, with the reason and the ADR number if one was added._
+
+- 2026-11-09, M2.1: this session runs on Windows, so `tools/verify.ps1` is the local full gate; Linux checks run in PR CI. The initial baseline run was interrupted by implementation edits before its test stage completed; it is not recorded as a passing baseline. The first sandboxed attempt also needed network access for pinned dependency checks and `PYTHONIOENCODING=utf-8` for Unicode diagnostics in this Windows shell.
+- 2026-11-09, M2.1: ADR-027 replaces the incompatible `rusqlite_migration` dependency with an append-only transactional/checksummed runner over existing bundled `rusqlite` 0.41. Added `uuid` (MIT/Apache-2.0) for OS-random UUIDv7 identities. Dependency resolution tried to move bindgen from its existing `syn` 2 dependency to `syn` 3, breaking compilation; its original lockfile entry was retained. No toolchain or pre-existing dependency version was changed.
 
 - 2026-10-31, before M1: the plan moved to cloud-first development (ADR-023), lean CI (ADR-024), a pull-request workflow (ADR-025, replacing ADR-019) and secure and safe by default (ADR-026). M1 grew from 10 to 13 WPs (installer, security and safety baseline, problem reports and diagnostics).
 

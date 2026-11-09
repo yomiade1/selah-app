@@ -1,0 +1,47 @@
+syntax = "proto3";
+
+package selah.v1;
+
+import "selah/v1/common.proto";
+
+option csharp_namespace = "Selah.Contracts.V1";
+
+// Data contracts only. Planning and live commands arrive in M4.
+enum ServiceItemKind {
+  SERVICE_ITEM_KIND_UNSPECIFIED = 0;
+  SERVICE_ITEM_KIND_SONG = 1;
+  SERVICE_ITEM_KIND_SCRIPTURE = 2;
+  SERVICE_ITEM_KIND_MEDIA = 3;
+  SERVICE_ITEM_KIND_PRESENTATION = 4;
+  SERVICE_ITEM_KIND_NOTE = 5;
+}
+
+message ServiceItem {
+  Id id = 1;
+  ServiceItemKind kind = 2;
+  Id content_id = 3;
+  Id arrangement_id = 4;
+  string title = 5;
+  string notes = 6;
+  string scripture_reference = 7;
+  string bible_translation = 8;
+}
+
+message Service {
+  Id id = 1;
+  string name = 2;
+  Timestamp starts_at = 3;
+  Id service_type_id = 4;
+  repeated ServiceItem items = 5;
+  repeated Id team_ids = 6;
+}
+
+message ServiceType {
+  Id id = 1;
+  string name = 2;
+}
+
+message Team {
+  Id id = 1;
+  string name = 2;
+}

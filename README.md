@@ -2,7 +2,7 @@
 
 A church presentation app for Windows and macOS: powerful enough for broadcast teams, simple enough for a first-time volunteer, and dependable every Sunday.
 
-> Working name. Milestone 1 is in progress: workspace and contract scaffolding exist, but there is no runnable application or installer yet. See [PROGRESS.md](PROGRESS.md) for validation gaps and next steps.
+> Working name. Milestone 1 foundations and the Windows test installer are available. Milestone 2 library storage is in progress. This is not ready for a service yet. See [PROGRESS.md](PROGRESS.md) for validation gaps and next steps.
 
 ## Start here
 

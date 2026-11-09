@@ -160,6 +160,18 @@ def ffmpeg_env():
     return env
 
 
+def previous_milestone_tag():
+    """Most recent milestone tag reachable from HEAD (m1, m2, ...) for buf breaking."""
+    result = subprocess.run(
+        ["git", "describe", "--tags", "--abbrev=0", "--match", "m[0-9]*"],
+        cwd=ROOT,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    return result.stdout.strip() or "m1"
+
+
 def stages(args):
     rust_env = {"CARGO_TERM_COLOR": "never", "SELAH_GPU": "software",
                 "SKIA_BINARIES_URL": skia_binaries_url(), "@ffmpeg": "1"}
@@ -191,6 +203,7 @@ def stages(args):
     stage("3", "clippy", [tool("cargo"), "clippy", "--workspace", "--all-targets", "--locked", "--", "-D", "warnings"], rust_env)
     stage("3", "web lint", pnpm("-r", "run", "lint"))
     stage("4", "buf lint", pnpm("exec", "buf", "lint"))
+    stage("4", "buf breaking", pnpm("exec", "buf", "breaking", "--against", f".git#tag={previous_milestone_tag()}"))
     stage("4", "generated contracts are current", [PY, "tools/check-generated.py"])
     stage("5", "cargo build", [tool("cargo"), "build", "--workspace", "--all-targets", "--locked"], rust_env)
     # The FFmpeg-linked crates are left out: their bindings need the Windows FFmpeg headers, and
@@ -229,6 +242,8 @@ def stages(args):
 
 
 def main():
+    if hasattr(sys.stdout, "reconfigure"):
+        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--cloud", action="store_true")
     parser.add_argument("--ci", action="store_true")

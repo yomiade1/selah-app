@@ -65,7 +65,7 @@ Format: **Status** · **Context** · **Decision** · **Consequences**.
 
 ### ADR-012: Storage
 - **Status:** Accepted (2026-10-30)
-- **Decision:** SQLite through `rusqlite` (bundled, FTS5 on, WAL mode). IDs are UUIDv7. Every mutating command is appended to an `ops` table with its inverse, which provides undo/redo, autosave, audit and sync. Media is stored by BLAKE3 hash. Migrations are append-only (`rusqlite_migration`).
+- **Decision:** SQLite through `rusqlite` (bundled, FTS5 on, WAL mode). IDs are UUIDv7. Every mutating command is appended to an `ops` table with its inverse, which provides undo/redo, autosave, audit and sync. Media is stored by BLAKE3 hash. Migrations are append-only (implementation amended by ADR-027).
 - **Consequences:** Each milestone saves a fixture database (`tests/fixtures/db/m<N>.db`), and every later build must migrate it without loss.
 
 ### ADR-013: Cloud sync model
@@ -157,3 +157,9 @@ Format: **Status** · **Context** · **Decision** · **Consequences**.
 - **Decision:** The requirements in [SECURITY.md](SECURITY.md) (SEC-01 to SEC-15 and SAFE-01 to SAFE-09) are part of every milestone's definition of done. M1 builds the baseline (M1.12). Each later milestone delivers the items mapped to it, with tests. A feature that can put something on screen, make sound, open a port, read files from outside or store a secret isn't done until its SEC and SAFE items pass. Security and safety bugs are P0 or P1 and block merging.
 - **Emergency lane:** the UI may send exactly two commands straight to the engine, **Clear everything** and **Show logo**, over a dedicated pipe, so the screens can be cleared even if core is frozen. This is the only exception to the rule that the UI talks only to core (ADR-001, ADR-002). The engine reports the change to core when core is back, and core records it in the op log.
 - **Consequences:** Some extra work in every feature. The threat model in SECURITY.md is reviewed at the end of each milestone.
+
+### ADR-027: Transactional library migrations on the pinned SQLite version
+- **Status:** Accepted (2026-11-09). Amends the migration-library choice in ADR-012.
+- **Context:** The workspace already uses bundled `rusqlite` 0.41. `rusqlite_migration` 2.5 requires `rusqlite` 0.39; 2.6 requires 0.40 and Rust 1.95, beyond the pinned Rust 1.91. SQLite's native `links` dependency prevents mixing these versions. Downgrading the KB database dependency to add a migration helper would expand the regression risk.
+- **Decision:** Use a small migration runner over the existing `rusqlite` connection. A single immediate transaction rechecks history, runs append-only SQL, records each SQL file's BLAKE3 checksum and advances `user_version`. On open, refuse unknown versions, checksum drift, incomplete histories and non-empty unversioned databases. Never reset a database on failure.
+- **Consequences:** No new migration dependency or toolchain change. Historical schema fixtures and integration tests protect the runner. Reconsider the helper library when its SQLite and Rust requirements align with the workspace; preserve all existing history and fixtures during any change.

@@ -43,12 +43,23 @@ To report a vulnerability, see [SECURITY.md](../SECURITY.md) in the repository r
 | Build and CI | Strangers' pull requests and forks while public, compromised dependencies or actions | Stolen tokens, poisoned builds | SEC-09, SEC-10 |
 | Installer and updater (M1) | The update feed and package host the person configured; Velopack's `Update.exe` running as the user | A tampered or swapped package; an update that interrupts a service; an installer that asks for admin | SEC-01, SEC-12, SEC-13, SAFE-06 |
 | Support files (M1) | The public problem-report form where the person attaches a support bundle or a Diagnostics report | Secrets, names, email addresses or church data leaking into a public issue | SEC-05, SEC-06 |
+| Library storage (M2.1) | Existing database pages, media paths and bytes on the user's disk | Corrupt or future databases reset without warning; partial writes; path traversal; damaged media reused | SEC-03, SEC-15: integrity checks, immutable migration history, bounded validation, transactional documents, content-addressed verified media |
 
 The threat model is reviewed at the end of every milestone (TESTING-AND-QUALITY §4.2). New boundaries get a row before their feature is merged. The full review with a penetration test is M10.6 (H-21).
 
 **M1 review (2026-11-07).** M1 added two boundaries (the last two rows). Residual risks: until signing (H-15), the update package is only as trustworthy as the feed it came from. HTTPS and the feed's SHA-256 stop tampering on the way, but not a compromised feed host, so feeds stay opt-in and set by the person. Support bundles are redacted by pattern and by registered secrets; free text that a person typed into a song or note could still name people, so the problem-report form tells them to check the file before attaching it.
 
 ## 4. Security requirements
+
+**M2.1 storage review (2026-11-09).** Database failures retain the original file.
+Documents and ordered child rows commit together; media bytes are synced and
+published before metadata can reference them. Hashes, extensions and canonical
+paths are checked, and streams are bounded. A saved schema fixture tests future
+migration compatibility. No new IPC commands or outgoing connections are added.
+Residual risks: another process with the same user's filesystem permissions can
+change an open file; hash checks detect corruption but do not provide isolation
+from that process. Media decoding, bundle verification, backups and restore are
+still M2.6 work; storage does not decode or display imported bytes.
 
 | ID | Requirement | Verified by | Milestones |
 |---|---|---|---|

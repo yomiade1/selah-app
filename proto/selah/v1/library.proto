@@ -1,0 +1,117 @@
+syntax = "proto3";
+
+package selah.v1;
+
+import "selah/v1/common.proto";
+
+option csharp_namespace = "Selah.Contracts.V1";
+
+enum SectionKind {
+  SECTION_KIND_UNSPECIFIED = 0;
+  SECTION_KIND_VERSE = 1;
+  SECTION_KIND_CHORUS = 2;
+  SECTION_KIND_BRIDGE = 3;
+  SECTION_KIND_TAG = 4;
+  SECTION_KIND_INTRO = 5;
+  SECTION_KIND_OUTRO = 6;
+  SECTION_KIND_OTHER = 7;
+}
+
+message Chord {
+  // Unicode character offset in the lyric line, not a UTF-8 byte offset.
+  uint32 position = 1;
+  string text = 2;
+}
+
+message LyricLine {
+  string text = 1;
+  repeated Chord chords = 2;
+}
+
+message TranslationLines {
+  repeated string lines = 1;
+}
+
+message Section {
+  Id id = 1;
+  string label = 2;
+  SectionKind kind = 3;
+  Color color = 4;
+  string hotkey = 5;
+  repeated LyricLine lines = 6;
+  map<string, TranslationLines> translations = 7;
+}
+
+message Arrangement {
+  Id id = 1;
+  string name = 2;
+  repeated Id section_ids = 3;
+}
+
+message Song {
+  Id id = 1;
+  string title = 2;
+  repeated string authors = 3;
+  string ccli_number = 4;
+  string copyright = 5;
+  string key = 6;
+  double tempo = 7;
+  repeated string tags = 8;
+  bool public_domain = 9;
+  repeated Section sections = 10;
+  repeated Arrangement arrangements = 11;
+}
+
+message TemplateVariant {
+  Id id = 1;
+  Resolution resolution = 2;
+  uint32 max_lines = 3;
+  // Reserved for the metric text styles delivered in M3.
+  string style_json = 4;
+}
+
+message Template {
+  Id id = 1;
+  string name = 2;
+  repeated TemplateVariant variants = 3;
+}
+
+enum MediaKind {
+  MEDIA_KIND_UNSPECIFIED = 0;
+  MEDIA_KIND_IMAGE = 1;
+  MEDIA_KIND_VIDEO = 2;
+  MEDIA_KIND_AUDIO = 3;
+}
+
+message MediaItem {
+  Id id = 1;
+  string name = 2;
+  MediaKind kind = 3;
+  // Lower-case BLAKE3 hex; never an outside file path.
+  string content_hash = 4;
+  string extension = 5;
+  uint64 size_bytes = 6;
+  Resolution resolution = 7;
+  uint64 duration_milliseconds = 8;
+  repeated string tags = 9;
+}
+
+message Slide {
+  Id id = 1;
+  string text = 2;
+  Id media_id = 3;
+  // M3 extends this with structured elements. Generated song slides are not stored.
+  string elements_json = 4;
+}
+
+message Presentation {
+  Id id = 1;
+  string name = 2;
+  repeated Slide slides = 3;
+  Id template_id = 4;
+}
+
+message Tag {
+  Id id = 1;
+  string name = 2;
+}

@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+Milestone 2 (in progress): library storage foundations.
+
+- Added database storage for songs, templates, media, custom presentations and service data.
+  Library editing controls will follow in the remaining milestone 2 work.
+- Library storage checks saved data on open, keeps media by its content hash and refuses
+  corrupt files without replacing the library.
+
 Milestone 1: the foundations. This is a test build for checking the basics, not for a service yet.
 
 - Selah has a Windows installer. It installs just for you, without administrator rights, and
