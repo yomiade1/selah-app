@@ -2151,6 +2151,7 @@ dependencies = [
  "anyhow",
  "blake3",
  "crc32fast",
+ "fastrand",
  "flate2",
  "prost",
  "rusqlite",

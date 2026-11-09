@@ -58,8 +58,10 @@ original database is retained; there is no empty-library fallback.
 | `tags` | Named reusable tags |
 | `settings` | JSON values by key and policy level |
 | `ops` | Sequence, UUID, timestamp, actor, origin, document, command, inverse, undo group and sync status |
-| `editor_buffers`, `help_feedback` | Reserved for autosave and local help feedback |
+| `editor_buffers`, `help_feedback` | Crash-safe autosave buffers (with `doc_type` added in `002_command_bus.sql`) and local help feedback |
 | `schema_migrations` | Version and immutable migration checksum |
+
+`library/migrations/002_command_bus.sql` extends the schema to version `2` with `undo_entries` (reversible forward/inverse snapshots grouped by `undo_group` with monotonic `undone` generations), `command_idempotency` (per-actor/envelope-ID replay table), supporting indexes, and `editor_buffers.doc_type`.
 
 FTS5 `songs_fts` and `media_fts` are created with unicode61 and diacritic folding.
 M2.3 supplies index maintenance, search and ranking. Future milestone tables

@@ -1,5 +1,5 @@
 use anyhow::ensure;
-use rusqlite::params;
+use rusqlite::{Transaction, TransactionBehavior, params};
 use serde_json::Value;
 
 use super::Library;
@@ -12,11 +12,40 @@ pub enum PolicyLevel {
     Organisation = 2,
 }
 
+impl PolicyLevel {
+    pub fn from_proto(value: i32) -> Option<Self> {
+        match selah_proto::v1::PolicyLevel::try_from(value).ok()? {
+            selah_proto::v1::PolicyLevel::User => Some(Self::User),
+            selah_proto::v1::PolicyLevel::Machine => Some(Self::Machine),
+            selah_proto::v1::PolicyLevel::Organisation => Some(Self::Organisation),
+            selah_proto::v1::PolicyLevel::Unspecified => None,
+        }
+    }
+
+    pub fn to_proto(self) -> selah_proto::v1::PolicyLevel {
+        match self {
+            Self::User => selah_proto::v1::PolicyLevel::User,
+            Self::Machine => selah_proto::v1::PolicyLevel::Machine,
+            Self::Organisation => selah_proto::v1::PolicyLevel::Organisation,
+        }
+    }
+}
+
 #[derive(Clone, Debug, PartialEq)]
 pub struct EffectiveSetting {
     pub value: Value,
     pub level: PolicyLevel,
     pub locked: bool,
+}
+
+#[derive(Debug, thiserror::Error)]
+pub(crate) enum PolicyError {
+    #[error("{0}")]
+    Invalid(anyhow::Error),
+    #[error("setting is locked by policy")]
+    Locked,
+    #[error(transparent)]
+    Db(#[from] rusqlite::Error),
 }
 
 fn validate_key(key: &str) -> anyhow::Result<()> {
@@ -31,6 +60,63 @@ fn validate_key(key: &str) -> anyhow::Result<()> {
     Ok(())
 }
 
+pub(crate) fn set_setting_in_tx(
+    tx: &Transaction<'_>,
+    key: &str,
+    value: &Value,
+    level: PolicyLevel,
+    locked: bool,
+) -> Result<(), PolicyError> {
+    validate_key(key).map_err(PolicyError::Invalid)?;
+    if level == PolicyLevel::User && locked {
+        return Err(PolicyError::Locked);
+    }
+    let encoded = serde_json::to_string(value).map_err(|e| PolicyError::Invalid(e.into()))?;
+    if encoded.len() > 64 * 1024 {
+        return Err(PolicyError::Invalid(anyhow::anyhow!(
+            "setting is too large"
+        )));
+    }
+    if level == PolicyLevel::User {
+        let locks: i64 = tx.query_row(
+            "SELECT count(*) FROM settings WHERE key=?1 AND level>0 AND locked=1",
+            [key],
+            |r| r.get(0),
+        )?;
+        if locks > 0 {
+            return Err(PolicyError::Locked);
+        }
+    }
+    tx.execute(
+        "INSERT INTO settings VALUES (?1, ?2, ?3, ?4) ON CONFLICT(key, level) DO UPDATE SET value=excluded.value, locked=excluded.locked",
+        params![key, level as i32, encoded, locked],
+    )?;
+    Ok(())
+}
+
+pub(crate) fn remove_setting_in_tx(
+    tx: &Transaction<'_>,
+    key: &str,
+    level: PolicyLevel,
+) -> Result<(), PolicyError> {
+    validate_key(key).map_err(PolicyError::Invalid)?;
+    if level == PolicyLevel::User {
+        let locks: i64 = tx.query_row(
+            "SELECT count(*) FROM settings WHERE key=?1 AND level>0 AND locked=1",
+            [key],
+            |r| r.get(0),
+        )?;
+        if locks > 0 {
+            return Err(PolicyError::Locked);
+        }
+    }
+    tx.execute(
+        "DELETE FROM settings WHERE key=?1 AND level=?2",
+        params![key, level as i32],
+    )?;
+    Ok(())
+}
+
 impl Library {
     /// This is a storage primitive. Machine and organisation writes require an admin
     /// command in the bus; secrets must go to SecretStore, never to this table.
@@ -41,25 +127,10 @@ impl Library {
         level: PolicyLevel,
         locked: bool,
     ) -> anyhow::Result<()> {
-        validate_key(key)?;
-        ensure!(
-            level != PolicyLevel::User || !locked,
-            "a user cannot lock a policy"
-        );
-        let encoded = serde_json::to_string(value)?;
-        ensure!(encoded.len() <= 64 * 1024, "setting is too large");
         let tx = self
             .db
-            .transaction_with_behavior(rusqlite::TransactionBehavior::Immediate)?;
-        if level == PolicyLevel::User {
-            let locks: i64 = tx.query_row(
-                "SELECT count(*) FROM settings WHERE key=?1 AND level>0 AND locked=1",
-                [key],
-                |r| r.get(0),
-            )?;
-            ensure!(locks == 0, "setting is locked by policy");
-        }
-        tx.execute("INSERT INTO settings VALUES (?1, ?2, ?3, ?4) ON CONFLICT(key, level) DO UPDATE SET value=excluded.value, locked=excluded.locked", params![key, level as i32, encoded, locked])?;
+            .transaction_with_behavior(TransactionBehavior::Immediate)?;
+        set_setting_in_tx(&tx, key, value, level, locked)?;
         tx.commit()?;
         Ok(())
     }
@@ -85,11 +156,15 @@ impl Library {
     }
 
     pub fn remove_setting(&mut self, key: &str, level: PolicyLevel) -> anyhow::Result<()> {
+        let tx = self
+            .db
+            .transaction_with_behavior(TransactionBehavior::Immediate)?;
         validate_key(key)?;
-        self.db.execute(
+        tx.execute(
             "DELETE FROM settings WHERE key=?1 AND level=?2",
             params![key, level as i32],
         )?;
+        tx.commit()?;
         Ok(())
     }
 }

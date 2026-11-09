@@ -3,13 +3,16 @@
 //! Repository writes are storage primitives; the command bus adds authorisation,
 //! operation logging and events before exposing mutations over IPC.
 mod media;
+mod ops;
 mod policy;
 mod repository;
 mod schema;
 
 pub use media::{MediaBlob, MediaStore};
+pub use ops::{CommandBusError, CommandMeta, ExecutionOutcome, MutationEventInfo};
 pub use policy::{EffectiveSetting, PolicyLevel};
 pub use repository::{Document, DocumentKind};
+pub use schema::CURRENT_SCHEMA_VERSION;
 
 use std::path::{Path, PathBuf};
 
@@ -78,9 +81,19 @@ impl LibraryPaths {
     }
 }
 
+pub(crate) fn unix_millis() -> i64 {
+    std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .map(|d| i64::try_from(d.as_millis()).unwrap_or(i64::MAX))
+        .unwrap_or(0)
+}
+
 pub struct Library {
     pub(crate) db: Connection,
     paths: LibraryPaths,
+    idempotency_writes: u64,
+    #[cfg(test)]
+    _memory_dir: Option<tempfile::TempDir>,
 }
 
 impl Library {
@@ -110,7 +123,28 @@ impl Library {
         schema::check_history(&db)?;
         db.execute_batch("PRAGMA foreign_keys = ON; PRAGMA journal_mode = WAL; PRAGMA synchronous = FULL; PRAGMA trusted_schema = OFF;")?;
         schema::migrate(&mut db)?;
-        Ok(Self { db, paths })
+        Ok(Self {
+            db,
+            paths,
+            idempotency_writes: 0,
+            #[cfg(test)]
+            _memory_dir: None,
+        })
+    }
+
+    #[cfg(test)]
+    pub(crate) fn open_in_memory() -> anyhow::Result<Self> {
+        let dir = tempfile::tempdir()?;
+        let paths = LibraryPaths::create(dir.path())?;
+        let mut db = Connection::open_in_memory()?;
+        db.execute_batch("PRAGMA foreign_keys = ON; PRAGMA trusted_schema = OFF;")?;
+        schema::migrate(&mut db)?;
+        Ok(Self {
+            db,
+            paths,
+            idempotency_writes: 0,
+            _memory_dir: Some(dir),
+        })
     }
 
     pub fn paths(&self) -> &LibraryPaths {

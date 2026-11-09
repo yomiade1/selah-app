@@ -199,6 +199,7 @@ impl Shared {
     async fn send_to_engine(&self, command: selah_proto::v1::RenderCommand) {
         let body = envelope::Body::Command(Command {
             action: Some(command::Action::Render(command)),
+            ..Default::default()
         });
         if let Err(error) = self.engine.send(body).await {
             tracing::warn!(%error, "engine is not connected; it will be resynchronised");
@@ -318,15 +319,21 @@ async fn main() -> anyhow::Result<()> {
     if safe_mode {
         tracing::warn!("starting in safe mode (SAFE-07)");
     }
+    let library_dir = std::env::var_os("SELAH_LIBRARY_DIR")
+        .filter(|value| !value.is_empty())
+        .map(std::path::PathBuf::from)
+        .unwrap_or_else(|| paths.library.clone());
     let endpoint = Endpoint::for_current_user(Service::Core);
     // SEC-13: one gate for every outgoing connection; offline until a setting allows a purpose.
     let net = Arc::new(selah_net::Net::https());
-    let mut service = CoreService::with_platform(
+    let mut service = CoreService::open_with_platform(
         &paths.config,
+        &library_dir,
         safe_mode,
         net.clone(),
         selah_runtime::power::platform(),
-    );
+    )
+    .context("could not open the library")?;
     match help_index() {
         Some((path, help)) => {
             tracing::info!(path = %path.display(), "help index loaded");

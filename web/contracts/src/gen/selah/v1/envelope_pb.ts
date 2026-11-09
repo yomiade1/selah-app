@@ -4,15 +4,17 @@
 
 import type { GenEnum, GenFile, GenMessage } from "@bufbuild/protobuf/codegenv2";
 import { enumDesc, fileDesc, messageDesc } from "@bufbuild/protobuf/codegenv2";
-import type { Resolution } from "./common_pb.js";
+import type { Id, Resolution } from "./common_pb.js";
 import { file_selah_v1_common } from "./common_pb.js";
 import type { Error } from "./errors_pb.js";
 import { file_selah_v1_errors } from "./errors_pb.js";
 import type { Article, GetArticle, HelpForContext, HelpResults, RecordFeedback, SearchHelp } from "./help_pb.js";
 import { file_selah_v1_help } from "./help_pb.js";
+import type { DeleteMediaItem, DeletePresentation, DeleteSong, DeleteTag, DeleteTemplate, DiscardEditorBuffer, EditorBufferList, EditorBufferReply, GetEditorBuffer, GetMediaItem, GetPresentation, GetSong, GetTag, GetTemplate, GetUndoState, LibraryChanged, ListEditorBuffers, ListMediaItems, ListOps, ListPresentations, ListSongs, ListTags, ListTemplates, MediaItem, MediaItemList, OpList, Presentation, PresentationList, Redo, SaveEditorBuffer, SaveMediaItem, SavePresentation, SaveSong, SaveTag, SaveTemplate, Song, SongList, Tag, TagList, Template, TemplateList, Undo, UndoState, UndoStateChanged } from "./library_pb.js";
+import { file_selah_v1_library } from "./library_pb.js";
 import type { EmergencyApplied, FrameShown, RenderCommand, TestPattern } from "./render_pb.js";
 import { file_selah_v1_render } from "./render_pb.js";
-import type { CheckForUpdate, GetSettings, InstallUpdate, SetAppearance, Settings, SetUpdateSettings, UpdateCheck } from "./settings_pb.js";
+import type { CheckForUpdate, GetPolicySetting, GetPolicySettingReply, GetSettings, InstallUpdate, RemovePolicySetting, SetAppearance, SetPolicySetting, Settings, SetUpdateSettings, UpdateCheck } from "./settings_pb.js";
 import { file_selah_v1_settings } from "./settings_pb.js";
 import type { Message } from "@bufbuild/protobuf";
 
@@ -20,7 +22,7 @@ import type { Message } from "@bufbuild/protobuf";
  * Describes the file selah/v1/envelope.proto.
  */
 export const file_selah_v1_envelope: GenFile = /*@__PURE__*/
-  fileDesc("ChdzZWxhaC92MS9lbnZlbG9wZS5wcm90bxIIc2VsYWgudjEiUgoFQWN0b3ISDwoHdXNlcl9pZBgBIAEoCRIRCglkZXZpY2VfaWQYAiABKAkSJQoGb3JpZ2luGAMgASgOMhUuc2VsYWgudjEuQWN0b3JPcmlnaW4ihAIKCEVudmVsb3BlEgoKAmlkGAEgASgEEhYKDmNvcnJlbGF0aW9uX2lkGAIgASgEEh4KBWFjdG9yGAMgASgLMg8uc2VsYWgudjEuQWN0b3ISJAoHY29tbWFuZBgKIAEoCzIRLnNlbGFoLnYxLkNvbW1hbmRIABIgCgVxdWVyeRgLIAEoCzIPLnNlbGFoLnYxLlF1ZXJ5SAASIAoFZXZlbnQYDCABKAsyDy5zZWxhaC52MS5FdmVudEgAEiAKBXJlcGx5GA0gASgLMg8uc2VsYWgudjEuUmVwbHlIABIgCgVlcnJvchgOIAEoCzIPLnNlbGFoLnYxLkVycm9ySABCBgoEYm9keSLgBAoHQ29tbWFuZBIpCgZyZW5kZXIYASABKAsyFy5zZWxhaC52MS5SZW5kZXJDb21tYW5kSAASMQoOc2V0X2FwcGVhcmFuY2UYAiABKAsyFy5zZWxhaC52MS5TZXRBcHBlYXJhbmNlSAASMwoPcmVjb3JkX2ZlZWRiYWNrGAMgASgLMhguc2VsYWgudjEuUmVjb3JkRmVlZGJhY2tIABI2ChFzaG93X3Rlc3RfcGF0dGVybhgEIAEoCzIZLnNlbGFoLnYxLlNob3dUZXN0UGF0dGVybkgAEi8KDWNsZWFyX291dHB1dHMYBSABKAsyFi5zZWxhaC52MS5DbGVhck91dHB1dHNIABI0ChBjaGVja19mb3JfdXBkYXRlGAYgASgLMhguc2VsYWgudjEuQ2hlY2tGb3JVcGRhdGVIABIxCg5pbnN0YWxsX3VwZGF0ZRgHIAEoCzIXLnNlbGFoLnYxLkluc3RhbGxVcGRhdGVIABI6ChNzZXRfdXBkYXRlX3NldHRpbmdzGAggASgLMhsuc2VsYWgudjEuU2V0VXBkYXRlU2V0dGluZ3NIABI1ChByZXN0YXJ0X25vcm1hbGx5GAkgASgLMhkuc2VsYWgudjEuUmVzdGFydE5vcm1hbGx5SAASPgoVY3JlYXRlX3N1cHBvcnRfYnVuZGxlGAogASgLMh0uc2VsYWgudjEuQ3JlYXRlU3VwcG9ydEJ1bmRsZUgAEjMKD3J1bl9kaWFnbm9zdGljcxgLIAEoCzIYLnNlbGFoLnYxLlJ1bkRpYWdub3N0aWNzSABCCAoGYWN0aW9uIhEKD1Jlc3RhcnROb3JtYWxseSI5Cg9TaG93VGVzdFBhdHRlcm4SJgoHcGF0dGVybhgBIAEoDjIVLnNlbGFoLnYxLlRlc3RQYXR0ZXJuIg4KDENsZWFyT3V0cHV0cyKXAwoFUXVlcnkSKQoKZ2V0X3N0YXR1cxgBIAEoCzITLnNlbGFoLnYxLkdldFN0YXR1c0gAEi0KDGdldF9zZXR0aW5ncxgCIAEoCzIVLnNlbGFoLnYxLkdldFNldHRpbmdzSAASKwoLc2VhcmNoX2hlbHAYAyABKAsyFC5zZWxhaC52MS5TZWFyY2hIZWxwSAASKwoLZ2V0X2FydGljbGUYBCABKAsyFC5zZWxhaC52MS5HZXRBcnRpY2xlSAASNAoQaGVscF9mb3JfY29udGV4dBgFIAEoCzIYLnNlbGFoLnYxLkhlbHBGb3JDb250ZXh0SAASKAoJc3Vic2NyaWJlGAYgASgLMhMuc2VsYWgudjEuU3Vic2NyaWJlSAASOgoTZ2V0X3dhdGNoZG9nX3N0YXR1cxgHIAEoCzIbLnNlbGFoLnYxLkdldFdhdGNoZG9nU3RhdHVzSAASMwoPZ2V0X2RpYWdub3N0aWNzGAggASgLMhguc2VsYWgudjEuR2V0RGlhZ25vc3RpY3NIAEIJCgdyZXF1ZXN0IgsKCUdldFN0YXR1cyL5AQoGU3RhdHVzEhEKCWNvbm5lY3RlZBgBIAEoCBIRCglzYWZlX21vZGUYAiABKAgSFgoOc2NlbmVfcmV2aXNpb24YAyABKAQSGAoQZW5naW5lX2Nvbm5lY3RlZBgEIAEoCBIdChVlbmdpbmVfc2NlbmVfcmV2aXNpb24YBSABKAQSFgoOZnJhbWVfY2hlY2tzdW0YBiABKAwSDwoHdmVyc2lvbhgHIAEoCRIMCgRsaXZlGAggASgIEhAKCHJlbmRlcmVyGAkgASgJEi8KEW91dHB1dF9yZXNvbHV0aW9uGAogASgLMhQuc2VsYWgudjEuUmVzb2x1dGlvbiITChFHZXRXYXRjaGRvZ1N0YXR1cyJLCgtQcm9jZXNzSW5mbxIMCgRyb2xlGAEgASgJEgsKA3BpZBgCIAEoDRIQCghyZXN0YXJ0cxgDIAEoDRIPCgdydW5uaW5nGAQgASgIImcKDldhdGNoZG9nU3RhdHVzEigKCXByb2Nlc3NlcxgBIAMoCzIVLnNlbGFoLnYxLlByb2Nlc3NJbmZvEhEKCXNhZmVfbW9kZRgCIAEoCBIYChBzYWZlX21vZGVfcmVhc29uGAMgASgJIiAKCVN1YnNjcmliZRITCgtldmVudF9uYW1lcxgBIAMoCSIqCglIZWFydGJlYXQSHQoVbW9ub3RvbmljX25hbm9zZWNvbmRzGAEgASgEIssBCgVFdmVudBIrCgtmcmFtZV9zaG93bhgBIAEoCzIULnNlbGFoLnYxLkZyYW1lU2hvd25IABIiCgZzdGF0dXMYAiABKAsyEC5zZWxhaC52MS5TdGF0dXNIABIoCgloZWFydGJlYXQYAyABKAsyEy5zZWxhaC52MS5IZWFydGJlYXRIABI3ChFlbWVyZ2VuY3lfYXBwbGllZBgEIAEoCzIaLnNlbGFoLnYxLkVtZXJnZW5jeUFwcGxpZWRIAEIOCgxub3RpZmljYXRpb24iygMKBVJlcGx5EiIKBnN0YXR1cxgBIAEoCzIQLnNlbGFoLnYxLlN0YXR1c0gAEiYKCHNldHRpbmdzGAIgASgLMhIuc2VsYWgudjEuU2V0dGluZ3NIABItCgxoZWxwX3Jlc3VsdHMYAyABKAsyFS5zZWxhaC52MS5IZWxwUmVzdWx0c0gAEiQKB2FydGljbGUYBCABKAsyES5zZWxhaC52MS5BcnRpY2xlSAASFgoMYWNrbm93bGVkZ2VkGAUgASgISAASMwoPd2F0Y2hkb2dfc3RhdHVzGAYgASgLMhguc2VsYWgudjEuV2F0Y2hkb2dTdGF0dXNIABItCgx1cGRhdGVfY2hlY2sYByABKAsyFS5zZWxhaC52MS5VcGRhdGVDaGVja0gAEjEKDnN1cHBvcnRfYnVuZGxlGAggASgLMhcuc2VsYWgudjEuU3VwcG9ydEJ1bmRsZUgAEiwKC2RpYWdub3N0aWNzGAkgASgLMhUuc2VsYWgudjEuRGlhZ25vc3RpY3NIABI5ChJkaWFnbm9zdGljc19yZXBvcnQYCiABKAsyGy5zZWxhaC52MS5EaWFnbm9zdGljc1JlcG9ydEgAQggKBnJlc3VsdCIVChNDcmVhdGVTdXBwb3J0QnVuZGxlIjEKDVN1cHBvcnRCdW5kbGUSDAoEcGF0aBgBIAEoCRISCgpyZXBvcnRfdXJsGAIgASgJIhAKDkdldERpYWdub3N0aWNzIqgBCgtEaWFnbm9zdGljcxIPCgd2ZXJzaW9uGAEgASgJEgoKAm9zGAIgASgJEgwKBGFyY2gYAyABKAkSEQoJc2FmZV9tb2RlGAQgASgIEhgKEGVuZ2luZV9jb25uZWN0ZWQYBSABKAgSEAoIcmVuZGVyZXIYBiABKAkSLwoRb3V0cHV0X3Jlc29sdXRpb24YByABKAsyFC5zZWxhaC52MS5SZXNvbHV0aW9uIh8KDlJ1bkRpYWdub3N0aWNzEg0KBXF1aWNrGAEgASgIItIBChFEaWFnbm9zdGljc1JlcG9ydBIMCgRwYXRoGAEgASgJEhIKCmlwY19wOTlfbXMYAiABKAESEAoIaXBjX3Bhc3MYAyABKAgSEgoKdmlkZW9fY2xpcBgEIAEoCRIUCgx2aWRlb19kZWNvZGUYBSABKAkSFAoMdmlkZW9fZnJhbWVzGAYgASgEEhUKDXZpZGVvX2Ryb3BwZWQYByABKAQSHgoWdmlkZW9fY29tcG9zaXRlX3A5OV9tcxgIIAEoARISCgp2aWRlb19wYXNzGAkgASgIKpkCCgtBY3Rvck9yaWdpbhIcChhBQ1RPUl9PUklHSU5fVU5TUEVDSUZJRUQQABITCg9BQ1RPUl9PUklHSU5fVUkQARIUChBBQ1RPUl9PUklHSU5fQVBJEAISFQoRQUNUT1JfT1JJR0lOX01JREkQAxIWChJBQ1RPUl9PUklHSU5fTUFDUk8QBBIZChVBQ1RPUl9PUklHSU5fVElNRUxJTkUQBRIVChFBQ1RPUl9PUklHSU5fU1lOQxAGEhUKEUFDVE9SX09SSUdJTl9UT1VSEAcSFQoRQUNUT1JfT1JJR0lOX0NPUkUQCBIXChNBQ1RPUl9PUklHSU5fRU5HSU5FEAkSGQoVQUNUT1JfT1JJR0lOX1dBVENIRE9HEApCFaoCElNlbGFoLkNvbnRyYWN0cy5WMWIGcHJvdG8z", [file_selah_v1_common, file_selah_v1_errors, file_selah_v1_help, file_selah_v1_render, file_selah_v1_settings]);
+  fileDesc("ChdzZWxhaC92MS9lbnZlbG9wZS5wcm90bxIIc2VsYWgudjEiUgoFQWN0b3ISDwoHdXNlcl9pZBgBIAEoCRIRCglkZXZpY2VfaWQYAiABKAkSJQoGb3JpZ2luGAMgASgOMhUuc2VsYWgudjEuQWN0b3JPcmlnaW4ihAIKCEVudmVsb3BlEgoKAmlkGAEgASgEEhYKDmNvcnJlbGF0aW9uX2lkGAIgASgEEh4KBWFjdG9yGAMgASgLMg8uc2VsYWgudjEuQWN0b3ISJAoHY29tbWFuZBgKIAEoCzIRLnNlbGFoLnYxLkNvbW1hbmRIABIgCgVxdWVyeRgLIAEoCzIPLnNlbGFoLnYxLlF1ZXJ5SAASIAoFZXZlbnQYDCABKAsyDy5zZWxhaC52MS5FdmVudEgAEiAKBXJlcGx5GA0gASgLMg8uc2VsYWgudjEuUmVwbHlIABIgCgVlcnJvchgOIAEoCzIPLnNlbGFoLnYxLkVycm9ySABCBgoEYm9keSKmCwoHQ29tbWFuZBIpCgZyZW5kZXIYASABKAsyFy5zZWxhaC52MS5SZW5kZXJDb21tYW5kSAASMQoOc2V0X2FwcGVhcmFuY2UYAiABKAsyFy5zZWxhaC52MS5TZXRBcHBlYXJhbmNlSAASMwoPcmVjb3JkX2ZlZWRiYWNrGAMgASgLMhguc2VsYWgudjEuUmVjb3JkRmVlZGJhY2tIABI2ChFzaG93X3Rlc3RfcGF0dGVybhgEIAEoCzIZLnNlbGFoLnYxLlNob3dUZXN0UGF0dGVybkgAEi8KDWNsZWFyX291dHB1dHMYBSABKAsyFi5zZWxhaC52MS5DbGVhck91dHB1dHNIABI0ChBjaGVja19mb3JfdXBkYXRlGAYgASgLMhguc2VsYWgudjEuQ2hlY2tGb3JVcGRhdGVIABIxCg5pbnN0YWxsX3VwZGF0ZRgHIAEoCzIXLnNlbGFoLnYxLkluc3RhbGxVcGRhdGVIABI6ChNzZXRfdXBkYXRlX3NldHRpbmdzGAggASgLMhsuc2VsYWgudjEuU2V0VXBkYXRlU2V0dGluZ3NIABI1ChByZXN0YXJ0X25vcm1hbGx5GAkgASgLMhkuc2VsYWgudjEuUmVzdGFydE5vcm1hbGx5SAASPgoVY3JlYXRlX3N1cHBvcnRfYnVuZGxlGAogASgLMh0uc2VsYWgudjEuQ3JlYXRlU3VwcG9ydEJ1bmRsZUgAEjMKD3J1bl9kaWFnbm9zdGljcxgLIAEoCzIYLnNlbGFoLnYxLlJ1bkRpYWdub3N0aWNzSAASJwoJc2F2ZV9zb25nGAwgASgLMhIuc2VsYWgudjEuU2F2ZVNvbmdIABIrCgtkZWxldGVfc29uZxgNIAEoCzIULnNlbGFoLnYxLkRlbGV0ZVNvbmdIABIvCg1zYXZlX3RlbXBsYXRlGA4gASgLMhYuc2VsYWgudjEuU2F2ZVRlbXBsYXRlSAASMwoPZGVsZXRlX3RlbXBsYXRlGA8gASgLMhguc2VsYWgudjEuRGVsZXRlVGVtcGxhdGVIABIyCg9zYXZlX21lZGlhX2l0ZW0YECABKAsyFy5zZWxhaC52MS5TYXZlTWVkaWFJdGVtSAASNgoRZGVsZXRlX21lZGlhX2l0ZW0YESABKAsyGS5zZWxhaC52MS5EZWxldGVNZWRpYUl0ZW1IABI3ChFzYXZlX3ByZXNlbnRhdGlvbhgSIAEoCzIaLnNlbGFoLnYxLlNhdmVQcmVzZW50YXRpb25IABI7ChNkZWxldGVfcHJlc2VudGF0aW9uGBMgASgLMhwuc2VsYWgudjEuRGVsZXRlUHJlc2VudGF0aW9uSAASJQoIc2F2ZV90YWcYFCABKAsyES5zZWxhaC52MS5TYXZlVGFnSAASKQoKZGVsZXRlX3RhZxgVIAEoCzITLnNlbGFoLnYxLkRlbGV0ZVRhZ0gAEh4KBHVuZG8YFiABKAsyDi5zZWxhaC52MS5VbmRvSAASHgoEcmVkbxgXIAEoCzIOLnNlbGFoLnYxLlJlZG9IABI4ChJzYXZlX2VkaXRvcl9idWZmZXIYGCABKAsyGi5zZWxhaC52MS5TYXZlRWRpdG9yQnVmZmVySAASPgoVZGlzY2FyZF9lZGl0b3JfYnVmZmVyGBkgASgLMh0uc2VsYWgudjEuRGlzY2FyZEVkaXRvckJ1ZmZlckgAEjgKEnNldF9wb2xpY3lfc2V0dGluZxgaIAEoCzIaLnNlbGFoLnYxLlNldFBvbGljeVNldHRpbmdIABI+ChVyZW1vdmVfcG9saWN5X3NldHRpbmcYGyABKAsyHS5zZWxhaC52MS5SZW1vdmVQb2xpY3lTZXR0aW5nSAASIAoKdW5kb19ncm91cBhkIAEoCzIMLnNlbGFoLnYxLklkQggKBmFjdGlvbiIRCg9SZXN0YXJ0Tm9ybWFsbHkiOQoPU2hvd1Rlc3RQYXR0ZXJuEiYKB3BhdHRlcm4YASABKA4yFS5zZWxhaC52MS5UZXN0UGF0dGVybiIOCgxDbGVhck91dHB1dHMi+ggKBVF1ZXJ5EikKCmdldF9zdGF0dXMYASABKAsyEy5zZWxhaC52MS5HZXRTdGF0dXNIABItCgxnZXRfc2V0dGluZ3MYAiABKAsyFS5zZWxhaC52MS5HZXRTZXR0aW5nc0gAEisKC3NlYXJjaF9oZWxwGAMgASgLMhQuc2VsYWgudjEuU2VhcmNoSGVscEgAEisKC2dldF9hcnRpY2xlGAQgASgLMhQuc2VsYWgudjEuR2V0QXJ0aWNsZUgAEjQKEGhlbHBfZm9yX2NvbnRleHQYBSABKAsyGC5zZWxhaC52MS5IZWxwRm9yQ29udGV4dEgAEigKCXN1YnNjcmliZRgGIAEoCzITLnNlbGFoLnYxLlN1YnNjcmliZUgAEjoKE2dldF93YXRjaGRvZ19zdGF0dXMYByABKAsyGy5zZWxhaC52MS5HZXRXYXRjaGRvZ1N0YXR1c0gAEjMKD2dldF9kaWFnbm9zdGljcxgIIAEoCzIYLnNlbGFoLnYxLkdldERpYWdub3N0aWNzSAASJQoIZ2V0X3NvbmcYCSABKAsyES5zZWxhaC52MS5HZXRTb25nSAASKQoKbGlzdF9zb25ncxgKIAEoCzITLnNlbGFoLnYxLkxpc3RTb25nc0gAEi0KDGdldF90ZW1wbGF0ZRgLIAEoCzIVLnNlbGFoLnYxLkdldFRlbXBsYXRlSAASMQoObGlzdF90ZW1wbGF0ZXMYDCABKAsyFy5zZWxhaC52MS5MaXN0VGVtcGxhdGVzSAASMAoOZ2V0X21lZGlhX2l0ZW0YDSABKAsyFi5zZWxhaC52MS5HZXRNZWRpYUl0ZW1IABI0ChBsaXN0X21lZGlhX2l0ZW1zGA4gASgLMhguc2VsYWgudjEuTGlzdE1lZGlhSXRlbXNIABI1ChBnZXRfcHJlc2VudGF0aW9uGA8gASgLMhkuc2VsYWgudjEuR2V0UHJlc2VudGF0aW9uSAASOQoSbGlzdF9wcmVzZW50YXRpb25zGBAgASgLMhsuc2VsYWgudjEuTGlzdFByZXNlbnRhdGlvbnNIABIjCgdnZXRfdGFnGBEgASgLMhAuc2VsYWgudjEuR2V0VGFnSAASJwoJbGlzdF90YWdzGBIgASgLMhIuc2VsYWgudjEuTGlzdFRhZ3NIABIwCg5nZXRfdW5kb19zdGF0ZRgTIAEoCzIWLnNlbGFoLnYxLkdldFVuZG9TdGF0ZUgAEjYKEWdldF9lZGl0b3JfYnVmZmVyGBQgASgLMhkuc2VsYWgudjEuR2V0RWRpdG9yQnVmZmVySAASOgoTbGlzdF9lZGl0b3JfYnVmZmVycxgVIAEoCzIbLnNlbGFoLnYxLkxpc3RFZGl0b3JCdWZmZXJzSAASJQoIbGlzdF9vcHMYFiABKAsyES5zZWxhaC52MS5MaXN0T3BzSAASOAoSZ2V0X3BvbGljeV9zZXR0aW5nGBcgASgLMhouc2VsYWgudjEuR2V0UG9saWN5U2V0dGluZ0gAQgkKB3JlcXVlc3QiCwoJR2V0U3RhdHVzIvkBCgZTdGF0dXMSEQoJY29ubmVjdGVkGAEgASgIEhEKCXNhZmVfbW9kZRgCIAEoCBIWCg5zY2VuZV9yZXZpc2lvbhgDIAEoBBIYChBlbmdpbmVfY29ubmVjdGVkGAQgASgIEh0KFWVuZ2luZV9zY2VuZV9yZXZpc2lvbhgFIAEoBBIWCg5mcmFtZV9jaGVja3N1bRgGIAEoDBIPCgd2ZXJzaW9uGAcgASgJEgwKBGxpdmUYCCABKAgSEAoIcmVuZGVyZXIYCSABKAkSLwoRb3V0cHV0X3Jlc29sdXRpb24YCiABKAsyFC5zZWxhaC52MS5SZXNvbHV0aW9uIhMKEUdldFdhdGNoZG9nU3RhdHVzIksKC1Byb2Nlc3NJbmZvEgwKBHJvbGUYASABKAkSCwoDcGlkGAIgASgNEhAKCHJlc3RhcnRzGAMgASgNEg8KB3J1bm5pbmcYBCABKAgiZwoOV2F0Y2hkb2dTdGF0dXMSKAoJcHJvY2Vzc2VzGAEgAygLMhUuc2VsYWgudjEuUHJvY2Vzc0luZm8SEQoJc2FmZV9tb2RlGAIgASgIEhgKEHNhZmVfbW9kZV9yZWFzb24YAyABKAkiIAoJU3Vic2NyaWJlEhMKC2V2ZW50X25hbWVzGAEgAygJIioKCUhlYXJ0YmVhdBIdChVtb25vdG9uaWNfbmFub3NlY29uZHMYASABKAQiugIKBUV2ZW50EisKC2ZyYW1lX3Nob3duGAEgASgLMhQuc2VsYWgudjEuRnJhbWVTaG93bkgAEiIKBnN0YXR1cxgCIAEoCzIQLnNlbGFoLnYxLlN0YXR1c0gAEigKCWhlYXJ0YmVhdBgDIAEoCzITLnNlbGFoLnYxLkhlYXJ0YmVhdEgAEjcKEWVtZXJnZW5jeV9hcHBsaWVkGAQgASgLMhouc2VsYWgudjEuRW1lcmdlbmN5QXBwbGllZEgAEjMKD2xpYnJhcnlfY2hhbmdlZBgFIAEoCzIYLnNlbGFoLnYxLkxpYnJhcnlDaGFuZ2VkSAASOAoSdW5kb19zdGF0ZV9jaGFuZ2VkGAYgASgLMhouc2VsYWgudjEuVW5kb1N0YXRlQ2hhbmdlZEgAQg4KDG5vdGlmaWNhdGlvbiL0CAoFUmVwbHkSIgoGc3RhdHVzGAEgASgLMhAuc2VsYWgudjEuU3RhdHVzSAASJgoIc2V0dGluZ3MYAiABKAsyEi5zZWxhaC52MS5TZXR0aW5nc0gAEi0KDGhlbHBfcmVzdWx0cxgDIAEoCzIVLnNlbGFoLnYxLkhlbHBSZXN1bHRzSAASJAoHYXJ0aWNsZRgEIAEoCzIRLnNlbGFoLnYxLkFydGljbGVIABIWCgxhY2tub3dsZWRnZWQYBSABKAhIABIzCg93YXRjaGRvZ19zdGF0dXMYBiABKAsyGC5zZWxhaC52MS5XYXRjaGRvZ1N0YXR1c0gAEi0KDHVwZGF0ZV9jaGVjaxgHIAEoCzIVLnNlbGFoLnYxLlVwZGF0ZUNoZWNrSAASMQoOc3VwcG9ydF9idW5kbGUYCCABKAsyFy5zZWxhaC52MS5TdXBwb3J0QnVuZGxlSAASLAoLZGlhZ25vc3RpY3MYCSABKAsyFS5zZWxhaC52MS5EaWFnbm9zdGljc0gAEjkKEmRpYWdub3N0aWNzX3JlcG9ydBgKIAEoCzIbLnNlbGFoLnYxLkRpYWdub3N0aWNzUmVwb3J0SAASHgoEc29uZxgLIAEoCzIOLnNlbGFoLnYxLlNvbmdIABInCglzb25nX2xpc3QYDCABKAsyEi5zZWxhaC52MS5Tb25nTGlzdEgAEiYKCHRlbXBsYXRlGA0gASgLMhIuc2VsYWgudjEuVGVtcGxhdGVIABIvCg10ZW1wbGF0ZV9saXN0GA4gASgLMhYuc2VsYWgudjEuVGVtcGxhdGVMaXN0SAASKQoKbWVkaWFfaXRlbRgPIAEoCzITLnNlbGFoLnYxLk1lZGlhSXRlbUgAEjIKD21lZGlhX2l0ZW1fbGlzdBgQIAEoCzIXLnNlbGFoLnYxLk1lZGlhSXRlbUxpc3RIABIuCgxwcmVzZW50YXRpb24YESABKAsyFi5zZWxhaC52MS5QcmVzZW50YXRpb25IABI3ChFwcmVzZW50YXRpb25fbGlzdBgSIAEoCzIaLnNlbGFoLnYxLlByZXNlbnRhdGlvbkxpc3RIABIcCgN0YWcYEyABKAsyDS5zZWxhaC52MS5UYWdIABIlCgh0YWdfbGlzdBgUIAEoCzIRLnNlbGFoLnYxLlRhZ0xpc3RIABIpCgp1bmRvX3N0YXRlGBUgASgLMhMuc2VsYWgudjEuVW5kb1N0YXRlSAASNAoNZWRpdG9yX2J1ZmZlchgWIAEoCzIbLnNlbGFoLnYxLkVkaXRvckJ1ZmZlclJlcGx5SAASOAoSZWRpdG9yX2J1ZmZlcl9saXN0GBcgASgLMhouc2VsYWgudjEuRWRpdG9yQnVmZmVyTGlzdEgAEiMKB29wX2xpc3QYGCABKAsyEC5zZWxhaC52MS5PcExpc3RIABI5Cg5wb2xpY3lfc2V0dGluZxgZIAEoCzIfLnNlbGFoLnYxLkdldFBvbGljeVNldHRpbmdSZXBseUgAQggKBnJlc3VsdCIVChNDcmVhdGVTdXBwb3J0QnVuZGxlIjEKDVN1cHBvcnRCdW5kbGUSDAoEcGF0aBgBIAEoCRISCgpyZXBvcnRfdXJsGAIgASgJIhAKDkdldERpYWdub3N0aWNzIqgBCgtEaWFnbm9zdGljcxIPCgd2ZXJzaW9uGAEgASgJEgoKAm9zGAIgASgJEgwKBGFyY2gYAyABKAkSEQoJc2FmZV9tb2RlGAQgASgIEhgKEGVuZ2luZV9jb25uZWN0ZWQYBSABKAgSEAoIcmVuZGVyZXIYBiABKAkSLwoRb3V0cHV0X3Jlc29sdXRpb24YByABKAsyFC5zZWxhaC52MS5SZXNvbHV0aW9uIh8KDlJ1bkRpYWdub3N0aWNzEg0KBXF1aWNrGAEgASgIItIBChFEaWFnbm9zdGljc1JlcG9ydBIMCgRwYXRoGAEgASgJEhIKCmlwY19wOTlfbXMYAiABKAESEAoIaXBjX3Bhc3MYAyABKAgSEgoKdmlkZW9fY2xpcBgEIAEoCRIUCgx2aWRlb19kZWNvZGUYBSABKAkSFAoMdmlkZW9fZnJhbWVzGAYgASgEEhUKDXZpZGVvX2Ryb3BwZWQYByABKAQSHgoWdmlkZW9fY29tcG9zaXRlX3A5OV9tcxgIIAEoARISCgp2aWRlb19wYXNzGAkgASgIKpkCCgtBY3Rvck9yaWdpbhIcChhBQ1RPUl9PUklHSU5fVU5TUEVDSUZJRUQQABITCg9BQ1RPUl9PUklHSU5fVUkQARIUChBBQ1RPUl9PUklHSU5fQVBJEAISFQoRQUNUT1JfT1JJR0lOX01JREkQAxIWChJBQ1RPUl9PUklHSU5fTUFDUk8QBBIZChVBQ1RPUl9PUklHSU5fVElNRUxJTkUQBRIVChFBQ1RPUl9PUklHSU5fU1lOQxAGEhUKEUFDVE9SX09SSUdJTl9UT1VSEAcSFQoRQUNUT1JfT1JJR0lOX0NPUkUQCBIXChNBQ1RPUl9PUklHSU5fRU5HSU5FEAkSGQoVQUNUT1JfT1JJR0lOX1dBVENIRE9HEApCFaoCElNlbGFoLkNvbnRyYWN0cy5WMWIGcHJvdG8z", [file_selah_v1_common, file_selah_v1_errors, file_selah_v1_help, file_selah_v1_library, file_selah_v1_render, file_selah_v1_settings]);
 
 /**
  * This is attribution, not proof of identity. The receiver must authenticate
@@ -187,7 +189,110 @@ export type Command = Message<"selah.v1.Command"> & {
      */
     value: RunDiagnostics;
     case: "runDiagnostics";
+  } | {
+    /**
+     * @generated from field: selah.v1.SaveSong save_song = 12;
+     */
+    value: SaveSong;
+    case: "saveSong";
+  } | {
+    /**
+     * @generated from field: selah.v1.DeleteSong delete_song = 13;
+     */
+    value: DeleteSong;
+    case: "deleteSong";
+  } | {
+    /**
+     * @generated from field: selah.v1.SaveTemplate save_template = 14;
+     */
+    value: SaveTemplate;
+    case: "saveTemplate";
+  } | {
+    /**
+     * @generated from field: selah.v1.DeleteTemplate delete_template = 15;
+     */
+    value: DeleteTemplate;
+    case: "deleteTemplate";
+  } | {
+    /**
+     * @generated from field: selah.v1.SaveMediaItem save_media_item = 16;
+     */
+    value: SaveMediaItem;
+    case: "saveMediaItem";
+  } | {
+    /**
+     * @generated from field: selah.v1.DeleteMediaItem delete_media_item = 17;
+     */
+    value: DeleteMediaItem;
+    case: "deleteMediaItem";
+  } | {
+    /**
+     * @generated from field: selah.v1.SavePresentation save_presentation = 18;
+     */
+    value: SavePresentation;
+    case: "savePresentation";
+  } | {
+    /**
+     * @generated from field: selah.v1.DeletePresentation delete_presentation = 19;
+     */
+    value: DeletePresentation;
+    case: "deletePresentation";
+  } | {
+    /**
+     * @generated from field: selah.v1.SaveTag save_tag = 20;
+     */
+    value: SaveTag;
+    case: "saveTag";
+  } | {
+    /**
+     * @generated from field: selah.v1.DeleteTag delete_tag = 21;
+     */
+    value: DeleteTag;
+    case: "deleteTag";
+  } | {
+    /**
+     * @generated from field: selah.v1.Undo undo = 22;
+     */
+    value: Undo;
+    case: "undo";
+  } | {
+    /**
+     * @generated from field: selah.v1.Redo redo = 23;
+     */
+    value: Redo;
+    case: "redo";
+  } | {
+    /**
+     * @generated from field: selah.v1.SaveEditorBuffer save_editor_buffer = 24;
+     */
+    value: SaveEditorBuffer;
+    case: "saveEditorBuffer";
+  } | {
+    /**
+     * @generated from field: selah.v1.DiscardEditorBuffer discard_editor_buffer = 25;
+     */
+    value: DiscardEditorBuffer;
+    case: "discardEditorBuffer";
+  } | {
+    /**
+     * @generated from field: selah.v1.SetPolicySetting set_policy_setting = 26;
+     */
+    value: SetPolicySetting;
+    case: "setPolicySetting";
+  } | {
+    /**
+     * @generated from field: selah.v1.RemovePolicySetting remove_policy_setting = 27;
+     */
+    value: RemovePolicySetting;
+    case: "removePolicySetting";
   } | { case: undefined; value?: undefined };
+
+  /**
+   * Optional client-supplied UUIDv7 grouping multiple mutations into one undo/redo step.
+   *
+   * @generated from field: selah.v1.Id undo_group = 100;
+   */
+  undoGroup?: Id;
 };
 
 /**
@@ -302,6 +407,96 @@ export type Query = Message<"selah.v1.Query"> & {
      */
     value: GetDiagnostics;
     case: "getDiagnostics";
+  } | {
+    /**
+     * @generated from field: selah.v1.GetSong get_song = 9;
+     */
+    value: GetSong;
+    case: "getSong";
+  } | {
+    /**
+     * @generated from field: selah.v1.ListSongs list_songs = 10;
+     */
+    value: ListSongs;
+    case: "listSongs";
+  } | {
+    /**
+     * @generated from field: selah.v1.GetTemplate get_template = 11;
+     */
+    value: GetTemplate;
+    case: "getTemplate";
+  } | {
+    /**
+     * @generated from field: selah.v1.ListTemplates list_templates = 12;
+     */
+    value: ListTemplates;
+    case: "listTemplates";
+  } | {
+    /**
+     * @generated from field: selah.v1.GetMediaItem get_media_item = 13;
+     */
+    value: GetMediaItem;
+    case: "getMediaItem";
+  } | {
+    /**
+     * @generated from field: selah.v1.ListMediaItems list_media_items = 14;
+     */
+    value: ListMediaItems;
+    case: "listMediaItems";
+  } | {
+    /**
+     * @generated from field: selah.v1.GetPresentation get_presentation = 15;
+     */
+    value: GetPresentation;
+    case: "getPresentation";
+  } | {
+    /**
+     * @generated from field: selah.v1.ListPresentations list_presentations = 16;
+     */
+    value: ListPresentations;
+    case: "listPresentations";
+  } | {
+    /**
+     * @generated from field: selah.v1.GetTag get_tag = 17;
+     */
+    value: GetTag;
+    case: "getTag";
+  } | {
+    /**
+     * @generated from field: selah.v1.ListTags list_tags = 18;
+     */
+    value: ListTags;
+    case: "listTags";
+  } | {
+    /**
+     * @generated from field: selah.v1.GetUndoState get_undo_state = 19;
+     */
+    value: GetUndoState;
+    case: "getUndoState";
+  } | {
+    /**
+     * @generated from field: selah.v1.GetEditorBuffer get_editor_buffer = 20;
+     */
+    value: GetEditorBuffer;
+    case: "getEditorBuffer";
+  } | {
+    /**
+     * @generated from field: selah.v1.ListEditorBuffers list_editor_buffers = 21;
+     */
+    value: ListEditorBuffers;
+    case: "listEditorBuffers";
+  } | {
+    /**
+     * @generated from field: selah.v1.ListOps list_ops = 22;
+     */
+    value: ListOps;
+    case: "listOps";
+  } | {
+    /**
+     * @generated from field: selah.v1.GetPolicySetting get_policy_setting = 23;
+     */
+    value: GetPolicySetting;
+    case: "getPolicySetting";
   } | { case: undefined; value?: undefined };
 };
 
@@ -534,6 +729,18 @@ export type Event = Message<"selah.v1.Event"> & {
      */
     value: EmergencyApplied;
     case: "emergencyApplied";
+  } | {
+    /**
+     * @generated from field: selah.v1.LibraryChanged library_changed = 5;
+     */
+    value: LibraryChanged;
+    case: "libraryChanged";
+  } | {
+    /**
+     * @generated from field: selah.v1.UndoStateChanged undo_state_changed = 6;
+     */
+    value: UndoStateChanged;
+    case: "undoStateChanged";
   } | { case: undefined; value?: undefined };
 };
 
@@ -611,6 +818,96 @@ export type Reply = Message<"selah.v1.Reply"> & {
      */
     value: DiagnosticsReport;
     case: "diagnosticsReport";
+  } | {
+    /**
+     * @generated from field: selah.v1.Song song = 11;
+     */
+    value: Song;
+    case: "song";
+  } | {
+    /**
+     * @generated from field: selah.v1.SongList song_list = 12;
+     */
+    value: SongList;
+    case: "songList";
+  } | {
+    /**
+     * @generated from field: selah.v1.Template template = 13;
+     */
+    value: Template;
+    case: "template";
+  } | {
+    /**
+     * @generated from field: selah.v1.TemplateList template_list = 14;
+     */
+    value: TemplateList;
+    case: "templateList";
+  } | {
+    /**
+     * @generated from field: selah.v1.MediaItem media_item = 15;
+     */
+    value: MediaItem;
+    case: "mediaItem";
+  } | {
+    /**
+     * @generated from field: selah.v1.MediaItemList media_item_list = 16;
+     */
+    value: MediaItemList;
+    case: "mediaItemList";
+  } | {
+    /**
+     * @generated from field: selah.v1.Presentation presentation = 17;
+     */
+    value: Presentation;
+    case: "presentation";
+  } | {
+    /**
+     * @generated from field: selah.v1.PresentationList presentation_list = 18;
+     */
+    value: PresentationList;
+    case: "presentationList";
+  } | {
+    /**
+     * @generated from field: selah.v1.Tag tag = 19;
+     */
+    value: Tag;
+    case: "tag";
+  } | {
+    /**
+     * @generated from field: selah.v1.TagList tag_list = 20;
+     */
+    value: TagList;
+    case: "tagList";
+  } | {
+    /**
+     * @generated from field: selah.v1.UndoState undo_state = 21;
+     */
+    value: UndoState;
+    case: "undoState";
+  } | {
+    /**
+     * @generated from field: selah.v1.EditorBufferReply editor_buffer = 22;
+     */
+    value: EditorBufferReply;
+    case: "editorBuffer";
+  } | {
+    /**
+     * @generated from field: selah.v1.EditorBufferList editor_buffer_list = 23;
+     */
+    value: EditorBufferList;
+    case: "editorBufferList";
+  } | {
+    /**
+     * @generated from field: selah.v1.OpList op_list = 24;
+     */
+    value: OpList;
+    case: "opList";
+  } | {
+    /**
+     * @generated from field: selah.v1.GetPolicySettingReply policy_setting = 25;
+     */
+    value: GetPolicySettingReply;
+    case: "policySetting";
   } | { case: undefined; value?: undefined };
 };
 

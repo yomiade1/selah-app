@@ -5,6 +5,7 @@ package selah.v1;
 import "selah/v1/common.proto";
 import "selah/v1/errors.proto";
 import "selah/v1/help.proto";
+import "selah/v1/library.proto";
 import "selah/v1/render.proto";
 import "selah/v1/settings.proto";
 
@@ -58,7 +59,25 @@ message Command {
     RestartNormally restart_normally = 9;
     CreateSupportBundle create_support_bundle = 10;
     RunDiagnostics run_diagnostics = 11;
+    SaveSong save_song = 12;
+    DeleteSong delete_song = 13;
+    SaveTemplate save_template = 14;
+    DeleteTemplate delete_template = 15;
+    SaveMediaItem save_media_item = 16;
+    DeleteMediaItem delete_media_item = 17;
+    SavePresentation save_presentation = 18;
+    DeletePresentation delete_presentation = 19;
+    SaveTag save_tag = 20;
+    DeleteTag delete_tag = 21;
+    Undo undo = 22;
+    Redo redo = 23;
+    SaveEditorBuffer save_editor_buffer = 24;
+    DiscardEditorBuffer discard_editor_buffer = 25;
+    SetPolicySetting set_policy_setting = 26;
+    RemovePolicySetting remove_policy_setting = 27;
   }
+  // Optional client-supplied UUIDv7 grouping multiple mutations into one undo/redo step.
+  Id undo_group = 100;
 }
 
 // UI → watchdog: leave safe mode (SAFE-07, "Restart normally"). The watchdog restarts core and
@@ -83,6 +102,21 @@ message Query {
     Subscribe subscribe = 6;
     GetWatchdogStatus get_watchdog_status = 7;
     GetDiagnostics get_diagnostics = 8;
+    GetSong get_song = 9;
+    ListSongs list_songs = 10;
+    GetTemplate get_template = 11;
+    ListTemplates list_templates = 12;
+    GetMediaItem get_media_item = 13;
+    ListMediaItems list_media_items = 14;
+    GetPresentation get_presentation = 15;
+    ListPresentations list_presentations = 16;
+    GetTag get_tag = 17;
+    ListTags list_tags = 18;
+    GetUndoState get_undo_state = 19;
+    GetEditorBuffer get_editor_buffer = 20;
+    ListEditorBuffers list_editor_buffers = 21;
+    ListOps list_ops = 22;
+    GetPolicySetting get_policy_setting = 23;
   }
 }
 
@@ -135,6 +169,8 @@ message Event {
     Status status = 2;
     Heartbeat heartbeat = 3;
     EmergencyApplied emergency_applied = 4;
+    LibraryChanged library_changed = 5;
+    UndoStateChanged undo_state_changed = 6;
   }
 }
 
@@ -150,6 +186,21 @@ message Reply {
     SupportBundle support_bundle = 8;
     Diagnostics diagnostics = 9;
     DiagnosticsReport diagnostics_report = 10;
+    Song song = 11;
+    SongList song_list = 12;
+    Template template = 13;
+    TemplateList template_list = 14;
+    MediaItem media_item = 15;
+    MediaItemList media_item_list = 16;
+    Presentation presentation = 17;
+    PresentationList presentation_list = 18;
+    Tag tag = 19;
+    TagList tag_list = 20;
+    UndoState undo_state = 21;
+    EditorBufferReply editor_buffer = 22;
+    EditorBufferList editor_buffer_list = 23;
+    OpList op_list = 24;
+    GetPolicySettingReply policy_setting = 25;
   }
 }
 

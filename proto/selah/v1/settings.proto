@@ -54,3 +54,38 @@ message UpdateCheck {
 message InstallUpdate {
   string version = 1;
 }
+
+enum PolicyLevel {
+  POLICY_LEVEL_UNSPECIFIED = 0;
+  POLICY_LEVEL_USER = 1;
+  POLICY_LEVEL_MACHINE = 2;
+  POLICY_LEVEL_ORGANISATION = 3;
+}
+
+message PolicySetting {
+  string key = 1;
+  string value_json = 2;
+  PolicyLevel level = 3;
+  bool locked = 4;
+}
+
+message SetPolicySetting {
+  string key = 1;
+  string value_json = 2;
+  PolicyLevel level = 3;
+  bool locked = 4;
+}
+
+message RemovePolicySetting {
+  string key = 1;
+  PolicyLevel level = 2;
+}
+
+message GetPolicySetting {
+  string key = 1;
+}
+
+message GetPolicySettingReply {
+  bool found = 1;
+  PolicySetting setting = 2;
+}

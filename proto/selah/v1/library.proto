@@ -115,3 +115,229 @@ message Tag {
   Id id = 1;
   string name = 2;
 }
+
+enum DocumentType {
+  DOCUMENT_TYPE_UNSPECIFIED = 0;
+  DOCUMENT_TYPE_SONG = 1;
+  DOCUMENT_TYPE_TEMPLATE = 2;
+  DOCUMENT_TYPE_MEDIA = 3;
+  DOCUMENT_TYPE_PRESENTATION = 4;
+  DOCUMENT_TYPE_SERVICE = 5;
+  DOCUMENT_TYPE_SERVICE_TYPE = 6;
+  DOCUMENT_TYPE_TEAM = 7;
+  DOCUMENT_TYPE_TAG = 8;
+}
+
+enum LibraryChangeKind {
+  LIBRARY_CHANGE_KIND_UNSPECIFIED = 0;
+  LIBRARY_CHANGE_KIND_SAVED = 1;
+  LIBRARY_CHANGE_KIND_DELETED = 2;
+}
+
+// Serialised into ops.command and ops.inverse as a document snapshot or delete marker.
+message OpState {
+  bool present = 1;
+  bytes data = 2;
+}
+
+message SaveSong {
+  Song song = 1;
+}
+
+message DeleteSong {
+  Id id = 1;
+}
+
+message GetSong {
+  Id id = 1;
+}
+
+message ListSongs {
+  uint32 limit = 1;
+  uint32 offset = 2;
+}
+
+message SongList {
+  repeated Song songs = 1;
+}
+
+message SaveTemplate {
+  Template template = 1;
+}
+
+message DeleteTemplate {
+  Id id = 1;
+}
+
+message GetTemplate {
+  Id id = 1;
+}
+
+message ListTemplates {
+  uint32 limit = 1;
+  uint32 offset = 2;
+}
+
+message TemplateList {
+  repeated Template templates = 1;
+}
+
+message SaveMediaItem {
+  MediaItem media_item = 1;
+}
+
+message DeleteMediaItem {
+  Id id = 1;
+}
+
+message GetMediaItem {
+  Id id = 1;
+}
+
+message ListMediaItems {
+  uint32 limit = 1;
+  uint32 offset = 2;
+}
+
+message MediaItemList {
+  repeated MediaItem media_items = 1;
+}
+
+message SavePresentation {
+  Presentation presentation = 1;
+}
+
+message DeletePresentation {
+  Id id = 1;
+}
+
+message GetPresentation {
+  Id id = 1;
+}
+
+message ListPresentations {
+  uint32 limit = 1;
+  uint32 offset = 2;
+}
+
+message PresentationList {
+  repeated Presentation presentations = 1;
+}
+
+message SaveTag {
+  Tag tag = 1;
+}
+
+message DeleteTag {
+  Id id = 1;
+}
+
+message GetTag {
+  Id id = 1;
+}
+
+message ListTags {
+  uint32 limit = 1;
+  uint32 offset = 2;
+}
+
+message TagList {
+  repeated Tag tags = 1;
+}
+
+message Undo {
+  // Optional: when set, undoes the latest active undo group for this document only.
+  Id doc_id = 1;
+}
+
+message Redo {
+  // Optional: when set, redoes the most recently undone group for this document only.
+  Id doc_id = 1;
+}
+
+message GetUndoState {
+  // Optional: when set, returns the undo/redo stack state for this document.
+  Id doc_id = 1;
+}
+
+message UndoState {
+  bool can_undo = 1;
+  bool can_redo = 2;
+  uint32 undo_depth = 3;
+  uint32 redo_depth = 4;
+}
+
+message EditorBuffer {
+  Id doc_id = 1;
+  DocumentType doc_type = 2;
+  string content = 3;
+  Timestamp updated_at = 4;
+}
+
+message SaveEditorBuffer {
+  Id doc_id = 1;
+  DocumentType doc_type = 2;
+  string content = 3;
+}
+
+message DiscardEditorBuffer {
+  Id doc_id = 1;
+}
+
+message GetEditorBuffer {
+  Id doc_id = 1;
+}
+
+message EditorBufferReply {
+  bool found = 1;
+  EditorBuffer buffer = 2;
+}
+
+message ListEditorBuffers {
+  uint32 limit = 1;
+  uint32 offset = 2;
+}
+
+message EditorBufferList {
+  repeated EditorBuffer buffers = 1;
+}
+
+message ListOps {
+  uint64 after_seq = 1;
+  uint32 limit = 2;
+  Id doc_id = 3;
+}
+
+message OpRecord {
+  uint64 seq = 1;
+  Id op_id = 2;
+  Timestamp timestamp = 3;
+  string user_id = 4;
+  string device_id = 5;
+  string origin = 6;
+  DocumentType doc_type = 7;
+  Id doc_id = 8;
+  bytes command = 9;
+  bytes inverse = 10;
+  Id undo_group = 11;
+  int32 sync_status = 12;
+}
+
+message OpList {
+  repeated OpRecord ops = 1;
+}
+
+message LibraryChanged {
+  DocumentType doc_type = 1;
+  Id doc_id = 2;
+  LibraryChangeKind change = 3;
+  uint64 op_seq = 4;
+  Id undo_group = 5;
+  bool from_undo_redo = 6;
+}
+
+message UndoStateChanged {
+  UndoState global = 1;
+  Id doc_id = 2;
+  UndoState document = 3;
+}

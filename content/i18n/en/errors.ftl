@@ -17,3 +17,7 @@ error-update-feed = Selah couldn't read the update address. Check the address an
 error-update-verify = The update didn't download correctly, so Selah didn't install it. Try again later.
 error-update-live = Something is on the screens. Clear them, then install the update.
 error-update-install = Selah couldn't start the update. Try again, or install the new version from its Setup file.
+error-library-not-found = Selah couldn't find that item in your library.
+error-library-invalid = Selah couldn't save that change to your library. Check what you entered, then try again.
+error-setting-locked = Your church admin locked this setting, so it can't change here.
+error-nothing-to-undo = There is nothing left to undo or redo.

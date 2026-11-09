@@ -44,4 +44,82 @@ public sealed class ContractTests
         Assert.Equal(ActorOrigin.Ui, message.Actor.Origin);
         Assert.Equal(bytes, message.ToByteArray());
     }
+
+    [Fact]
+    public void M2CommandQueryAndEventMessagesRoundTrip()
+    {
+        var idBytes = ByteString.CopyFrom(new byte[]
+        {
+            0x01, 0x92, 0x70, 0x00, 0x00, 0x00, 0x70, 0x00,
+            0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01,
+        });
+        var groupBytes = ByteString.CopyFrom(new byte[]
+        {
+            0x01, 0x92, 0x70, 0x00, 0x00, 0x01, 0x70, 0x00,
+            0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02,
+        });
+        var saveCmd = new Envelope
+        {
+            Id = 1001,
+            Actor = new Actor { UserId = "local-owner", DeviceId = "ui", Origin = ActorOrigin.Ui },
+            Command = new Command
+            {
+                UndoGroup = new Id { Value = groupBytes },
+                SaveSong = new SaveSong
+                {
+                    Song = new Song
+                    {
+                        Id = new Id { Value = idBytes },
+                        Title = "Amazing Grace",
+                        PublicDomain = true,
+                    },
+                },
+            },
+        };
+        Assert.Equal(saveCmd, Envelope.Parser.ParseFrom(saveCmd.ToByteArray()));
+
+        var policyCmd = new Envelope
+        {
+            Id = 1002,
+            Command = new Command
+            {
+                SetPolicySetting = new SetPolicySetting
+                {
+                    Key = "appearance.text-size",
+                    ValueJson = "130",
+                    Level = PolicyLevel.Machine,
+                    Locked = true,
+                },
+            },
+        };
+        Assert.Equal(policyCmd, Envelope.Parser.ParseFrom(policyCmd.ToByteArray()));
+
+        var listOpsQuery = new Envelope
+        {
+            Id = 1003,
+            Query = new Query
+            {
+                ListOps = new ListOps { AfterSeq = 10, Limit = 50, DocId = new Id { Value = idBytes } },
+            },
+        };
+        Assert.Equal(listOpsQuery, Envelope.Parser.ParseFrom(listOpsQuery.ToByteArray()));
+
+        var libraryEvent = new Envelope
+        {
+            Id = 1004,
+            Event = new Event
+            {
+                LibraryChanged = new LibraryChanged
+                {
+                    DocType = DocumentType.Song,
+                    DocId = new Id { Value = idBytes },
+                    Change = LibraryChangeKind.Saved,
+                    OpSeq = 11,
+                    UndoGroup = new Id { Value = groupBytes },
+                    FromUndoRedo = true,
+                },
+            },
+        };
+        Assert.Equal(libraryEvent, Envelope.Parser.ParseFrom(libraryEvent.ToByteArray()));
+    }
 }

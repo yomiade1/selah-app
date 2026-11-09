@@ -57,7 +57,7 @@ impl Client {
             pending: Mutex::new(HashMap::new()),
             events,
             state,
-            next_id: AtomicU64::new(1),
+            next_id: AtomicU64::new(initial_envelope_id()),
             shutdown: Notify::new(),
         });
         tokio::spawn(supervise(endpoint, Arc::downgrade(&inner)));
@@ -133,6 +133,19 @@ impl Client {
             None => Err(io::Error::new(io::ErrorKind::NotConnected, "not connected")),
         }
     }
+}
+
+fn initial_envelope_id() -> u64 {
+    static NEXT_INSTANCE: AtomicU64 = AtomicU64::new(0);
+    // Keep values positive within signed 64-bit SQLite INTEGER while avoiding cross-run collisions.
+    let ms = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .map(|d| d.as_millis() as u64)
+        .unwrap_or(1_700_000_000_000)
+        .saturating_sub(1_700_000_000_000)
+        & 0x1FF_FFFF_FFFF;
+    let tag = ((std::process::id() as u64) ^ NEXT_INSTANCE.fetch_add(1, Ordering::Relaxed)) & 0xFFF;
+    ((ms << 22) | (tag << 10) | 1).max(1)
 }
 
 async fn supervise(endpoint: Endpoint, weak: std::sync::Weak<Inner>) {

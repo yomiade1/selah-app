@@ -3,7 +3,8 @@ use std::io::Read;
 use prost::Message;
 use rusqlite::Connection;
 use selah_core::library::{
-    Library, MAX_DOCUMENT_BYTES, MediaStore, PolicyLevel, new_id, validate_id,
+    CURRENT_SCHEMA_VERSION, Library, MAX_DOCUMENT_BYTES, MediaStore, PolicyLevel, new_id,
+    validate_id,
 };
 use selah_proto::v1::*;
 use serde_json::json;
@@ -59,7 +60,7 @@ fn fresh_library_has_the_expected_layout_and_a_versioned_database() {
     for directory in ["media", "bibles", "packs", "backups"] {
         assert!(root.path().join(directory).is_dir());
     }
-    assert_eq!(library.schema_version().unwrap(), 1);
+    assert_eq!(library.schema_version().unwrap(), CURRENT_SCHEMA_VERSION);
     library.integrity_check().unwrap();
     let db = Connection::open(library.paths().database.clone()).unwrap();
     assert_eq!(
@@ -274,7 +275,7 @@ fn migration_reopen_is_idempotent_and_preserves_records() {
     }
     for _ in 0..5 {
         let library = Library::open(root.path()).unwrap();
-        assert_eq!(library.schema_version().unwrap(), 1);
+        assert_eq!(library.schema_version().unwrap(), CURRENT_SCHEMA_VERSION);
         assert_eq!(
             library
                 .get::<Song>(original.id.as_ref().unwrap())

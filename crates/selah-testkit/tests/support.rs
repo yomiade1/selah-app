@@ -23,6 +23,7 @@ async fn ask(stack: &Stack, body: envelope::Body, timeout: Duration) -> envelope
 fn command_body(action: command::Action) -> envelope::Body {
     envelope::Body::Command(Command {
         action: Some(action),
+        ..Default::default()
     })
 }
 

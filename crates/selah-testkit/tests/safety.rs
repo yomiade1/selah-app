@@ -26,6 +26,7 @@ async fn restart_normally_leaves_safe_mode_and_keeps_the_screens() {
         .request(
             envelope::Body::Command(Command {
                 action: Some(command::Action::RestartNormally(RestartNormally {})),
+                ..Default::default()
             }),
             Duration::from_secs(5),
         )

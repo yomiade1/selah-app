@@ -1,9 +1,15 @@
 //! Core request handling: authorise, validate, apply, then tell the engine and subscribers.
+use prost::Message;
 use selah_proto::v1::{
-    Actor, ActorOrigin, Envelope, Event, RenderCommand, Reply, Scene, Status, TestPattern, command,
-    envelope, event, query, render_command, reply,
+    Actor, ActorOrigin, Command, Envelope, Event, GetPolicySettingReply, LibraryChanged,
+    MediaItemList, PolicySetting, PresentationList, RenderCommand, Reply, Scene, SongList, Status,
+    TagList, TemplateList, TestPattern, UndoStateChanged, command, envelope, event, query,
+    render_command, reply,
 };
 
+use crate::library::{
+    CommandBusError, CommandMeta, DocumentKind, ExecutionOutcome, Library, validate_id,
+};
 use crate::live::{LiveState, is_live};
 use crate::permissions::{self, DENIED_CODE};
 use crate::settings::SettingsStore;
@@ -15,6 +21,29 @@ pub mod codes {
     pub const INVALID: &str = "SEL-IPC-0002";
     pub const SETTING: &str = "SEL-SET-0001";
     pub const HELP_NOT_FOUND: &str = "SEL-HELP-0001";
+    pub const LIB_NOT_FOUND: &str = "SEL-LIB-0001";
+    pub const LIB_INVALID: &str = "SEL-LIB-0002";
+    pub const SETTING_LOCKED: &str = "SEL-LIB-0003";
+    pub const NOTHING_TO_UNDO: &str = "SEL-LIB-0004";
+}
+
+fn fix_article_for(code: &str) -> &'static str {
+    match code {
+        "SEL-SEC-0001" => "troubleshooting.you-dont-have-permission",
+        "SEL-IPC-0001" | "SEL-IPC-0002" | "SEL-SET-0001" | "SEL-HELP-0001" => {
+            "troubleshooting.selah-cant-do-that"
+        }
+        "SEL-UPD-0001" | "SEL-UPD-0002" | "SEL-UPD-0003" | "SEL-UPD-0004" | "SEL-UPD-0005" => {
+            "getting-started.update-selah"
+        }
+        "SEL-SUP-0001" => "getting-started.report-a-problem",
+        "SEL-DIAG-0001" | "SEL-DIAG-0002" => "getting-started.run-diagnostics",
+        "SEL-LIB-0001" => "troubleshooting.library-item-not-found",
+        "SEL-LIB-0002" => "troubleshooting.cant-save-library-item",
+        "SEL-LIB-0003" => "troubleshooting.setting-is-locked",
+        "SEL-LIB-0004" => "troubleshooting.nothing-to-undo",
+        _ => "",
+    }
 }
 
 /// Help results are capped (help.proto SearchHelp).
@@ -61,6 +90,7 @@ pub struct Outcome {
 pub struct CoreService {
     settings: SettingsStore,
     live: LiveState,
+    library: Library,
     pub engine: EngineView,
     safe_mode: bool,
     actor: Actor,
@@ -103,9 +133,28 @@ impl CoreService {
         net: std::sync::Arc<selah_net::Net>,
         keep_awake: Box<dyn selah_runtime::power::KeepAwake>,
     ) -> Self {
+        Self::open_with_platform(
+            config_dir,
+            &config_dir.join("library"),
+            safe_mode,
+            net,
+            keep_awake,
+        )
+        .expect("open core library")
+    }
+
+    pub fn open_with_platform(
+        config_dir: &std::path::Path,
+        library_dir: &std::path::Path,
+        safe_mode: bool,
+        net: std::sync::Arc<selah_net::Net>,
+        keep_awake: Box<dyn selah_runtime::power::KeepAwake>,
+    ) -> anyhow::Result<Self> {
+        let library = Library::open(library_dir)?;
         let mut service = Self {
             settings: SettingsStore::open(config_dir),
             live: LiveState::open(config_dir),
+            library,
             engine: EngineView::default(),
             safe_mode,
             help: None,
@@ -122,7 +171,15 @@ impl CoreService {
         service.apply_settings_side_effects();
         // The live-state snapshot may say something is on the screens (core restarted).
         service.sync_keep_awake();
-        service
+        Ok(service)
+    }
+
+    pub fn library(&self) -> &Library {
+        &self.library
+    }
+
+    pub fn library_mut(&mut self) -> &mut Library {
+        &mut self.library
     }
 
     /// The network gate, for slow work the host runs.
@@ -210,8 +267,89 @@ impl CoreService {
             body: Some(envelope::Body::Error(selah_proto::v1::Error {
                 code: code.into(),
                 message_key: key.into(),
+                fix_article_id: fix_article_for(code).into(),
                 ..Default::default()
             })),
+        }
+    }
+
+    fn bus_error(&self, request: &Envelope, error: &CommandBusError) -> Envelope {
+        tracing::warn!(%error, code = error.code(), "library request failed");
+        Envelope {
+            id: request.id,
+            correlation_id: request.id,
+            actor: Some(self.actor.clone()),
+            body: Some(envelope::Body::Error(selah_proto::v1::Error {
+                code: error.code().into(),
+                message_key: error.message_key().into(),
+                fix_article_id: error.fix_article_id().into(),
+                ..Default::default()
+            })),
+        }
+    }
+
+    fn library_outcome(
+        &mut self,
+        request: &Envelope,
+        result: Result<ExecutionOutcome, CommandBusError>,
+    ) -> Outcome {
+        match result {
+            Ok(ExecutionOutcome::Replayed(body)) => Outcome {
+                reply: Some(Envelope {
+                    id: request.id,
+                    correlation_id: request.id,
+                    actor: Some(self.actor.clone()),
+                    body: Some(body),
+                }),
+                ..Outcome::default()
+            },
+            Ok(ExecutionOutcome::Applied {
+                reply,
+                changes,
+                undo_doc_id,
+            }) => {
+                let mut broadcast = Vec::new();
+                if !changes.is_empty() {
+                    for change in &changes {
+                        broadcast.push(Event {
+                            notification: Some(event::Notification::LibraryChanged(
+                                LibraryChanged {
+                                    doc_type: change.doc_type.to_proto() as i32,
+                                    doc_id: Some(change.doc_id.clone()),
+                                    change: change.change as i32,
+                                    op_seq: change.op_seq,
+                                    undo_group: Some(change.undo_group.clone()),
+                                    from_undo_redo: change.from_undo_redo,
+                                },
+                            )),
+                        });
+                    }
+                    let single_doc = undo_doc_id.as_ref().or_else(|| {
+                        let first = &changes[0].doc_id;
+                        changes.iter().all(|c| c.doc_id == *first).then_some(first)
+                    });
+                    let global = self.library.undo_state(None).ok();
+                    let document = single_doc.and_then(|id| self.library.undo_state(Some(id)).ok());
+                    broadcast.push(Event {
+                        notification: Some(event::Notification::UndoStateChanged(
+                            UndoStateChanged {
+                                global,
+                                doc_id: single_doc.cloned(),
+                                document,
+                            },
+                        )),
+                    });
+                }
+                Outcome {
+                    reply: Some(self.reply(request, reply)),
+                    broadcast,
+                    ..Outcome::default()
+                }
+            }
+            Err(error) => Outcome {
+                reply: Some(self.bus_error(request, &error)),
+                ..Outcome::default()
+            },
         }
     }
 
@@ -224,7 +362,7 @@ impl CoreService {
     fn handle_inner(&mut self, request: &Envelope) -> Outcome {
         match request.body.as_ref() {
             Some(envelope::Body::Command(command)) => match command.action.as_ref() {
-                Some(action) => self.command(request, action),
+                Some(action) => self.command(request, command, action),
                 None => Outcome {
                     reply: Some(self.error(request, codes::INVALID, "error-invalid-request")),
                     ..Outcome::default()
@@ -236,7 +374,12 @@ impl CoreService {
         }
     }
 
-    fn command(&mut self, request: &Envelope, action: &command::Action) -> Outcome {
+    fn command(
+        &mut self,
+        request: &Envelope,
+        command: &Command,
+        action: &command::Action,
+    ) -> Outcome {
         let kind = permissions::kind_of(action);
         let actor = request.actor.clone().unwrap_or_default();
         // SEC-14: authorise before validating or applying anything.
@@ -247,6 +390,13 @@ impl CoreService {
                 ..Outcome::default()
             };
         }
+        let command_hash: [u8; 32] = *blake3::hash(&command.encode_to_vec()).as_bytes();
+        let meta = CommandMeta {
+            actor: &actor,
+            envelope_id: request.id,
+            command_hash,
+            undo_group: command.undo_group.as_ref(),
+        };
         let ack = |service: &Self| Some(service.reply(request, reply::Result::Acknowledged(true)));
         match action {
             command::Action::ShowTestPattern(show) => {
@@ -297,11 +447,134 @@ impl CoreService {
                     },
                 }
             }
-            // Stored from M2 (help feedback lives in library.db).
-            command::Action::RecordFeedback(_) => Outcome {
-                reply: ack(self),
-                ..Outcome::default()
-            },
+            command::Action::RecordFeedback(feedback) => {
+                let result =
+                    self.library
+                        .record_feedback_op(&feedback.article_id, feedback.helpful, &meta);
+                self.library_outcome(request, result)
+            }
+            command::Action::SaveSong(cmd) => {
+                let result = match cmd.song.as_ref() {
+                    Some(doc) => self.library.save_document_op(doc, &meta),
+                    None => Err(CommandBusError::Invalid("missing song".into())),
+                };
+                self.library_outcome(request, result)
+            }
+            command::Action::DeleteSong(cmd) => {
+                let result = match cmd.id.as_ref() {
+                    Some(id) => self
+                        .library
+                        .delete_document_op(DocumentKind::Song, id, &meta),
+                    None => Err(CommandBusError::Invalid("missing song id".into())),
+                };
+                self.library_outcome(request, result)
+            }
+            command::Action::SaveTemplate(cmd) => {
+                let result = match cmd.template.as_ref() {
+                    Some(doc) => self.library.save_document_op(doc, &meta),
+                    None => Err(CommandBusError::Invalid("missing template".into())),
+                };
+                self.library_outcome(request, result)
+            }
+            command::Action::DeleteTemplate(cmd) => {
+                let result = match cmd.id.as_ref() {
+                    Some(id) => self
+                        .library
+                        .delete_document_op(DocumentKind::Template, id, &meta),
+                    None => Err(CommandBusError::Invalid("missing template id".into())),
+                };
+                self.library_outcome(request, result)
+            }
+            command::Action::SaveMediaItem(cmd) => {
+                let result = match cmd.media_item.as_ref() {
+                    Some(doc) => self.library.save_document_op(doc, &meta),
+                    None => Err(CommandBusError::Invalid("missing media item".into())),
+                };
+                self.library_outcome(request, result)
+            }
+            command::Action::DeleteMediaItem(cmd) => {
+                let result = match cmd.id.as_ref() {
+                    Some(id) => self
+                        .library
+                        .delete_document_op(DocumentKind::Media, id, &meta),
+                    None => Err(CommandBusError::Invalid("missing media item id".into())),
+                };
+                self.library_outcome(request, result)
+            }
+            command::Action::SavePresentation(cmd) => {
+                let result = match cmd.presentation.as_ref() {
+                    Some(doc) => self.library.save_document_op(doc, &meta),
+                    None => Err(CommandBusError::Invalid("missing presentation".into())),
+                };
+                self.library_outcome(request, result)
+            }
+            command::Action::DeletePresentation(cmd) => {
+                let result = match cmd.id.as_ref() {
+                    Some(id) => {
+                        self.library
+                            .delete_document_op(DocumentKind::Presentation, id, &meta)
+                    }
+                    None => Err(CommandBusError::Invalid("missing presentation id".into())),
+                };
+                self.library_outcome(request, result)
+            }
+            command::Action::SaveTag(cmd) => {
+                let result = match cmd.tag.as_ref() {
+                    Some(doc) => self.library.save_document_op(doc, &meta),
+                    None => Err(CommandBusError::Invalid("missing tag".into())),
+                };
+                self.library_outcome(request, result)
+            }
+            command::Action::DeleteTag(cmd) => {
+                let result = match cmd.id.as_ref() {
+                    Some(id) => self
+                        .library
+                        .delete_document_op(DocumentKind::Tag, id, &meta),
+                    None => Err(CommandBusError::Invalid("missing tag id".into())),
+                };
+                self.library_outcome(request, result)
+            }
+            command::Action::Undo(cmd) => {
+                let result = self.library.undo_op(cmd.doc_id.as_ref(), &meta);
+                self.library_outcome(request, result)
+            }
+            command::Action::Redo(cmd) => {
+                let result = self.library.redo_op(cmd.doc_id.as_ref(), &meta);
+                self.library_outcome(request, result)
+            }
+            command::Action::SaveEditorBuffer(cmd) => {
+                let result = match cmd.doc_id.as_ref() {
+                    Some(id) => {
+                        self.library
+                            .save_editor_buffer_op(id, cmd.doc_type, &cmd.content, &meta)
+                    }
+                    None => Err(CommandBusError::Invalid("missing document id".into())),
+                };
+                self.library_outcome(request, result)
+            }
+            command::Action::DiscardEditorBuffer(cmd) => {
+                let result = match cmd.doc_id.as_ref() {
+                    Some(id) => self.library.discard_editor_buffer_op(id, &meta),
+                    None => Err(CommandBusError::Invalid("missing document id".into())),
+                };
+                self.library_outcome(request, result)
+            }
+            command::Action::SetPolicySetting(cmd) => {
+                let result = self.library.set_policy_setting_op(
+                    &cmd.key,
+                    &cmd.value_json,
+                    cmd.level,
+                    cmd.locked,
+                    &meta,
+                );
+                self.library_outcome(request, result)
+            }
+            command::Action::RemovePolicySetting(cmd) => {
+                let result = self
+                    .library
+                    .remove_policy_setting_op(&cmd.key, cmd.level, &meta);
+                self.library_outcome(request, result)
+            }
             command::Action::SetUpdateSettings(change) => {
                 let feed = change.update_feed_url.trim().to_owned();
                 let allow = change.allow_update_check;
@@ -445,6 +718,99 @@ impl CoreService {
                     ..Outcome::default()
                 };
             }
+            Some(query::Request::GetSong(get)) => {
+                self.get_document(request, get.id.as_ref(), reply::Result::Song)
+            }
+            Some(query::Request::ListSongs(list)) => {
+                self.list_documents(request, list.limit, list.offset, |songs| {
+                    reply::Result::SongList(SongList { songs })
+                })
+            }
+            Some(query::Request::GetTemplate(get)) => {
+                self.get_document(request, get.id.as_ref(), reply::Result::Template)
+            }
+            Some(query::Request::ListTemplates(list)) => {
+                self.list_documents(request, list.limit, list.offset, |templates| {
+                    reply::Result::TemplateList(TemplateList { templates })
+                })
+            }
+            Some(query::Request::GetMediaItem(get)) => {
+                self.get_document(request, get.id.as_ref(), reply::Result::MediaItem)
+            }
+            Some(query::Request::ListMediaItems(list)) => {
+                self.list_documents(request, list.limit, list.offset, |media_items| {
+                    reply::Result::MediaItemList(MediaItemList { media_items })
+                })
+            }
+            Some(query::Request::GetPresentation(get)) => {
+                self.get_document(request, get.id.as_ref(), reply::Result::Presentation)
+            }
+            Some(query::Request::ListPresentations(list)) => {
+                self.list_documents(request, list.limit, list.offset, |presentations| {
+                    reply::Result::PresentationList(PresentationList { presentations })
+                })
+            }
+            Some(query::Request::GetTag(get)) => {
+                self.get_document(request, get.id.as_ref(), reply::Result::Tag)
+            }
+            Some(query::Request::ListTags(list)) => {
+                self.list_documents(request, list.limit, list.offset, |tags| {
+                    reply::Result::TagList(TagList { tags })
+                })
+            }
+            Some(query::Request::GetUndoState(q)) => {
+                match self.library.undo_state(q.doc_id.as_ref()) {
+                    Ok(state) => self.reply(request, reply::Result::UndoState(state)),
+                    Err(error) => self.bus_error(request, &error),
+                }
+            }
+            Some(query::Request::GetEditorBuffer(q)) => match q.doc_id.as_ref() {
+                Some(id) => match self.library.get_editor_buffer(id) {
+                    Ok(reply_msg) => self.reply(request, reply::Result::EditorBuffer(reply_msg)),
+                    Err(error) => self.bus_error(request, &error),
+                },
+                None => self.bus_error(
+                    request,
+                    &CommandBusError::Invalid("missing document id".into()),
+                ),
+            },
+            Some(query::Request::ListEditorBuffers(q)) => {
+                match self.library.list_editor_buffers(q.limit, q.offset) {
+                    Ok(list) => self.reply(request, reply::Result::EditorBufferList(list)),
+                    Err(error) => self.bus_error(request, &error),
+                }
+            }
+            Some(query::Request::ListOps(q)) => {
+                match self
+                    .library
+                    .list_ops(q.after_seq, q.limit, q.doc_id.as_ref())
+                {
+                    Ok(list) => self.reply(request, reply::Result::OpList(list)),
+                    Err(error) => self.bus_error(request, &error),
+                }
+            }
+            Some(query::Request::GetPolicySetting(q)) => match self.library.setting(&q.key) {
+                Ok(Some(effective)) => self.reply(
+                    request,
+                    reply::Result::PolicySetting(GetPolicySettingReply {
+                        found: true,
+                        setting: Some(PolicySetting {
+                            key: q.key.clone(),
+                            value_json: serde_json::to_string(&effective.value).unwrap_or_default(),
+                            level: effective.level.to_proto() as i32,
+                            locked: effective.locked,
+                        }),
+                    }),
+                ),
+                Ok(None) => self.reply(
+                    request,
+                    reply::Result::PolicySetting(GetPolicySettingReply {
+                        found: false,
+                        setting: None,
+                    }),
+                ),
+                Err(error) => self.bus_error(request, &CommandBusError::Invalid(error.to_string())),
+            },
             Some(query::Request::GetWatchdogStatus(_)) | None => {
                 self.error(request, codes::UNSUPPORTED, "error-unsupported-request")
             }
@@ -452,6 +818,41 @@ impl CoreService {
         Outcome {
             reply: Some(reply),
             ..Outcome::default()
+        }
+    }
+
+    fn get_document<T: crate::library::Document>(
+        &self,
+        request: &Envelope,
+        id: Option<&selah_proto::v1::Id>,
+        wrap: fn(T) -> reply::Result,
+    ) -> Envelope {
+        let Some(id) = id else {
+            return self.bus_error(request, &CommandBusError::Invalid("missing id".into()));
+        };
+        if let Err(error) = validate_id(id) {
+            return self.bus_error(request, &CommandBusError::Invalid(error.to_string()));
+        }
+        match self.library.get::<T>(id) {
+            Ok(Some(doc)) => self.reply(request, wrap(doc)),
+            Ok(None) => self.bus_error(
+                request,
+                &CommandBusError::NotFound("library item not found".into()),
+            ),
+            Err(error) => self.bus_error(request, &CommandBusError::Invalid(error.to_string())),
+        }
+    }
+
+    fn list_documents<T: crate::library::Document>(
+        &self,
+        request: &Envelope,
+        limit: u32,
+        offset: u32,
+        wrap: impl FnOnce(Vec<T>) -> reply::Result,
+    ) -> Envelope {
+        match self.library.list::<T>(limit, offset) {
+            Ok(items) => self.reply(request, wrap(items)),
+            Err(error) => self.bus_error(request, &CommandBusError::Invalid(error.to_string())),
         }
     }
 
@@ -709,6 +1110,7 @@ mod tests {
             action: Some(command::Action::ShowTestPattern(ShowTestPattern {
                 pattern: TestPattern::SmpteBars as i32,
             })),
+            ..Default::default()
         })
     }
 
@@ -765,6 +1167,7 @@ mod tests {
     fn command(action: command::Action) -> envelope::Body {
         envelope::Body::Command(Command {
             action: Some(action),
+            ..Default::default()
         })
     }
 
@@ -981,6 +1384,7 @@ mod tests {
             ActorOrigin::Ui,
             envelope::Body::Command(Command {
                 action: Some(command::Action::ClearOutputs(ClearOutputs {})),
+                ..Default::default()
             }),
         ));
         assert!(cleared.to_engine.is_some());
@@ -992,5 +1396,365 @@ mod tests {
             panic!()
         };
         assert_eq!(error.code, codes::UNSUPPORTED);
+    }
+
+    fn song_fixture(title: &str) -> selah_proto::v1::Song {
+        let sec_id = crate::library::new_id();
+        selah_proto::v1::Song {
+            id: Some(crate::library::new_id()),
+            title: title.into(),
+            authors: vec!["Writer".into()],
+            tags: vec!["Hymn".into()],
+            public_domain: true,
+            sections: vec![selah_proto::v1::Section {
+                id: Some(sec_id),
+                label: "Verse 1".into(),
+                kind: selah_proto::v1::SectionKind::Verse as i32,
+                lines: vec![selah_proto::v1::LyricLine {
+                    text: "Grace how sweet the sound".into(),
+                    chords: vec![],
+                }],
+                ..Default::default()
+            }],
+            ..Default::default()
+        }
+    }
+
+    fn request_with_id(id: u64, origin: ActorOrigin, body: envelope::Body) -> Envelope {
+        Envelope {
+            id,
+            correlation_id: 0,
+            actor: Some(Actor {
+                user_id: "local-owner".into(),
+                device_id: "ui-1".into(),
+                origin: origin as i32,
+            }),
+            body: Some(body),
+        }
+    }
+
+    fn command_with_group(
+        action: command::Action,
+        undo_group: Option<selah_proto::v1::Id>,
+    ) -> envelope::Body {
+        envelope::Body::Command(Command {
+            action: Some(action),
+            undo_group,
+        })
+    }
+
+    #[test]
+    fn library_commands_emit_events_undo_redo_and_replay_idempotently() {
+        let dir = tempfile::tempdir().unwrap();
+        let mut core = CoreService::new(dir.path(), false);
+        let song = song_fixture("Amazing Grace");
+        let song_id = song.id.clone().unwrap();
+
+        let save_req = request_with_id(
+            101,
+            ActorOrigin::Ui,
+            command_with_group(
+                command::Action::SaveSong(selah_proto::v1::SaveSong {
+                    song: Some(song.clone()),
+                }),
+                None,
+            ),
+        );
+        let save_out = core.handle(&save_req);
+        assert!(matches!(
+            save_out.reply.as_ref().and_then(|r| r.body.as_ref()),
+            Some(envelope::Body::Reply(Reply {
+                result: Some(reply::Result::Acknowledged(true))
+            }))
+        ));
+        assert_eq!(save_out.broadcast.len(), 2);
+        assert!(matches!(
+            save_out.broadcast[0].notification,
+            Some(event::Notification::LibraryChanged(ref ev))
+                if ev.doc_id.as_ref() == Some(&song_id)
+                    && ev.change == selah_proto::v1::LibraryChangeKind::Saved as i32
+                    && !ev.from_undo_redo
+        ));
+        assert!(matches!(
+            save_out.broadcast[1].notification,
+            Some(event::Notification::UndoStateChanged(ref ev))
+                if ev.global.as_ref().is_some_and(|s| s.can_undo && !s.can_redo)
+                    && ev.doc_id.as_ref() == Some(&song_id)
+        ));
+
+        // Exact retry returns the cached reply without emitting duplicate subscriber events.
+        let replay = core.handle(&save_req);
+        assert!(replay.broadcast.is_empty());
+        assert_eq!(replay.reply.as_ref().unwrap().correlation_id, 101);
+        assert!(matches!(
+            replay.reply.as_ref().and_then(|r| r.body.as_ref()),
+            Some(envelope::Body::Reply(Reply {
+                result: Some(reply::Result::Acknowledged(true))
+            }))
+        ));
+
+        // Reusing the same envelope id with different command bytes returns SEL-IPC-0002.
+        let other_song = song_fixture("Different Song");
+        let conflict = core.handle(&request_with_id(
+            101,
+            ActorOrigin::Ui,
+            command_with_group(
+                command::Action::SaveSong(selah_proto::v1::SaveSong {
+                    song: Some(other_song),
+                }),
+                None,
+            ),
+        ));
+        assert_eq!(error_code(&conflict), codes::INVALID);
+
+        // Undo removes the song and emits from_undo_redo=true.
+        let undo_out = core.handle(&request_with_id(
+            102,
+            ActorOrigin::Ui,
+            command_with_group(
+                command::Action::Undo(selah_proto::v1::Undo { doc_id: None }),
+                None,
+            ),
+        ));
+        assert!(matches!(
+            undo_out.broadcast[0].notification,
+            Some(event::Notification::LibraryChanged(ref ev))
+                if ev.change == selah_proto::v1::LibraryChangeKind::Deleted as i32
+                    && ev.from_undo_redo
+        ));
+        let get_after_undo = core.handle(&request_with_id(
+            103,
+            ActorOrigin::Ui,
+            envelope::Body::Query(Query {
+                request: Some(query::Request::GetSong(selah_proto::v1::GetSong {
+                    id: Some(song_id.clone()),
+                })),
+            }),
+        ));
+        assert_eq!(error_code(&get_after_undo), codes::LIB_NOT_FOUND);
+
+        // Redo brings the song back.
+        let redo_out = core.handle(&request_with_id(
+            104,
+            ActorOrigin::Ui,
+            command_with_group(
+                command::Action::Redo(selah_proto::v1::Redo { doc_id: None }),
+                None,
+            ),
+        ));
+        assert!(matches!(
+            redo_out.broadcast[0].notification,
+            Some(event::Notification::LibraryChanged(ref ev))
+                if ev.change == selah_proto::v1::LibraryChangeKind::Saved as i32
+                    && ev.from_undo_redo
+        ));
+        let get_after_redo = core.handle(&request_with_id(
+            105,
+            ActorOrigin::Ui,
+            envelope::Body::Query(Query {
+                request: Some(query::Request::GetSong(selah_proto::v1::GetSong {
+                    id: Some(song_id.clone()),
+                })),
+            }),
+        ));
+        assert!(matches!(
+            get_after_redo.reply.and_then(|r| r.body),
+            Some(envelope::Body::Reply(Reply {
+                result: Some(reply::Result::Song(s))
+            })) if s == song
+        ));
+
+        // Op log holds save + undo + redo (3 ops) and ignores the replayed command.
+        let ops_reply = core.handle(&request_with_id(
+            106,
+            ActorOrigin::Ui,
+            envelope::Body::Query(Query {
+                request: Some(query::Request::ListOps(selah_proto::v1::ListOps {
+                    after_seq: 0,
+                    limit: 10,
+                    doc_id: Some(song_id),
+                })),
+            }),
+        ));
+        let Some(envelope::Body::Reply(Reply {
+            result: Some(reply::Result::OpList(list)),
+        })) = ops_reply.reply.and_then(|r| r.body)
+        else {
+            panic!("expected op list");
+        };
+        assert_eq!(list.ops.len(), 3);
+    }
+
+    #[test]
+    fn unauthorized_library_commands_are_refused_before_touching_database() {
+        // sec: SEC-14
+        let dir = tempfile::tempdir().unwrap();
+        let mut core = CoreService::new(dir.path(), false);
+        let song = song_fixture("Refused Song");
+
+        for origin in [
+            ActorOrigin::Unspecified,
+            ActorOrigin::Api,
+            ActorOrigin::Midi,
+            ActorOrigin::Macro,
+            ActorOrigin::Timeline,
+            ActorOrigin::Sync,
+            ActorOrigin::Core,
+            ActorOrigin::Engine,
+            ActorOrigin::Watchdog,
+        ] {
+            let outcome = core.handle(&request_with_id(
+                200,
+                origin,
+                command_with_group(
+                    command::Action::SaveSong(selah_proto::v1::SaveSong {
+                        song: Some(song.clone()),
+                    }),
+                    None,
+                ),
+            ));
+            assert_eq!(error_code(&outcome), DENIED_CODE);
+            assert!(outcome.broadcast.is_empty());
+        }
+
+        // Database and op log remain empty.
+        assert!(
+            core.library()
+                .list::<selah_proto::v1::Song>(10, 0)
+                .unwrap()
+                .is_empty()
+        );
+        assert!(core.library().list_ops(0, 10, None).unwrap().ops.is_empty());
+
+        // A subsequent authorized request using the same id (for UI origin) still applies cleanly.
+        let allowed = core.handle(&request_with_id(
+            200,
+            ActorOrigin::Ui,
+            command_with_group(
+                command::Action::SaveSong(selah_proto::v1::SaveSong { song: Some(song) }),
+                None,
+            ),
+        ));
+        assert_eq!(allowed.broadcast.len(), 2);
+    }
+
+    #[test]
+    fn editor_buffers_policies_and_help_feedback_round_trip_through_core_service() {
+        let dir = tempfile::tempdir().unwrap();
+        let mut core = CoreService::new(dir.path(), false);
+        let doc_id = crate::library::new_id();
+
+        let save_buf = core.handle(&request_with_id(
+            301,
+            ActorOrigin::Ui,
+            command_with_group(
+                command::Action::SaveEditorBuffer(selah_proto::v1::SaveEditorBuffer {
+                    doc_id: Some(doc_id.clone()),
+                    doc_type: selah_proto::v1::DocumentType::Song as i32,
+                    content: "Verse 1\nHow great Thou art".into(),
+                }),
+                None,
+            ),
+        ));
+        assert!(save_buf.broadcast.is_empty());
+
+        let got_buf = core.handle(&request_with_id(
+            302,
+            ActorOrigin::Ui,
+            envelope::Body::Query(Query {
+                request: Some(query::Request::GetEditorBuffer(
+                    selah_proto::v1::GetEditorBuffer {
+                        doc_id: Some(doc_id.clone()),
+                    },
+                )),
+            }),
+        ));
+        assert!(matches!(
+            got_buf.reply.and_then(|r| r.body),
+            Some(envelope::Body::Reply(Reply {
+                result: Some(reply::Result::EditorBuffer(b))
+            })) if b.found && b.buffer.as_ref().unwrap().content == "Verse 1\nHow great Thou art"
+        ));
+
+        let discard_buf = core.handle(&request_with_id(
+            303,
+            ActorOrigin::Ui,
+            command_with_group(
+                command::Action::DiscardEditorBuffer(selah_proto::v1::DiscardEditorBuffer {
+                    doc_id: Some(doc_id.clone()),
+                }),
+                None,
+            ),
+        ));
+        assert!(matches!(
+            discard_buf.reply.and_then(|r| r.body),
+            Some(envelope::Body::Reply(Reply {
+                result: Some(reply::Result::Acknowledged(true))
+            }))
+        ));
+
+        core.handle(&request_with_id(
+            304,
+            ActorOrigin::Ui,
+            command_with_group(
+                command::Action::SetPolicySetting(selah_proto::v1::SetPolicySetting {
+                    key: "appearance.text-size".into(),
+                    value_json: "130".into(),
+                    level: selah_proto::v1::PolicyLevel::Machine as i32,
+                    locked: true,
+                }),
+                None,
+            ),
+        ));
+        let user_override = core.handle(&request_with_id(
+            305,
+            ActorOrigin::Ui,
+            command_with_group(
+                command::Action::SetPolicySetting(selah_proto::v1::SetPolicySetting {
+                    key: "appearance.text-size".into(),
+                    value_json: "100".into(),
+                    level: selah_proto::v1::PolicyLevel::User as i32,
+                    locked: false,
+                }),
+                None,
+            ),
+        ));
+        assert_eq!(error_code(&user_override), codes::SETTING_LOCKED);
+
+        let policy_get = core.handle(&request_with_id(
+            306,
+            ActorOrigin::Ui,
+            envelope::Body::Query(Query {
+                request: Some(query::Request::GetPolicySetting(
+                    selah_proto::v1::GetPolicySetting {
+                        key: "appearance.text-size".into(),
+                    },
+                )),
+            }),
+        ));
+        assert!(matches!(
+            policy_get.reply.and_then(|r| r.body),
+            Some(envelope::Body::Reply(Reply {
+                result: Some(reply::Result::PolicySetting(p))
+            })) if p.found && p.setting.as_ref().is_some_and(|s| s.locked && s.value_json == "130")
+        ));
+
+        core.handle(&request_with_id(
+            307,
+            ActorOrigin::Ui,
+            command_with_group(
+                command::Action::RecordFeedback(selah_proto::v1::RecordFeedback {
+                    article_id: "troubleshooting.selah-started-in-safe-mode".into(),
+                    helpful: true,
+                }),
+                None,
+            ),
+        ));
+        assert_eq!(
+            core.library()
+                .help_feedback_count("troubleshooting.selah-started-in-safe-mode", Some(true))
+                .unwrap(),
+            1
+        );
     }
 }

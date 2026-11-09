@@ -33,6 +33,60 @@ impl DocumentKind {
             Self::Tag => "tags",
         }
     }
+
+    pub fn as_str(self) -> &'static str {
+        match self {
+            Self::Song => "song",
+            Self::Template => "template",
+            Self::Media => "media",
+            Self::Presentation => "presentation",
+            Self::Service => "service",
+            Self::ServiceType => "service_type",
+            Self::Team => "team",
+            Self::Tag => "tag",
+        }
+    }
+
+    pub fn parse(value: &str) -> Option<Self> {
+        match value {
+            "song" => Some(Self::Song),
+            "template" => Some(Self::Template),
+            "media" => Some(Self::Media),
+            "presentation" => Some(Self::Presentation),
+            "service" => Some(Self::Service),
+            "service_type" => Some(Self::ServiceType),
+            "team" => Some(Self::Team),
+            "tag" => Some(Self::Tag),
+            _ => None,
+        }
+    }
+
+    pub fn from_proto(value: i32) -> Option<Self> {
+        match DocumentType::try_from(value).ok()? {
+            DocumentType::Song => Some(Self::Song),
+            DocumentType::Template => Some(Self::Template),
+            DocumentType::Media => Some(Self::Media),
+            DocumentType::Presentation => Some(Self::Presentation),
+            DocumentType::Service => Some(Self::Service),
+            DocumentType::ServiceType => Some(Self::ServiceType),
+            DocumentType::Team => Some(Self::Team),
+            DocumentType::Tag => Some(Self::Tag),
+            DocumentType::Unspecified => None,
+        }
+    }
+
+    pub fn to_proto(self) -> DocumentType {
+        match self {
+            Self::Song => DocumentType::Song,
+            Self::Template => DocumentType::Template,
+            Self::Media => DocumentType::Media,
+            Self::Presentation => DocumentType::Presentation,
+            Self::Service => DocumentType::Service,
+            Self::ServiceType => DocumentType::ServiceType,
+            Self::Team => DocumentType::Team,
+            Self::Tag => DocumentType::Tag,
+        }
+    }
 }
 
 mod sealed {
@@ -428,9 +482,75 @@ impl Library {
     pub fn delete<T: Document>(&mut self, id: &Id) -> anyhow::Result<bool> {
         validate_id(id)?;
         let tx = self.db.transaction()?;
-        let sql = format!("DELETE FROM {} WHERE id=?1", T::KIND.table());
-        let changed = tx.execute(&sql, [&id.value])? != 0;
+        let changed = delete_in_tx(&tx, T::KIND, &id.value)?;
         tx.commit()?;
         Ok(changed)
+    }
+}
+
+pub(super) fn read_snapshot_in_tx(
+    tx: &Transaction<'_>,
+    kind: DocumentKind,
+    id: &[u8],
+) -> anyhow::Result<Option<Vec<u8>>> {
+    let sql = format!("SELECT data FROM {} WHERE id=?1", kind.table());
+    Ok(tx.query_row(&sql, [id], |r| r.get(0)).optional()?)
+}
+
+pub(super) fn delete_in_tx(
+    tx: &Transaction<'_>,
+    kind: DocumentKind,
+    id: &[u8],
+) -> anyhow::Result<bool> {
+    let sql = format!("DELETE FROM {} WHERE id=?1", kind.table());
+    Ok(tx.execute(&sql, [id])? != 0)
+}
+
+fn verify_and_write<T: Document>(
+    media_root: &std::path::Path,
+    tx: &Transaction<'_>,
+    expected_id: &[u8],
+    data: &[u8],
+) -> anyhow::Result<()> {
+    ensure!(data.len() <= MAX_DOCUMENT_BYTES, "document is too large");
+    let doc = T::decode(data)?;
+    ensure!(
+        required_id(doc.id())? == expected_id,
+        "stored document ID mismatch"
+    );
+    doc.validate()?;
+    if T::KIND == DocumentKind::Media {
+        let item = MediaItem::decode(data)?;
+        super::MediaStore::open(media_root)?.verify(
+            &item.content_hash,
+            &item.extension,
+            item.size_bytes,
+        )?;
+    }
+    doc.write(tx)?;
+    Ok(())
+}
+
+pub(super) fn apply_snapshot_in_tx(
+    media_root: &std::path::Path,
+    tx: &Transaction<'_>,
+    kind: DocumentKind,
+    id: &[u8],
+    present: bool,
+    data: &[u8],
+) -> anyhow::Result<()> {
+    if !present {
+        delete_in_tx(tx, kind, id)?;
+        return Ok(());
+    }
+    match kind {
+        DocumentKind::Song => verify_and_write::<Song>(media_root, tx, id, data),
+        DocumentKind::Template => verify_and_write::<Template>(media_root, tx, id, data),
+        DocumentKind::Media => verify_and_write::<MediaItem>(media_root, tx, id, data),
+        DocumentKind::Presentation => verify_and_write::<Presentation>(media_root, tx, id, data),
+        DocumentKind::Service => verify_and_write::<Service>(media_root, tx, id, data),
+        DocumentKind::ServiceType => verify_and_write::<ServiceType>(media_root, tx, id, data),
+        DocumentKind::Team => verify_and_write::<Team>(media_root, tx, id, data),
+        DocumentKind::Tag => verify_and_write::<Tag>(media_root, tx, id, data),
     }
 }

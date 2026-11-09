@@ -49,3 +49,15 @@ errors:
   - code: SEL-DIAG-0002
     message: error-diagnostics-failed
     fix_article: getting-started.run-diagnostics
+  - code: SEL-LIB-0001
+    message: error-library-not-found
+    fix_article: troubleshooting.library-item-not-found
+  - code: SEL-LIB-0002
+    message: error-library-invalid
+    fix_article: troubleshooting.cant-save-library-item
+  - code: SEL-LIB-0003
+    message: error-setting-locked
+    fix_article: troubleshooting.setting-is-locked
+  - code: SEL-LIB-0004
+    message: error-nothing-to-undo
+    fix_article: troubleshooting.nothing-to-undo

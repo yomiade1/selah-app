@@ -10,7 +10,6 @@ planned:
   - { id: screens.use-corner-pin, kind: article, milestone: M5 }
   - { id: screens.match-colours, kind: article, milestone: M5 }
   - { id: troubleshooting.you-dont-have-permission, kind: article, milestone: M4 }
-  - { id: troubleshooting.selah-cant-do-that, kind: article, milestone: M2 }
   # Anchors
   - { id: simple.service-progress, kind: anchor, milestone: M4 }
   - { id: simple.slide-strip, kind: anchor, milestone: M4 }

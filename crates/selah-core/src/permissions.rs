@@ -23,9 +23,25 @@ pub enum CommandKind {
     RestartNormally,
     CreateSupportBundle,
     RunDiagnostics,
+    SaveSong,
+    DeleteSong,
+    SaveTemplate,
+    DeleteTemplate,
+    SaveMediaItem,
+    DeleteMediaItem,
+    SavePresentation,
+    DeletePresentation,
+    SaveTag,
+    DeleteTag,
+    Undo,
+    Redo,
+    SaveEditorBuffer,
+    DiscardEditorBuffer,
+    SetPolicySetting,
+    RemovePolicySetting,
 }
 
-pub const ALL_COMMANDS: [CommandKind; 11] = [
+pub const ALL_COMMANDS: [CommandKind; 27] = [
     CommandKind::Render,
     CommandKind::SetAppearance,
     CommandKind::RecordFeedback,
@@ -37,6 +53,22 @@ pub const ALL_COMMANDS: [CommandKind; 11] = [
     CommandKind::RestartNormally,
     CommandKind::CreateSupportBundle,
     CommandKind::RunDiagnostics,
+    CommandKind::SaveSong,
+    CommandKind::DeleteSong,
+    CommandKind::SaveTemplate,
+    CommandKind::DeleteTemplate,
+    CommandKind::SaveMediaItem,
+    CommandKind::DeleteMediaItem,
+    CommandKind::SavePresentation,
+    CommandKind::DeletePresentation,
+    CommandKind::SaveTag,
+    CommandKind::DeleteTag,
+    CommandKind::Undo,
+    CommandKind::Redo,
+    CommandKind::SaveEditorBuffer,
+    CommandKind::DiscardEditorBuffer,
+    CommandKind::SetPolicySetting,
+    CommandKind::RemovePolicySetting,
 ];
 
 pub fn kind_of(action: &command::Action) -> CommandKind {
@@ -52,6 +84,22 @@ pub fn kind_of(action: &command::Action) -> CommandKind {
         command::Action::RestartNormally(_) => CommandKind::RestartNormally,
         command::Action::CreateSupportBundle(_) => CommandKind::CreateSupportBundle,
         command::Action::RunDiagnostics(_) => CommandKind::RunDiagnostics,
+        command::Action::SaveSong(_) => CommandKind::SaveSong,
+        command::Action::DeleteSong(_) => CommandKind::DeleteSong,
+        command::Action::SaveTemplate(_) => CommandKind::SaveTemplate,
+        command::Action::DeleteTemplate(_) => CommandKind::DeleteTemplate,
+        command::Action::SaveMediaItem(_) => CommandKind::SaveMediaItem,
+        command::Action::DeleteMediaItem(_) => CommandKind::DeleteMediaItem,
+        command::Action::SavePresentation(_) => CommandKind::SavePresentation,
+        command::Action::DeletePresentation(_) => CommandKind::DeletePresentation,
+        command::Action::SaveTag(_) => CommandKind::SaveTag,
+        command::Action::DeleteTag(_) => CommandKind::DeleteTag,
+        command::Action::Undo(_) => CommandKind::Undo,
+        command::Action::Redo(_) => CommandKind::Redo,
+        command::Action::SaveEditorBuffer(_) => CommandKind::SaveEditorBuffer,
+        command::Action::DiscardEditorBuffer(_) => CommandKind::DiscardEditorBuffer,
+        command::Action::SetPolicySetting(_) => CommandKind::SetPolicySetting,
+        command::Action::RemovePolicySetting(_) => CommandKind::RemovePolicySetting,
     }
 }
 
@@ -67,7 +115,23 @@ pub fn changes_screens(kind: CommandKind) -> bool {
         | CommandKind::InstallUpdate
         | CommandKind::RestartNormally
         | CommandKind::CreateSupportBundle
-        | CommandKind::RunDiagnostics => false,
+        | CommandKind::RunDiagnostics
+        | CommandKind::SaveSong
+        | CommandKind::DeleteSong
+        | CommandKind::SaveTemplate
+        | CommandKind::DeleteTemplate
+        | CommandKind::SaveMediaItem
+        | CommandKind::DeleteMediaItem
+        | CommandKind::SavePresentation
+        | CommandKind::DeletePresentation
+        | CommandKind::SaveTag
+        | CommandKind::DeleteTag
+        | CommandKind::Undo
+        | CommandKind::Redo
+        | CommandKind::SaveEditorBuffer
+        | CommandKind::DiscardEditorBuffer
+        | CommandKind::SetPolicySetting
+        | CommandKind::RemovePolicySetting => false,
     }
 }
 
@@ -182,7 +246,23 @@ mod tests {
                 | CommandKind::InstallUpdate
                 | CommandKind::RestartNormally
                 | CommandKind::CreateSupportBundle
-                | CommandKind::RunDiagnostics => {}
+                | CommandKind::RunDiagnostics
+                | CommandKind::SaveSong
+                | CommandKind::DeleteSong
+                | CommandKind::SaveTemplate
+                | CommandKind::DeleteTemplate
+                | CommandKind::SaveMediaItem
+                | CommandKind::DeleteMediaItem
+                | CommandKind::SavePresentation
+                | CommandKind::DeletePresentation
+                | CommandKind::SaveTag
+                | CommandKind::DeleteTag
+                | CommandKind::Undo
+                | CommandKind::Redo
+                | CommandKind::SaveEditorBuffer
+                | CommandKind::DiscardEditorBuffer
+                | CommandKind::SetPolicySetting
+                | CommandKind::RemovePolicySetting => {}
             }
         }
         let unique: std::collections::HashSet<_> = ALL_COMMANDS.iter().collect();

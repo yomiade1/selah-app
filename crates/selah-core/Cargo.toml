@@ -28,4 +28,5 @@ tempfile.workspace = true
 uuid = { version = "1", features = ["v7"] }
 
 [dev-dependencies]
+fastrand = "2"
 selah-secrets = { path = "../selah-secrets" }

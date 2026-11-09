@@ -2,7 +2,12 @@
 use anyhow::ensure;
 use rusqlite::{Connection, TransactionBehavior, params};
 
-const MIGRATIONS: &[&str] = &[include_str!("migrations/001_library.sql")];
+const MIGRATIONS: &[&str] = &[
+    include_str!("migrations/001_library.sql"),
+    include_str!("migrations/002_command_bus.sql"),
+];
+
+pub const CURRENT_SCHEMA_VERSION: u32 = MIGRATIONS.len() as u32;
 
 pub(super) fn check_history(db: &Connection) -> anyhow::Result<()> {
     let version = db.query_row("PRAGMA user_version", [], |r| r.get::<_, u32>(0))? as usize;

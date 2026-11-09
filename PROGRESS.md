@@ -9,7 +9,7 @@ Status values: `Not started` · `In progress` · `Blocked` (say on what) · `Don
 | Milestone | Status | Branch / tag | Started | Finished | Notes |
 |---|---|---|---|---|---|
 | M1. Foundations and risk spikes | Done, H-checks pending | `claude/m1-finish` | 2026-11-07 | 2026-11-07 | All 13 WPs done (local Windows sessions, H-01). Open (H): M1-A7 benchmark report, M1-A12 install on your PC; M1-A1/A6 macOS from the `macos` job. |
-| M2. Library, songs, scripture and the help system | In progress | `codex/m2-library` | 2026-11-09 | — | M2.1 done; M2.2–M2.9 remain. |
+| M2. Library, songs, scripture and the help system | In progress | `codex/m2-library` | 2026-11-09 | — | M2.1–M2.2 done; M2.3–M2.9 remain. |
 | M3. Render engine, templates and the slide editor | Not started | — | — | — | |
 | M4. Live operation, services and stage | Not started | — | — | — | |
 | M5. Screens, video and audio I/O | Not started | — | — | — | |
@@ -19,29 +19,23 @@ Status values: `Not started` · `In progress` · `Blocked` (say on what) · `Don
 | M9. Cloud, teams and enterprise | Not started | — | — | — | |
 | M10. Launch readiness and v1.0 | Not started | — | — | — | |
 
-**Next action:** continue Milestone 2 at M2.2 (command bus, op log, undo/redo and autosave). M1 is merged; its human checklists below remain open.
+**Next action:** continue Milestone 2 at M2.3 (search). M1 is merged; its human checklists below remain open.
 
 ## Resume notes
 
 _When a session stops partway through a milestone, write here: the milestone, the last finished WP, anything half-done (files, branch state) and the exact next step. Clear it when the milestone is done._
 
 M2 branch: `codex/m2-library`, based on `origin/main` at `87b78f7` (M1 merged;
-no open agent PR at session start). M2.1 adds data-only protobuf contracts,
-typed SQLite repositories, immutable checksum-checked migrations, UUIDv7 IDs,
-bounded BLAKE3 media storage and user/machine/organisation policy values. See
-`docs/specs/data-model.md` and ADR-027 for the migration-library compatibility
-decision. The new `schema-v1.db` fixture has invented content and must remain
-immutable. `m2.db` is still due at milestone completion.
+no open agent PR at session start). M2.1–M2.2 are complete (`schema-v1.db`
+remains immutable; `m2.db` is due at milestone completion).
 
-Start the next WP at M2.2: wire the library into core/host, add authorised
-commands and queries to the envelope and permission matrix, persist commands
-with inverses atomically with mutations, undo groups and editor buffers, then
-deliver op events and crash recovery tests. The current repository API is a
-storage primitive, not an exposed command path. Search indexes exist but are
-not maintained until M2.3. Media probe/decoding and backup/restore remain M2.6;
-the library editor and contextual help remain M2.7–M2.9. M1's `settings.json`
-is unchanged; integrate policy through authorised commands before UI exposure.
-H-06 and H-18 remain open; no Bible text or new articles ship in M2.1.
+Start the next WP at M2.3 (search): maintain FTS5 indexes, trigram typo
+tolerance, synonyms, and ranked search across songs, media, and prepared Bible
+hooks, and add the 10,000-song search latency benchmark in `selah-bench`
+(`M2-A4`: p95 ≤ 50 ms). Songs parsing/chords/splitting (M2.4), scripture (M2.5),
+media bin and `.selah` bundles (M2.6), and UI/contextual help/KB content
+(M2.7–M2.9) follow sequentially. H-06 and H-18 remain open; M2 KB articles stay
+`status: review`.
 
 ## Milestone checklists
 
@@ -87,7 +81,7 @@ H-06 and H-18 remain open; no Bible text or new articles ship in M2.1.
 **Work packages**
 
 - [x] **M2.1** Data model, store and migrations — evidence: commit `M2.1`; `proto/selah/v1/{library,service}.proto` + TS/Rust/C# generated contracts (`buf lint`, `buf breaking --against .git#tag=m1`, `check-generated` pass); `selah-core::library` (UUIDv7, SQLite STRICT/WAL/FULL/trusted_schema=0, checksummed append-only migrations + `schema-v1.db` fixture, sealed typed repositories, BLAKE3 `MediaStore`, 3-tier policy settings); `selah-core` library integration tests (17) + unit test; `docs/specs/data-model.md`, ADR-027, `docs/SECURITY.md`; full `tools/verify.ps1` gate green on Windows; ledger updated (rust 139, total 249)
-- [ ] **M2.2** Command bus, op log, undo/redo and autosave — evidence: 
+- [x] **M2.2** Command bus, op log, undo/redo and autosave — evidence: commit `M2.2`; `proto/selah/v1/{envelope,library,settings}.proto` + TS/Rust/C# generated contracts (`M2CommandQueryAndEventMessagesRoundTrip`, `web/contracts` M2 round-trip test); migration `002_command_bus.sql` (`undo_entries`, `command_idempotency`, `editor_buffers.doc_type`); SEC-14 `permissions::authorize` extended for all 27 commands + `unauthorized_library_commands_are_refused_before_touching_database`; transactional command execution, inverse capture, per-document & global undo groups, idempotency replay/conflict checks, autosave `editor_buffers`, `help_feedback` persistence, `LibraryChanged` / `UndoStateChanged` broadcasts, `selah-core-host` `SELAH_LIBRARY_DIR` wiring; `selah-core` `ops::tests` (8 incl. **M2-A2**), `service::tests` (3 new library/buffer/policy tests), `selah-testkit` `library_crash` (**M2-A3**); errors `SEL-LIB-0001`–`0004` + 5 `troubleshooting` KB articles (`status: review`, lint 0 errors); `docs/specs/{command-bus,data-model}.md`; full `tools/verify.ps1` gate green on Windows; ledger updated (rust 151, dotnet 21, web 4, kb 12, total 268)
 - [ ] **M2.3** Search — evidence: 
 - [ ] **M2.4** Songs: paste-to-sections, chords and slide splitting — evidence: 
 - [ ] **M2.5** Scripture — evidence: 
@@ -99,8 +93,8 @@ H-06 and H-18 remain open; no Bible text or new articles ship in M2.1.
 **Acceptance criteria**
 
 - [ ] **M2-A1** (auto) The 25 curated hymns, pasted in 4 formats (plain, markers, chords over lyrics, ChordPro), produce exactly the expected section JSON (100%). — evidence: 
-- [ ] **M2-A2** (auto) Undo/redo property test: 10,000 random op sequences. — evidence: 
-- [ ] **M2-A3** (auto) Killing core during 1,000 writes leaves `PRAGMA integrity_check` = ok, loses no committed op, and the unsaved editor buffer is restored. — evidence: 
+- [x] **M2-A2** (auto) Undo/redo property test: 10,000 random op sequences. — evidence: `selah-core` `library::ops::tests::m2_a2_ten_thousand_random_op_sequences_round_trip_undo_and_redo` (10,000 random sequences across `Song`, `Template`, `Presentation`, and `Tag` with create/update/delete and contiguous multi-op undo groups; undoing all ops restores empty baseline and redoing restores final state)
+- [x] **M2-A3** (auto) Killing core during 1,000 writes leaves `PRAGMA integrity_check` = ok, loses no committed op, and the unsaved editor buffer is restored. — evidence: `selah-testkit` `library_crash::killing_core_during_one_thousand_writes_preserves_integrity_ops_and_editor_buffer` (kills real `selah-core` mid-flight during 4-way concurrent writes over 1,000 committed songs, recovers via `selah-watchdog` in < 5 s, restores unsaved `editor_buffers`, verifies paginated `ListSongs` + `ListOps` completeness and `PRAGMA integrity_check = ok`)
 - [ ] **M2-A4** (auto) Song search p95 ≤ 50 ms on 10,000 songs. "amzing grace" finds "Amazing Grace"; synonym tests pass. — evidence: 
 - [ ] **M2-A5** (auto) At least 300 scripture-reference test cases pass across 6 languages; OSIS, USFM and Zefania samples import correctly. — evidence: 
 - [ ] **M2-A6** (auto) `.selah` export → import → export produces identical canonical JSON; backup and restore round trip. — evidence: 
@@ -399,6 +393,7 @@ _Anything done differently from BUILD-PLAN.md or the docs, with the reason and t
 
 - 2026-11-09, M2.1: this session runs on Windows, so `tools/verify.ps1` is the local full gate; Linux checks run in PR CI. The initial baseline run was interrupted by implementation edits before its test stage completed; it is not recorded as a passing baseline. The first sandboxed attempt also needed network access for pinned dependency checks and `PYTHONIOENCODING=utf-8` for Unicode diagnostics in this Windows shell.
 - 2026-11-09, M2.1: ADR-027 replaces the incompatible `rusqlite_migration` dependency with an append-only transactional/checksummed runner over existing bundled `rusqlite` 0.41. Added `uuid` (MIT/Apache-2.0) for OS-random UUIDv7 identities. Dependency resolution tried to move bindgen from its existing `syn` 2 dependency to `syn` 3, breaking compilation; its original lockfile entry was retained. No toolchain or pre-existing dependency version was changed.
+- 2026-11-09, M2.2: added `fastrand` `2` (MIT/Apache-2.0) as a dev-dependency on `selah-core` for the deterministic 10,000-sequence M2-A2 undo/redo property test (`cargo deny check` green); `selah-testkit::library_crash` holds the process-level M2-A3 recovery suite (`tests/ledger.json` counts it under `rust`, with `E2E_FILES` unchanged).
 
 - 2026-10-31, before M1: the plan moved to cloud-first development (ADR-023), lean CI (ADR-024), a pull-request workflow (ADR-025, replacing ADR-019) and secure and safe by default (ADR-026). M1 grew from 10 to 13 WPs (installer, security and safety baseline, problem reports and diagnostics).
 

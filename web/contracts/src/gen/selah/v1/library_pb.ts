@@ -4,7 +4,7 @@
 
 import type { GenEnum, GenFile, GenMessage } from "@bufbuild/protobuf/codegenv2";
 import { enumDesc, fileDesc, messageDesc } from "@bufbuild/protobuf/codegenv2";
-import type { Color, Id, Resolution } from "./common_pb.js";
+import type { Color, Id, Resolution, Timestamp } from "./common_pb.js";
 import { file_selah_v1_common } from "./common_pb.js";
 import type { Message } from "@bufbuild/protobuf";
 
@@ -12,7 +12,7 @@ import type { Message } from "@bufbuild/protobuf";
  * Describes the file selah/v1/library.proto.
  */
 export const file_selah_v1_library: GenFile = /*@__PURE__*/
-  fileDesc("ChZzZWxhaC92MS9saWJyYXJ5LnByb3RvEghzZWxhaC52MSInCgVDaG9yZBIQCghwb3NpdGlvbhgBIAEoDRIMCgR0ZXh0GAIgASgJIjoKCUx5cmljTGluZRIMCgR0ZXh0GAEgASgJEh8KBmNob3JkcxgCIAMoCzIPLnNlbGFoLnYxLkNob3JkIiEKEFRyYW5zbGF0aW9uTGluZXMSDQoFbGluZXMYASADKAkitwIKB1NlY3Rpb24SGAoCaWQYASABKAsyDC5zZWxhaC52MS5JZBINCgVsYWJlbBgCIAEoCRIjCgRraW5kGAMgASgOMhUuc2VsYWgudjEuU2VjdGlvbktpbmQSHgoFY29sb3IYBCABKAsyDy5zZWxhaC52MS5Db2xvchIOCgZob3RrZXkYBSABKAkSIgoFbGluZXMYBiADKAsyEy5zZWxhaC52MS5MeXJpY0xpbmUSOQoMdHJhbnNsYXRpb25zGAcgAygLMiMuc2VsYWgudjEuU2VjdGlvbi5UcmFuc2xhdGlvbnNFbnRyeRpPChFUcmFuc2xhdGlvbnNFbnRyeRILCgNrZXkYASABKAkSKQoFdmFsdWUYAiABKAsyGi5zZWxhaC52MS5UcmFuc2xhdGlvbkxpbmVzOgI4ASJYCgtBcnJhbmdlbWVudBIYCgJpZBgBIAEoCzIMLnNlbGFoLnYxLklkEgwKBG5hbWUYAiABKAkSIQoLc2VjdGlvbl9pZHMYAyADKAsyDC5zZWxhaC52MS5JZCL7AQoEU29uZxIYCgJpZBgBIAEoCzIMLnNlbGFoLnYxLklkEg0KBXRpdGxlGAIgASgJEg8KB2F1dGhvcnMYAyADKAkSEwoLY2NsaV9udW1iZXIYBCABKAkSEQoJY29weXJpZ2h0GAUgASgJEgsKA2tleRgGIAEoCRINCgV0ZW1wbxgHIAEoARIMCgR0YWdzGAggAygJEhUKDXB1YmxpY19kb21haW4YCSABKAgSIwoIc2VjdGlvbnMYCiADKAsyES5zZWxhaC52MS5TZWN0aW9uEisKDGFycmFuZ2VtZW50cxgLIAMoCzIVLnNlbGFoLnYxLkFycmFuZ2VtZW50InwKD1RlbXBsYXRlVmFyaWFudBIYCgJpZBgBIAEoCzIMLnNlbGFoLnYxLklkEigKCnJlc29sdXRpb24YAiABKAsyFC5zZWxhaC52MS5SZXNvbHV0aW9uEhEKCW1heF9saW5lcxgDIAEoDRISCgpzdHlsZV9qc29uGAQgASgJIl8KCFRlbXBsYXRlEhgKAmlkGAEgASgLMgwuc2VsYWgudjEuSWQSDAoEbmFtZRgCIAEoCRIrCgh2YXJpYW50cxgDIAMoCzIZLnNlbGFoLnYxLlRlbXBsYXRlVmFyaWFudCLqAQoJTWVkaWFJdGVtEhgKAmlkGAEgASgLMgwuc2VsYWgudjEuSWQSDAoEbmFtZRgCIAEoCRIhCgRraW5kGAMgASgOMhMuc2VsYWgudjEuTWVkaWFLaW5kEhQKDGNvbnRlbnRfaGFzaBgEIAEoCRIRCglleHRlbnNpb24YBSABKAkSEgoKc2l6ZV9ieXRlcxgGIAEoBBIoCgpyZXNvbHV0aW9uGAcgASgLMhQuc2VsYWgudjEuUmVzb2x1dGlvbhIdChVkdXJhdGlvbl9taWxsaXNlY29uZHMYCCABKAQSDAoEdGFncxgJIAMoCSJmCgVTbGlkZRIYCgJpZBgBIAEoCzIMLnNlbGFoLnYxLklkEgwKBHRleHQYAiABKAkSHgoIbWVkaWFfaWQYAyABKAsyDC5zZWxhaC52MS5JZBIVCg1lbGVtZW50c19qc29uGAQgASgJInoKDFByZXNlbnRhdGlvbhIYCgJpZBgBIAEoCzIMLnNlbGFoLnYxLklkEgwKBG5hbWUYAiABKAkSHwoGc2xpZGVzGAMgAygLMg8uc2VsYWgudjEuU2xpZGUSIQoLdGVtcGxhdGVfaWQYBCABKAsyDC5zZWxhaC52MS5JZCItCgNUYWcSGAoCaWQYASABKAsyDC5zZWxhaC52MS5JZBIMCgRuYW1lGAIgASgJKtMBCgtTZWN0aW9uS2luZBIcChhTRUNUSU9OX0tJTkRfVU5TUEVDSUZJRUQQABIWChJTRUNUSU9OX0tJTkRfVkVSU0UQARIXChNTRUNUSU9OX0tJTkRfQ0hPUlVTEAISFwoTU0VDVElPTl9LSU5EX0JSSURHRRADEhQKEFNFQ1RJT05fS0lORF9UQUcQBBIWChJTRUNUSU9OX0tJTkRfSU5UUk8QBRIWChJTRUNUSU9OX0tJTkRfT1VUUk8QBhIWChJTRUNUSU9OX0tJTkRfT1RIRVIQByppCglNZWRpYUtpbmQSGgoWTUVESUFfS0lORF9VTlNQRUNJRklFRBAAEhQKEE1FRElBX0tJTkRfSU1BR0UQARIUChBNRURJQV9LSU5EX1ZJREVPEAISFAoQTUVESUFfS0lORF9BVURJTxADQhWqAhJTZWxhaC5Db250cmFjdHMuVjFiBnByb3RvMw", [file_selah_v1_common]);
+  fileDesc("ChZzZWxhaC92MS9saWJyYXJ5LnByb3RvEghzZWxhaC52MSInCgVDaG9yZBIQCghwb3NpdGlvbhgBIAEoDRIMCgR0ZXh0GAIgASgJIjoKCUx5cmljTGluZRIMCgR0ZXh0GAEgASgJEh8KBmNob3JkcxgCIAMoCzIPLnNlbGFoLnYxLkNob3JkIiEKEFRyYW5zbGF0aW9uTGluZXMSDQoFbGluZXMYASADKAkitwIKB1NlY3Rpb24SGAoCaWQYASABKAsyDC5zZWxhaC52MS5JZBINCgVsYWJlbBgCIAEoCRIjCgRraW5kGAMgASgOMhUuc2VsYWgudjEuU2VjdGlvbktpbmQSHgoFY29sb3IYBCABKAsyDy5zZWxhaC52MS5Db2xvchIOCgZob3RrZXkYBSABKAkSIgoFbGluZXMYBiADKAsyEy5zZWxhaC52MS5MeXJpY0xpbmUSOQoMdHJhbnNsYXRpb25zGAcgAygLMiMuc2VsYWgudjEuU2VjdGlvbi5UcmFuc2xhdGlvbnNFbnRyeRpPChFUcmFuc2xhdGlvbnNFbnRyeRILCgNrZXkYASABKAkSKQoFdmFsdWUYAiABKAsyGi5zZWxhaC52MS5UcmFuc2xhdGlvbkxpbmVzOgI4ASJYCgtBcnJhbmdlbWVudBIYCgJpZBgBIAEoCzIMLnNlbGFoLnYxLklkEgwKBG5hbWUYAiABKAkSIQoLc2VjdGlvbl9pZHMYAyADKAsyDC5zZWxhaC52MS5JZCL7AQoEU29uZxIYCgJpZBgBIAEoCzIMLnNlbGFoLnYxLklkEg0KBXRpdGxlGAIgASgJEg8KB2F1dGhvcnMYAyADKAkSEwoLY2NsaV9udW1iZXIYBCABKAkSEQoJY29weXJpZ2h0GAUgASgJEgsKA2tleRgGIAEoCRINCgV0ZW1wbxgHIAEoARIMCgR0YWdzGAggAygJEhUKDXB1YmxpY19kb21haW4YCSABKAgSIwoIc2VjdGlvbnMYCiADKAsyES5zZWxhaC52MS5TZWN0aW9uEisKDGFycmFuZ2VtZW50cxgLIAMoCzIVLnNlbGFoLnYxLkFycmFuZ2VtZW50InwKD1RlbXBsYXRlVmFyaWFudBIYCgJpZBgBIAEoCzIMLnNlbGFoLnYxLklkEigKCnJlc29sdXRpb24YAiABKAsyFC5zZWxhaC52MS5SZXNvbHV0aW9uEhEKCW1heF9saW5lcxgDIAEoDRISCgpzdHlsZV9qc29uGAQgASgJIl8KCFRlbXBsYXRlEhgKAmlkGAEgASgLMgwuc2VsYWgudjEuSWQSDAoEbmFtZRgCIAEoCRIrCgh2YXJpYW50cxgDIAMoCzIZLnNlbGFoLnYxLlRlbXBsYXRlVmFyaWFudCLqAQoJTWVkaWFJdGVtEhgKAmlkGAEgASgLMgwuc2VsYWgudjEuSWQSDAoEbmFtZRgCIAEoCRIhCgRraW5kGAMgASgOMhMuc2VsYWgudjEuTWVkaWFLaW5kEhQKDGNvbnRlbnRfaGFzaBgEIAEoCRIRCglleHRlbnNpb24YBSABKAkSEgoKc2l6ZV9ieXRlcxgGIAEoBBIoCgpyZXNvbHV0aW9uGAcgASgLMhQuc2VsYWgudjEuUmVzb2x1dGlvbhIdChVkdXJhdGlvbl9taWxsaXNlY29uZHMYCCABKAQSDAoEdGFncxgJIAMoCSJmCgVTbGlkZRIYCgJpZBgBIAEoCzIMLnNlbGFoLnYxLklkEgwKBHRleHQYAiABKAkSHgoIbWVkaWFfaWQYAyABKAsyDC5zZWxhaC52MS5JZBIVCg1lbGVtZW50c19qc29uGAQgASgJInoKDFByZXNlbnRhdGlvbhIYCgJpZBgBIAEoCzIMLnNlbGFoLnYxLklkEgwKBG5hbWUYAiABKAkSHwoGc2xpZGVzGAMgAygLMg8uc2VsYWgudjEuU2xpZGUSIQoLdGVtcGxhdGVfaWQYBCABKAsyDC5zZWxhaC52MS5JZCItCgNUYWcSGAoCaWQYASABKAsyDC5zZWxhaC52MS5JZBIMCgRuYW1lGAIgASgJIigKB09wU3RhdGUSDwoHcHJlc2VudBgBIAEoCBIMCgRkYXRhGAIgASgMIigKCFNhdmVTb25nEhwKBHNvbmcYASABKAsyDi5zZWxhaC52MS5Tb25nIiYKCkRlbGV0ZVNvbmcSGAoCaWQYASABKAsyDC5zZWxhaC52MS5JZCIjCgdHZXRTb25nEhgKAmlkGAEgASgLMgwuc2VsYWgudjEuSWQiKgoJTGlzdFNvbmdzEg0KBWxpbWl0GAEgASgNEg4KBm9mZnNldBgCIAEoDSIpCghTb25nTGlzdBIdCgVzb25ncxgBIAMoCzIOLnNlbGFoLnYxLlNvbmciNAoMU2F2ZVRlbXBsYXRlEiQKCHRlbXBsYXRlGAEgASgLMhIuc2VsYWgudjEuVGVtcGxhdGUiKgoORGVsZXRlVGVtcGxhdGUSGAoCaWQYASABKAsyDC5zZWxhaC52MS5JZCInCgtHZXRUZW1wbGF0ZRIYCgJpZBgBIAEoCzIMLnNlbGFoLnYxLklkIi4KDUxpc3RUZW1wbGF0ZXMSDQoFbGltaXQYASABKA0SDgoGb2Zmc2V0GAIgASgNIjUKDFRlbXBsYXRlTGlzdBIlCgl0ZW1wbGF0ZXMYASADKAsyEi5zZWxhaC52MS5UZW1wbGF0ZSI4Cg1TYXZlTWVkaWFJdGVtEicKCm1lZGlhX2l0ZW0YASABKAsyEy5zZWxhaC52MS5NZWRpYUl0ZW0iKwoPRGVsZXRlTWVkaWFJdGVtEhgKAmlkGAEgASgLMgwuc2VsYWgudjEuSWQiKAoMR2V0TWVkaWFJdGVtEhgKAmlkGAEgASgLMgwuc2VsYWgudjEuSWQiLwoOTGlzdE1lZGlhSXRlbXMSDQoFbGltaXQYASABKA0SDgoGb2Zmc2V0GAIgASgNIjkKDU1lZGlhSXRlbUxpc3QSKAoLbWVkaWFfaXRlbXMYASADKAsyEy5zZWxhaC52MS5NZWRpYUl0ZW0iQAoQU2F2ZVByZXNlbnRhdGlvbhIsCgxwcmVzZW50YXRpb24YASABKAsyFi5zZWxhaC52MS5QcmVzZW50YXRpb24iLgoSRGVsZXRlUHJlc2VudGF0aW9uEhgKAmlkGAEgASgLMgwuc2VsYWgudjEuSWQiKwoPR2V0UHJlc2VudGF0aW9uEhgKAmlkGAEgASgLMgwuc2VsYWgudjEuSWQiMgoRTGlzdFByZXNlbnRhdGlvbnMSDQoFbGltaXQYASABKA0SDgoGb2Zmc2V0GAIgASgNIkEKEFByZXNlbnRhdGlvbkxpc3QSLQoNcHJlc2VudGF0aW9ucxgBIAMoCzIWLnNlbGFoLnYxLlByZXNlbnRhdGlvbiIlCgdTYXZlVGFnEhoKA3RhZxgBIAEoCzINLnNlbGFoLnYxLlRhZyIlCglEZWxldGVUYWcSGAoCaWQYASABKAsyDC5zZWxhaC52MS5JZCIiCgZHZXRUYWcSGAoCaWQYASABKAsyDC5zZWxhaC52MS5JZCIpCghMaXN0VGFncxINCgVsaW1pdBgBIAEoDRIOCgZvZmZzZXQYAiABKA0iJgoHVGFnTGlzdBIbCgR0YWdzGAEgAygLMg0uc2VsYWgudjEuVGFnIiQKBFVuZG8SHAoGZG9jX2lkGAEgASgLMgwuc2VsYWgudjEuSWQiJAoEUmVkbxIcCgZkb2NfaWQYASABKAsyDC5zZWxhaC52MS5JZCIsCgxHZXRVbmRvU3RhdGUSHAoGZG9jX2lkGAEgASgLMgwuc2VsYWgudjEuSWQiVwoJVW5kb1N0YXRlEhAKCGNhbl91bmRvGAEgASgIEhAKCGNhbl9yZWRvGAIgASgIEhIKCnVuZG9fZGVwdGgYAyABKA0SEgoKcmVkb19kZXB0aBgEIAEoDSKQAQoMRWRpdG9yQnVmZmVyEhwKBmRvY19pZBgBIAEoCzIMLnNlbGFoLnYxLklkEigKCGRvY190eXBlGAIgASgOMhYuc2VsYWgudjEuRG9jdW1lbnRUeXBlEg8KB2NvbnRlbnQYAyABKAkSJwoKdXBkYXRlZF9hdBgEIAEoCzITLnNlbGFoLnYxLlRpbWVzdGFtcCJrChBTYXZlRWRpdG9yQnVmZmVyEhwKBmRvY19pZBgBIAEoCzIMLnNlbGFoLnYxLklkEigKCGRvY190eXBlGAIgASgOMhYuc2VsYWgudjEuRG9jdW1lbnRUeXBlEg8KB2NvbnRlbnQYAyABKAkiMwoTRGlzY2FyZEVkaXRvckJ1ZmZlchIcCgZkb2NfaWQYASABKAsyDC5zZWxhaC52MS5JZCIvCg9HZXRFZGl0b3JCdWZmZXISHAoGZG9jX2lkGAEgASgLMgwuc2VsYWgudjEuSWQiSgoRRWRpdG9yQnVmZmVyUmVwbHkSDQoFZm91bmQYASABKAgSJgoGYnVmZmVyGAIgASgLMhYuc2VsYWgudjEuRWRpdG9yQnVmZmVyIjIKEUxpc3RFZGl0b3JCdWZmZXJzEg0KBWxpbWl0GAEgASgNEg4KBm9mZnNldBgCIAEoDSI7ChBFZGl0b3JCdWZmZXJMaXN0EicKB2J1ZmZlcnMYASADKAsyFi5zZWxhaC52MS5FZGl0b3JCdWZmZXIiSQoHTGlzdE9wcxIRCglhZnRlcl9zZXEYASABKAQSDQoFbGltaXQYAiABKA0SHAoGZG9jX2lkGAMgASgLMgwuc2VsYWgudjEuSWQisQIKCE9wUmVjb3JkEgsKA3NlcRgBIAEoBBIbCgVvcF9pZBgCIAEoCzIMLnNlbGFoLnYxLklkEiYKCXRpbWVzdGFtcBgDIAEoCzITLnNlbGFoLnYxLlRpbWVzdGFtcBIPCgd1c2VyX2lkGAQgASgJEhEKCWRldmljZV9pZBgFIAEoCRIOCgZvcmlnaW4YBiABKAkSKAoIZG9jX3R5cGUYByABKA4yFi5zZWxhaC52MS5Eb2N1bWVudFR5cGUSHAoGZG9jX2lkGAggASgLMgwuc2VsYWgudjEuSWQSDwoHY29tbWFuZBgJIAEoDBIPCgdpbnZlcnNlGAogASgMEiAKCnVuZG9fZ3JvdXAYCyABKAsyDC5zZWxhaC52MS5JZBITCgtzeW5jX3N0YXR1cxgMIAEoBSIpCgZPcExpc3QSHwoDb3BzGAEgAygLMhIuc2VsYWgudjEuT3BSZWNvcmQizwEKDkxpYnJhcnlDaGFuZ2VkEigKCGRvY190eXBlGAEgASgOMhYuc2VsYWgudjEuRG9jdW1lbnRUeXBlEhwKBmRvY19pZBgCIAEoCzIMLnNlbGFoLnYxLklkEisKBmNoYW5nZRgDIAEoDjIbLnNlbGFoLnYxLkxpYnJhcnlDaGFuZ2VLaW5kEg4KBm9wX3NlcRgEIAEoBBIgCgp1bmRvX2dyb3VwGAUgASgLMgwuc2VsYWgudjEuSWQSFgoOZnJvbV91bmRvX3JlZG8YBiABKAgifAoQVW5kb1N0YXRlQ2hhbmdlZBIjCgZnbG9iYWwYASABKAsyEy5zZWxhaC52MS5VbmRvU3RhdGUSHAoGZG9jX2lkGAIgASgLMgwuc2VsYWgudjEuSWQSJQoIZG9jdW1lbnQYAyABKAsyEy5zZWxhaC52MS5VbmRvU3RhdGUq0wEKC1NlY3Rpb25LaW5kEhwKGFNFQ1RJT05fS0lORF9VTlNQRUNJRklFRBAAEhYKElNFQ1RJT05fS0lORF9WRVJTRRABEhcKE1NFQ1RJT05fS0lORF9DSE9SVVMQAhIXChNTRUNUSU9OX0tJTkRfQlJJREdFEAMSFAoQU0VDVElPTl9LSU5EX1RBRxAEEhYKElNFQ1RJT05fS0lORF9JTlRSTxAFEhYKElNFQ1RJT05fS0lORF9PVVRSTxAGEhYKElNFQ1RJT05fS0lORF9PVEhFUhAHKmkKCU1lZGlhS2luZBIaChZNRURJQV9LSU5EX1VOU1BFQ0lGSUVEEAASFAoQTUVESUFfS0lORF9JTUFHRRABEhQKEE1FRElBX0tJTkRfVklERU8QAhIUChBNRURJQV9LSU5EX0FVRElPEAMqhAIKDERvY3VtZW50VHlwZRIdChlET0NVTUVOVF9UWVBFX1VOU1BFQ0lGSUVEEAASFgoSRE9DVU1FTlRfVFlQRV9TT05HEAESGgoWRE9DVU1FTlRfVFlQRV9URU1QTEFURRACEhcKE0RPQ1VNRU5UX1RZUEVfTUVESUEQAxIeChpET0NVTUVOVF9UWVBFX1BSRVNFTlRBVElPThAEEhkKFURPQ1VNRU5UX1RZUEVfU0VSVklDRRAFEh4KGkRPQ1VNRU5UX1RZUEVfU0VSVklDRV9UWVBFEAYSFgoSRE9DVU1FTlRfVFlQRV9URUFNEAcSFQoRRE9DVU1FTlRfVFlQRV9UQUcQCCp4ChFMaWJyYXJ5Q2hhbmdlS2luZBIjCh9MSUJSQVJZX0NIQU5HRV9LSU5EX1VOU1BFQ0lGSUVEEAASHQoZTElCUkFSWV9DSEFOR0VfS0lORF9TQVZFRBABEh8KG0xJQlJBUllfQ0hBTkdFX0tJTkRfREVMRVRFRBACQhWqAhJTZWxhaC5Db250cmFjdHMuVjFiBnByb3RvMw", [file_selah_v1_common]);
 
 /**
  * @generated from message selah.v1.Chord
@@ -427,6 +427,908 @@ export const TagSchema: GenMessage<Tag> = /*@__PURE__*/
   messageDesc(file_selah_v1_library, 11);
 
 /**
+ * Serialised into ops.command and ops.inverse as a document snapshot or delete marker.
+ *
+ * @generated from message selah.v1.OpState
+ */
+export type OpState = Message<"selah.v1.OpState"> & {
+  /**
+   * @generated from field: bool present = 1;
+   */
+  present: boolean;
+
+  /**
+   * @generated from field: bytes data = 2;
+   */
+  data: Uint8Array;
+};
+
+/**
+ * Describes the message selah.v1.OpState.
+ * Use `create(OpStateSchema)` to create a new message.
+ */
+export const OpStateSchema: GenMessage<OpState> = /*@__PURE__*/
+  messageDesc(file_selah_v1_library, 12);
+
+/**
+ * @generated from message selah.v1.SaveSong
+ */
+export type SaveSong = Message<"selah.v1.SaveSong"> & {
+  /**
+   * @generated from field: selah.v1.Song song = 1;
+   */
+  song?: Song;
+};
+
+/**
+ * Describes the message selah.v1.SaveSong.
+ * Use `create(SaveSongSchema)` to create a new message.
+ */
+export const SaveSongSchema: GenMessage<SaveSong> = /*@__PURE__*/
+  messageDesc(file_selah_v1_library, 13);
+
+/**
+ * @generated from message selah.v1.DeleteSong
+ */
+export type DeleteSong = Message<"selah.v1.DeleteSong"> & {
+  /**
+   * @generated from field: selah.v1.Id id = 1;
+   */
+  id?: Id;
+};
+
+/**
+ * Describes the message selah.v1.DeleteSong.
+ * Use `create(DeleteSongSchema)` to create a new message.
+ */
+export const DeleteSongSchema: GenMessage<DeleteSong> = /*@__PURE__*/
+  messageDesc(file_selah_v1_library, 14);
+
+/**
+ * @generated from message selah.v1.GetSong
+ */
+export type GetSong = Message<"selah.v1.GetSong"> & {
+  /**
+   * @generated from field: selah.v1.Id id = 1;
+   */
+  id?: Id;
+};
+
+/**
+ * Describes the message selah.v1.GetSong.
+ * Use `create(GetSongSchema)` to create a new message.
+ */
+export const GetSongSchema: GenMessage<GetSong> = /*@__PURE__*/
+  messageDesc(file_selah_v1_library, 15);
+
+/**
+ * @generated from message selah.v1.ListSongs
+ */
+export type ListSongs = Message<"selah.v1.ListSongs"> & {
+  /**
+   * @generated from field: uint32 limit = 1;
+   */
+  limit: number;
+
+  /**
+   * @generated from field: uint32 offset = 2;
+   */
+  offset: number;
+};
+
+/**
+ * Describes the message selah.v1.ListSongs.
+ * Use `create(ListSongsSchema)` to create a new message.
+ */
+export const ListSongsSchema: GenMessage<ListSongs> = /*@__PURE__*/
+  messageDesc(file_selah_v1_library, 16);
+
+/**
+ * @generated from message selah.v1.SongList
+ */
+export type SongList = Message<"selah.v1.SongList"> & {
+  /**
+   * @generated from field: repeated selah.v1.Song songs = 1;
+   */
+  songs: Song[];
+};
+
+/**
+ * Describes the message selah.v1.SongList.
+ * Use `create(SongListSchema)` to create a new message.
+ */
+export const SongListSchema: GenMessage<SongList> = /*@__PURE__*/
+  messageDesc(file_selah_v1_library, 17);
+
+/**
+ * @generated from message selah.v1.SaveTemplate
+ */
+export type SaveTemplate = Message<"selah.v1.SaveTemplate"> & {
+  /**
+   * @generated from field: selah.v1.Template template = 1;
+   */
+  template?: Template;
+};
+
+/**
+ * Describes the message selah.v1.SaveTemplate.
+ * Use `create(SaveTemplateSchema)` to create a new message.
+ */
+export const SaveTemplateSchema: GenMessage<SaveTemplate> = /*@__PURE__*/
+  messageDesc(file_selah_v1_library, 18);
+
+/**
+ * @generated from message selah.v1.DeleteTemplate
+ */
+export type DeleteTemplate = Message<"selah.v1.DeleteTemplate"> & {
+  /**
+   * @generated from field: selah.v1.Id id = 1;
+   */
+  id?: Id;
+};
+
+/**
+ * Describes the message selah.v1.DeleteTemplate.
+ * Use `create(DeleteTemplateSchema)` to create a new message.
+ */
+export const DeleteTemplateSchema: GenMessage<DeleteTemplate> = /*@__PURE__*/
+  messageDesc(file_selah_v1_library, 19);
+
+/**
+ * @generated from message selah.v1.GetTemplate
+ */
+export type GetTemplate = Message<"selah.v1.GetTemplate"> & {
+  /**
+   * @generated from field: selah.v1.Id id = 1;
+   */
+  id?: Id;
+};
+
+/**
+ * Describes the message selah.v1.GetTemplate.
+ * Use `create(GetTemplateSchema)` to create a new message.
+ */
+export const GetTemplateSchema: GenMessage<GetTemplate> = /*@__PURE__*/
+  messageDesc(file_selah_v1_library, 20);
+
+/**
+ * @generated from message selah.v1.ListTemplates
+ */
+export type ListTemplates = Message<"selah.v1.ListTemplates"> & {
+  /**
+   * @generated from field: uint32 limit = 1;
+   */
+  limit: number;
+
+  /**
+   * @generated from field: uint32 offset = 2;
+   */
+  offset: number;
+};
+
+/**
+ * Describes the message selah.v1.ListTemplates.
+ * Use `create(ListTemplatesSchema)` to create a new message.
+ */
+export const ListTemplatesSchema: GenMessage<ListTemplates> = /*@__PURE__*/
+  messageDesc(file_selah_v1_library, 21);
+
+/**
+ * @generated from message selah.v1.TemplateList
+ */
+export type TemplateList = Message<"selah.v1.TemplateList"> & {
+  /**
+   * @generated from field: repeated selah.v1.Template templates = 1;
+   */
+  templates: Template[];
+};
+
+/**
+ * Describes the message selah.v1.TemplateList.
+ * Use `create(TemplateListSchema)` to create a new message.
+ */
+export const TemplateListSchema: GenMessage<TemplateList> = /*@__PURE__*/
+  messageDesc(file_selah_v1_library, 22);
+
+/**
+ * @generated from message selah.v1.SaveMediaItem
+ */
+export type SaveMediaItem = Message<"selah.v1.SaveMediaItem"> & {
+  /**
+   * @generated from field: selah.v1.MediaItem media_item = 1;
+   */
+  mediaItem?: MediaItem;
+};
+
+/**
+ * Describes the message selah.v1.SaveMediaItem.
+ * Use `create(SaveMediaItemSchema)` to create a new message.
+ */
+export const SaveMediaItemSchema: GenMessage<SaveMediaItem> = /*@__PURE__*/
+  messageDesc(file_selah_v1_library, 23);
+
+/**
+ * @generated from message selah.v1.DeleteMediaItem
+ */
+export type DeleteMediaItem = Message<"selah.v1.DeleteMediaItem"> & {
+  /**
+   * @generated from field: selah.v1.Id id = 1;
+   */
+  id?: Id;
+};
+
+/**
+ * Describes the message selah.v1.DeleteMediaItem.
+ * Use `create(DeleteMediaItemSchema)` to create a new message.
+ */
+export const DeleteMediaItemSchema: GenMessage<DeleteMediaItem> = /*@__PURE__*/
+  messageDesc(file_selah_v1_library, 24);
+
+/**
+ * @generated from message selah.v1.GetMediaItem
+ */
+export type GetMediaItem = Message<"selah.v1.GetMediaItem"> & {
+  /**
+   * @generated from field: selah.v1.Id id = 1;
+   */
+  id?: Id;
+};
+
+/**
+ * Describes the message selah.v1.GetMediaItem.
+ * Use `create(GetMediaItemSchema)` to create a new message.
+ */
+export const GetMediaItemSchema: GenMessage<GetMediaItem> = /*@__PURE__*/
+  messageDesc(file_selah_v1_library, 25);
+
+/**
+ * @generated from message selah.v1.ListMediaItems
+ */
+export type ListMediaItems = Message<"selah.v1.ListMediaItems"> & {
+  /**
+   * @generated from field: uint32 limit = 1;
+   */
+  limit: number;
+
+  /**
+   * @generated from field: uint32 offset = 2;
+   */
+  offset: number;
+};
+
+/**
+ * Describes the message selah.v1.ListMediaItems.
+ * Use `create(ListMediaItemsSchema)` to create a new message.
+ */
+export const ListMediaItemsSchema: GenMessage<ListMediaItems> = /*@__PURE__*/
+  messageDesc(file_selah_v1_library, 26);
+
+/**
+ * @generated from message selah.v1.MediaItemList
+ */
+export type MediaItemList = Message<"selah.v1.MediaItemList"> & {
+  /**
+   * @generated from field: repeated selah.v1.MediaItem media_items = 1;
+   */
+  mediaItems: MediaItem[];
+};
+
+/**
+ * Describes the message selah.v1.MediaItemList.
+ * Use `create(MediaItemListSchema)` to create a new message.
+ */
+export const MediaItemListSchema: GenMessage<MediaItemList> = /*@__PURE__*/
+  messageDesc(file_selah_v1_library, 27);
+
+/**
+ * @generated from message selah.v1.SavePresentation
+ */
+export type SavePresentation = Message<"selah.v1.SavePresentation"> & {
+  /**
+   * @generated from field: selah.v1.Presentation presentation = 1;
+   */
+  presentation?: Presentation;
+};
+
+/**
+ * Describes the message selah.v1.SavePresentation.
+ * Use `create(SavePresentationSchema)` to create a new message.
+ */
+export const SavePresentationSchema: GenMessage<SavePresentation> = /*@__PURE__*/
+  messageDesc(file_selah_v1_library, 28);
+
+/**
+ * @generated from message selah.v1.DeletePresentation
+ */
+export type DeletePresentation = Message<"selah.v1.DeletePresentation"> & {
+  /**
+   * @generated from field: selah.v1.Id id = 1;
+   */
+  id?: Id;
+};
+
+/**
+ * Describes the message selah.v1.DeletePresentation.
+ * Use `create(DeletePresentationSchema)` to create a new message.
+ */
+export const DeletePresentationSchema: GenMessage<DeletePresentation> = /*@__PURE__*/
+  messageDesc(file_selah_v1_library, 29);
+
+/**
+ * @generated from message selah.v1.GetPresentation
+ */
+export type GetPresentation = Message<"selah.v1.GetPresentation"> & {
+  /**
+   * @generated from field: selah.v1.Id id = 1;
+   */
+  id?: Id;
+};
+
+/**
+ * Describes the message selah.v1.GetPresentation.
+ * Use `create(GetPresentationSchema)` to create a new message.
+ */
+export const GetPresentationSchema: GenMessage<GetPresentation> = /*@__PURE__*/
+  messageDesc(file_selah_v1_library, 30);
+
+/**
+ * @generated from message selah.v1.ListPresentations
+ */
+export type ListPresentations = Message<"selah.v1.ListPresentations"> & {
+  /**
+   * @generated from field: uint32 limit = 1;
+   */
+  limit: number;
+
+  /**
+   * @generated from field: uint32 offset = 2;
+   */
+  offset: number;
+};
+
+/**
+ * Describes the message selah.v1.ListPresentations.
+ * Use `create(ListPresentationsSchema)` to create a new message.
+ */
+export const ListPresentationsSchema: GenMessage<ListPresentations> = /*@__PURE__*/
+  messageDesc(file_selah_v1_library, 31);
+
+/**
+ * @generated from message selah.v1.PresentationList
+ */
+export type PresentationList = Message<"selah.v1.PresentationList"> & {
+  /**
+   * @generated from field: repeated selah.v1.Presentation presentations = 1;
+   */
+  presentations: Presentation[];
+};
+
+/**
+ * Describes the message selah.v1.PresentationList.
+ * Use `create(PresentationListSchema)` to create a new message.
+ */
+export const PresentationListSchema: GenMessage<PresentationList> = /*@__PURE__*/
+  messageDesc(file_selah_v1_library, 32);
+
+/**
+ * @generated from message selah.v1.SaveTag
+ */
+export type SaveTag = Message<"selah.v1.SaveTag"> & {
+  /**
+   * @generated from field: selah.v1.Tag tag = 1;
+   */
+  tag?: Tag;
+};
+
+/**
+ * Describes the message selah.v1.SaveTag.
+ * Use `create(SaveTagSchema)` to create a new message.
+ */
+export const SaveTagSchema: GenMessage<SaveTag> = /*@__PURE__*/
+  messageDesc(file_selah_v1_library, 33);
+
+/**
+ * @generated from message selah.v1.DeleteTag
+ */
+export type DeleteTag = Message<"selah.v1.DeleteTag"> & {
+  /**
+   * @generated from field: selah.v1.Id id = 1;
+   */
+  id?: Id;
+};
+
+/**
+ * Describes the message selah.v1.DeleteTag.
+ * Use `create(DeleteTagSchema)` to create a new message.
+ */
+export const DeleteTagSchema: GenMessage<DeleteTag> = /*@__PURE__*/
+  messageDesc(file_selah_v1_library, 34);
+
+/**
+ * @generated from message selah.v1.GetTag
+ */
+export type GetTag = Message<"selah.v1.GetTag"> & {
+  /**
+   * @generated from field: selah.v1.Id id = 1;
+   */
+  id?: Id;
+};
+
+/**
+ * Describes the message selah.v1.GetTag.
+ * Use `create(GetTagSchema)` to create a new message.
+ */
+export const GetTagSchema: GenMessage<GetTag> = /*@__PURE__*/
+  messageDesc(file_selah_v1_library, 35);
+
+/**
+ * @generated from message selah.v1.ListTags
+ */
+export type ListTags = Message<"selah.v1.ListTags"> & {
+  /**
+   * @generated from field: uint32 limit = 1;
+   */
+  limit: number;
+
+  /**
+   * @generated from field: uint32 offset = 2;
+   */
+  offset: number;
+};
+
+/**
+ * Describes the message selah.v1.ListTags.
+ * Use `create(ListTagsSchema)` to create a new message.
+ */
+export const ListTagsSchema: GenMessage<ListTags> = /*@__PURE__*/
+  messageDesc(file_selah_v1_library, 36);
+
+/**
+ * @generated from message selah.v1.TagList
+ */
+export type TagList = Message<"selah.v1.TagList"> & {
+  /**
+   * @generated from field: repeated selah.v1.Tag tags = 1;
+   */
+  tags: Tag[];
+};
+
+/**
+ * Describes the message selah.v1.TagList.
+ * Use `create(TagListSchema)` to create a new message.
+ */
+export const TagListSchema: GenMessage<TagList> = /*@__PURE__*/
+  messageDesc(file_selah_v1_library, 37);
+
+/**
+ * @generated from message selah.v1.Undo
+ */
+export type Undo = Message<"selah.v1.Undo"> & {
+  /**
+   * Optional: when set, undoes the latest active undo group for this document only.
+   *
+   * @generated from field: selah.v1.Id doc_id = 1;
+   */
+  docId?: Id;
+};
+
+/**
+ * Describes the message selah.v1.Undo.
+ * Use `create(UndoSchema)` to create a new message.
+ */
+export const UndoSchema: GenMessage<Undo> = /*@__PURE__*/
+  messageDesc(file_selah_v1_library, 38);
+
+/**
+ * @generated from message selah.v1.Redo
+ */
+export type Redo = Message<"selah.v1.Redo"> & {
+  /**
+   * Optional: when set, redoes the most recently undone group for this document only.
+   *
+   * @generated from field: selah.v1.Id doc_id = 1;
+   */
+  docId?: Id;
+};
+
+/**
+ * Describes the message selah.v1.Redo.
+ * Use `create(RedoSchema)` to create a new message.
+ */
+export const RedoSchema: GenMessage<Redo> = /*@__PURE__*/
+  messageDesc(file_selah_v1_library, 39);
+
+/**
+ * @generated from message selah.v1.GetUndoState
+ */
+export type GetUndoState = Message<"selah.v1.GetUndoState"> & {
+  /**
+   * Optional: when set, returns the undo/redo stack state for this document.
+   *
+   * @generated from field: selah.v1.Id doc_id = 1;
+   */
+  docId?: Id;
+};
+
+/**
+ * Describes the message selah.v1.GetUndoState.
+ * Use `create(GetUndoStateSchema)` to create a new message.
+ */
+export const GetUndoStateSchema: GenMessage<GetUndoState> = /*@__PURE__*/
+  messageDesc(file_selah_v1_library, 40);
+
+/**
+ * @generated from message selah.v1.UndoState
+ */
+export type UndoState = Message<"selah.v1.UndoState"> & {
+  /**
+   * @generated from field: bool can_undo = 1;
+   */
+  canUndo: boolean;
+
+  /**
+   * @generated from field: bool can_redo = 2;
+   */
+  canRedo: boolean;
+
+  /**
+   * @generated from field: uint32 undo_depth = 3;
+   */
+  undoDepth: number;
+
+  /**
+   * @generated from field: uint32 redo_depth = 4;
+   */
+  redoDepth: number;
+};
+
+/**
+ * Describes the message selah.v1.UndoState.
+ * Use `create(UndoStateSchema)` to create a new message.
+ */
+export const UndoStateSchema: GenMessage<UndoState> = /*@__PURE__*/
+  messageDesc(file_selah_v1_library, 41);
+
+/**
+ * @generated from message selah.v1.EditorBuffer
+ */
+export type EditorBuffer = Message<"selah.v1.EditorBuffer"> & {
+  /**
+   * @generated from field: selah.v1.Id doc_id = 1;
+   */
+  docId?: Id;
+
+  /**
+   * @generated from field: selah.v1.DocumentType doc_type = 2;
+   */
+  docType: DocumentType;
+
+  /**
+   * @generated from field: string content = 3;
+   */
+  content: string;
+
+  /**
+   * @generated from field: selah.v1.Timestamp updated_at = 4;
+   */
+  updatedAt?: Timestamp;
+};
+
+/**
+ * Describes the message selah.v1.EditorBuffer.
+ * Use `create(EditorBufferSchema)` to create a new message.
+ */
+export const EditorBufferSchema: GenMessage<EditorBuffer> = /*@__PURE__*/
+  messageDesc(file_selah_v1_library, 42);
+
+/**
+ * @generated from message selah.v1.SaveEditorBuffer
+ */
+export type SaveEditorBuffer = Message<"selah.v1.SaveEditorBuffer"> & {
+  /**
+   * @generated from field: selah.v1.Id doc_id = 1;
+   */
+  docId?: Id;
+
+  /**
+   * @generated from field: selah.v1.DocumentType doc_type = 2;
+   */
+  docType: DocumentType;
+
+  /**
+   * @generated from field: string content = 3;
+   */
+  content: string;
+};
+
+/**
+ * Describes the message selah.v1.SaveEditorBuffer.
+ * Use `create(SaveEditorBufferSchema)` to create a new message.
+ */
+export const SaveEditorBufferSchema: GenMessage<SaveEditorBuffer> = /*@__PURE__*/
+  messageDesc(file_selah_v1_library, 43);
+
+/**
+ * @generated from message selah.v1.DiscardEditorBuffer
+ */
+export type DiscardEditorBuffer = Message<"selah.v1.DiscardEditorBuffer"> & {
+  /**
+   * @generated from field: selah.v1.Id doc_id = 1;
+   */
+  docId?: Id;
+};
+
+/**
+ * Describes the message selah.v1.DiscardEditorBuffer.
+ * Use `create(DiscardEditorBufferSchema)` to create a new message.
+ */
+export const DiscardEditorBufferSchema: GenMessage<DiscardEditorBuffer> = /*@__PURE__*/
+  messageDesc(file_selah_v1_library, 44);
+
+/**
+ * @generated from message selah.v1.GetEditorBuffer
+ */
+export type GetEditorBuffer = Message<"selah.v1.GetEditorBuffer"> & {
+  /**
+   * @generated from field: selah.v1.Id doc_id = 1;
+   */
+  docId?: Id;
+};
+
+/**
+ * Describes the message selah.v1.GetEditorBuffer.
+ * Use `create(GetEditorBufferSchema)` to create a new message.
+ */
+export const GetEditorBufferSchema: GenMessage<GetEditorBuffer> = /*@__PURE__*/
+  messageDesc(file_selah_v1_library, 45);
+
+/**
+ * @generated from message selah.v1.EditorBufferReply
+ */
+export type EditorBufferReply = Message<"selah.v1.EditorBufferReply"> & {
+  /**
+   * @generated from field: bool found = 1;
+   */
+  found: boolean;
+
+  /**
+   * @generated from field: selah.v1.EditorBuffer buffer = 2;
+   */
+  buffer?: EditorBuffer;
+};
+
+/**
+ * Describes the message selah.v1.EditorBufferReply.
+ * Use `create(EditorBufferReplySchema)` to create a new message.
+ */
+export const EditorBufferReplySchema: GenMessage<EditorBufferReply> = /*@__PURE__*/
+  messageDesc(file_selah_v1_library, 46);
+
+/**
+ * @generated from message selah.v1.ListEditorBuffers
+ */
+export type ListEditorBuffers = Message<"selah.v1.ListEditorBuffers"> & {
+  /**
+   * @generated from field: uint32 limit = 1;
+   */
+  limit: number;
+
+  /**
+   * @generated from field: uint32 offset = 2;
+   */
+  offset: number;
+};
+
+/**
+ * Describes the message selah.v1.ListEditorBuffers.
+ * Use `create(ListEditorBuffersSchema)` to create a new message.
+ */
+export const ListEditorBuffersSchema: GenMessage<ListEditorBuffers> = /*@__PURE__*/
+  messageDesc(file_selah_v1_library, 47);
+
+/**
+ * @generated from message selah.v1.EditorBufferList
+ */
+export type EditorBufferList = Message<"selah.v1.EditorBufferList"> & {
+  /**
+   * @generated from field: repeated selah.v1.EditorBuffer buffers = 1;
+   */
+  buffers: EditorBuffer[];
+};
+
+/**
+ * Describes the message selah.v1.EditorBufferList.
+ * Use `create(EditorBufferListSchema)` to create a new message.
+ */
+export const EditorBufferListSchema: GenMessage<EditorBufferList> = /*@__PURE__*/
+  messageDesc(file_selah_v1_library, 48);
+
+/**
+ * @generated from message selah.v1.ListOps
+ */
+export type ListOps = Message<"selah.v1.ListOps"> & {
+  /**
+   * @generated from field: uint64 after_seq = 1;
+   */
+  afterSeq: bigint;
+
+  /**
+   * @generated from field: uint32 limit = 2;
+   */
+  limit: number;
+
+  /**
+   * @generated from field: selah.v1.Id doc_id = 3;
+   */
+  docId?: Id;
+};
+
+/**
+ * Describes the message selah.v1.ListOps.
+ * Use `create(ListOpsSchema)` to create a new message.
+ */
+export const ListOpsSchema: GenMessage<ListOps> = /*@__PURE__*/
+  messageDesc(file_selah_v1_library, 49);
+
+/**
+ * @generated from message selah.v1.OpRecord
+ */
+export type OpRecord = Message<"selah.v1.OpRecord"> & {
+  /**
+   * @generated from field: uint64 seq = 1;
+   */
+  seq: bigint;
+
+  /**
+   * @generated from field: selah.v1.Id op_id = 2;
+   */
+  opId?: Id;
+
+  /**
+   * @generated from field: selah.v1.Timestamp timestamp = 3;
+   */
+  timestamp?: Timestamp;
+
+  /**
+   * @generated from field: string user_id = 4;
+   */
+  userId: string;
+
+  /**
+   * @generated from field: string device_id = 5;
+   */
+  deviceId: string;
+
+  /**
+   * @generated from field: string origin = 6;
+   */
+  origin: string;
+
+  /**
+   * @generated from field: selah.v1.DocumentType doc_type = 7;
+   */
+  docType: DocumentType;
+
+  /**
+   * @generated from field: selah.v1.Id doc_id = 8;
+   */
+  docId?: Id;
+
+  /**
+   * @generated from field: bytes command = 9;
+   */
+  command: Uint8Array;
+
+  /**
+   * @generated from field: bytes inverse = 10;
+   */
+  inverse: Uint8Array;
+
+  /**
+   * @generated from field: selah.v1.Id undo_group = 11;
+   */
+  undoGroup?: Id;
+
+  /**
+   * @generated from field: int32 sync_status = 12;
+   */
+  syncStatus: number;
+};
+
+/**
+ * Describes the message selah.v1.OpRecord.
+ * Use `create(OpRecordSchema)` to create a new message.
+ */
+export const OpRecordSchema: GenMessage<OpRecord> = /*@__PURE__*/
+  messageDesc(file_selah_v1_library, 50);
+
+/**
+ * @generated from message selah.v1.OpList
+ */
+export type OpList = Message<"selah.v1.OpList"> & {
+  /**
+   * @generated from field: repeated selah.v1.OpRecord ops = 1;
+   */
+  ops: OpRecord[];
+};
+
+/**
+ * Describes the message selah.v1.OpList.
+ * Use `create(OpListSchema)` to create a new message.
+ */
+export const OpListSchema: GenMessage<OpList> = /*@__PURE__*/
+  messageDesc(file_selah_v1_library, 51);
+
+/**
+ * @generated from message selah.v1.LibraryChanged
+ */
+export type LibraryChanged = Message<"selah.v1.LibraryChanged"> & {
+  /**
+   * @generated from field: selah.v1.DocumentType doc_type = 1;
+   */
+  docType: DocumentType;
+
+  /**
+   * @generated from field: selah.v1.Id doc_id = 2;
+   */
+  docId?: Id;
+
+  /**
+   * @generated from field: selah.v1.LibraryChangeKind change = 3;
+   */
+  change: LibraryChangeKind;
+
+  /**
+   * @generated from field: uint64 op_seq = 4;
+   */
+  opSeq: bigint;
+
+  /**
+   * @generated from field: selah.v1.Id undo_group = 5;
+   */
+  undoGroup?: Id;
+
+  /**
+   * @generated from field: bool from_undo_redo = 6;
+   */
+  fromUndoRedo: boolean;
+};
+
+/**
+ * Describes the message selah.v1.LibraryChanged.
+ * Use `create(LibraryChangedSchema)` to create a new message.
+ */
+export const LibraryChangedSchema: GenMessage<LibraryChanged> = /*@__PURE__*/
+  messageDesc(file_selah_v1_library, 52);
+
+/**
+ * @generated from message selah.v1.UndoStateChanged
+ */
+export type UndoStateChanged = Message<"selah.v1.UndoStateChanged"> & {
+  /**
+   * @generated from field: selah.v1.UndoState global = 1;
+   */
+  global?: UndoState;
+
+  /**
+   * @generated from field: selah.v1.Id doc_id = 2;
+   */
+  docId?: Id;
+
+  /**
+   * @generated from field: selah.v1.UndoState document = 3;
+   */
+  document?: UndoState;
+};
+
+/**
+ * Describes the message selah.v1.UndoStateChanged.
+ * Use `create(UndoStateChangedSchema)` to create a new message.
+ */
+export const UndoStateChangedSchema: GenMessage<UndoStateChanged> = /*@__PURE__*/
+  messageDesc(file_selah_v1_library, 53);
+
+/**
  * @generated from enum selah.v1.SectionKind
  */
 export enum SectionKind {
@@ -507,4 +1409,86 @@ export enum MediaKind {
  */
 export const MediaKindSchema: GenEnum<MediaKind> = /*@__PURE__*/
   enumDesc(file_selah_v1_library, 1);
+
+/**
+ * @generated from enum selah.v1.DocumentType
+ */
+export enum DocumentType {
+  /**
+   * @generated from enum value: DOCUMENT_TYPE_UNSPECIFIED = 0;
+   */
+  UNSPECIFIED = 0,
+
+  /**
+   * @generated from enum value: DOCUMENT_TYPE_SONG = 1;
+   */
+  SONG = 1,
+
+  /**
+   * @generated from enum value: DOCUMENT_TYPE_TEMPLATE = 2;
+   */
+  TEMPLATE = 2,
+
+  /**
+   * @generated from enum value: DOCUMENT_TYPE_MEDIA = 3;
+   */
+  MEDIA = 3,
+
+  /**
+   * @generated from enum value: DOCUMENT_TYPE_PRESENTATION = 4;
+   */
+  PRESENTATION = 4,
+
+  /**
+   * @generated from enum value: DOCUMENT_TYPE_SERVICE = 5;
+   */
+  SERVICE = 5,
+
+  /**
+   * @generated from enum value: DOCUMENT_TYPE_SERVICE_TYPE = 6;
+   */
+  SERVICE_TYPE = 6,
+
+  /**
+   * @generated from enum value: DOCUMENT_TYPE_TEAM = 7;
+   */
+  TEAM = 7,
+
+  /**
+   * @generated from enum value: DOCUMENT_TYPE_TAG = 8;
+   */
+  TAG = 8,
+}
+
+/**
+ * Describes the enum selah.v1.DocumentType.
+ */
+export const DocumentTypeSchema: GenEnum<DocumentType> = /*@__PURE__*/
+  enumDesc(file_selah_v1_library, 2);
+
+/**
+ * @generated from enum selah.v1.LibraryChangeKind
+ */
+export enum LibraryChangeKind {
+  /**
+   * @generated from enum value: LIBRARY_CHANGE_KIND_UNSPECIFIED = 0;
+   */
+  UNSPECIFIED = 0,
+
+  /**
+   * @generated from enum value: LIBRARY_CHANGE_KIND_SAVED = 1;
+   */
+  SAVED = 1,
+
+  /**
+   * @generated from enum value: LIBRARY_CHANGE_KIND_DELETED = 2;
+   */
+  DELETED = 2,
+}
+
+/**
+ * Describes the enum selah.v1.LibraryChangeKind.
+ */
+export const LibraryChangeKindSchema: GenEnum<LibraryChangeKind> = /*@__PURE__*/
+  enumDesc(file_selah_v1_library, 3);
 

@@ -50,6 +50,7 @@ async fn clear_everything_works_with_core_frozen() {
                 action: Some(command::Action::Render(RenderCommand {
                     action: Some(render_command::Action::ClearEverything(ClearEverything {})),
                 })),
+                ..Default::default()
             }),
             Duration::from_secs(2),
         )
