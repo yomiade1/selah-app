@@ -1,0 +1,302 @@
+{
+  "title": "When I Survey the Wondrous Cross",
+  "author": "Isaac Watts (1674-1748)",
+  "key": "F",
+  "public_domain": true,
+  "arrangement": [
+    "Verse 1",
+    "Verse 2",
+    "Verse 3",
+    "Verse 4"
+  ],
+  "sections": [
+    {
+      "label": "Verse 1",
+      "kind": "verse",
+      "color_hex": "#2378C3",
+      "hotkey": "1",
+      "lines": [
+        {
+          "text": "When I survey the wondrous cross",
+          "chords": [
+            {
+              "position": 5,
+              "text": "F"
+            },
+            {
+              "position": 18,
+              "text": "Bb"
+            },
+            {
+              "position": 27,
+              "text": "F"
+            }
+          ]
+        },
+        {
+          "text": "On which the Prince of glory died,",
+          "chords": [
+            {
+              "position": 3,
+              "text": "Dm"
+            },
+            {
+              "position": 23,
+              "text": "C"
+            }
+          ]
+        },
+        {
+          "text": "My richest gain I count but loss,",
+          "chords": [
+            {
+              "position": 3,
+              "text": "F"
+            },
+            {
+              "position": 18,
+              "text": "Bb"
+            },
+            {
+              "position": 28,
+              "text": "F"
+            }
+          ]
+        },
+        {
+          "text": "And pour contempt on all my pride.",
+          "chords": [
+            {
+              "position": 4,
+              "text": "Bb"
+            },
+            {
+              "position": 21,
+              "text": "C"
+            },
+            {
+              "position": 28,
+              "text": "F"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "label": "Verse 2",
+      "kind": "verse",
+      "color_hex": "#2378C3",
+      "hotkey": "2",
+      "lines": [
+        {
+          "text": "Forbid it, Lord, that I should boast,",
+          "chords": [
+            {
+              "position": 3,
+              "text": "F"
+            },
+            {
+              "position": 22,
+              "text": "Bb"
+            },
+            {
+              "position": 31,
+              "text": "F"
+            }
+          ]
+        },
+        {
+          "text": "Save in the death of Christ my God!",
+          "chords": [
+            {
+              "position": 5,
+              "text": "Dm"
+            },
+            {
+              "position": 21,
+              "text": "C"
+            }
+          ]
+        },
+        {
+          "text": "All the vain things that charm me most,",
+          "chords": [
+            {
+              "position": 4,
+              "text": "F"
+            },
+            {
+              "position": 25,
+              "text": "Bb"
+            },
+            {
+              "position": 34,
+              "text": "F"
+            }
+          ]
+        },
+        {
+          "text": "I sacrifice them to His blood.",
+          "chords": [
+            {
+              "position": 2,
+              "text": "Bb"
+            },
+            {
+              "position": 17,
+              "text": "C"
+            },
+            {
+              "position": 24,
+              "text": "F"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "label": "Verse 3",
+      "kind": "verse",
+      "color_hex": "#2378C3",
+      "hotkey": "3",
+      "lines": [
+        {
+          "text": "See, from His head, His hands, His feet,",
+          "chords": [
+            {
+              "position": 5,
+              "text": "F"
+            },
+            {
+              "position": 24,
+              "text": "Bb"
+            },
+            {
+              "position": 35,
+              "text": "F"
+            }
+          ]
+        },
+        {
+          "text": "Sorrow and love flow mingled down!",
+          "chords": [
+            {
+              "position": 3,
+              "text": "Dm"
+            },
+            {
+              "position": 21,
+              "text": "C"
+            }
+          ]
+        },
+        {
+          "text": "Did e’er such love and sorrow meet,",
+          "chords": [
+            {
+              "position": 4,
+              "text": "F"
+            },
+            {
+              "position": 23,
+              "text": "Bb"
+            },
+            {
+              "position": 30,
+              "text": "F"
+            }
+          ]
+        },
+        {
+          "text": "Or thorns compose so rich a crown?",
+          "chords": [
+            {
+              "position": 3,
+              "text": "Bb"
+            },
+            {
+              "position": 21,
+              "text": "C"
+            },
+            {
+              "position": 28,
+              "text": "F"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "label": "Verse 4",
+      "kind": "verse",
+      "color_hex": "#2378C3",
+      "hotkey": "4",
+      "lines": [
+        {
+          "text": "Were the whole realm of nature mine,",
+          "chords": [
+            {
+              "position": 5,
+              "text": "F"
+            },
+            {
+              "position": 24,
+              "text": "Bb"
+            },
+            {
+              "position": 31,
+              "text": "F"
+            }
+          ]
+        },
+        {
+          "text": "That were a present far too small;",
+          "chords": [
+            {
+              "position": 5,
+              "text": "Dm"
+            },
+            {
+              "position": 20,
+              "text": "C"
+            }
+          ]
+        },
+        {
+          "text": "Love so amazing, so divine,",
+          "chords": [
+            {
+              "position": 5,
+              "text": "F"
+            },
+            {
+              "position": 17,
+              "text": "Bb"
+            },
+            {
+              "position": 22,
+              "text": "F"
+            }
+          ]
+        },
+        {
+          "text": "Demands my soul, my life, my all.",
+          "chords": [
+            {
+              "position": 2,
+              "text": "Bb"
+            },
+            {
+              "position": 20,
+              "text": "C"
+            },
+            {
+              "position": 29,
+              "text": "F"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,270 @@
+{
+  "title": "Just as I Am",
+  "author": "Charlotte Elliott (1789-1871)",
+  "key": "Eb",
+  "public_domain": true,
+  "arrangement": [
+    "Verse 1",
+    "Verse 2",
+    "Verse 3",
+    "Verse 4"
+  ],
+  "sections": [
+    {
+      "label": "Verse 1",
+      "kind": "verse",
+      "color_hex": "#2378C3",
+      "hotkey": "1",
+      "lines": [
+        {
+          "text": "Just as I am, without one plea,",
+          "chords": [
+            {
+              "position": 0,
+              "text": "Eb"
+            },
+            {
+              "position": 18,
+              "text": "Bb"
+            }
+          ]
+        },
+        {
+          "text": "But that Thy blood was shed for me,",
+          "chords": [
+            {
+              "position": 4,
+              "text": "Bb"
+            },
+            {
+              "position": 23,
+              "text": "Eb"
+            }
+          ]
+        },
+        {
+          "text": "And that Thou bidd’st me come to Thee,",
+          "chords": [
+            {
+              "position": 4,
+              "text": "Eb"
+            },
+            {
+              "position": 25,
+              "text": "Ab"
+            }
+          ]
+        },
+        {
+          "text": "O Lamb of God, I come, I come.",
+          "chords": [
+            {
+              "position": 2,
+              "text": "Eb"
+            },
+            {
+              "position": 17,
+              "text": "Bb"
+            },
+            {
+              "position": 25,
+              "text": "Eb"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "label": "Verse 2",
+      "kind": "verse",
+      "color_hex": "#2378C3",
+      "hotkey": "2",
+      "lines": [
+        {
+          "text": "Just as I am, and waiting not",
+          "chords": [
+            {
+              "position": 0,
+              "text": "Eb"
+            },
+            {
+              "position": 18,
+              "text": "Bb"
+            }
+          ]
+        },
+        {
+          "text": "To rid my soul of one dark blot,",
+          "chords": [
+            {
+              "position": 3,
+              "text": "Bb"
+            },
+            {
+              "position": 18,
+              "text": "Eb"
+            }
+          ]
+        },
+        {
+          "text": "To Thee whose blood can cleanse each spot,",
+          "chords": [
+            {
+              "position": 3,
+              "text": "Eb"
+            },
+            {
+              "position": 24,
+              "text": "Ab"
+            }
+          ]
+        },
+        {
+          "text": "O Lamb of God, I come, I come.",
+          "chords": [
+            {
+              "position": 2,
+              "text": "Eb"
+            },
+            {
+              "position": 17,
+              "text": "Bb"
+            },
+            {
+              "position": 25,
+              "text": "Eb"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "label": "Verse 3",
+      "kind": "verse",
+      "color_hex": "#2378C3",
+      "hotkey": "3",
+      "lines": [
+        {
+          "text": "Just as I am, though tossed about",
+          "chords": [
+            {
+              "position": 0,
+              "text": "Eb"
+            },
+            {
+              "position": 21,
+              "text": "Bb"
+            }
+          ]
+        },
+        {
+          "text": "With many a conflict, many a doubt,",
+          "chords": [
+            {
+              "position": 5,
+              "text": "Bb"
+            },
+            {
+              "position": 22,
+              "text": "Eb"
+            }
+          ]
+        },
+        {
+          "text": "Fightings and fears within, without,",
+          "chords": [
+            {
+              "position": 0,
+              "text": "Eb"
+            },
+            {
+              "position": 24,
+              "text": "Ab"
+            }
+          ]
+        },
+        {
+          "text": "O Lamb of God, I come, I come.",
+          "chords": [
+            {
+              "position": 2,
+              "text": "Eb"
+            },
+            {
+              "position": 17,
+              "text": "Bb"
+            },
+            {
+              "position": 25,
+              "text": "Eb"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "label": "Verse 4",
+      "kind": "verse",
+      "color_hex": "#2378C3",
+      "hotkey": "4",
+      "lines": [
+        {
+          "text": "Just as I am, Thy love unknown",
+          "chords": [
+            {
+              "position": 0,
+              "text": "Eb"
+            },
+            {
+              "position": 18,
+              "text": "Bb"
+            }
+          ]
+        },
+        {
+          "text": "Hath broken every barrier down;",
+          "chords": [
+            {
+              "position": 5,
+              "text": "Bb"
+            },
+            {
+              "position": 18,
+              "text": "Eb"
+            }
+          ]
+        },
+        {
+          "text": "Now, to be Thine, yea, Thine alone,",
+          "chords": [
+            {
+              "position": 5,
+              "text": "Eb"
+            },
+            {
+              "position": 23,
+              "text": "Ab"
+            }
+          ]
+        },
+        {
+          "text": "O Lamb of God, I come, I come.",
+          "chords": [
+            {
+              "position": 2,
+              "text": "Eb"
+            },
+            {
+              "position": 17,
+              "text": "Bb"
+            },
+            {
+              "position": 25,
+              "text": "Eb"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

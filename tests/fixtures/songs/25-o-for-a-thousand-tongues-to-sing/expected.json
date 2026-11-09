@@ -1,0 +1,286 @@
+{
+  "title": "O for a Thousand Tongues to Sing",
+  "author": "Charles Wesley (1707-1788)",
+  "key": "G",
+  "public_domain": true,
+  "arrangement": [
+    "Verse 1",
+    "Verse 2",
+    "Verse 3",
+    "Verse 4"
+  ],
+  "sections": [
+    {
+      "label": "Verse 1",
+      "kind": "verse",
+      "color_hex": "#2378C3",
+      "hotkey": "1",
+      "lines": [
+        {
+          "text": "O for a thousand tongues to sing",
+          "chords": [
+            {
+              "position": 0,
+              "text": "G"
+            },
+            {
+              "position": 17,
+              "text": "C"
+            },
+            {
+              "position": 28,
+              "text": "G"
+            }
+          ]
+        },
+        {
+          "text": "My great Redeemer’s praise,",
+          "chords": [
+            {
+              "position": 3,
+              "text": "D"
+            },
+            {
+              "position": 20,
+              "text": "G"
+            }
+          ]
+        },
+        {
+          "text": "The glories of my God and King,",
+          "chords": [
+            {
+              "position": 4,
+              "text": "G"
+            },
+            {
+              "position": 18,
+              "text": "C"
+            },
+            {
+              "position": 26,
+              "text": "G"
+            }
+          ]
+        },
+        {
+          "text": "The triumphs of His grace!",
+          "chords": [
+            {
+              "position": 4,
+              "text": "D"
+            },
+            {
+              "position": 20,
+              "text": "G"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "label": "Verse 2",
+      "kind": "verse",
+      "color_hex": "#2378C3",
+      "hotkey": "2",
+      "lines": [
+        {
+          "text": "My gracious Master and my God,",
+          "chords": [
+            {
+              "position": 0,
+              "text": "G"
+            },
+            {
+              "position": 19,
+              "text": "C"
+            },
+            {
+              "position": 26,
+              "text": "G"
+            }
+          ]
+        },
+        {
+          "text": "Assist me to proclaim,",
+          "chords": [
+            {
+              "position": 2,
+              "text": "D"
+            },
+            {
+              "position": 16,
+              "text": "G"
+            }
+          ]
+        },
+        {
+          "text": "To spread through all the earth abroad",
+          "chords": [
+            {
+              "position": 3,
+              "text": "G"
+            },
+            {
+              "position": 26,
+              "text": "C"
+            },
+            {
+              "position": 33,
+              "text": "G"
+            }
+          ]
+        },
+        {
+          "text": "The honors of Thy name.",
+          "chords": [
+            {
+              "position": 4,
+              "text": "D"
+            },
+            {
+              "position": 18,
+              "text": "G"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "label": "Verse 3",
+      "kind": "verse",
+      "color_hex": "#2378C3",
+      "hotkey": "3",
+      "lines": [
+        {
+          "text": "Jesus! the name that charms our fears,",
+          "chords": [
+            {
+              "position": 0,
+              "text": "G"
+            },
+            {
+              "position": 21,
+              "text": "C"
+            },
+            {
+              "position": 32,
+              "text": "G"
+            }
+          ]
+        },
+        {
+          "text": "That bids our sorrows cease,",
+          "chords": [
+            {
+              "position": 5,
+              "text": "D"
+            },
+            {
+              "position": 22,
+              "text": "G"
+            }
+          ]
+        },
+        {
+          "text": "’Tis music in the sinner’s ears,",
+          "chords": [
+            {
+              "position": 5,
+              "text": "G"
+            },
+            {
+              "position": 18,
+              "text": "C"
+            },
+            {
+              "position": 27,
+              "text": "G"
+            }
+          ]
+        },
+        {
+          "text": "’Tis life and health and peace.",
+          "chords": [
+            {
+              "position": 5,
+              "text": "D"
+            },
+            {
+              "position": 25,
+              "text": "G"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "label": "Verse 4",
+      "kind": "verse",
+      "color_hex": "#2378C3",
+      "hotkey": "4",
+      "lines": [
+        {
+          "text": "He breaks the power of canceled sin,",
+          "chords": [
+            {
+              "position": 0,
+              "text": "G"
+            },
+            {
+              "position": 23,
+              "text": "C"
+            },
+            {
+              "position": 32,
+              "text": "G"
+            }
+          ]
+        },
+        {
+          "text": "He sets the prisoner free;",
+          "chords": [
+            {
+              "position": 3,
+              "text": "D"
+            },
+            {
+              "position": 21,
+              "text": "G"
+            }
+          ]
+        },
+        {
+          "text": "His blood can make the foulest clean;",
+          "chords": [
+            {
+              "position": 4,
+              "text": "G"
+            },
+            {
+              "position": 23,
+              "text": "C"
+            },
+            {
+              "position": 31,
+              "text": "G"
+            }
+          ]
+        },
+        {
+          "text": "His blood availed for me.",
+          "chords": [
+            {
+              "position": 4,
+              "text": "D"
+            },
+            {
+              "position": 22,
+              "text": "G"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

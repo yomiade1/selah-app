@@ -1,0 +1,378 @@
+{
+  "title": "’Tis So Sweet to Trust in Jesus",
+  "author": "Louisa M. R. Stead (1850-1917)",
+  "key": "G",
+  "public_domain": true,
+  "arrangement": [
+    "Verse 1",
+    "Chorus",
+    "Verse 2",
+    "Chorus",
+    "Verse 3",
+    "Chorus",
+    "Verse 4",
+    "Chorus"
+  ],
+  "sections": [
+    {
+      "label": "Verse 1",
+      "kind": "verse",
+      "color_hex": "#2378C3",
+      "hotkey": "1",
+      "lines": [
+        {
+          "text": "’Tis so sweet to trust in Jesus,",
+          "chords": [
+            {
+              "position": 0,
+              "text": "G"
+            },
+            {
+              "position": 17,
+              "text": "C"
+            },
+            {
+              "position": 26,
+              "text": "G"
+            }
+          ]
+        },
+        {
+          "text": "Just to take Him at His word;",
+          "chords": [
+            {
+              "position": 0,
+              "text": "Em"
+            },
+            {
+              "position": 17,
+              "text": "D"
+            }
+          ]
+        },
+        {
+          "text": "Just to rest upon His promise,",
+          "chords": [
+            {
+              "position": 0,
+              "text": "G"
+            },
+            {
+              "position": 15,
+              "text": "C"
+            },
+            {
+              "position": 22,
+              "text": "G"
+            }
+          ]
+        },
+        {
+          "text": "Just to know, Thus saith the Lord.",
+          "chords": [
+            {
+              "position": 0,
+              "text": "Em"
+            },
+            {
+              "position": 19,
+              "text": "D"
+            },
+            {
+              "position": 29,
+              "text": "G"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "label": "Chorus",
+      "kind": "chorus",
+      "color_hex": "#C84281",
+      "hotkey": "C",
+      "lines": [
+        {
+          "text": "Jesus, Jesus, how I trust Him!",
+          "chords": [
+            {
+              "position": 0,
+              "text": "G"
+            },
+            {
+              "position": 14,
+              "text": "C"
+            },
+            {
+              "position": 20,
+              "text": "G"
+            }
+          ]
+        },
+        {
+          "text": "How I’ve proved Him o’er and o’er!",
+          "chords": [
+            {
+              "position": 0,
+              "text": "Em"
+            },
+            {
+              "position": 20,
+              "text": "D"
+            }
+          ]
+        },
+        {
+          "text": "Jesus, Jesus, precious Jesus!",
+          "chords": [
+            {
+              "position": 0,
+              "text": "G"
+            },
+            {
+              "position": 14,
+              "text": "C"
+            },
+            {
+              "position": 23,
+              "text": "G"
+            }
+          ]
+        },
+        {
+          "text": "O for grace to trust Him more!",
+          "chords": [
+            {
+              "position": 0,
+              "text": "Em"
+            },
+            {
+              "position": 15,
+              "text": "D"
+            },
+            {
+              "position": 25,
+              "text": "G"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "label": "Verse 2",
+      "kind": "verse",
+      "color_hex": "#2378C3",
+      "hotkey": "2",
+      "lines": [
+        {
+          "text": "O how sweet to trust in Jesus,",
+          "chords": [
+            {
+              "position": 0,
+              "text": "G"
+            },
+            {
+              "position": 15,
+              "text": "C"
+            },
+            {
+              "position": 24,
+              "text": "G"
+            }
+          ]
+        },
+        {
+          "text": "Just to trust His cleansing blood;",
+          "chords": [
+            {
+              "position": 0,
+              "text": "Em"
+            },
+            {
+              "position": 18,
+              "text": "D"
+            }
+          ]
+        },
+        {
+          "text": "Just in simple faith to plunge me",
+          "chords": [
+            {
+              "position": 0,
+              "text": "G"
+            },
+            {
+              "position": 15,
+              "text": "C"
+            },
+            {
+              "position": 24,
+              "text": "G"
+            }
+          ]
+        },
+        {
+          "text": "’Neath the healing, cleansing flood.",
+          "chords": [
+            {
+              "position": 0,
+              "text": "Em"
+            },
+            {
+              "position": 20,
+              "text": "D"
+            },
+            {
+              "position": 30,
+              "text": "G"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "label": "Verse 3",
+      "kind": "verse",
+      "color_hex": "#2378C3",
+      "hotkey": "3",
+      "lines": [
+        {
+          "text": "Yes, ’tis sweet to trust in Jesus,",
+          "chords": [
+            {
+              "position": 0,
+              "text": "G"
+            },
+            {
+              "position": 19,
+              "text": "C"
+            },
+            {
+              "position": 28,
+              "text": "G"
+            }
+          ]
+        },
+        {
+          "text": "Just from sin and self to cease;",
+          "chords": [
+            {
+              "position": 0,
+              "text": "Em"
+            },
+            {
+              "position": 18,
+              "text": "D"
+            }
+          ]
+        },
+        {
+          "text": "Just from Jesus simply taking",
+          "chords": [
+            {
+              "position": 0,
+              "text": "G"
+            },
+            {
+              "position": 16,
+              "text": "C"
+            },
+            {
+              "position": 23,
+              "text": "G"
+            }
+          ]
+        },
+        {
+          "text": "Life and rest, and joy and peace.",
+          "chords": [
+            {
+              "position": 0,
+              "text": "Em"
+            },
+            {
+              "position": 19,
+              "text": "D"
+            },
+            {
+              "position": 27,
+              "text": "G"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "label": "Verse 4",
+      "kind": "verse",
+      "color_hex": "#2378C3",
+      "hotkey": "4",
+      "lines": [
+        {
+          "text": "I’m so glad I learned to trust Thee,",
+          "chords": [
+            {
+              "position": 0,
+              "text": "G"
+            },
+            {
+              "position": 14,
+              "text": "C"
+            },
+            {
+              "position": 25,
+              "text": "G"
+            }
+          ]
+        },
+        {
+          "text": "Precious Jesus, Savior, Friend;",
+          "chords": [
+            {
+              "position": 0,
+              "text": "Em"
+            },
+            {
+              "position": 16,
+              "text": "D"
+            }
+          ]
+        },
+        {
+          "text": "And I know that Thou art with me,",
+          "chords": [
+            {
+              "position": 0,
+              "text": "G"
+            },
+            {
+              "position": 16,
+              "text": "C"
+            },
+            {
+              "position": 25,
+              "text": "G"
+            }
+          ]
+        },
+        {
+          "text": "Wilt be with me to the end.",
+          "chords": [
+            {
+              "position": 0,
+              "text": "Em"
+            },
+            {
+              "position": 16,
+              "text": "D"
+            },
+            {
+              "position": 23,
+              "text": "G"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

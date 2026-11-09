@@ -1,0 +1,466 @@
+{
+  "title": "A Mighty Fortress Is Our God",
+  "author": "Martin Luther (1483-1546); tr. Frederick H. Hedge (1805-1890)",
+  "key": "C",
+  "public_domain": true,
+  "arrangement": [
+    "Verse 1",
+    "Verse 2",
+    "Verse 3",
+    "Verse 4"
+  ],
+  "sections": [
+    {
+      "label": "Verse 1",
+      "kind": "verse",
+      "color_hex": "#2378C3",
+      "hotkey": "1",
+      "lines": [
+        {
+          "text": "A mighty fortress is our God, a bulwark never failing;",
+          "chords": [
+            {
+              "position": 2,
+              "text": "C"
+            },
+            {
+              "position": 18,
+              "text": "G"
+            },
+            {
+              "position": 25,
+              "text": "Am"
+            },
+            {
+              "position": 32,
+              "text": "F"
+            },
+            {
+              "position": 46,
+              "text": "G"
+            },
+            {
+              "position": 50,
+              "text": "C"
+            }
+          ]
+        },
+        {
+          "text": "Our helper He amid the flood of mortal ills prevailing.",
+          "chords": [
+            {
+              "position": 4,
+              "text": "C"
+            },
+            {
+              "position": 15,
+              "text": "G"
+            },
+            {
+              "position": 23,
+              "text": "Am"
+            },
+            {
+              "position": 32,
+              "text": "F"
+            },
+            {
+              "position": 47,
+              "text": "G"
+            },
+            {
+              "position": 51,
+              "text": "C"
+            }
+          ]
+        },
+        {
+          "text": "For still our ancient foe doth seek to work us woe;",
+          "chords": [
+            {
+              "position": 4,
+              "text": "G"
+            },
+            {
+              "position": 31,
+              "text": "Am"
+            }
+          ]
+        },
+        {
+          "text": "His craft and power are great, and armed with cruel hate,",
+          "chords": [
+            {
+              "position": 4,
+              "text": "F"
+            },
+            {
+              "position": 35,
+              "text": "G"
+            }
+          ]
+        },
+        {
+          "text": "On earth is not His equal.",
+          "chords": [
+            {
+              "position": 3,
+              "text": "Am"
+            },
+            {
+              "position": 12,
+              "text": "F"
+            },
+            {
+              "position": 16,
+              "text": "G"
+            },
+            {
+              "position": 20,
+              "text": "C"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "label": "Verse 2",
+      "kind": "verse",
+      "color_hex": "#2378C3",
+      "hotkey": "2",
+      "lines": [
+        {
+          "text": "Did we in our own strength confide, our striving would be losing;",
+          "chords": [
+            {
+              "position": 4,
+              "text": "C"
+            },
+            {
+              "position": 18,
+              "text": "G"
+            },
+            {
+              "position": 30,
+              "text": "Am"
+            },
+            {
+              "position": 40,
+              "text": "F"
+            },
+            {
+              "position": 58,
+              "text": "G"
+            },
+            {
+              "position": 61,
+              "text": "C"
+            }
+          ]
+        },
+        {
+          "text": "Were not the right Man on our side, the Man of God’s own choosing.",
+          "chords": [
+            {
+              "position": 5,
+              "text": "C"
+            },
+            {
+              "position": 23,
+              "text": "G"
+            },
+            {
+              "position": 30,
+              "text": "Am"
+            },
+            {
+              "position": 40,
+              "text": "F"
+            },
+            {
+              "position": 57,
+              "text": "G"
+            },
+            {
+              "position": 62,
+              "text": "C"
+            }
+          ]
+        },
+        {
+          "text": "Dost ask who that may be? Christ Jesus, it is He;",
+          "chords": [
+            {
+              "position": 5,
+              "text": "G"
+            },
+            {
+              "position": 33,
+              "text": "Am"
+            }
+          ]
+        },
+        {
+          "text": "Lord Sabaoth, His name, from age to age the same,",
+          "chords": [
+            {
+              "position": 5,
+              "text": "F"
+            },
+            {
+              "position": 29,
+              "text": "G"
+            }
+          ]
+        },
+        {
+          "text": "And He must win the battle.",
+          "chords": [
+            {
+              "position": 4,
+              "text": "Am"
+            },
+            {
+              "position": 12,
+              "text": "F"
+            },
+            {
+              "position": 20,
+              "text": "G"
+            },
+            {
+              "position": 23,
+              "text": "C"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "label": "Verse 3",
+      "kind": "verse",
+      "color_hex": "#2378C3",
+      "hotkey": "3",
+      "lines": [
+        {
+          "text": "And though this world, with devils filled, should threaten to undo us,",
+          "chords": [
+            {
+              "position": 4,
+              "text": "C"
+            },
+            {
+              "position": 28,
+              "text": "G"
+            },
+            {
+              "position": 35,
+              "text": "Am"
+            },
+            {
+              "position": 50,
+              "text": "F"
+            },
+            {
+              "position": 64,
+              "text": "G"
+            },
+            {
+              "position": 67,
+              "text": "C"
+            }
+          ]
+        },
+        {
+          "text": "We will not fear, for God hath willed His truth to triumph through us.",
+          "chords": [
+            {
+              "position": 3,
+              "text": "C"
+            },
+            {
+              "position": 22,
+              "text": "G"
+            },
+            {
+              "position": 31,
+              "text": "Am"
+            },
+            {
+              "position": 42,
+              "text": "F"
+            },
+            {
+              "position": 59,
+              "text": "G"
+            },
+            {
+              "position": 67,
+              "text": "C"
+            }
+          ]
+        },
+        {
+          "text": "The Prince of Darkness grim, we tremble not for him;",
+          "chords": [
+            {
+              "position": 4,
+              "text": "G"
+            },
+            {
+              "position": 32,
+              "text": "Am"
+            }
+          ]
+        },
+        {
+          "text": "His rage we can endure, for lo, his doom is sure,",
+          "chords": [
+            {
+              "position": 4,
+              "text": "F"
+            },
+            {
+              "position": 28,
+              "text": "G"
+            }
+          ]
+        },
+        {
+          "text": "One little word shall fell him.",
+          "chords": [
+            {
+              "position": 4,
+              "text": "Am"
+            },
+            {
+              "position": 11,
+              "text": "F"
+            },
+            {
+              "position": 22,
+              "text": "G"
+            },
+            {
+              "position": 27,
+              "text": "C"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "label": "Verse 4",
+      "kind": "verse",
+      "color_hex": "#2378C3",
+      "hotkey": "4",
+      "lines": [
+        {
+          "text": "That word above all earthly powers, no thanks to them, abideth;",
+          "chords": [
+            {
+              "position": 5,
+              "text": "C"
+            },
+            {
+              "position": 20,
+              "text": "G"
+            },
+            {
+              "position": 28,
+              "text": "Am"
+            },
+            {
+              "position": 39,
+              "text": "F"
+            },
+            {
+              "position": 56,
+              "text": "G"
+            },
+            {
+              "position": 59,
+              "text": "C"
+            }
+          ]
+        },
+        {
+          "text": "The Spirit and the gifts are ours through Him who with us sideth.",
+          "chords": [
+            {
+              "position": 4,
+              "text": "C"
+            },
+            {
+              "position": 19,
+              "text": "G"
+            },
+            {
+              "position": 29,
+              "text": "Am"
+            },
+            {
+              "position": 42,
+              "text": "F"
+            },
+            {
+              "position": 58,
+              "text": "G"
+            },
+            {
+              "position": 61,
+              "text": "C"
+            }
+          ]
+        },
+        {
+          "text": "Let goods and kindred go, this mortal life also;",
+          "chords": [
+            {
+              "position": 4,
+              "text": "G"
+            },
+            {
+              "position": 31,
+              "text": "Am"
+            }
+          ]
+        },
+        {
+          "text": "The body they may kill: God’s truth abideth still,",
+          "chords": [
+            {
+              "position": 4,
+              "text": "F"
+            },
+            {
+              "position": 30,
+              "text": "G"
+            }
+          ]
+        },
+        {
+          "text": "His kingdom is forever.",
+          "chords": [
+            {
+              "position": 4,
+              "text": "Am"
+            },
+            {
+              "position": 12,
+              "text": "F"
+            },
+            {
+              "position": 18,
+              "text": "G"
+            },
+            {
+              "position": 20,
+              "text": "C"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

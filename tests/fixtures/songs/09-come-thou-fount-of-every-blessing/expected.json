@@ -1,0 +1,337 @@
+{
+  "title": "Come, Thou Fount of Every Blessing",
+  "author": "Robert Robinson (1735-1790)",
+  "key": "D",
+  "public_domain": true,
+  "arrangement": [
+    "Verse 1",
+    "Verse 2",
+    "Verse 3"
+  ],
+  "sections": [
+    {
+      "label": "Verse 1",
+      "kind": "verse",
+      "color_hex": "#2378C3",
+      "hotkey": "1",
+      "lines": [
+        {
+          "text": "Come, Thou Fount of every blessing, tune my heart to sing Thy grace;",
+          "chords": [
+            {
+              "position": 0,
+              "text": "D"
+            },
+            {
+              "position": 20,
+              "text": "A"
+            },
+            {
+              "position": 36,
+              "text": "G"
+            },
+            {
+              "position": 44,
+              "text": "A"
+            },
+            {
+              "position": 62,
+              "text": "D"
+            }
+          ]
+        },
+        {
+          "text": "Streams of mercy, never ceasing, call for songs of loudest praise.",
+          "chords": [
+            {
+              "position": 0,
+              "text": "D"
+            },
+            {
+              "position": 18,
+              "text": "A"
+            },
+            {
+              "position": 33,
+              "text": "G"
+            },
+            {
+              "position": 42,
+              "text": "A"
+            },
+            {
+              "position": 59,
+              "text": "D"
+            }
+          ]
+        },
+        {
+          "text": "Teach me some melodious sonnet, sung by flaming tongues above;",
+          "chords": [
+            {
+              "position": 0,
+              "text": "Bm"
+            },
+            {
+              "position": 16,
+              "text": "G"
+            },
+            {
+              "position": 32,
+              "text": "Bm"
+            },
+            {
+              "position": 40,
+              "text": "G"
+            },
+            {
+              "position": 57,
+              "text": "D"
+            }
+          ]
+        },
+        {
+          "text": "Praise the mount! I’m fixed upon it, mount of God’s unchanging love.",
+          "chords": [
+            {
+              "position": 0,
+              "text": "D"
+            },
+            {
+              "position": 22,
+              "text": "A"
+            },
+            {
+              "position": 37,
+              "text": "G"
+            },
+            {
+              "position": 46,
+              "text": "A"
+            },
+            {
+              "position": 63,
+              "text": "D"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "label": "Verse 2",
+      "kind": "verse",
+      "color_hex": "#2378C3",
+      "hotkey": "2",
+      "lines": [
+        {
+          "text": "Here I raise my Ebenezer; hither by Thy help I’m come;",
+          "chords": [
+            {
+              "position": 0,
+              "text": "D"
+            },
+            {
+              "position": 16,
+              "text": "A"
+            },
+            {
+              "position": 26,
+              "text": "G"
+            },
+            {
+              "position": 33,
+              "text": "A"
+            },
+            {
+              "position": 49,
+              "text": "D"
+            }
+          ]
+        },
+        {
+          "text": "And I hope, by Thy good pleasure, safely to arrive at home.",
+          "chords": [
+            {
+              "position": 0,
+              "text": "D"
+            },
+            {
+              "position": 15,
+              "text": "A"
+            },
+            {
+              "position": 34,
+              "text": "G"
+            },
+            {
+              "position": 41,
+              "text": "A"
+            },
+            {
+              "position": 54,
+              "text": "D"
+            }
+          ]
+        },
+        {
+          "text": "Jesus sought me when a stranger, wandering from the fold of God;",
+          "chords": [
+            {
+              "position": 0,
+              "text": "Bm"
+            },
+            {
+              "position": 16,
+              "text": "G"
+            },
+            {
+              "position": 33,
+              "text": "Bm"
+            },
+            {
+              "position": 43,
+              "text": "G"
+            },
+            {
+              "position": 60,
+              "text": "D"
+            }
+          ]
+        },
+        {
+          "text": "He, to rescue me from danger, interposed His precious blood.",
+          "chords": [
+            {
+              "position": 0,
+              "text": "D"
+            },
+            {
+              "position": 14,
+              "text": "A"
+            },
+            {
+              "position": 30,
+              "text": "G"
+            },
+            {
+              "position": 35,
+              "text": "A"
+            },
+            {
+              "position": 54,
+              "text": "D"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "label": "Verse 3",
+      "kind": "verse",
+      "color_hex": "#2378C3",
+      "hotkey": "3",
+      "lines": [
+        {
+          "text": "O to grace how great a debtor daily I’m constrained to be!",
+          "chords": [
+            {
+              "position": 0,
+              "text": "D"
+            },
+            {
+              "position": 15,
+              "text": "A"
+            },
+            {
+              "position": 30,
+              "text": "G"
+            },
+            {
+              "position": 36,
+              "text": "A"
+            },
+            {
+              "position": 55,
+              "text": "D"
+            }
+          ]
+        },
+        {
+          "text": "Let Thy goodness, like a fetter, bind my wandering heart to Thee.",
+          "chords": [
+            {
+              "position": 0,
+              "text": "D"
+            },
+            {
+              "position": 18,
+              "text": "A"
+            },
+            {
+              "position": 33,
+              "text": "G"
+            },
+            {
+              "position": 41,
+              "text": "A"
+            },
+            {
+              "position": 60,
+              "text": "D"
+            }
+          ]
+        },
+        {
+          "text": "Prone to wander, Lord, I feel it, prone to leave the God I love;",
+          "chords": [
+            {
+              "position": 0,
+              "text": "Bm"
+            },
+            {
+              "position": 17,
+              "text": "G"
+            },
+            {
+              "position": 34,
+              "text": "Bm"
+            },
+            {
+              "position": 43,
+              "text": "G"
+            },
+            {
+              "position": 59,
+              "text": "D"
+            }
+          ]
+        },
+        {
+          "text": "Here’s my heart, O take and seal it, seal it for Thy courts above.",
+          "chords": [
+            {
+              "position": 0,
+              "text": "D"
+            },
+            {
+              "position": 19,
+              "text": "A"
+            },
+            {
+              "position": 37,
+              "text": "G"
+            },
+            {
+              "position": 45,
+              "text": "A"
+            },
+            {
+              "position": 61,
+              "text": "D"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

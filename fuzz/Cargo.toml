@@ -12,11 +12,19 @@ cargo-fuzz = true
 
 [dependencies]
 libfuzzer-sys = "0.4"
+selah-core = { path = "../crates/selah-core" }
 selah-ipc = { path = "../crates/selah-ipc" }
 
 [[bin]]
 name = "ipc_frame"
 path = "fuzz_targets/ipc_frame.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "chordpro"
+path = "fuzz_targets/chordpro.rs"
 test = false
 doc = false
 bench = false

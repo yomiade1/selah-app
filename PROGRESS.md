@@ -9,7 +9,7 @@ Status values: `Not started` · `In progress` · `Blocked` (say on what) · `Don
 | Milestone | Status | Branch / tag | Started | Finished | Notes |
 |---|---|---|---|---|---|
 | M1. Foundations and risk spikes | Done, H-checks pending | `claude/m1-finish` | 2026-11-07 | 2026-11-07 | All 13 WPs done (local Windows sessions, H-01). Open (H): M1-A7 benchmark report, M1-A12 install on your PC; M1-A1/A6 macOS from the `macos` job. |
-| M2. Library, songs, scripture and the help system | In progress | `codex/m2-library` | 2026-11-09 | — | M2.1–M2.3 done; M2.4–M2.9 remain. |
+| M2. Library, songs, scripture and the help system | In progress | `codex/m2-library` | 2026-11-09 | — | M2.1–M2.4 done; M2.5–M2.9 remain. |
 | M3. Render engine, templates and the slide editor | Not started | — | — | — | |
 | M4. Live operation, services and stage | Not started | — | — | — | |
 | M5. Screens, video and audio I/O | Not started | — | — | — | |
@@ -19,21 +19,21 @@ Status values: `Not started` · `In progress` · `Blocked` (say on what) · `Don
 | M9. Cloud, teams and enterprise | Not started | — | — | — | |
 | M10. Launch readiness and v1.0 | Not started | — | — | — | |
 
-**Next action:** continue Milestone 2 at M2.4 (songs: paste-to-sections, chords and slide splitting). M1 is merged; its human checklists below remain open.
+**Next action:** continue Milestone 2 at M2.5 (scripture: KJV/WEB bundles, 6-language reference parser, OSIS/USFM/Zefania importers, verse-to-slide splitting). M1 is merged; its human checklists below remain open.
 
 ## Resume notes
 
 _When a session stops partway through a milestone, write here: the milestone, the last finished WP, anything half-done (files, branch state) and the exact next step. Clear it when the milestone is done._
 
 M2 branch: `codex/m2-library`, based on `origin/main` at `87b78f7` (M1 merged;
-no open agent PR at session start). M2.1–M2.3 are complete (`schema-v1.db`
+no open agent PR at session start). M2.1–M2.4 are complete (`schema-v1.db`
 remains immutable; `m2.db` is due at milestone completion).
 
-Start the next WP at M2.4 (songs: paste-to-sections, chords, slide splitting,
-and 25 curated public-domain hymns, `M2-A1`/`M2-A11`). Scripture (M2.5),
-media bin and `.selah` bundles (M2.6), and UI/contextual help/KB content
-(M2.7–M2.9) follow sequentially. H-06 and H-18 remain open; M2 KB articles stay
-`status: review`.
+Start the next WP at M2.5 (scripture: bundled KJV/WEB SQLite databases per H-06,
+>= 300-case 6-language reference parser, OSIS/USFM/Zefania bounded importers +
+fuzz targets, verse-to-slide splitting, `M2-A5`/`M2-A11`). Media bin and
+`.selah` bundles (M2.6), and UI/contextual help/KB content (M2.7–M2.9) follow
+sequentially. H-06 and H-18 remain open; M2 KB articles stay `status: review`.
 
 ## Milestone checklists
 
@@ -81,7 +81,7 @@ media bin and `.selah` bundles (M2.6), and UI/contextual help/KB content
 - [x] **M2.1** Data model, store and migrations — evidence: commit `M2.1`; `proto/selah/v1/{library,service}.proto` + TS/Rust/C# generated contracts (`buf lint`, `buf breaking --against .git#tag=m1`, `check-generated` pass); `selah-core::library` (UUIDv7, SQLite STRICT/WAL/FULL/trusted_schema=0, checksummed append-only migrations + `schema-v1.db` fixture, sealed typed repositories, BLAKE3 `MediaStore`, 3-tier policy settings); `selah-core` library integration tests (17) + unit test; `docs/specs/data-model.md`, ADR-027, `docs/SECURITY.md`; full `tools/verify.ps1` gate green on Windows; ledger updated (rust 139, total 249)
 - [x] **M2.2** Command bus, op log, undo/redo and autosave — evidence: commit `M2.2`; `proto/selah/v1/{envelope,library,settings}.proto` + TS/Rust/C# generated contracts (`M2CommandQueryAndEventMessagesRoundTrip`, `web/contracts` M2 round-trip test); migration `002_command_bus.sql` (`undo_entries`, `command_idempotency`, `editor_buffers.doc_type`); SEC-14 `permissions::authorize` extended for all 27 commands + `unauthorized_library_commands_are_refused_before_touching_database`; transactional command execution, inverse capture, per-document & global undo groups, idempotency replay/conflict checks, autosave `editor_buffers`, `help_feedback` persistence, `LibraryChanged` / `UndoStateChanged` broadcasts, `selah-core-host` `SELAH_LIBRARY_DIR` wiring; `selah-core` `ops::tests` (8 incl. **M2-A2**), `service::tests` (3 new library/buffer/policy tests), `selah-testkit` `library_crash` (**M2-A3**); errors `SEL-LIB-0001`–`0004` + 5 `troubleshooting` KB articles (`status: review`, lint 0 errors); `docs/specs/{command-bus,data-model}.md`; full `tools/verify.ps1` gate green on Windows; ledger updated (rust 151, dotnet 21, web 4, kb 12, total 268)
 - [x] **M2.3** Search — evidence: commit `M2.3`; `proto/selah/v1/{envelope,library}.proto` + TS/Rust/C# generated contracts (`SearchSongs`/`SearchMedia`/`SearchScripture`/`SearchLibrary` queries, C# `M2CommandQueryAndEventMessagesRoundTrip`, `web/contracts` M2 search round-trip test); migration `003_search.sql` (FTS5 `unicode61 remove_diacritics 2` + `trigram` indexes for songs/media + `search_synonyms` + `search_meta`, backfilled on `schema-v1.db` upgrade); `selah-core::library::search` (diacritic/orthography folding, Damerau-Levenshtein typo tolerance, bilingual synonyms, weighted BM25+field ranking, per-translation `bible_meta`/FTS5/trigram query engine + `biblical` path confinement, `write_bible_database` hook for M2.5, SEC-03 query validation & bounds); `crates/selah-core/tests/search.rs` (10) + `search.rs` unit tests (3) + `service::tests::search_queries_round_trip_through_core_service_and_map_errors`; `selah-bench search --check` on 10,000 songs (`p50 = 5.19 ms`, `p95 = 17.07 ms <= 50 ms`, `amzing_grace_p95 = 14.68 ms`, `correctness_pass = true`) wired into gate stage 6; `docs/specs/{search,command-bus,data-model}.md`; headless engine IPC startup fix (`selah-engine/src/engine.rs`) verified 3× in `selah-testkit::continuity`; full `tools/verify.ps1` gate green on Windows; ledger updated (rust 164, dotnet 22, web 5, total 283)
-- [ ] **M2.4** Songs: paste-to-sections, chords and slide splitting — evidence: 
+- [x] **M2.4** Songs: paste-to-sections, chords and slide splitting — evidence: commit `M2.4`; `proto/selah/v1/{envelope,library}.proto` + TS/Rust/C# generated contracts (`ParsePastedSong`, `TransposeSong`, `SplitSongSlides`, `SongPasteFormat`, `CopyrightPlacement`, `AccidentalSpelling`, `GeneratedSlide`, `GeneratedSongSlides`; C# `ContractTests`, `web/contracts` round-trip test); `selah-core::songs` (`parse` across Plain/Markers/ChordsOverLyrics/ChordPro with SEC-03 size/line/section/nesting/chord bounds + `fuzz_chordpro`, `chords` key-aware 12-semitone + slash-chord transposition, `sections` DESIGN-SYSTEM colours & two-pass non-overlapping hotkeys, `split` rule-based `max_lines` + title/blank/copyright/translation slides); `fuzz/fuzz_targets/chordpro.rs` + `songs_fuzz_smoke` (`SELAH_FUZZ_SECONDS=5` green in stage 6); `service::tests::song_parse_transpose_and_split_queries_round_trip_through_core_service`; `tests/fixtures/songs/` (25 public-domain hymns × 4 formats + `PROVENANCE.md`) verified 100% by `selah-core/tests/songs.rs`; `docs/specs/songs.md`; full `tools/verify.ps1` gate green on Windows; ledger updated (rust 183, dotnet 22, web 6, total 303)
 - [ ] **M2.5** Scripture — evidence: 
 - [ ] **M2.6** Media bin and library exchange — evidence: 
 - [ ] **M2.7** Library and song editor UI — evidence: 
@@ -90,7 +90,7 @@ media bin and `.selah` bundles (M2.6), and UI/contextual help/KB content
 
 **Acceptance criteria**
 
-- [ ] **M2-A1** (auto) The 25 curated hymns, pasted in 4 formats (plain, markers, chords over lyrics, ChordPro), produce exactly the expected section JSON (100%). — evidence: 
+- [x] **M2-A1** (auto) The 25 curated hymns, pasted in 4 formats (plain, markers, chords over lyrics, ChordPro), produce exactly the expected section JSON (100%). — evidence: `selah-core/tests/songs.rs::curated_25_hymns_match_expected_across_all_four_paste_formats` (all 25 directories in `tests/fixtures/songs/`, 100 fixture checks across `plain.txt`, `markers.txt`, `chords.txt`, `song.cho` compared 100% against `expected.json` for arrangement, labels, kinds, colours, hotkeys, Unicode lyrics, aligned chord offsets, metadata and `Library` persistence)
 - [x] **M2-A2** (auto) Undo/redo property test: 10,000 random op sequences. — evidence: `selah-core` `library::ops::tests::m2_a2_ten_thousand_random_op_sequences_round_trip_undo_and_redo` (10,000 random sequences across `Song`, `Template`, `Presentation`, and `Tag` with create/update/delete and contiguous multi-op undo groups; undoing all ops restores empty baseline and redoing restores final state)
 - [x] **M2-A3** (auto) Killing core during 1,000 writes leaves `PRAGMA integrity_check` = ok, loses no committed op, and the unsaved editor buffer is restored. — evidence: `selah-testkit` `library_crash::killing_core_during_one_thousand_writes_preserves_integrity_ops_and_editor_buffer` (kills real `selah-core` mid-flight during 4-way concurrent writes over 1,000 committed songs, recovers via `selah-watchdog` in < 5 s, restores unsaved `editor_buffers`, verifies paginated `ListSongs` + `ListOps` completeness and `PRAGMA integrity_check = ok`)
 - [x] **M2-A4** (auto) Song search p95 ≤ 50 ms on 10,000 songs. "amzing grace" finds "Amazing Grace"; synonym tests pass. — evidence: `selah-bench search --check --json target/verify-report/bench-search.json` (10,000 songs, 200 iterations: `p50 = 5.19 ms`, `p95 = 17.07 ms`, `amzing_grace_p95 = 14.68 ms`, `correctness_pass = true`, gate stage 6) + `selah-core/tests/search.rs` (`song_search_handles_typos_short_transpositions_and_avoids_false_positives`, `song_search_pagination_and_synonyms_work`, `multilingual_diacritics_fold_for_search_and_typos`)

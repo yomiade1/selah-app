@@ -229,5 +229,70 @@ public sealed class ContractTests
             },
         };
         Assert.Equal(searchReply, Envelope.Parser.ParseFrom(searchReply.ToByteArray()));
+
+        var parseQuery = new Envelope
+        {
+            Id = 1010,
+            Query = new Query
+            {
+                ParsePastedSong = new ParsePastedSong
+                {
+                    RawText = "{title: Amazing Grace}\n{sov}\n[G]Amazing grace\n{eov}",
+                    Format = SongPasteFormat.ChordPro,
+                    DefaultTitle = "Amazing Grace",
+                },
+            },
+        };
+        Assert.Equal(parseQuery, Envelope.Parser.ParseFrom(parseQuery.ToByteArray()));
+
+        var transposeQuery = new Envelope
+        {
+            Id = 1011,
+            Query = new Query
+            {
+                TransposeSong = new TransposeSong
+                {
+                    Song = new Song { Id = new Id { Value = idBytes }, Title = "Amazing Grace", Key = "G" },
+                    Semitones = 3,
+                    AccidentalSpelling = AccidentalSpelling.Flats,
+                },
+            },
+        };
+        Assert.Equal(transposeQuery, Envelope.Parser.ParseFrom(transposeQuery.ToByteArray()));
+
+        var splitReply = new Envelope
+        {
+            Id = 1012,
+            CorrelationId = 1010,
+            Reply = new Reply
+            {
+                GeneratedSongSlides = new GeneratedSongSlides
+                {
+                    CopyrightLine = "“Amazing Grace” · John Newton · Public Domain",
+                    Slides =
+                    {
+                        new GeneratedSlide
+                        {
+                            SectionId = new Id { Value = idBytes },
+                            SectionLabel = "Verse 1",
+                            SectionKind = SectionKind.Verse,
+                            SectionHotkey = "1",
+                            PartIndex = 1,
+                            PartCount = 2,
+                            Lines =
+                            {
+                                new LyricLine
+                                {
+                                    Text = "Amazing grace",
+                                    Chords = { new Chord { Position = 0, Text = "G" } },
+                                },
+                            },
+                            FooterCopyright = "“Amazing Grace” · John Newton · Public Domain",
+                        },
+                    },
+                },
+            },
+        };
+        Assert.Equal(splitReply, Envelope.Parser.ParseFrom(splitReply.ToByteArray()));
     }
 }

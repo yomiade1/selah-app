@@ -1,0 +1,382 @@
+{
+  "title": "O Worship the King",
+  "author": "Robert Grant (1779-1838)",
+  "key": "G",
+  "public_domain": true,
+  "arrangement": [
+    "Verse 1",
+    "Verse 2",
+    "Verse 3",
+    "Verse 4"
+  ],
+  "sections": [
+    {
+      "label": "Verse 1",
+      "kind": "verse",
+      "color_hex": "#2378C3",
+      "hotkey": "1",
+      "lines": [
+        {
+          "text": "O worship the King all glorious above,",
+          "chords": [
+            {
+              "position": 2,
+              "text": "G"
+            },
+            {
+              "position": 14,
+              "text": "Em"
+            },
+            {
+              "position": 23,
+              "text": "C"
+            },
+            {
+              "position": 33,
+              "text": "G"
+            }
+          ]
+        },
+        {
+          "text": "O gratefully sing His power and His love;",
+          "chords": [
+            {
+              "position": 2,
+              "text": "G"
+            },
+            {
+              "position": 13,
+              "text": "Em"
+            },
+            {
+              "position": 22,
+              "text": "A"
+            },
+            {
+              "position": 36,
+              "text": "D"
+            }
+          ]
+        },
+        {
+          "text": "Our Shield and Defender, the Ancient of Days,",
+          "chords": [
+            {
+              "position": 4,
+              "text": "G"
+            },
+            {
+              "position": 17,
+              "text": "Em"
+            },
+            {
+              "position": 29,
+              "text": "C"
+            },
+            {
+              "position": 40,
+              "text": "G"
+            }
+          ]
+        },
+        {
+          "text": "Pavilioned in splendor, and girded with praise.",
+          "chords": [
+            {
+              "position": 2,
+              "text": "C"
+            },
+            {
+              "position": 14,
+              "text": "G"
+            },
+            {
+              "position": 28,
+              "text": "D"
+            },
+            {
+              "position": 40,
+              "text": "G"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "label": "Verse 2",
+      "kind": "verse",
+      "color_hex": "#2378C3",
+      "hotkey": "2",
+      "lines": [
+        {
+          "text": "O tell of His might, O sing of His grace,",
+          "chords": [
+            {
+              "position": 2,
+              "text": "G"
+            },
+            {
+              "position": 14,
+              "text": "Em"
+            },
+            {
+              "position": 23,
+              "text": "C"
+            },
+            {
+              "position": 35,
+              "text": "G"
+            }
+          ]
+        },
+        {
+          "text": "Whose robe is the light, whose canopy space;",
+          "chords": [
+            {
+              "position": 6,
+              "text": "G"
+            },
+            {
+              "position": 18,
+              "text": "Em"
+            },
+            {
+              "position": 31,
+              "text": "A"
+            },
+            {
+              "position": 38,
+              "text": "D"
+            }
+          ]
+        },
+        {
+          "text": "His chariots of wrath the deep thunderclouds form,",
+          "chords": [
+            {
+              "position": 4,
+              "text": "G"
+            },
+            {
+              "position": 16,
+              "text": "Em"
+            },
+            {
+              "position": 31,
+              "text": "C"
+            },
+            {
+              "position": 45,
+              "text": "G"
+            }
+          ]
+        },
+        {
+          "text": "And dark is His path on the wings of the storm.",
+          "chords": [
+            {
+              "position": 4,
+              "text": "C"
+            },
+            {
+              "position": 16,
+              "text": "G"
+            },
+            {
+              "position": 28,
+              "text": "D"
+            },
+            {
+              "position": 41,
+              "text": "G"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "label": "Verse 3",
+      "kind": "verse",
+      "color_hex": "#2378C3",
+      "hotkey": "3",
+      "lines": [
+        {
+          "text": "Thy bountiful care what tongue can recite?",
+          "chords": [
+            {
+              "position": 4,
+              "text": "G"
+            },
+            {
+              "position": 14,
+              "text": "Em"
+            },
+            {
+              "position": 24,
+              "text": "C"
+            },
+            {
+              "position": 37,
+              "text": "G"
+            }
+          ]
+        },
+        {
+          "text": "It breathes in the air, it shines in the light;",
+          "chords": [
+            {
+              "position": 3,
+              "text": "G"
+            },
+            {
+              "position": 19,
+              "text": "Em"
+            },
+            {
+              "position": 27,
+              "text": "A"
+            },
+            {
+              "position": 41,
+              "text": "D"
+            }
+          ]
+        },
+        {
+          "text": "It streams from the hills, it descends to the plain,",
+          "chords": [
+            {
+              "position": 3,
+              "text": "G"
+            },
+            {
+              "position": 20,
+              "text": "Em"
+            },
+            {
+              "position": 32,
+              "text": "C"
+            },
+            {
+              "position": 46,
+              "text": "G"
+            }
+          ]
+        },
+        {
+          "text": "And sweetly distills in the dew and the rain.",
+          "chords": [
+            {
+              "position": 4,
+              "text": "C"
+            },
+            {
+              "position": 15,
+              "text": "G"
+            },
+            {
+              "position": 28,
+              "text": "D"
+            },
+            {
+              "position": 40,
+              "text": "G"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "label": "Verse 4",
+      "kind": "verse",
+      "color_hex": "#2378C3",
+      "hotkey": "4",
+      "lines": [
+        {
+          "text": "Frail children of dust, and feeble as frail,",
+          "chords": [
+            {
+              "position": 6,
+              "text": "G"
+            },
+            {
+              "position": 18,
+              "text": "Em"
+            },
+            {
+              "position": 28,
+              "text": "C"
+            },
+            {
+              "position": 38,
+              "text": "G"
+            }
+          ]
+        },
+        {
+          "text": "In Thee do we trust, nor find Thee to fail;",
+          "chords": [
+            {
+              "position": 3,
+              "text": "G"
+            },
+            {
+              "position": 14,
+              "text": "Em"
+            },
+            {
+              "position": 25,
+              "text": "A"
+            },
+            {
+              "position": 38,
+              "text": "D"
+            }
+          ]
+        },
+        {
+          "text": "Thy mercies how tender, how firm to the end,",
+          "chords": [
+            {
+              "position": 4,
+              "text": "G"
+            },
+            {
+              "position": 16,
+              "text": "Em"
+            },
+            {
+              "position": 28,
+              "text": "C"
+            },
+            {
+              "position": 40,
+              "text": "G"
+            }
+          ]
+        },
+        {
+          "text": "Our Maker, Defender, Redeemer, and Friend.",
+          "chords": [
+            {
+              "position": 4,
+              "text": "C"
+            },
+            {
+              "position": 13,
+              "text": "G"
+            },
+            {
+              "position": 23,
+              "text": "D"
+            },
+            {
+              "position": 35,
+              "text": "G"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

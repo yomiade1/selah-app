@@ -1,0 +1,382 @@
+{
+  "title": "Praise to the Lord, the Almighty",
+  "author": "Joachim Neander (1650-1680); tr. Catherine Winkworth (1827-1878)",
+  "key": "F",
+  "public_domain": true,
+  "arrangement": [
+    "Verse 1",
+    "Verse 2",
+    "Verse 3",
+    "Verse 4"
+  ],
+  "sections": [
+    {
+      "label": "Verse 1",
+      "kind": "verse",
+      "color_hex": "#2378C3",
+      "hotkey": "1",
+      "lines": [
+        {
+          "text": "Praise to the Lord, the Almighty, the King of creation!",
+          "chords": [
+            {
+              "position": 0,
+              "text": "F"
+            },
+            {
+              "position": 14,
+              "text": "C"
+            },
+            {
+              "position": 26,
+              "text": "Dm"
+            },
+            {
+              "position": 38,
+              "text": "Bb"
+            },
+            {
+              "position": 49,
+              "text": "C"
+            }
+          ]
+        },
+        {
+          "text": "O my soul, praise Him, for He is thy health and salvation!",
+          "chords": [
+            {
+              "position": 0,
+              "text": "F"
+            },
+            {
+              "position": 11,
+              "text": "C"
+            },
+            {
+              "position": 27,
+              "text": "Dm"
+            },
+            {
+              "position": 37,
+              "text": "Bb"
+            },
+            {
+              "position": 51,
+              "text": "C"
+            }
+          ]
+        },
+        {
+          "text": "All ye who hear, now to His temple draw near;",
+          "chords": [
+            {
+              "position": 0,
+              "text": "Bb"
+            },
+            {
+              "position": 11,
+              "text": "F"
+            },
+            {
+              "position": 28,
+              "text": "C"
+            }
+          ]
+        },
+        {
+          "text": "Praise Him in glad adoration!",
+          "chords": [
+            {
+              "position": 0,
+              "text": "Bb"
+            },
+            {
+              "position": 14,
+              "text": "C"
+            },
+            {
+              "position": 22,
+              "text": "F"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "label": "Verse 2",
+      "kind": "verse",
+      "color_hex": "#2378C3",
+      "hotkey": "2",
+      "lines": [
+        {
+          "text": "Praise to the Lord, who o’er all things so wondrously reigneth,",
+          "chords": [
+            {
+              "position": 0,
+              "text": "F"
+            },
+            {
+              "position": 14,
+              "text": "C"
+            },
+            {
+              "position": 29,
+              "text": "Dm"
+            },
+            {
+              "position": 43,
+              "text": "Bb"
+            },
+            {
+              "position": 54,
+              "text": "C"
+            }
+          ]
+        },
+        {
+          "text": "Shelters thee under His wings, yea, so gently sustaineth!",
+          "chords": [
+            {
+              "position": 0,
+              "text": "F"
+            },
+            {
+              "position": 14,
+              "text": "C"
+            },
+            {
+              "position": 24,
+              "text": "Dm"
+            },
+            {
+              "position": 39,
+              "text": "Bb"
+            },
+            {
+              "position": 49,
+              "text": "C"
+            }
+          ]
+        },
+        {
+          "text": "Hast thou not seen how thy desires e’er have been",
+          "chords": [
+            {
+              "position": 0,
+              "text": "Bb"
+            },
+            {
+              "position": 14,
+              "text": "F"
+            },
+            {
+              "position": 29,
+              "text": "C"
+            }
+          ]
+        },
+        {
+          "text": "Granted in what He ordaineth?",
+          "chords": [
+            {
+              "position": 0,
+              "text": "Bb"
+            },
+            {
+              "position": 11,
+              "text": "C"
+            },
+            {
+              "position": 21,
+              "text": "F"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "label": "Verse 3",
+      "kind": "verse",
+      "color_hex": "#2378C3",
+      "hotkey": "3",
+      "lines": [
+        {
+          "text": "Praise to the Lord, who doth prosper thy work and defend thee!",
+          "chords": [
+            {
+              "position": 0,
+              "text": "F"
+            },
+            {
+              "position": 14,
+              "text": "C"
+            },
+            {
+              "position": 29,
+              "text": "Dm"
+            },
+            {
+              "position": 41,
+              "text": "Bb"
+            },
+            {
+              "position": 52,
+              "text": "C"
+            }
+          ]
+        },
+        {
+          "text": "Surely His goodness and mercy here daily attend thee.",
+          "chords": [
+            {
+              "position": 0,
+              "text": "F"
+            },
+            {
+              "position": 11,
+              "text": "C"
+            },
+            {
+              "position": 24,
+              "text": "Dm"
+            },
+            {
+              "position": 35,
+              "text": "Bb"
+            },
+            {
+              "position": 43,
+              "text": "C"
+            }
+          ]
+        },
+        {
+          "text": "Ponder anew what the Almighty can do,",
+          "chords": [
+            {
+              "position": 0,
+              "text": "Bb"
+            },
+            {
+              "position": 8,
+              "text": "F"
+            },
+            {
+              "position": 23,
+              "text": "C"
+            }
+          ]
+        },
+        {
+          "text": "If with His love He befriend thee.",
+          "chords": [
+            {
+              "position": 0,
+              "text": "Bb"
+            },
+            {
+              "position": 12,
+              "text": "C"
+            },
+            {
+              "position": 22,
+              "text": "F"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "label": "Verse 4",
+      "kind": "verse",
+      "color_hex": "#2378C3",
+      "hotkey": "4",
+      "lines": [
+        {
+          "text": "Praise to the Lord! O let all that is in me adore Him!",
+          "chords": [
+            {
+              "position": 0,
+              "text": "F"
+            },
+            {
+              "position": 14,
+              "text": "C"
+            },
+            {
+              "position": 26,
+              "text": "Dm"
+            },
+            {
+              "position": 38,
+              "text": "Bb"
+            },
+            {
+              "position": 45,
+              "text": "C"
+            }
+          ]
+        },
+        {
+          "text": "All that hath life and breath, come now with praises before Him!",
+          "chords": [
+            {
+              "position": 0,
+              "text": "F"
+            },
+            {
+              "position": 14,
+              "text": "C"
+            },
+            {
+              "position": 31,
+              "text": "Dm"
+            },
+            {
+              "position": 45,
+              "text": "Bb"
+            },
+            {
+              "position": 55,
+              "text": "C"
+            }
+          ]
+        },
+        {
+          "text": "Let the Amen sound from His people again:",
+          "chords": [
+            {
+              "position": 0,
+              "text": "Bb"
+            },
+            {
+              "position": 9,
+              "text": "F"
+            },
+            {
+              "position": 28,
+              "text": "C"
+            }
+          ]
+        },
+        {
+          "text": "Gladly for aye we adore Him.",
+          "chords": [
+            {
+              "position": 0,
+              "text": "Bb"
+            },
+            {
+              "position": 11,
+              "text": "C"
+            },
+            {
+              "position": 19,
+              "text": "F"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

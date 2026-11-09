@@ -1,0 +1,366 @@
+{
+  "title": "Be Thou My Vision",
+  "author": "Ancient Irish; tr. Mary E. Byrne (1880-1931); vers. Eleanor H. Hull (1860-1935)",
+  "key": "Eb",
+  "public_domain": true,
+  "arrangement": [
+    "Verse 1",
+    "Verse 2",
+    "Verse 3",
+    "Verse 4"
+  ],
+  "sections": [
+    {
+      "label": "Verse 1",
+      "kind": "verse",
+      "color_hex": "#2378C3",
+      "hotkey": "1",
+      "lines": [
+        {
+          "text": "Be Thou my Vision, O Lord of my heart;",
+          "chords": [
+            {
+              "position": 0,
+              "text": "Eb"
+            },
+            {
+              "position": 11,
+              "text": "Bb"
+            },
+            {
+              "position": 21,
+              "text": "Ab"
+            },
+            {
+              "position": 32,
+              "text": "Eb"
+            }
+          ]
+        },
+        {
+          "text": "Naught be all else to me, save that Thou art.",
+          "chords": [
+            {
+              "position": 0,
+              "text": "Bb"
+            },
+            {
+              "position": 26,
+              "text": "Ab"
+            },
+            {
+              "position": 41,
+              "text": "Bb"
+            }
+          ]
+        },
+        {
+          "text": "Thou my best Thought, by day or by night,",
+          "chords": [
+            {
+              "position": 0,
+              "text": "Ab"
+            },
+            {
+              "position": 13,
+              "text": "Eb"
+            },
+            {
+              "position": 25,
+              "text": "Bb"
+            },
+            {
+              "position": 35,
+              "text": "Cm"
+            }
+          ]
+        },
+        {
+          "text": "Waking or sleeping, Thy presence my light.",
+          "chords": [
+            {
+              "position": 0,
+              "text": "Eb"
+            },
+            {
+              "position": 10,
+              "text": "Ab"
+            },
+            {
+              "position": 24,
+              "text": "Bb"
+            },
+            {
+              "position": 36,
+              "text": "Eb"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "label": "Verse 2",
+      "kind": "verse",
+      "color_hex": "#2378C3",
+      "hotkey": "2",
+      "lines": [
+        {
+          "text": "Be Thou my Wisdom, and Thou my true Word;",
+          "chords": [
+            {
+              "position": 0,
+              "text": "Eb"
+            },
+            {
+              "position": 11,
+              "text": "Bb"
+            },
+            {
+              "position": 23,
+              "text": "Ab"
+            },
+            {
+              "position": 36,
+              "text": "Eb"
+            }
+          ]
+        },
+        {
+          "text": "I ever with Thee and Thou with me, Lord;",
+          "chords": [
+            {
+              "position": 0,
+              "text": "Bb"
+            },
+            {
+              "position": 21,
+              "text": "Ab"
+            },
+            {
+              "position": 35,
+              "text": "Bb"
+            }
+          ]
+        },
+        {
+          "text": "Thou my great Father, and I Thy true son,",
+          "chords": [
+            {
+              "position": 0,
+              "text": "Ab"
+            },
+            {
+              "position": 14,
+              "text": "Eb"
+            },
+            {
+              "position": 26,
+              "text": "Bb"
+            },
+            {
+              "position": 37,
+              "text": "Cm"
+            }
+          ]
+        },
+        {
+          "text": "Thou in me dwelling, and I with Thee one.",
+          "chords": [
+            {
+              "position": 0,
+              "text": "Eb"
+            },
+            {
+              "position": 11,
+              "text": "Ab"
+            },
+            {
+              "position": 25,
+              "text": "Bb"
+            },
+            {
+              "position": 37,
+              "text": "Eb"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "label": "Verse 3",
+      "kind": "verse",
+      "color_hex": "#2378C3",
+      "hotkey": "3",
+      "lines": [
+        {
+          "text": "Riches I heed not, nor man’s empty praise,",
+          "chords": [
+            {
+              "position": 0,
+              "text": "Eb"
+            },
+            {
+              "position": 9,
+              "text": "Bb"
+            },
+            {
+              "position": 23,
+              "text": "Ab"
+            },
+            {
+              "position": 35,
+              "text": "Eb"
+            }
+          ]
+        },
+        {
+          "text": "Thou mine inheritance, now and always;",
+          "chords": [
+            {
+              "position": 0,
+              "text": "Bb"
+            },
+            {
+              "position": 23,
+              "text": "Ab"
+            },
+            {
+              "position": 33,
+              "text": "Bb"
+            }
+          ]
+        },
+        {
+          "text": "Thou and Thou only, first in my heart,",
+          "chords": [
+            {
+              "position": 0,
+              "text": "Ab"
+            },
+            {
+              "position": 14,
+              "text": "Eb"
+            },
+            {
+              "position": 26,
+              "text": "Bb"
+            },
+            {
+              "position": 32,
+              "text": "Cm"
+            }
+          ]
+        },
+        {
+          "text": "High King of heaven, my Treasure Thou art.",
+          "chords": [
+            {
+              "position": 0,
+              "text": "Eb"
+            },
+            {
+              "position": 13,
+              "text": "Ab"
+            },
+            {
+              "position": 24,
+              "text": "Bb"
+            },
+            {
+              "position": 38,
+              "text": "Eb"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "label": "Verse 4",
+      "kind": "verse",
+      "color_hex": "#2378C3",
+      "hotkey": "4",
+      "lines": [
+        {
+          "text": "High King of heaven, my victory won,",
+          "chords": [
+            {
+              "position": 0,
+              "text": "Eb"
+            },
+            {
+              "position": 13,
+              "text": "Bb"
+            },
+            {
+              "position": 24,
+              "text": "Ab"
+            },
+            {
+              "position": 32,
+              "text": "Eb"
+            }
+          ]
+        },
+        {
+          "text": "May I reach heaven’s joys, O bright heav’n’s Sun!",
+          "chords": [
+            {
+              "position": 0,
+              "text": "Bb"
+            },
+            {
+              "position": 27,
+              "text": "Ab"
+            },
+            {
+              "position": 45,
+              "text": "Bb"
+            }
+          ]
+        },
+        {
+          "text": "Heart of my own heart, whatever befall,",
+          "chords": [
+            {
+              "position": 0,
+              "text": "Ab"
+            },
+            {
+              "position": 12,
+              "text": "Eb"
+            },
+            {
+              "position": 27,
+              "text": "Bb"
+            },
+            {
+              "position": 34,
+              "text": "Cm"
+            }
+          ]
+        },
+        {
+          "text": "Still be my Vision, O Ruler of all.",
+          "chords": [
+            {
+              "position": 0,
+              "text": "Eb"
+            },
+            {
+              "position": 12,
+              "text": "Ab"
+            },
+            {
+              "position": 22,
+              "text": "Bb"
+            },
+            {
+              "position": 31,
+              "text": "Eb"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

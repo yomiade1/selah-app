@@ -12,7 +12,7 @@ import type { Message } from "@bufbuild/protobuf";
  * Describes the file selah/v1/library.proto.
  */
 export const file_selah_v1_library: GenFile = /*@__PURE__*/
-  fileDesc("ChZzZWxhaC92MS9saWJyYXJ5LnByb3RvEghzZWxhaC52MSInCgVDaG9yZBIQCghwb3NpdGlvbhgBIAEoDRIMCgR0ZXh0GAIgASgJIjoKCUx5cmljTGluZRIMCgR0ZXh0GAEgASgJEh8KBmNob3JkcxgCIAMoCzIPLnNlbGFoLnYxLkNob3JkIiEKEFRyYW5zbGF0aW9uTGluZXMSDQoFbGluZXMYASADKAkitwIKB1NlY3Rpb24SGAoCaWQYASABKAsyDC5zZWxhaC52MS5JZBINCgVsYWJlbBgCIAEoCRIjCgRraW5kGAMgASgOMhUuc2VsYWgudjEuU2VjdGlvbktpbmQSHgoFY29sb3IYBCABKAsyDy5zZWxhaC52MS5Db2xvchIOCgZob3RrZXkYBSABKAkSIgoFbGluZXMYBiADKAsyEy5zZWxhaC52MS5MeXJpY0xpbmUSOQoMdHJhbnNsYXRpb25zGAcgAygLMiMuc2VsYWgudjEuU2VjdGlvbi5UcmFuc2xhdGlvbnNFbnRyeRpPChFUcmFuc2xhdGlvbnNFbnRyeRILCgNrZXkYASABKAkSKQoFdmFsdWUYAiABKAsyGi5zZWxhaC52MS5UcmFuc2xhdGlvbkxpbmVzOgI4ASJYCgtBcnJhbmdlbWVudBIYCgJpZBgBIAEoCzIMLnNlbGFoLnYxLklkEgwKBG5hbWUYAiABKAkSIQoLc2VjdGlvbl9pZHMYAyADKAsyDC5zZWxhaC52MS5JZCL7AQoEU29uZxIYCgJpZBgBIAEoCzIMLnNlbGFoLnYxLklkEg0KBXRpdGxlGAIgASgJEg8KB2F1dGhvcnMYAyADKAkSEwoLY2NsaV9udW1iZXIYBCABKAkSEQoJY29weXJpZ2h0GAUgASgJEgsKA2tleRgGIAEoCRINCgV0ZW1wbxgHIAEoARIMCgR0YWdzGAggAygJEhUKDXB1YmxpY19kb21haW4YCSABKAgSIwoIc2VjdGlvbnMYCiADKAsyES5zZWxhaC52MS5TZWN0aW9uEisKDGFycmFuZ2VtZW50cxgLIAMoCzIVLnNlbGFoLnYxLkFycmFuZ2VtZW50InwKD1RlbXBsYXRlVmFyaWFudBIYCgJpZBgBIAEoCzIMLnNlbGFoLnYxLklkEigKCnJlc29sdXRpb24YAiABKAsyFC5zZWxhaC52MS5SZXNvbHV0aW9uEhEKCW1heF9saW5lcxgDIAEoDRISCgpzdHlsZV9qc29uGAQgASgJIl8KCFRlbXBsYXRlEhgKAmlkGAEgASgLMgwuc2VsYWgudjEuSWQSDAoEbmFtZRgCIAEoCRIrCgh2YXJpYW50cxgDIAMoCzIZLnNlbGFoLnYxLlRlbXBsYXRlVmFyaWFudCLqAQoJTWVkaWFJdGVtEhgKAmlkGAEgASgLMgwuc2VsYWgudjEuSWQSDAoEbmFtZRgCIAEoCRIhCgRraW5kGAMgASgOMhMuc2VsYWgudjEuTWVkaWFLaW5kEhQKDGNvbnRlbnRfaGFzaBgEIAEoCRIRCglleHRlbnNpb24YBSABKAkSEgoKc2l6ZV9ieXRlcxgGIAEoBBIoCgpyZXNvbHV0aW9uGAcgASgLMhQuc2VsYWgudjEuUmVzb2x1dGlvbhIdChVkdXJhdGlvbl9taWxsaXNlY29uZHMYCCABKAQSDAoEdGFncxgJIAMoCSJmCgVTbGlkZRIYCgJpZBgBIAEoCzIMLnNlbGFoLnYxLklkEgwKBHRleHQYAiABKAkSHgoIbWVkaWFfaWQYAyABKAsyDC5zZWxhaC52MS5JZBIVCg1lbGVtZW50c19qc29uGAQgASgJInoKDFByZXNlbnRhdGlvbhIYCgJpZBgBIAEoCzIMLnNlbGFoLnYxLklkEgwKBG5hbWUYAiABKAkSHwoGc2xpZGVzGAMgAygLMg8uc2VsYWgudjEuU2xpZGUSIQoLdGVtcGxhdGVfaWQYBCABKAsyDC5zZWxhaC52MS5JZCItCgNUYWcSGAoCaWQYASABKAsyDC5zZWxhaC52MS5JZBIMCgRuYW1lGAIgASgJIigKB09wU3RhdGUSDwoHcHJlc2VudBgBIAEoCBIMCgRkYXRhGAIgASgMIigKCFNhdmVTb25nEhwKBHNvbmcYASABKAsyDi5zZWxhaC52MS5Tb25nIiYKCkRlbGV0ZVNvbmcSGAoCaWQYASABKAsyDC5zZWxhaC52MS5JZCIjCgdHZXRTb25nEhgKAmlkGAEgASgLMgwuc2VsYWgudjEuSWQiKgoJTGlzdFNvbmdzEg0KBWxpbWl0GAEgASgNEg4KBm9mZnNldBgCIAEoDSIpCghTb25nTGlzdBIdCgVzb25ncxgBIAMoCzIOLnNlbGFoLnYxLlNvbmciNAoMU2F2ZVRlbXBsYXRlEiQKCHRlbXBsYXRlGAEgASgLMhIuc2VsYWgudjEuVGVtcGxhdGUiKgoORGVsZXRlVGVtcGxhdGUSGAoCaWQYASABKAsyDC5zZWxhaC52MS5JZCInCgtHZXRUZW1wbGF0ZRIYCgJpZBgBIAEoCzIMLnNlbGFoLnYxLklkIi4KDUxpc3RUZW1wbGF0ZXMSDQoFbGltaXQYASABKA0SDgoGb2Zmc2V0GAIgASgNIjUKDFRlbXBsYXRlTGlzdBIlCgl0ZW1wbGF0ZXMYASADKAsyEi5zZWxhaC52MS5UZW1wbGF0ZSI4Cg1TYXZlTWVkaWFJdGVtEicKCm1lZGlhX2l0ZW0YASABKAsyEy5zZWxhaC52MS5NZWRpYUl0ZW0iKwoPRGVsZXRlTWVkaWFJdGVtEhgKAmlkGAEgASgLMgwuc2VsYWgudjEuSWQiKAoMR2V0TWVkaWFJdGVtEhgKAmlkGAEgASgLMgwuc2VsYWgudjEuSWQiLwoOTGlzdE1lZGlhSXRlbXMSDQoFbGltaXQYASABKA0SDgoGb2Zmc2V0GAIgASgNIjkKDU1lZGlhSXRlbUxpc3QSKAoLbWVkaWFfaXRlbXMYASADKAsyEy5zZWxhaC52MS5NZWRpYUl0ZW0iQAoQU2F2ZVByZXNlbnRhdGlvbhIsCgxwcmVzZW50YXRpb24YASABKAsyFi5zZWxhaC52MS5QcmVzZW50YXRpb24iLgoSRGVsZXRlUHJlc2VudGF0aW9uEhgKAmlkGAEgASgLMgwuc2VsYWgudjEuSWQiKwoPR2V0UHJlc2VudGF0aW9uEhgKAmlkGAEgASgLMgwuc2VsYWgudjEuSWQiMgoRTGlzdFByZXNlbnRhdGlvbnMSDQoFbGltaXQYASABKA0SDgoGb2Zmc2V0GAIgASgNIkEKEFByZXNlbnRhdGlvbkxpc3QSLQoNcHJlc2VudGF0aW9ucxgBIAMoCzIWLnNlbGFoLnYxLlByZXNlbnRhdGlvbiIlCgdTYXZlVGFnEhoKA3RhZxgBIAEoCzINLnNlbGFoLnYxLlRhZyIlCglEZWxldGVUYWcSGAoCaWQYASABKAsyDC5zZWxhaC52MS5JZCIiCgZHZXRUYWcSGAoCaWQYASABKAsyDC5zZWxhaC52MS5JZCIpCghMaXN0VGFncxINCgVsaW1pdBgBIAEoDRIOCgZvZmZzZXQYAiABKA0iJgoHVGFnTGlzdBIbCgR0YWdzGAEgAygLMg0uc2VsYWgudjEuVGFnIiQKBFVuZG8SHAoGZG9jX2lkGAEgASgLMgwuc2VsYWgudjEuSWQiJAoEUmVkbxIcCgZkb2NfaWQYASABKAsyDC5zZWxhaC52MS5JZCIsCgxHZXRVbmRvU3RhdGUSHAoGZG9jX2lkGAEgASgLMgwuc2VsYWgudjEuSWQiVwoJVW5kb1N0YXRlEhAKCGNhbl91bmRvGAEgASgIEhAKCGNhbl9yZWRvGAIgASgIEhIKCnVuZG9fZGVwdGgYAyABKA0SEgoKcmVkb19kZXB0aBgEIAEoDSKQAQoMRWRpdG9yQnVmZmVyEhwKBmRvY19pZBgBIAEoCzIMLnNlbGFoLnYxLklkEigKCGRvY190eXBlGAIgASgOMhYuc2VsYWgudjEuRG9jdW1lbnRUeXBlEg8KB2NvbnRlbnQYAyABKAkSJwoKdXBkYXRlZF9hdBgEIAEoCzITLnNlbGFoLnYxLlRpbWVzdGFtcCJrChBTYXZlRWRpdG9yQnVmZmVyEhwKBmRvY19pZBgBIAEoCzIMLnNlbGFoLnYxLklkEigKCGRvY190eXBlGAIgASgOMhYuc2VsYWgudjEuRG9jdW1lbnRUeXBlEg8KB2NvbnRlbnQYAyABKAkiMwoTRGlzY2FyZEVkaXRvckJ1ZmZlchIcCgZkb2NfaWQYASABKAsyDC5zZWxhaC52MS5JZCIvCg9HZXRFZGl0b3JCdWZmZXISHAoGZG9jX2lkGAEgASgLMgwuc2VsYWgudjEuSWQiSgoRRWRpdG9yQnVmZmVyUmVwbHkSDQoFZm91bmQYASABKAgSJgoGYnVmZmVyGAIgASgLMhYuc2VsYWgudjEuRWRpdG9yQnVmZmVyIjIKEUxpc3RFZGl0b3JCdWZmZXJzEg0KBWxpbWl0GAEgASgNEg4KBm9mZnNldBgCIAEoDSI7ChBFZGl0b3JCdWZmZXJMaXN0EicKB2J1ZmZlcnMYASADKAsyFi5zZWxhaC52MS5FZGl0b3JCdWZmZXIiSQoHTGlzdE9wcxIRCglhZnRlcl9zZXEYASABKAQSDQoFbGltaXQYAiABKA0SHAoGZG9jX2lkGAMgASgLMgwuc2VsYWgudjEuSWQisQIKCE9wUmVjb3JkEgsKA3NlcRgBIAEoBBIbCgVvcF9pZBgCIAEoCzIMLnNlbGFoLnYxLklkEiYKCXRpbWVzdGFtcBgDIAEoCzITLnNlbGFoLnYxLlRpbWVzdGFtcBIPCgd1c2VyX2lkGAQgASgJEhEKCWRldmljZV9pZBgFIAEoCRIOCgZvcmlnaW4YBiABKAkSKAoIZG9jX3R5cGUYByABKA4yFi5zZWxhaC52MS5Eb2N1bWVudFR5cGUSHAoGZG9jX2lkGAggASgLMgwuc2VsYWgudjEuSWQSDwoHY29tbWFuZBgJIAEoDBIPCgdpbnZlcnNlGAogASgMEiAKCnVuZG9fZ3JvdXAYCyABKAsyDC5zZWxhaC52MS5JZBITCgtzeW5jX3N0YXR1cxgMIAEoBSIpCgZPcExpc3QSHwoDb3BzGAEgAygLMhIuc2VsYWgudjEuT3BSZWNvcmQizwEKDkxpYnJhcnlDaGFuZ2VkEigKCGRvY190eXBlGAEgASgOMhYuc2VsYWgudjEuRG9jdW1lbnRUeXBlEhwKBmRvY19pZBgCIAEoCzIMLnNlbGFoLnYxLklkEisKBmNoYW5nZRgDIAEoDjIbLnNlbGFoLnYxLkxpYnJhcnlDaGFuZ2VLaW5kEg4KBm9wX3NlcRgEIAEoBBIgCgp1bmRvX2dyb3VwGAUgASgLMgwuc2VsYWgudjEuSWQSFgoOZnJvbV91bmRvX3JlZG8YBiABKAgifAoQVW5kb1N0YXRlQ2hhbmdlZBIjCgZnbG9iYWwYASABKAsyEy5zZWxhaC52MS5VbmRvU3RhdGUSHAoGZG9jX2lkGAIgASgLMgwuc2VsYWgudjEuSWQSJQoIZG9jdW1lbnQYAyABKAsyEy5zZWxhaC52MS5VbmRvU3RhdGUiOwoLU2VhcmNoU29uZ3MSDQoFcXVlcnkYASABKAkSDQoFbGltaXQYAiABKA0SDgoGb2Zmc2V0GAMgASgNImUKDVNvbmdTZWFyY2hIaXQSHAoEc29uZxgBIAEoCzIOLnNlbGFoLnYxLlNvbmcSDQoFc2NvcmUYAiABKAESDwoHc25pcHBldBgDIAEoCRIWCg5tYXRjaGVkX2ZpZWxkcxgEIAMoCSJJChFTb25nU2VhcmNoUmVzdWx0cxIlCgRoaXRzGAEgAygLMhcuc2VsYWgudjEuU29uZ1NlYXJjaEhpdBINCgV0b3RhbBgCIAEoDSJeCgtTZWFyY2hNZWRpYRINCgVxdWVyeRgBIAEoCRIhCgRraW5kGAIgASgOMhMuc2VsYWgudjEuTWVkaWFLaW5kEg0KBWxpbWl0GAMgASgNEg4KBm9mZnNldBgEIAEoDSJxCg5NZWRpYVNlYXJjaEhpdBInCgptZWRpYV9pdGVtGAEgASgLMhMuc2VsYWgudjEuTWVkaWFJdGVtEg0KBXNjb3JlGAIgASgBEg8KB3NuaXBwZXQYAyABKAkSFgoObWF0Y2hlZF9maWVsZHMYBCADKAkiSwoSTWVkaWFTZWFyY2hSZXN1bHRzEiYKBGhpdHMYASADKAsyGC5zZWxhaC52MS5NZWRpYVNlYXJjaEhpdBINCgV0b3RhbBgCIAEoDSJUCg9TZWFyY2hTY3JpcHR1cmUSDQoFcXVlcnkYASABKAkSEwoLdHJhbnNsYXRpb24YAiABKAkSDQoFbGltaXQYAyABKA0SDgoGb2Zmc2V0GAQgASgNIoYBChFTY3JpcHR1cmVWZXJzZUhpdBITCgt0cmFuc2xhdGlvbhgBIAEoCRIMCgRib29rGAIgASgJEhEKCWJvb2tfbmFtZRgDIAEoCRIPCgdjaGFwdGVyGAQgASgNEg0KBXZlcnNlGAUgASgNEgwKBHRleHQYBiABKAkSDQoFc2NvcmUYByABKAEiUgoWU2NyaXB0dXJlU2VhcmNoUmVzdWx0cxIpCgRoaXRzGAEgAygLMhsuc2VsYWgudjEuU2NyaXB0dXJlVmVyc2VIaXQSDQoFdG90YWwYAiABKA0iaAoNU2VhcmNoTGlicmFyeRINCgVxdWVyeRgBIAEoCRIkCgVzY29wZRgCIAEoDjIVLnNlbGFoLnYxLlNlYXJjaFNjb3BlEhMKC3RyYW5zbGF0aW9uGAMgASgJEg0KBWxpbWl0GAQgASgNIpcBChRMaWJyYXJ5U2VhcmNoUmVzdWx0cxImCgVzb25ncxgBIAMoCzIXLnNlbGFoLnYxLlNvbmdTZWFyY2hIaXQSJwoFbWVkaWEYAiADKAsyGC5zZWxhaC52MS5NZWRpYVNlYXJjaEhpdBIuCglzY3JpcHR1cmUYAyADKAsyGy5zZWxhaC52MS5TY3JpcHR1cmVWZXJzZUhpdCrTAQoLU2VjdGlvbktpbmQSHAoYU0VDVElPTl9LSU5EX1VOU1BFQ0lGSUVEEAASFgoSU0VDVElPTl9LSU5EX1ZFUlNFEAESFwoTU0VDVElPTl9LSU5EX0NIT1JVUxACEhcKE1NFQ1RJT05fS0lORF9CUklER0UQAxIUChBTRUNUSU9OX0tJTkRfVEFHEAQSFgoSU0VDVElPTl9LSU5EX0lOVFJPEAUSFgoSU0VDVElPTl9LSU5EX09VVFJPEAYSFgoSU0VDVElPTl9LSU5EX09USEVSEAcqaQoJTWVkaWFLaW5kEhoKFk1FRElBX0tJTkRfVU5TUEVDSUZJRUQQABIUChBNRURJQV9LSU5EX0lNQUdFEAESFAoQTUVESUFfS0lORF9WSURFTxACEhQKEE1FRElBX0tJTkRfQVVESU8QAyqEAgoMRG9jdW1lbnRUeXBlEh0KGURPQ1VNRU5UX1RZUEVfVU5TUEVDSUZJRUQQABIWChJET0NVTUVOVF9UWVBFX1NPTkcQARIaChZET0NVTUVOVF9UWVBFX1RFTVBMQVRFEAISFwoTRE9DVU1FTlRfVFlQRV9NRURJQRADEh4KGkRPQ1VNRU5UX1RZUEVfUFJFU0VOVEFUSU9OEAQSGQoVRE9DVU1FTlRfVFlQRV9TRVJWSUNFEAUSHgoaRE9DVU1FTlRfVFlQRV9TRVJWSUNFX1RZUEUQBhIWChJET0NVTUVOVF9UWVBFX1RFQU0QBxIVChFET0NVTUVOVF9UWVBFX1RBRxAIKngKEUxpYnJhcnlDaGFuZ2VLaW5kEiMKH0xJQlJBUllfQ0hBTkdFX0tJTkRfVU5TUEVDSUZJRUQQABIdChlMSUJSQVJZX0NIQU5HRV9LSU5EX1NBVkVEEAESHwobTElCUkFSWV9DSEFOR0VfS0lORF9ERUxFVEVEEAIqjQEKC1NlYXJjaFNjb3BlEhwKGFNFQVJDSF9TQ09QRV9VTlNQRUNJRklFRBAAEhQKEFNFQVJDSF9TQ09QRV9BTEwQARIWChJTRUFSQ0hfU0NPUEVfU09OR1MQAhIWChJTRUFSQ0hfU0NPUEVfTUVESUEQAxIaChZTRUFSQ0hfU0NPUEVfU0NSSVBUVVJFEARCFaoCElNlbGFoLkNvbnRyYWN0cy5WMWIGcHJvdG8z", [file_selah_v1_common]);
+  fileDesc("ChZzZWxhaC92MS9saWJyYXJ5LnByb3RvEghzZWxhaC52MSInCgVDaG9yZBIQCghwb3NpdGlvbhgBIAEoDRIMCgR0ZXh0GAIgASgJIjoKCUx5cmljTGluZRIMCgR0ZXh0GAEgASgJEh8KBmNob3JkcxgCIAMoCzIPLnNlbGFoLnYxLkNob3JkIiEKEFRyYW5zbGF0aW9uTGluZXMSDQoFbGluZXMYASADKAkitwIKB1NlY3Rpb24SGAoCaWQYASABKAsyDC5zZWxhaC52MS5JZBINCgVsYWJlbBgCIAEoCRIjCgRraW5kGAMgASgOMhUuc2VsYWgudjEuU2VjdGlvbktpbmQSHgoFY29sb3IYBCABKAsyDy5zZWxhaC52MS5Db2xvchIOCgZob3RrZXkYBSABKAkSIgoFbGluZXMYBiADKAsyEy5zZWxhaC52MS5MeXJpY0xpbmUSOQoMdHJhbnNsYXRpb25zGAcgAygLMiMuc2VsYWgudjEuU2VjdGlvbi5UcmFuc2xhdGlvbnNFbnRyeRpPChFUcmFuc2xhdGlvbnNFbnRyeRILCgNrZXkYASABKAkSKQoFdmFsdWUYAiABKAsyGi5zZWxhaC52MS5UcmFuc2xhdGlvbkxpbmVzOgI4ASJYCgtBcnJhbmdlbWVudBIYCgJpZBgBIAEoCzIMLnNlbGFoLnYxLklkEgwKBG5hbWUYAiABKAkSIQoLc2VjdGlvbl9pZHMYAyADKAsyDC5zZWxhaC52MS5JZCL7AQoEU29uZxIYCgJpZBgBIAEoCzIMLnNlbGFoLnYxLklkEg0KBXRpdGxlGAIgASgJEg8KB2F1dGhvcnMYAyADKAkSEwoLY2NsaV9udW1iZXIYBCABKAkSEQoJY29weXJpZ2h0GAUgASgJEgsKA2tleRgGIAEoCRINCgV0ZW1wbxgHIAEoARIMCgR0YWdzGAggAygJEhUKDXB1YmxpY19kb21haW4YCSABKAgSIwoIc2VjdGlvbnMYCiADKAsyES5zZWxhaC52MS5TZWN0aW9uEisKDGFycmFuZ2VtZW50cxgLIAMoCzIVLnNlbGFoLnYxLkFycmFuZ2VtZW50InwKD1RlbXBsYXRlVmFyaWFudBIYCgJpZBgBIAEoCzIMLnNlbGFoLnYxLklkEigKCnJlc29sdXRpb24YAiABKAsyFC5zZWxhaC52MS5SZXNvbHV0aW9uEhEKCW1heF9saW5lcxgDIAEoDRISCgpzdHlsZV9qc29uGAQgASgJIl8KCFRlbXBsYXRlEhgKAmlkGAEgASgLMgwuc2VsYWgudjEuSWQSDAoEbmFtZRgCIAEoCRIrCgh2YXJpYW50cxgDIAMoCzIZLnNlbGFoLnYxLlRlbXBsYXRlVmFyaWFudCLqAQoJTWVkaWFJdGVtEhgKAmlkGAEgASgLMgwuc2VsYWgudjEuSWQSDAoEbmFtZRgCIAEoCRIhCgRraW5kGAMgASgOMhMuc2VsYWgudjEuTWVkaWFLaW5kEhQKDGNvbnRlbnRfaGFzaBgEIAEoCRIRCglleHRlbnNpb24YBSABKAkSEgoKc2l6ZV9ieXRlcxgGIAEoBBIoCgpyZXNvbHV0aW9uGAcgASgLMhQuc2VsYWgudjEuUmVzb2x1dGlvbhIdChVkdXJhdGlvbl9taWxsaXNlY29uZHMYCCABKAQSDAoEdGFncxgJIAMoCSJmCgVTbGlkZRIYCgJpZBgBIAEoCzIMLnNlbGFoLnYxLklkEgwKBHRleHQYAiABKAkSHgoIbWVkaWFfaWQYAyABKAsyDC5zZWxhaC52MS5JZBIVCg1lbGVtZW50c19qc29uGAQgASgJInoKDFByZXNlbnRhdGlvbhIYCgJpZBgBIAEoCzIMLnNlbGFoLnYxLklkEgwKBG5hbWUYAiABKAkSHwoGc2xpZGVzGAMgAygLMg8uc2VsYWgudjEuU2xpZGUSIQoLdGVtcGxhdGVfaWQYBCABKAsyDC5zZWxhaC52MS5JZCItCgNUYWcSGAoCaWQYASABKAsyDC5zZWxhaC52MS5JZBIMCgRuYW1lGAIgASgJIigKB09wU3RhdGUSDwoHcHJlc2VudBgBIAEoCBIMCgRkYXRhGAIgASgMIigKCFNhdmVTb25nEhwKBHNvbmcYASABKAsyDi5zZWxhaC52MS5Tb25nIiYKCkRlbGV0ZVNvbmcSGAoCaWQYASABKAsyDC5zZWxhaC52MS5JZCIjCgdHZXRTb25nEhgKAmlkGAEgASgLMgwuc2VsYWgudjEuSWQiKgoJTGlzdFNvbmdzEg0KBWxpbWl0GAEgASgNEg4KBm9mZnNldBgCIAEoDSIpCghTb25nTGlzdBIdCgVzb25ncxgBIAMoCzIOLnNlbGFoLnYxLlNvbmciNAoMU2F2ZVRlbXBsYXRlEiQKCHRlbXBsYXRlGAEgASgLMhIuc2VsYWgudjEuVGVtcGxhdGUiKgoORGVsZXRlVGVtcGxhdGUSGAoCaWQYASABKAsyDC5zZWxhaC52MS5JZCInCgtHZXRUZW1wbGF0ZRIYCgJpZBgBIAEoCzIMLnNlbGFoLnYxLklkIi4KDUxpc3RUZW1wbGF0ZXMSDQoFbGltaXQYASABKA0SDgoGb2Zmc2V0GAIgASgNIjUKDFRlbXBsYXRlTGlzdBIlCgl0ZW1wbGF0ZXMYASADKAsyEi5zZWxhaC52MS5UZW1wbGF0ZSI4Cg1TYXZlTWVkaWFJdGVtEicKCm1lZGlhX2l0ZW0YASABKAsyEy5zZWxhaC52MS5NZWRpYUl0ZW0iKwoPRGVsZXRlTWVkaWFJdGVtEhgKAmlkGAEgASgLMgwuc2VsYWgudjEuSWQiKAoMR2V0TWVkaWFJdGVtEhgKAmlkGAEgASgLMgwuc2VsYWgudjEuSWQiLwoOTGlzdE1lZGlhSXRlbXMSDQoFbGltaXQYASABKA0SDgoGb2Zmc2V0GAIgASgNIjkKDU1lZGlhSXRlbUxpc3QSKAoLbWVkaWFfaXRlbXMYASADKAsyEy5zZWxhaC52MS5NZWRpYUl0ZW0iQAoQU2F2ZVByZXNlbnRhdGlvbhIsCgxwcmVzZW50YXRpb24YASABKAsyFi5zZWxhaC52MS5QcmVzZW50YXRpb24iLgoSRGVsZXRlUHJlc2VudGF0aW9uEhgKAmlkGAEgASgLMgwuc2VsYWgudjEuSWQiKwoPR2V0UHJlc2VudGF0aW9uEhgKAmlkGAEgASgLMgwuc2VsYWgudjEuSWQiMgoRTGlzdFByZXNlbnRhdGlvbnMSDQoFbGltaXQYASABKA0SDgoGb2Zmc2V0GAIgASgNIkEKEFByZXNlbnRhdGlvbkxpc3QSLQoNcHJlc2VudGF0aW9ucxgBIAMoCzIWLnNlbGFoLnYxLlByZXNlbnRhdGlvbiIlCgdTYXZlVGFnEhoKA3RhZxgBIAEoCzINLnNlbGFoLnYxLlRhZyIlCglEZWxldGVUYWcSGAoCaWQYASABKAsyDC5zZWxhaC52MS5JZCIiCgZHZXRUYWcSGAoCaWQYASABKAsyDC5zZWxhaC52MS5JZCIpCghMaXN0VGFncxINCgVsaW1pdBgBIAEoDRIOCgZvZmZzZXQYAiABKA0iJgoHVGFnTGlzdBIbCgR0YWdzGAEgAygLMg0uc2VsYWgudjEuVGFnIiQKBFVuZG8SHAoGZG9jX2lkGAEgASgLMgwuc2VsYWgudjEuSWQiJAoEUmVkbxIcCgZkb2NfaWQYASABKAsyDC5zZWxhaC52MS5JZCIsCgxHZXRVbmRvU3RhdGUSHAoGZG9jX2lkGAEgASgLMgwuc2VsYWgudjEuSWQiVwoJVW5kb1N0YXRlEhAKCGNhbl91bmRvGAEgASgIEhAKCGNhbl9yZWRvGAIgASgIEhIKCnVuZG9fZGVwdGgYAyABKA0SEgoKcmVkb19kZXB0aBgEIAEoDSKQAQoMRWRpdG9yQnVmZmVyEhwKBmRvY19pZBgBIAEoCzIMLnNlbGFoLnYxLklkEigKCGRvY190eXBlGAIgASgOMhYuc2VsYWgudjEuRG9jdW1lbnRUeXBlEg8KB2NvbnRlbnQYAyABKAkSJwoKdXBkYXRlZF9hdBgEIAEoCzITLnNlbGFoLnYxLlRpbWVzdGFtcCJrChBTYXZlRWRpdG9yQnVmZmVyEhwKBmRvY19pZBgBIAEoCzIMLnNlbGFoLnYxLklkEigKCGRvY190eXBlGAIgASgOMhYuc2VsYWgudjEuRG9jdW1lbnRUeXBlEg8KB2NvbnRlbnQYAyABKAkiMwoTRGlzY2FyZEVkaXRvckJ1ZmZlchIcCgZkb2NfaWQYASABKAsyDC5zZWxhaC52MS5JZCIvCg9HZXRFZGl0b3JCdWZmZXISHAoGZG9jX2lkGAEgASgLMgwuc2VsYWgudjEuSWQiSgoRRWRpdG9yQnVmZmVyUmVwbHkSDQoFZm91bmQYASABKAgSJgoGYnVmZmVyGAIgASgLMhYuc2VsYWgudjEuRWRpdG9yQnVmZmVyIjIKEUxpc3RFZGl0b3JCdWZmZXJzEg0KBWxpbWl0GAEgASgNEg4KBm9mZnNldBgCIAEoDSI7ChBFZGl0b3JCdWZmZXJMaXN0EicKB2J1ZmZlcnMYASADKAsyFi5zZWxhaC52MS5FZGl0b3JCdWZmZXIiSQoHTGlzdE9wcxIRCglhZnRlcl9zZXEYASABKAQSDQoFbGltaXQYAiABKA0SHAoGZG9jX2lkGAMgASgLMgwuc2VsYWgudjEuSWQisQIKCE9wUmVjb3JkEgsKA3NlcRgBIAEoBBIbCgVvcF9pZBgCIAEoCzIMLnNlbGFoLnYxLklkEiYKCXRpbWVzdGFtcBgDIAEoCzITLnNlbGFoLnYxLlRpbWVzdGFtcBIPCgd1c2VyX2lkGAQgASgJEhEKCWRldmljZV9pZBgFIAEoCRIOCgZvcmlnaW4YBiABKAkSKAoIZG9jX3R5cGUYByABKA4yFi5zZWxhaC52MS5Eb2N1bWVudFR5cGUSHAoGZG9jX2lkGAggASgLMgwuc2VsYWgudjEuSWQSDwoHY29tbWFuZBgJIAEoDBIPCgdpbnZlcnNlGAogASgMEiAKCnVuZG9fZ3JvdXAYCyABKAsyDC5zZWxhaC52MS5JZBITCgtzeW5jX3N0YXR1cxgMIAEoBSIpCgZPcExpc3QSHwoDb3BzGAEgAygLMhIuc2VsYWgudjEuT3BSZWNvcmQizwEKDkxpYnJhcnlDaGFuZ2VkEigKCGRvY190eXBlGAEgASgOMhYuc2VsYWgudjEuRG9jdW1lbnRUeXBlEhwKBmRvY19pZBgCIAEoCzIMLnNlbGFoLnYxLklkEisKBmNoYW5nZRgDIAEoDjIbLnNlbGFoLnYxLkxpYnJhcnlDaGFuZ2VLaW5kEg4KBm9wX3NlcRgEIAEoBBIgCgp1bmRvX2dyb3VwGAUgASgLMgwuc2VsYWgudjEuSWQSFgoOZnJvbV91bmRvX3JlZG8YBiABKAgifAoQVW5kb1N0YXRlQ2hhbmdlZBIjCgZnbG9iYWwYASABKAsyEy5zZWxhaC52MS5VbmRvU3RhdGUSHAoGZG9jX2lkGAIgASgLMgwuc2VsYWgudjEuSWQSJQoIZG9jdW1lbnQYAyABKAsyEy5zZWxhaC52MS5VbmRvU3RhdGUiOwoLU2VhcmNoU29uZ3MSDQoFcXVlcnkYASABKAkSDQoFbGltaXQYAiABKA0SDgoGb2Zmc2V0GAMgASgNImUKDVNvbmdTZWFyY2hIaXQSHAoEc29uZxgBIAEoCzIOLnNlbGFoLnYxLlNvbmcSDQoFc2NvcmUYAiABKAESDwoHc25pcHBldBgDIAEoCRIWCg5tYXRjaGVkX2ZpZWxkcxgEIAMoCSJJChFTb25nU2VhcmNoUmVzdWx0cxIlCgRoaXRzGAEgAygLMhcuc2VsYWgudjEuU29uZ1NlYXJjaEhpdBINCgV0b3RhbBgCIAEoDSJeCgtTZWFyY2hNZWRpYRINCgVxdWVyeRgBIAEoCRIhCgRraW5kGAIgASgOMhMuc2VsYWgudjEuTWVkaWFLaW5kEg0KBWxpbWl0GAMgASgNEg4KBm9mZnNldBgEIAEoDSJxCg5NZWRpYVNlYXJjaEhpdBInCgptZWRpYV9pdGVtGAEgASgLMhMuc2VsYWgudjEuTWVkaWFJdGVtEg0KBXNjb3JlGAIgASgBEg8KB3NuaXBwZXQYAyABKAkSFgoObWF0Y2hlZF9maWVsZHMYBCADKAkiSwoSTWVkaWFTZWFyY2hSZXN1bHRzEiYKBGhpdHMYASADKAsyGC5zZWxhaC52MS5NZWRpYVNlYXJjaEhpdBINCgV0b3RhbBgCIAEoDSJUCg9TZWFyY2hTY3JpcHR1cmUSDQoFcXVlcnkYASABKAkSEwoLdHJhbnNsYXRpb24YAiABKAkSDQoFbGltaXQYAyABKA0SDgoGb2Zmc2V0GAQgASgNIoYBChFTY3JpcHR1cmVWZXJzZUhpdBITCgt0cmFuc2xhdGlvbhgBIAEoCRIMCgRib29rGAIgASgJEhEKCWJvb2tfbmFtZRgDIAEoCRIPCgdjaGFwdGVyGAQgASgNEg0KBXZlcnNlGAUgASgNEgwKBHRleHQYBiABKAkSDQoFc2NvcmUYByABKAEiUgoWU2NyaXB0dXJlU2VhcmNoUmVzdWx0cxIpCgRoaXRzGAEgAygLMhsuc2VsYWgudjEuU2NyaXB0dXJlVmVyc2VIaXQSDQoFdG90YWwYAiABKA0iaAoNU2VhcmNoTGlicmFyeRINCgVxdWVyeRgBIAEoCRIkCgVzY29wZRgCIAEoDjIVLnNlbGFoLnYxLlNlYXJjaFNjb3BlEhMKC3RyYW5zbGF0aW9uGAMgASgJEg0KBWxpbWl0GAQgASgNIpcBChRMaWJyYXJ5U2VhcmNoUmVzdWx0cxImCgVzb25ncxgBIAMoCzIXLnNlbGFoLnYxLlNvbmdTZWFyY2hIaXQSJwoFbWVkaWEYAiADKAsyGC5zZWxhaC52MS5NZWRpYVNlYXJjaEhpdBIuCglzY3JpcHR1cmUYAyADKAsyGy5zZWxhaC52MS5TY3JpcHR1cmVWZXJzZUhpdCJlCg9QYXJzZVBhc3RlZFNvbmcSEAoIcmF3X3RleHQYASABKAkSKQoGZm9ybWF0GAIgASgOMhkuc2VsYWgudjEuU29uZ1Bhc3RlRm9ybWF0EhUKDWRlZmF1bHRfdGl0bGUYAyABKAkiegoUUGFyc2VQYXN0ZWRTb25nUmVwbHkSHAoEc29uZxgBIAEoCzIOLnNlbGFoLnYxLlNvbmcSMgoPZGV0ZWN0ZWRfZm9ybWF0GAIgASgOMhkuc2VsYWgudjEuU29uZ1Bhc3RlRm9ybWF0EhAKCHdhcm5pbmdzGAMgAygJInsKDVRyYW5zcG9zZVNvbmcSHAoEc29uZxgBIAEoCzIOLnNlbGFoLnYxLlNvbmcSEQoJc2VtaXRvbmVzGAIgASgFEjkKE2FjY2lkZW50YWxfc3BlbGxpbmcYAyABKA4yHC5zZWxhaC52MS5BY2NpZGVudGFsU3BlbGxpbmci8gEKD1NwbGl0U29uZ1NsaWRlcxIcCgRzb25nGAEgASgLMg4uc2VsYWgudjEuU29uZxIkCg5hcnJhbmdlbWVudF9pZBgCIAEoCzIMLnNlbGFoLnYxLklkEhEKCW1heF9saW5lcxgDIAEoDRI5ChNjb3B5cmlnaHRfcGxhY2VtZW50GAQgASgOMhwuc2VsYWgudjEuQ29weXJpZ2h0UGxhY2VtZW50EhMKC3RpdGxlX3NsaWRlGAUgASgIEhoKEmJsYW5rX3NsaWRlX2F0X2VuZBgGIAEoCBIcChR0cmFuc2xhdGlvbl9sYW5ndWFnZRgHIAEoCSLbAgoOR2VuZXJhdGVkU2xpZGUSIAoKc2VjdGlvbl9pZBgBIAEoCzIMLnNlbGFoLnYxLklkEhUKDXNlY3Rpb25fbGFiZWwYAiABKAkSKwoMc2VjdGlvbl9raW5kGAMgASgOMhUuc2VsYWgudjEuU2VjdGlvbktpbmQSJgoNc2VjdGlvbl9jb2xvchgEIAEoCzIPLnNlbGFoLnYxLkNvbG9yEhYKDnNlY3Rpb25faG90a2V5GAUgASgJEhIKCnBhcnRfaW5kZXgYBiABKA0SEgoKcGFydF9jb3VudBgHIAEoDRIiCgVsaW5lcxgIIAMoCzITLnNlbGFoLnYxLkx5cmljTGluZRIZChF0cmFuc2xhdGlvbl9saW5lcxgJIAMoCRIYChBmb290ZXJfY29weXJpZ2h0GAogASgJEhAKCGlzX3RpdGxlGAsgASgIEhAKCGlzX2JsYW5rGAwgASgIIlcKE0dlbmVyYXRlZFNvbmdTbGlkZXMSKAoGc2xpZGVzGAEgAygLMhguc2VsYWgudjEuR2VuZXJhdGVkU2xpZGUSFgoOY29weXJpZ2h0X2xpbmUYAiABKAkq0wEKC1NlY3Rpb25LaW5kEhwKGFNFQ1RJT05fS0lORF9VTlNQRUNJRklFRBAAEhYKElNFQ1RJT05fS0lORF9WRVJTRRABEhcKE1NFQ1RJT05fS0lORF9DSE9SVVMQAhIXChNTRUNUSU9OX0tJTkRfQlJJREdFEAMSFAoQU0VDVElPTl9LSU5EX1RBRxAEEhYKElNFQ1RJT05fS0lORF9JTlRSTxAFEhYKElNFQ1RJT05fS0lORF9PVVRSTxAGEhYKElNFQ1RJT05fS0lORF9PVEhFUhAHKmkKCU1lZGlhS2luZBIaChZNRURJQV9LSU5EX1VOU1BFQ0lGSUVEEAASFAoQTUVESUFfS0lORF9JTUFHRRABEhQKEE1FRElBX0tJTkRfVklERU8QAhIUChBNRURJQV9LSU5EX0FVRElPEAMqhAIKDERvY3VtZW50VHlwZRIdChlET0NVTUVOVF9UWVBFX1VOU1BFQ0lGSUVEEAASFgoSRE9DVU1FTlRfVFlQRV9TT05HEAESGgoWRE9DVU1FTlRfVFlQRV9URU1QTEFURRACEhcKE0RPQ1VNRU5UX1RZUEVfTUVESUEQAxIeChpET0NVTUVOVF9UWVBFX1BSRVNFTlRBVElPThAEEhkKFURPQ1VNRU5UX1RZUEVfU0VSVklDRRAFEh4KGkRPQ1VNRU5UX1RZUEVfU0VSVklDRV9UWVBFEAYSFgoSRE9DVU1FTlRfVFlQRV9URUFNEAcSFQoRRE9DVU1FTlRfVFlQRV9UQUcQCCp4ChFMaWJyYXJ5Q2hhbmdlS2luZBIjCh9MSUJSQVJZX0NIQU5HRV9LSU5EX1VOU1BFQ0lGSUVEEAASHQoZTElCUkFSWV9DSEFOR0VfS0lORF9TQVZFRBABEh8KG0xJQlJBUllfQ0hBTkdFX0tJTkRfREVMRVRFRBACKo0BCgtTZWFyY2hTY29wZRIcChhTRUFSQ0hfU0NPUEVfVU5TUEVDSUZJRUQQABIUChBTRUFSQ0hfU0NPUEVfQUxMEAESFgoSU0VBUkNIX1NDT1BFX1NPTkdTEAISFgoSU0VBUkNIX1NDT1BFX01FRElBEAMSGgoWU0VBUkNIX1NDT1BFX1NDUklQVFVSRRAEKrsBCg9Tb25nUGFzdGVGb3JtYXQSIQodU09OR19QQVNURV9GT1JNQVRfVU5TUEVDSUZJRUQQABIbChdTT05HX1BBU1RFX0ZPUk1BVF9QTEFJThABEh0KGVNPTkdfUEFTVEVfRk9STUFUX01BUktFUlMQAhIoCiRTT05HX1BBU1RFX0ZPUk1BVF9DSE9SRFNfT1ZFUl9MWVJJQ1MQAxIfChtTT05HX1BBU1RFX0ZPUk1BVF9DSE9SRF9QUk8QBCrZAQoSQ29weXJpZ2h0UGxhY2VtZW50EiMKH0NPUFlSSUdIVF9QTEFDRU1FTlRfVU5TUEVDSUZJRUQQABIcChhDT1BZUklHSFRfUExBQ0VNRU5UX05PTkUQARIdChlDT1BZUklHSFRfUExBQ0VNRU5UX0ZJUlNUEAISHAoYQ09QWVJJR0hUX1BMQUNFTUVOVF9MQVNUEAMSJgoiQ09QWVJJR0hUX1BMQUNFTUVOVF9GSVJTVF9BTkRfTEFTVBAEEhsKF0NPUFlSSUdIVF9QTEFDRU1FTlRfQUxMEAUqeAoSQWNjaWRlbnRhbFNwZWxsaW5nEiMKH0FDQ0lERU5UQUxfU1BFTExJTkdfVU5TUEVDSUZJRUQQABIeChpBQ0NJREVOVEFMX1NQRUxMSU5HX1NIQVJQUxABEh0KGUFDQ0lERU5UQUxfU1BFTExJTkdfRkxBVFMQAkIVqgISU2VsYWguQ29udHJhY3RzLlYxYgZwcm90bzM", [file_selah_v1_common]);
 
 /**
  * @generated from message selah.v1.Chord
@@ -1660,6 +1660,228 @@ export const LibrarySearchResultsSchema: GenMessage<LibrarySearchResults> = /*@_
   messageDesc(file_selah_v1_library, 64);
 
 /**
+ * @generated from message selah.v1.ParsePastedSong
+ */
+export type ParsePastedSong = Message<"selah.v1.ParsePastedSong"> & {
+  /**
+   * @generated from field: string raw_text = 1;
+   */
+  rawText: string;
+
+  /**
+   * @generated from field: selah.v1.SongPasteFormat format = 2;
+   */
+  format: SongPasteFormat;
+
+  /**
+   * @generated from field: string default_title = 3;
+   */
+  defaultTitle: string;
+};
+
+/**
+ * Describes the message selah.v1.ParsePastedSong.
+ * Use `create(ParsePastedSongSchema)` to create a new message.
+ */
+export const ParsePastedSongSchema: GenMessage<ParsePastedSong> = /*@__PURE__*/
+  messageDesc(file_selah_v1_library, 65);
+
+/**
+ * @generated from message selah.v1.ParsePastedSongReply
+ */
+export type ParsePastedSongReply = Message<"selah.v1.ParsePastedSongReply"> & {
+  /**
+   * @generated from field: selah.v1.Song song = 1;
+   */
+  song?: Song;
+
+  /**
+   * @generated from field: selah.v1.SongPasteFormat detected_format = 2;
+   */
+  detectedFormat: SongPasteFormat;
+
+  /**
+   * @generated from field: repeated string warnings = 3;
+   */
+  warnings: string[];
+};
+
+/**
+ * Describes the message selah.v1.ParsePastedSongReply.
+ * Use `create(ParsePastedSongReplySchema)` to create a new message.
+ */
+export const ParsePastedSongReplySchema: GenMessage<ParsePastedSongReply> = /*@__PURE__*/
+  messageDesc(file_selah_v1_library, 66);
+
+/**
+ * @generated from message selah.v1.TransposeSong
+ */
+export type TransposeSong = Message<"selah.v1.TransposeSong"> & {
+  /**
+   * @generated from field: selah.v1.Song song = 1;
+   */
+  song?: Song;
+
+  /**
+   * @generated from field: int32 semitones = 2;
+   */
+  semitones: number;
+
+  /**
+   * @generated from field: selah.v1.AccidentalSpelling accidental_spelling = 3;
+   */
+  accidentalSpelling: AccidentalSpelling;
+};
+
+/**
+ * Describes the message selah.v1.TransposeSong.
+ * Use `create(TransposeSongSchema)` to create a new message.
+ */
+export const TransposeSongSchema: GenMessage<TransposeSong> = /*@__PURE__*/
+  messageDesc(file_selah_v1_library, 67);
+
+/**
+ * @generated from message selah.v1.SplitSongSlides
+ */
+export type SplitSongSlides = Message<"selah.v1.SplitSongSlides"> & {
+  /**
+   * @generated from field: selah.v1.Song song = 1;
+   */
+  song?: Song;
+
+  /**
+   * @generated from field: selah.v1.Id arrangement_id = 2;
+   */
+  arrangementId?: Id;
+
+  /**
+   * @generated from field: uint32 max_lines = 3;
+   */
+  maxLines: number;
+
+  /**
+   * @generated from field: selah.v1.CopyrightPlacement copyright_placement = 4;
+   */
+  copyrightPlacement: CopyrightPlacement;
+
+  /**
+   * @generated from field: bool title_slide = 5;
+   */
+  titleSlide: boolean;
+
+  /**
+   * @generated from field: bool blank_slide_at_end = 6;
+   */
+  blankSlideAtEnd: boolean;
+
+  /**
+   * @generated from field: string translation_language = 7;
+   */
+  translationLanguage: string;
+};
+
+/**
+ * Describes the message selah.v1.SplitSongSlides.
+ * Use `create(SplitSongSlidesSchema)` to create a new message.
+ */
+export const SplitSongSlidesSchema: GenMessage<SplitSongSlides> = /*@__PURE__*/
+  messageDesc(file_selah_v1_library, 68);
+
+/**
+ * @generated from message selah.v1.GeneratedSlide
+ */
+export type GeneratedSlide = Message<"selah.v1.GeneratedSlide"> & {
+  /**
+   * @generated from field: selah.v1.Id section_id = 1;
+   */
+  sectionId?: Id;
+
+  /**
+   * @generated from field: string section_label = 2;
+   */
+  sectionLabel: string;
+
+  /**
+   * @generated from field: selah.v1.SectionKind section_kind = 3;
+   */
+  sectionKind: SectionKind;
+
+  /**
+   * @generated from field: selah.v1.Color section_color = 4;
+   */
+  sectionColor?: Color;
+
+  /**
+   * @generated from field: string section_hotkey = 5;
+   */
+  sectionHotkey: string;
+
+  /**
+   * @generated from field: uint32 part_index = 6;
+   */
+  partIndex: number;
+
+  /**
+   * @generated from field: uint32 part_count = 7;
+   */
+  partCount: number;
+
+  /**
+   * @generated from field: repeated selah.v1.LyricLine lines = 8;
+   */
+  lines: LyricLine[];
+
+  /**
+   * @generated from field: repeated string translation_lines = 9;
+   */
+  translationLines: string[];
+
+  /**
+   * @generated from field: string footer_copyright = 10;
+   */
+  footerCopyright: string;
+
+  /**
+   * @generated from field: bool is_title = 11;
+   */
+  isTitle: boolean;
+
+  /**
+   * @generated from field: bool is_blank = 12;
+   */
+  isBlank: boolean;
+};
+
+/**
+ * Describes the message selah.v1.GeneratedSlide.
+ * Use `create(GeneratedSlideSchema)` to create a new message.
+ */
+export const GeneratedSlideSchema: GenMessage<GeneratedSlide> = /*@__PURE__*/
+  messageDesc(file_selah_v1_library, 69);
+
+/**
+ * @generated from message selah.v1.GeneratedSongSlides
+ */
+export type GeneratedSongSlides = Message<"selah.v1.GeneratedSongSlides"> & {
+  /**
+   * @generated from field: repeated selah.v1.GeneratedSlide slides = 1;
+   */
+  slides: GeneratedSlide[];
+
+  /**
+   * @generated from field: string copyright_line = 2;
+   */
+  copyrightLine: string;
+};
+
+/**
+ * Describes the message selah.v1.GeneratedSongSlides.
+ * Use `create(GeneratedSongSlidesSchema)` to create a new message.
+ */
+export const GeneratedSongSlidesSchema: GenMessage<GeneratedSongSlides> = /*@__PURE__*/
+  messageDesc(file_selah_v1_library, 70);
+
+/**
  * @generated from enum selah.v1.SectionKind
  */
 export enum SectionKind {
@@ -1858,4 +2080,107 @@ export enum SearchScope {
  */
 export const SearchScopeSchema: GenEnum<SearchScope> = /*@__PURE__*/
   enumDesc(file_selah_v1_library, 4);
+
+/**
+ * @generated from enum selah.v1.SongPasteFormat
+ */
+export enum SongPasteFormat {
+  /**
+   * @generated from enum value: SONG_PASTE_FORMAT_UNSPECIFIED = 0;
+   */
+  UNSPECIFIED = 0,
+
+  /**
+   * @generated from enum value: SONG_PASTE_FORMAT_PLAIN = 1;
+   */
+  PLAIN = 1,
+
+  /**
+   * @generated from enum value: SONG_PASTE_FORMAT_MARKERS = 2;
+   */
+  MARKERS = 2,
+
+  /**
+   * @generated from enum value: SONG_PASTE_FORMAT_CHORDS_OVER_LYRICS = 3;
+   */
+  CHORDS_OVER_LYRICS = 3,
+
+  /**
+   * @generated from enum value: SONG_PASTE_FORMAT_CHORD_PRO = 4;
+   */
+  CHORD_PRO = 4,
+}
+
+/**
+ * Describes the enum selah.v1.SongPasteFormat.
+ */
+export const SongPasteFormatSchema: GenEnum<SongPasteFormat> = /*@__PURE__*/
+  enumDesc(file_selah_v1_library, 5);
+
+/**
+ * @generated from enum selah.v1.CopyrightPlacement
+ */
+export enum CopyrightPlacement {
+  /**
+   * @generated from enum value: COPYRIGHT_PLACEMENT_UNSPECIFIED = 0;
+   */
+  UNSPECIFIED = 0,
+
+  /**
+   * @generated from enum value: COPYRIGHT_PLACEMENT_NONE = 1;
+   */
+  NONE = 1,
+
+  /**
+   * @generated from enum value: COPYRIGHT_PLACEMENT_FIRST = 2;
+   */
+  FIRST = 2,
+
+  /**
+   * @generated from enum value: COPYRIGHT_PLACEMENT_LAST = 3;
+   */
+  LAST = 3,
+
+  /**
+   * @generated from enum value: COPYRIGHT_PLACEMENT_FIRST_AND_LAST = 4;
+   */
+  FIRST_AND_LAST = 4,
+
+  /**
+   * @generated from enum value: COPYRIGHT_PLACEMENT_ALL = 5;
+   */
+  ALL = 5,
+}
+
+/**
+ * Describes the enum selah.v1.CopyrightPlacement.
+ */
+export const CopyrightPlacementSchema: GenEnum<CopyrightPlacement> = /*@__PURE__*/
+  enumDesc(file_selah_v1_library, 6);
+
+/**
+ * @generated from enum selah.v1.AccidentalSpelling
+ */
+export enum AccidentalSpelling {
+  /**
+   * @generated from enum value: ACCIDENTAL_SPELLING_UNSPECIFIED = 0;
+   */
+  UNSPECIFIED = 0,
+
+  /**
+   * @generated from enum value: ACCIDENTAL_SPELLING_SHARPS = 1;
+   */
+  SHARPS = 1,
+
+  /**
+   * @generated from enum value: ACCIDENTAL_SPELLING_FLATS = 2;
+   */
+  FLATS = 2,
+}
+
+/**
+ * Describes the enum selah.v1.AccidentalSpelling.
+ */
+export const AccidentalSpellingSchema: GenEnum<AccidentalSpelling> = /*@__PURE__*/
+  enumDesc(file_selah_v1_library, 7);
 

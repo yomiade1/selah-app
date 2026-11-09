@@ -1,14 +1,16 @@
 //! Core request handling: authorise, validate, apply, then tell the engine and subscribers.
 use prost::Message;
 use selah_proto::v1::{
-    Actor, ActorOrigin, Command, Envelope, Event, GetPolicySettingReply, LibraryChanged,
-    MediaItemList, MediaKind, PolicySetting, PresentationList, RenderCommand, Reply, Scene,
-    SearchScope, SongList, Status, TagList, TemplateList, TestPattern, UndoStateChanged, command,
-    envelope, event, query, render_command, reply,
+    Actor, ActorOrigin, Command, CopyrightPlacement, Envelope, Event, GetPolicySettingReply,
+    LibraryChanged, MediaItemList, MediaKind, ParsePastedSongReply, PolicySetting,
+    PresentationList, RenderCommand, Reply, Scene, SearchScope, Song, SongList, SongPasteFormat,
+    Status, TagList, TemplateList, TestPattern, UndoStateChanged, command, envelope, event, query,
+    render_command, reply,
 };
 
 use crate::library::{
-    CommandBusError, CommandMeta, DocumentKind, ExecutionOutcome, Library, validate_id,
+    CommandBusError, CommandMeta, Document, DocumentKind, ExecutionOutcome, Library, new_id,
+    validate_id,
 };
 use crate::live::{LiveState, is_live};
 use crate::permissions::{self, DENIED_CODE};
@@ -44,6 +46,33 @@ fn fix_article_for(code: &str) -> &'static str {
         "SEL-LIB-0004" => "troubleshooting.nothing-to-undo",
         _ => "",
     }
+}
+
+fn validate_song_preview(song: &Song) -> anyhow::Result<()> {
+    let mut copy = song.clone();
+    if copy.id.is_none() {
+        copy.id = Some(new_id());
+    }
+    if copy.title.trim().is_empty() {
+        copy.title = "Draft Song".into();
+    }
+    for (idx, sec) in copy.sections.iter_mut().enumerate() {
+        if sec.id.is_none() {
+            sec.id = Some(new_id());
+        }
+        if sec.label.trim().is_empty() {
+            sec.label = format!("Section {}", idx + 1);
+        }
+    }
+    for (idx, arr) in copy.arrangements.iter_mut().enumerate() {
+        if arr.id.is_none() {
+            arr.id = Some(new_id());
+        }
+        if arr.name.trim().is_empty() {
+            arr.name = format!("Arrangement {}", idx + 1);
+        }
+    }
+    copy.validate()
 }
 
 /// Help results are capped (help.proto SearchHelp).
@@ -855,6 +884,105 @@ impl CoreService {
                     &CommandBusError::Invalid("unknown search scope".into()),
                 ),
             },
+            Some(query::Request::ParsePastedSong(q)) => match SongPasteFormat::try_from(q.format) {
+                Ok(format) => {
+                    match crate::songs::parse_song(&q.raw_text, format, &q.default_title) {
+                        Ok(parsed) => self.reply(
+                            request,
+                            reply::Result::ParsedSong(ParsePastedSongReply {
+                                song: Some(parsed.song),
+                                detected_format: parsed.detected_format as i32,
+                                warnings: parsed.warnings,
+                            }),
+                        ),
+                        Err(error) => {
+                            self.bus_error(request, &CommandBusError::Invalid(error.to_string()))
+                        }
+                    }
+                }
+                Err(_) => self.bus_error(
+                    request,
+                    &CommandBusError::Invalid("unknown paste format".into()),
+                ),
+            },
+            Some(query::Request::TransposeSong(q)) => {
+                let Some(mut song) = q.song.clone() else {
+                    return Outcome {
+                        reply: Some(
+                            self.bus_error(
+                                request,
+                                &CommandBusError::Invalid("missing song".into()),
+                            ),
+                        ),
+                        ..Outcome::default()
+                    };
+                };
+                let prefer_flats =
+                    match selah_proto::v1::AccidentalSpelling::try_from(q.accidental_spelling) {
+                        Ok(selah_proto::v1::AccidentalSpelling::Unspecified) => None,
+                        Ok(selah_proto::v1::AccidentalSpelling::Sharps) => Some(false),
+                        Ok(selah_proto::v1::AccidentalSpelling::Flats) => Some(true),
+                        Err(_) => {
+                            return Outcome {
+                                reply: Some(self.bus_error(
+                                    request,
+                                    &CommandBusError::Invalid("unknown accidental spelling".into()),
+                                )),
+                                ..Outcome::default()
+                            };
+                        }
+                    };
+                match validate_song_preview(&song).and_then(|()| {
+                    crate::songs::transpose_song(&mut song, q.semitones, prefer_flats)
+                }) {
+                    Ok(()) => self.reply(request, reply::Result::Song(song)),
+                    Err(error) => {
+                        self.bus_error(request, &CommandBusError::Invalid(error.to_string()))
+                    }
+                }
+            }
+            Some(query::Request::SplitSongSlides(q)) => {
+                let Some(song) = q.song.as_ref() else {
+                    return Outcome {
+                        reply: Some(
+                            self.bus_error(
+                                request,
+                                &CommandBusError::Invalid("missing song".into()),
+                            ),
+                        ),
+                        ..Outcome::default()
+                    };
+                };
+                let placement = match CopyrightPlacement::try_from(q.copyright_placement) {
+                    Ok(p) => p,
+                    Err(_) => {
+                        return Outcome {
+                            reply: Some(self.bus_error(
+                                request,
+                                &CommandBusError::Invalid("unknown copyright placement".into()),
+                            )),
+                            ..Outcome::default()
+                        };
+                    }
+                };
+                let options = crate::songs::SplitOptions {
+                    arrangement_id: q.arrangement_id.clone(),
+                    max_lines: q.max_lines,
+                    copyright_placement: placement,
+                    title_slide: q.title_slide,
+                    blank_slide_at_end: q.blank_slide_at_end,
+                    translation_language: (!q.translation_language.trim().is_empty())
+                        .then(|| q.translation_language.clone()),
+                };
+                match validate_song_preview(song)
+                    .and_then(|()| crate::songs::generate_slides(song, &options))
+                {
+                    Ok(slides) => self.reply(request, reply::Result::GeneratedSongSlides(slides)),
+                    Err(error) => {
+                        self.bus_error(request, &CommandBusError::Invalid(error.to_string()))
+                    }
+                }
+            }
             Some(query::Request::GetWatchdogStatus(_)) | None => {
                 self.error(request, codes::UNSUPPORTED, "error-unsupported-request")
             }
@@ -1971,5 +2099,98 @@ mod tests {
             }),
         ));
         assert_eq!(error_code(&bad_limit), codes::LIB_INVALID);
+    }
+
+    #[test]
+    fn song_parse_transpose_and_split_queries_round_trip_through_core_service() {
+        let dir = tempfile::tempdir().unwrap();
+        let mut core = CoreService::new(dir.path(), false);
+
+        let raw = "\
+{title: Amazing Grace}
+{key: G}
+{sov}
+[G]Amazing grace! How [C]sweet the [G]sound
+That saved a wretch like [D]me!
+[G]I once was lost, but [C]now am [G]found;
+Was [Em]blind, but [D]now I [G]see.
+{eov}";
+
+        let parsed_out = core.handle(&request_with_id(
+            501,
+            ActorOrigin::Ui,
+            envelope::Body::Query(Query {
+                request: Some(query::Request::ParsePastedSong(
+                    selah_proto::v1::ParsePastedSong {
+                        raw_text: raw.into(),
+                        format: SongPasteFormat::Unspecified as i32,
+                        default_title: String::new(),
+                    },
+                )),
+            }),
+        ));
+        let parsed_reply = match parsed_out.reply.and_then(|r| r.body) {
+            Some(envelope::Body::Reply(Reply {
+                result: Some(reply::Result::ParsedSong(reply)),
+            })) => reply,
+            other => panic!("unexpected parsed reply: {other:?}"),
+        };
+        assert_eq!(
+            parsed_reply.detected_format,
+            SongPasteFormat::ChordPro as i32
+        );
+        let parsed_song = parsed_reply.song.unwrap();
+        assert_eq!(parsed_song.title, "Amazing Grace");
+
+        let transposed_out = core.handle(&request_with_id(
+            502,
+            ActorOrigin::Ui,
+            envelope::Body::Query(Query {
+                request: Some(query::Request::TransposeSong(
+                    selah_proto::v1::TransposeSong {
+                        song: Some(parsed_song),
+                        semitones: 2,
+                        accidental_spelling: selah_proto::v1::AccidentalSpelling::Unspecified
+                            as i32,
+                    },
+                )),
+            }),
+        ));
+        let transposed_song = match transposed_out.reply.and_then(|r| r.body) {
+            Some(envelope::Body::Reply(Reply {
+                result: Some(reply::Result::Song(song)),
+            })) => song,
+            other => panic!("unexpected transpose reply: {other:?}"),
+        };
+        assert_eq!(transposed_song.key, "A");
+        assert_eq!(transposed_song.sections[0].lines[0].chords[0].text, "A");
+
+        let split_out = core.handle(&request_with_id(
+            503,
+            ActorOrigin::Ui,
+            envelope::Body::Query(Query {
+                request: Some(query::Request::SplitSongSlides(
+                    selah_proto::v1::SplitSongSlides {
+                        song: Some(transposed_song),
+                        arrangement_id: None,
+                        max_lines: 2,
+                        copyright_placement: CopyrightPlacement::FirstAndLast as i32,
+                        title_slide: false,
+                        blank_slide_at_end: true,
+                        translation_language: String::new(),
+                    },
+                )),
+            }),
+        ));
+        let slides = match split_out.reply.and_then(|r| r.body) {
+            Some(envelope::Body::Reply(Reply {
+                result: Some(reply::Result::GeneratedSongSlides(slides)),
+            })) => slides,
+            other => panic!("unexpected split reply: {other:?}"),
+        };
+        assert_eq!(slides.slides.len(), 3);
+        assert_eq!(slides.slides[0].part_index, 1);
+        assert_eq!(slides.slides[0].part_count, 2);
+        assert!(slides.slides[2].is_blank);
     }
 }

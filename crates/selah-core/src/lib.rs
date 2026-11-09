@@ -7,6 +7,7 @@ pub mod live;
 pub mod permissions;
 pub mod service;
 pub mod settings;
+pub mod songs;
 pub mod support;
 pub mod update;
 

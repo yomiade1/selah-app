@@ -423,3 +423,74 @@ message LibrarySearchResults {
   repeated MediaSearchHit media = 2;
   repeated ScriptureVerseHit scripture = 3;
 }
+
+enum SongPasteFormat {
+  SONG_PASTE_FORMAT_UNSPECIFIED = 0;
+  SONG_PASTE_FORMAT_PLAIN = 1;
+  SONG_PASTE_FORMAT_MARKERS = 2;
+  SONG_PASTE_FORMAT_CHORDS_OVER_LYRICS = 3;
+  SONG_PASTE_FORMAT_CHORD_PRO = 4;
+}
+
+enum CopyrightPlacement {
+  COPYRIGHT_PLACEMENT_UNSPECIFIED = 0;
+  COPYRIGHT_PLACEMENT_NONE = 1;
+  COPYRIGHT_PLACEMENT_FIRST = 2;
+  COPYRIGHT_PLACEMENT_LAST = 3;
+  COPYRIGHT_PLACEMENT_FIRST_AND_LAST = 4;
+  COPYRIGHT_PLACEMENT_ALL = 5;
+}
+
+enum AccidentalSpelling {
+  ACCIDENTAL_SPELLING_UNSPECIFIED = 0;
+  ACCIDENTAL_SPELLING_SHARPS = 1;
+  ACCIDENTAL_SPELLING_FLATS = 2;
+}
+
+message ParsePastedSong {
+  string raw_text = 1;
+  SongPasteFormat format = 2;
+  string default_title = 3;
+}
+
+message ParsePastedSongReply {
+  Song song = 1;
+  SongPasteFormat detected_format = 2;
+  repeated string warnings = 3;
+}
+
+message TransposeSong {
+  Song song = 1;
+  int32 semitones = 2;
+  AccidentalSpelling accidental_spelling = 3;
+}
+
+message SplitSongSlides {
+  Song song = 1;
+  Id arrangement_id = 2;
+  uint32 max_lines = 3;
+  CopyrightPlacement copyright_placement = 4;
+  bool title_slide = 5;
+  bool blank_slide_at_end = 6;
+  string translation_language = 7;
+}
+
+message GeneratedSlide {
+  Id section_id = 1;
+  string section_label = 2;
+  SectionKind section_kind = 3;
+  Color section_color = 4;
+  string section_hotkey = 5;
+  uint32 part_index = 6;
+  uint32 part_count = 7;
+  repeated LyricLine lines = 8;
+  repeated string translation_lines = 9;
+  string footer_copyright = 10;
+  bool is_title = 11;
+  bool is_blank = 12;
+}
+
+message GeneratedSongSlides {
+  repeated GeneratedSlide slides = 1;
+  string copyright_line = 2;
+}

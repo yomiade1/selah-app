@@ -1,0 +1,382 @@
+{
+  "title": "Holy, Holy, Holy! Lord God Almighty",
+  "author": "Reginald Heber (1783-1826)",
+  "key": "D",
+  "public_domain": true,
+  "arrangement": [
+    "Verse 1",
+    "Verse 2",
+    "Verse 3",
+    "Verse 4"
+  ],
+  "sections": [
+    {
+      "label": "Verse 1",
+      "kind": "verse",
+      "color_hex": "#2378C3",
+      "hotkey": "1",
+      "lines": [
+        {
+          "text": "Holy, holy, holy! Lord God Almighty!",
+          "chords": [
+            {
+              "position": 0,
+              "text": "D"
+            },
+            {
+              "position": 12,
+              "text": "Bm"
+            },
+            {
+              "position": 18,
+              "text": "A"
+            },
+            {
+              "position": 29,
+              "text": "D"
+            }
+          ]
+        },
+        {
+          "text": "Early in the morning our song shall rise to Thee;",
+          "chords": [
+            {
+              "position": 0,
+              "text": "G"
+            },
+            {
+              "position": 13,
+              "text": "D"
+            },
+            {
+              "position": 25,
+              "text": "A"
+            }
+          ]
+        },
+        {
+          "text": "Holy, holy, holy! Merciful and mighty!",
+          "chords": [
+            {
+              "position": 0,
+              "text": "D"
+            },
+            {
+              "position": 12,
+              "text": "Bm"
+            },
+            {
+              "position": 18,
+              "text": "A"
+            },
+            {
+              "position": 31,
+              "text": "D"
+            }
+          ]
+        },
+        {
+          "text": "God in three Persons, blessed Trinity!",
+          "chords": [
+            {
+              "position": 0,
+              "text": "Bm"
+            },
+            {
+              "position": 13,
+              "text": "F#m"
+            },
+            {
+              "position": 22,
+              "text": "G"
+            },
+            {
+              "position": 30,
+              "text": "A"
+            },
+            {
+              "position": 35,
+              "text": "D"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "label": "Verse 2",
+      "kind": "verse",
+      "color_hex": "#2378C3",
+      "hotkey": "2",
+      "lines": [
+        {
+          "text": "Holy, holy, holy! All the saints adore Thee,",
+          "chords": [
+            {
+              "position": 0,
+              "text": "D"
+            },
+            {
+              "position": 12,
+              "text": "Bm"
+            },
+            {
+              "position": 18,
+              "text": "A"
+            },
+            {
+              "position": 34,
+              "text": "D"
+            }
+          ]
+        },
+        {
+          "text": "Casting down their golden crowns around the glassy sea;",
+          "chords": [
+            {
+              "position": 0,
+              "text": "G"
+            },
+            {
+              "position": 19,
+              "text": "D"
+            },
+            {
+              "position": 34,
+              "text": "A"
+            }
+          ]
+        },
+        {
+          "text": "Cherubim and seraphim falling down before Thee,",
+          "chords": [
+            {
+              "position": 0,
+              "text": "D"
+            },
+            {
+              "position": 13,
+              "text": "Bm"
+            },
+            {
+              "position": 22,
+              "text": "A"
+            },
+            {
+              "position": 37,
+              "text": "D"
+            }
+          ]
+        },
+        {
+          "text": "Who wert, and art, and evermore shalt be.",
+          "chords": [
+            {
+              "position": 0,
+              "text": "Bm"
+            },
+            {
+              "position": 14,
+              "text": "F#m"
+            },
+            {
+              "position": 23,
+              "text": "G"
+            },
+            {
+              "position": 27,
+              "text": "A"
+            },
+            {
+              "position": 38,
+              "text": "D"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "label": "Verse 3",
+      "kind": "verse",
+      "color_hex": "#2378C3",
+      "hotkey": "3",
+      "lines": [
+        {
+          "text": "Holy, holy, holy! Though the darkness hide Thee,",
+          "chords": [
+            {
+              "position": 0,
+              "text": "D"
+            },
+            {
+              "position": 12,
+              "text": "Bm"
+            },
+            {
+              "position": 18,
+              "text": "A"
+            },
+            {
+              "position": 38,
+              "text": "D"
+            }
+          ]
+        },
+        {
+          "text": "Though the eye of sinful man Thy glory may not see,",
+          "chords": [
+            {
+              "position": 0,
+              "text": "G"
+            },
+            {
+              "position": 18,
+              "text": "D"
+            },
+            {
+              "position": 33,
+              "text": "A"
+            }
+          ]
+        },
+        {
+          "text": "Only Thou art holy; there is none beside Thee,",
+          "chords": [
+            {
+              "position": 0,
+              "text": "D"
+            },
+            {
+              "position": 14,
+              "text": "Bm"
+            },
+            {
+              "position": 20,
+              "text": "A"
+            },
+            {
+              "position": 36,
+              "text": "D"
+            }
+          ]
+        },
+        {
+          "text": "Perfect in power, in love, and purity.",
+          "chords": [
+            {
+              "position": 0,
+              "text": "Bm"
+            },
+            {
+              "position": 11,
+              "text": "F#m"
+            },
+            {
+              "position": 21,
+              "text": "G"
+            },
+            {
+              "position": 31,
+              "text": "A"
+            },
+            {
+              "position": 35,
+              "text": "D"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "label": "Verse 4",
+      "kind": "verse",
+      "color_hex": "#2378C3",
+      "hotkey": "4",
+      "lines": [
+        {
+          "text": "Holy, holy, holy! Lord God Almighty!",
+          "chords": [
+            {
+              "position": 0,
+              "text": "D"
+            },
+            {
+              "position": 12,
+              "text": "Bm"
+            },
+            {
+              "position": 18,
+              "text": "A"
+            },
+            {
+              "position": 29,
+              "text": "D"
+            }
+          ]
+        },
+        {
+          "text": "All Thy works shall praise Thy Name, in earth and sky and sea;",
+          "chords": [
+            {
+              "position": 0,
+              "text": "G"
+            },
+            {
+              "position": 20,
+              "text": "D"
+            },
+            {
+              "position": 40,
+              "text": "A"
+            }
+          ]
+        },
+        {
+          "text": "Holy, holy, holy! Merciful and mighty!",
+          "chords": [
+            {
+              "position": 0,
+              "text": "D"
+            },
+            {
+              "position": 12,
+              "text": "Bm"
+            },
+            {
+              "position": 18,
+              "text": "A"
+            },
+            {
+              "position": 31,
+              "text": "D"
+            }
+          ]
+        },
+        {
+          "text": "God in three Persons, blessed Trinity!",
+          "chords": [
+            {
+              "position": 0,
+              "text": "Bm"
+            },
+            {
+              "position": 13,
+              "text": "F#m"
+            },
+            {
+              "position": 22,
+              "text": "G"
+            },
+            {
+              "position": 30,
+              "text": "A"
+            },
+            {
+              "position": 35,
+              "text": "D"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

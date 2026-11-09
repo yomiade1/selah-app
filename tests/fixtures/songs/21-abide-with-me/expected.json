@@ -1,0 +1,318 @@
+{
+  "title": "Abide with Me",
+  "author": "Henry Francis Lyte (1793-1847)",
+  "key": "Eb",
+  "public_domain": true,
+  "arrangement": [
+    "Verse 1",
+    "Verse 2",
+    "Verse 3",
+    "Verse 4"
+  ],
+  "sections": [
+    {
+      "label": "Verse 1",
+      "kind": "verse",
+      "color_hex": "#2378C3",
+      "hotkey": "1",
+      "lines": [
+        {
+          "text": "Abide with me; fast falls the eventide;",
+          "chords": [
+            {
+              "position": 1,
+              "text": "Eb"
+            },
+            {
+              "position": 20,
+              "text": "Bb"
+            },
+            {
+              "position": 34,
+              "text": "Cm"
+            }
+          ]
+        },
+        {
+          "text": "The darkness deepens; Lord, with me abide.",
+          "chords": [
+            {
+              "position": 4,
+              "text": "Ab"
+            },
+            {
+              "position": 22,
+              "text": "Eb"
+            },
+            {
+              "position": 37,
+              "text": "Bb"
+            }
+          ]
+        },
+        {
+          "text": "When other helpers fail and comforts flee,",
+          "chords": [
+            {
+              "position": 5,
+              "text": "Eb"
+            },
+            {
+              "position": 19,
+              "text": "Bb"
+            },
+            {
+              "position": 37,
+              "text": "Cm"
+            }
+          ]
+        },
+        {
+          "text": "Help of the helpless, O abide with me.",
+          "chords": [
+            {
+              "position": 5,
+              "text": "Ab"
+            },
+            {
+              "position": 22,
+              "text": "Bb"
+            },
+            {
+              "position": 35,
+              "text": "Eb"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "label": "Verse 2",
+      "kind": "verse",
+      "color_hex": "#2378C3",
+      "hotkey": "2",
+      "lines": [
+        {
+          "text": "Swift to its close ebbs out life’s little day;",
+          "chords": [
+            {
+              "position": 6,
+              "text": "Eb"
+            },
+            {
+              "position": 24,
+              "text": "Bb"
+            },
+            {
+              "position": 42,
+              "text": "Cm"
+            }
+          ]
+        },
+        {
+          "text": "Earth’s joys grow dim, its glories pass away;",
+          "chords": [
+            {
+              "position": 8,
+              "text": "Ab"
+            },
+            {
+              "position": 27,
+              "text": "Eb"
+            },
+            {
+              "position": 41,
+              "text": "Bb"
+            }
+          ]
+        },
+        {
+          "text": "Change and decay in all around I see;",
+          "chords": [
+            {
+              "position": 7,
+              "text": "Eb"
+            },
+            {
+              "position": 20,
+              "text": "Bb"
+            },
+            {
+              "position": 33,
+              "text": "Cm"
+            }
+          ]
+        },
+        {
+          "text": "O Thou who changest not, abide with me.",
+          "chords": [
+            {
+              "position": 2,
+              "text": "Ab"
+            },
+            {
+              "position": 20,
+              "text": "Bb"
+            },
+            {
+              "position": 36,
+              "text": "Eb"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "label": "Verse 3",
+      "kind": "verse",
+      "color_hex": "#2378C3",
+      "hotkey": "3",
+      "lines": [
+        {
+          "text": "I need Thy presence every passing hour;",
+          "chords": [
+            {
+              "position": 2,
+              "text": "Eb"
+            },
+            {
+              "position": 20,
+              "text": "Bb"
+            },
+            {
+              "position": 34,
+              "text": "Cm"
+            }
+          ]
+        },
+        {
+          "text": "What but Thy grace can foil the tempter’s power?",
+          "chords": [
+            {
+              "position": 5,
+              "text": "Ab"
+            },
+            {
+              "position": 23,
+              "text": "Eb"
+            },
+            {
+              "position": 42,
+              "text": "Bb"
+            }
+          ]
+        },
+        {
+          "text": "Who, like Thyself, my guide and stay can be?",
+          "chords": [
+            {
+              "position": 5,
+              "text": "Eb"
+            },
+            {
+              "position": 22,
+              "text": "Bb"
+            },
+            {
+              "position": 41,
+              "text": "Cm"
+            }
+          ]
+        },
+        {
+          "text": "Through cloud and sunshine, Lord, abide with me.",
+          "chords": [
+            {
+              "position": 8,
+              "text": "Ab"
+            },
+            {
+              "position": 28,
+              "text": "Bb"
+            },
+            {
+              "position": 45,
+              "text": "Eb"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "label": "Verse 4",
+      "kind": "verse",
+      "color_hex": "#2378C3",
+      "hotkey": "4",
+      "lines": [
+        {
+          "text": "Hold Thou Thy cross before my closing eyes;",
+          "chords": [
+            {
+              "position": 5,
+              "text": "Eb"
+            },
+            {
+              "position": 22,
+              "text": "Bb"
+            },
+            {
+              "position": 38,
+              "text": "Cm"
+            }
+          ]
+        },
+        {
+          "text": "Shine through the gloom and point me to the skies;",
+          "chords": [
+            {
+              "position": 6,
+              "text": "Ab"
+            },
+            {
+              "position": 28,
+              "text": "Eb"
+            },
+            {
+              "position": 44,
+              "text": "Bb"
+            }
+          ]
+        },
+        {
+          "text": "Heav’n’s morning breaks, and earth’s vain shadows flee;",
+          "chords": [
+            {
+              "position": 9,
+              "text": "Eb"
+            },
+            {
+              "position": 29,
+              "text": "Bb"
+            },
+            {
+              "position": 50,
+              "text": "Cm"
+            }
+          ]
+        },
+        {
+          "text": "In life, in death, O Lord, abide with me.",
+          "chords": [
+            {
+              "position": 3,
+              "text": "Ab"
+            },
+            {
+              "position": 21,
+              "text": "Bb"
+            },
+            {
+              "position": 38,
+              "text": "Eb"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

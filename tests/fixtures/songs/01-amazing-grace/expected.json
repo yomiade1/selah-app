@@ -1,0 +1,302 @@
+{
+  "title": "Amazing Grace",
+  "author": "John Newton (1725-1807)",
+  "key": "G",
+  "public_domain": true,
+  "arrangement": [
+    "Verse 1",
+    "Verse 2",
+    "Verse 3",
+    "Verse 4"
+  ],
+  "sections": [
+    {
+      "label": "Verse 1",
+      "kind": "verse",
+      "color_hex": "#2378C3",
+      "hotkey": "1",
+      "lines": [
+        {
+          "text": "Amazing grace! How sweet the sound",
+          "chords": [
+            {
+              "position": 0,
+              "text": "G"
+            },
+            {
+              "position": 19,
+              "text": "C"
+            },
+            {
+              "position": 29,
+              "text": "G"
+            }
+          ]
+        },
+        {
+          "text": "That saved a wretch like me!",
+          "chords": [
+            {
+              "position": 5,
+              "text": "G"
+            },
+            {
+              "position": 25,
+              "text": "D"
+            }
+          ]
+        },
+        {
+          "text": "I once was lost, but now am found,",
+          "chords": [
+            {
+              "position": 2,
+              "text": "G"
+            },
+            {
+              "position": 21,
+              "text": "C"
+            },
+            {
+              "position": 28,
+              "text": "G"
+            }
+          ]
+        },
+        {
+          "text": "Was blind, but now I see.",
+          "chords": [
+            {
+              "position": 4,
+              "text": "Em"
+            },
+            {
+              "position": 15,
+              "text": "D"
+            },
+            {
+              "position": 21,
+              "text": "G"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "label": "Verse 2",
+      "kind": "verse",
+      "color_hex": "#2378C3",
+      "hotkey": "2",
+      "lines": [
+        {
+          "text": "’Twas grace that taught my heart to fear,",
+          "chords": [
+            {
+              "position": 0,
+              "text": "G"
+            },
+            {
+              "position": 27,
+              "text": "C"
+            },
+            {
+              "position": 36,
+              "text": "G"
+            }
+          ]
+        },
+        {
+          "text": "And grace my fears relieved;",
+          "chords": [
+            {
+              "position": 4,
+              "text": "G"
+            },
+            {
+              "position": 21,
+              "text": "D"
+            }
+          ]
+        },
+        {
+          "text": "How precious did that grace appear",
+          "chords": [
+            {
+              "position": 4,
+              "text": "G"
+            },
+            {
+              "position": 22,
+              "text": "C"
+            },
+            {
+              "position": 30,
+              "text": "G"
+            }
+          ]
+        },
+        {
+          "text": "The hour I first believed.",
+          "chords": [
+            {
+              "position": 4,
+              "text": "Em"
+            },
+            {
+              "position": 11,
+              "text": "D"
+            },
+            {
+              "position": 19,
+              "text": "G"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "label": "Verse 3",
+      "kind": "verse",
+      "color_hex": "#2378C3",
+      "hotkey": "3",
+      "lines": [
+        {
+          "text": "Through many dangers, toils and snares,",
+          "chords": [
+            {
+              "position": 0,
+              "text": "G"
+            },
+            {
+              "position": 22,
+              "text": "C"
+            },
+            {
+              "position": 32,
+              "text": "G"
+            }
+          ]
+        },
+        {
+          "text": "I have already come;",
+          "chords": [
+            {
+              "position": 2,
+              "text": "G"
+            },
+            {
+              "position": 15,
+              "text": "D"
+            }
+          ]
+        },
+        {
+          "text": "’Tis grace hath brought me safe thus far,",
+          "chords": [
+            {
+              "position": 5,
+              "text": "G"
+            },
+            {
+              "position": 27,
+              "text": "C"
+            },
+            {
+              "position": 37,
+              "text": "G"
+            }
+          ]
+        },
+        {
+          "text": "And grace will lead me home.",
+          "chords": [
+            {
+              "position": 4,
+              "text": "Em"
+            },
+            {
+              "position": 15,
+              "text": "D"
+            },
+            {
+              "position": 23,
+              "text": "G"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "label": "Verse 4",
+      "kind": "verse",
+      "color_hex": "#2378C3",
+      "hotkey": "4",
+      "lines": [
+        {
+          "text": "When we’ve been there ten thousand years,",
+          "chords": [
+            {
+              "position": 0,
+              "text": "G"
+            },
+            {
+              "position": 26,
+              "text": "C"
+            },
+            {
+              "position": 35,
+              "text": "G"
+            }
+          ]
+        },
+        {
+          "text": "Bright shining as the sun,",
+          "chords": [
+            {
+              "position": 7,
+              "text": "G"
+            },
+            {
+              "position": 22,
+              "text": "D"
+            }
+          ]
+        },
+        {
+          "text": "We’ve no less days to sing God’s praise",
+          "chords": [
+            {
+              "position": 6,
+              "text": "G"
+            },
+            {
+              "position": 22,
+              "text": "C"
+            },
+            {
+              "position": 33,
+              "text": "G"
+            }
+          ]
+        },
+        {
+          "text": "Than when we’d first begun.",
+          "chords": [
+            {
+              "position": 5,
+              "text": "Em"
+            },
+            {
+              "position": 15,
+              "text": "D"
+            },
+            {
+              "position": 23,
+              "text": "G"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

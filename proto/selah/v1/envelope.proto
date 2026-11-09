@@ -121,6 +121,9 @@ message Query {
     SearchMedia search_media = 25;
     SearchScripture search_scripture = 26;
     SearchLibrary search_library = 27;
+    ParsePastedSong parse_pasted_song = 28;
+    TransposeSong transpose_song = 29;
+    SplitSongSlides split_song_slides = 30;
   }
 }
 
@@ -209,6 +212,8 @@ message Reply {
     MediaSearchResults media_search_results = 27;
     ScriptureSearchResults scripture_search_results = 28;
     LibrarySearchResults library_search_results = 29;
+    ParsePastedSongReply parsed_song = 30;
+    GeneratedSongSlides generated_song_slides = 31;
   }
 }
 

@@ -1,0 +1,325 @@
+{
+  "title": "Joyful, Joyful, We Adore Thee",
+  "author": "Henry van Dyke (1852-1933)",
+  "key": "G",
+  "public_domain": true,
+  "arrangement": [
+    "Verse 1",
+    "Verse 2",
+    "Verse 3"
+  ],
+  "sections": [
+    {
+      "label": "Verse 1",
+      "kind": "verse",
+      "color_hex": "#2378C3",
+      "hotkey": "1",
+      "lines": [
+        {
+          "text": "Joyful, joyful, we adore Thee, God of glory, Lord of love;",
+          "chords": [
+            {
+              "position": 0,
+              "text": "G"
+            },
+            {
+              "position": 16,
+              "text": "D"
+            },
+            {
+              "position": 31,
+              "text": "G"
+            },
+            {
+              "position": 45,
+              "text": "D"
+            }
+          ]
+        },
+        {
+          "text": "Hearts unfold like flowers before Thee, opening to the sun above.",
+          "chords": [
+            {
+              "position": 0,
+              "text": "G"
+            },
+            {
+              "position": 19,
+              "text": "D"
+            },
+            {
+              "position": 29,
+              "text": "Em"
+            },
+            {
+              "position": 40,
+              "text": "C"
+            },
+            {
+              "position": 55,
+              "text": "D"
+            },
+            {
+              "position": 60,
+              "text": "G"
+            }
+          ]
+        },
+        {
+          "text": "Melt the clouds of sin and sadness, drive the dark of doubt away;",
+          "chords": [
+            {
+              "position": 0,
+              "text": "D"
+            },
+            {
+              "position": 19,
+              "text": "G"
+            },
+            {
+              "position": 36,
+              "text": "D"
+            },
+            {
+              "position": 54,
+              "text": "G"
+            }
+          ]
+        },
+        {
+          "text": "Giver of immortal gladness, fill us with the light of day.",
+          "chords": [
+            {
+              "position": 0,
+              "text": "Em"
+            },
+            {
+              "position": 11,
+              "text": "Bm"
+            },
+            {
+              "position": 28,
+              "text": "C"
+            },
+            {
+              "position": 45,
+              "text": "D"
+            },
+            {
+              "position": 54,
+              "text": "G"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "label": "Verse 2",
+      "kind": "verse",
+      "color_hex": "#2378C3",
+      "hotkey": "2",
+      "lines": [
+        {
+          "text": "All Thy works with joy surround Thee, earth and heaven reflect Thy rays,",
+          "chords": [
+            {
+              "position": 0,
+              "text": "G"
+            },
+            {
+              "position": 19,
+              "text": "D"
+            },
+            {
+              "position": 38,
+              "text": "G"
+            },
+            {
+              "position": 57,
+              "text": "D"
+            }
+          ]
+        },
+        {
+          "text": "Stars and angels sing around Thee, center of unbroken praise.",
+          "chords": [
+            {
+              "position": 0,
+              "text": "G"
+            },
+            {
+              "position": 17,
+              "text": "D"
+            },
+            {
+              "position": 23,
+              "text": "Em"
+            },
+            {
+              "position": 35,
+              "text": "C"
+            },
+            {
+              "position": 47,
+              "text": "D"
+            },
+            {
+              "position": 54,
+              "text": "G"
+            }
+          ]
+        },
+        {
+          "text": "Field and forest, vale and mountain, flowery meadow, flashing sea,",
+          "chords": [
+            {
+              "position": 0,
+              "text": "D"
+            },
+            {
+              "position": 18,
+              "text": "G"
+            },
+            {
+              "position": 37,
+              "text": "D"
+            },
+            {
+              "position": 53,
+              "text": "G"
+            }
+          ]
+        },
+        {
+          "text": "Chanting bird and flowing fountain call us to rejoice in Thee.",
+          "chords": [
+            {
+              "position": 0,
+              "text": "Em"
+            },
+            {
+              "position": 18,
+              "text": "Bm"
+            },
+            {
+              "position": 35,
+              "text": "C"
+            },
+            {
+              "position": 48,
+              "text": "D"
+            },
+            {
+              "position": 57,
+              "text": "G"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "label": "Verse 3",
+      "kind": "verse",
+      "color_hex": "#2378C3",
+      "hotkey": "3",
+      "lines": [
+        {
+          "text": "Thou art giving and forgiving, ever blessing, ever blest,",
+          "chords": [
+            {
+              "position": 0,
+              "text": "G"
+            },
+            {
+              "position": 16,
+              "text": "D"
+            },
+            {
+              "position": 31,
+              "text": "G"
+            },
+            {
+              "position": 46,
+              "text": "D"
+            }
+          ]
+        },
+        {
+          "text": "Wellspring of the joy of living, ocean depth of happy rest!",
+          "chords": [
+            {
+              "position": 0,
+              "text": "G"
+            },
+            {
+              "position": 18,
+              "text": "D"
+            },
+            {
+              "position": 25,
+              "text": "Em"
+            },
+            {
+              "position": 33,
+              "text": "C"
+            },
+            {
+              "position": 48,
+              "text": "D"
+            },
+            {
+              "position": 54,
+              "text": "G"
+            }
+          ]
+        },
+        {
+          "text": "Thou our Father, Christ our Brother, all who live in love are Thine;",
+          "chords": [
+            {
+              "position": 0,
+              "text": "D"
+            },
+            {
+              "position": 17,
+              "text": "G"
+            },
+            {
+              "position": 37,
+              "text": "D"
+            },
+            {
+              "position": 53,
+              "text": "G"
+            }
+          ]
+        },
+        {
+          "text": "Teach us how to love each other, lift us to the joy divine.",
+          "chords": [
+            {
+              "position": 0,
+              "text": "Em"
+            },
+            {
+              "position": 16,
+              "text": "Bm"
+            },
+            {
+              "position": 33,
+              "text": "C"
+            },
+            {
+              "position": 48,
+              "text": "D"
+            },
+            {
+              "position": 54,
+              "text": "G"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

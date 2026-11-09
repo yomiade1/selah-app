@@ -7,9 +7,13 @@ import {
     ActorOrigin,
 } from "../dist/gen/selah/v1/envelope_pb.js";
 import {
+    AccidentalSpelling,
+    CopyrightPlacement,
     DocumentType,
     LibraryChangeKind,
     SearchScope,
+    SectionKind,
+    SongPasteFormat,
 } from "../dist/gen/selah/v1/library_pb.js";
 import { PolicyLevel } from "../dist/gen/selah/v1/settings_pb.js";
 
@@ -235,5 +239,125 @@ test("M2 search queries and results round-trip", () => {
     assert.deepEqual(
         fromBinary(EnvelopeSchema, toBinary(EnvelopeSchema, searchReply)),
         searchReply,
+    );
+});
+
+test("M2 song parse, transpose and split queries round-trip", () => {
+    const secId = new Uint8Array([
+        0x01, 0x92, 0x70, 0x00, 0x00, 0x00, 0x70, 0x00, 0x80, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x02,
+    ]);
+
+    const parseQuery = create(EnvelopeSchema, {
+        id: 1007n,
+        body: {
+            case: "query",
+            value: {
+                request: {
+                    case: "parsePastedSong",
+                    value: {
+                        rawText: "[G]Amazing grace",
+                        format: SongPasteFormat.CHORD_PRO,
+                        defaultTitle: "Amazing Grace",
+                    },
+                },
+            },
+        },
+    });
+    assert.deepEqual(
+        fromBinary(EnvelopeSchema, toBinary(EnvelopeSchema, parseQuery)),
+        parseQuery,
+    );
+
+    const transposeQuery = create(EnvelopeSchema, {
+        id: 1010n,
+        body: {
+            case: "query",
+            value: {
+                request: {
+                    case: "transposeSong",
+                    value: {
+                        song: {
+                            id: { value: secId },
+                            title: "Amazing Grace",
+                            key: "G",
+                        },
+                        semitones: 3,
+                        accidentalSpelling: AccidentalSpelling.FLATS,
+                    },
+                },
+            },
+        },
+    });
+    assert.deepEqual(
+        fromBinary(EnvelopeSchema, toBinary(EnvelopeSchema, transposeQuery)),
+        transposeQuery,
+    );
+
+    const splitQuery = create(EnvelopeSchema, {
+        id: 1008n,
+        body: {
+            case: "query",
+            value: {
+                request: {
+                    case: "splitSongSlides",
+                    value: {
+                        song: {
+                            id: { value: secId },
+                            title: "Amazing Grace",
+                            publicDomain: true,
+                        },
+                        maxLines: 2,
+                        copyrightPlacement: CopyrightPlacement.FIRST_AND_LAST,
+                        titleSlide: false,
+                        blankSlideAtEnd: true,
+                        translationLanguage: "yo",
+                    },
+                },
+            },
+        },
+    });
+    assert.deepEqual(
+        fromBinary(EnvelopeSchema, toBinary(EnvelopeSchema, splitQuery)),
+        splitQuery,
+    );
+
+    const splitReply = create(EnvelopeSchema, {
+        id: 1009n,
+        correlationId: 1008n,
+        body: {
+            case: "reply",
+            value: {
+                result: {
+                    case: "generatedSongSlides",
+                    value: {
+                        copyrightLine: "Amazing Grace · Public Domain",
+                        slides: [
+                            {
+                                sectionId: { value: secId },
+                                sectionLabel: "Verse 1",
+                                sectionKind: SectionKind.VERSE,
+                                sectionHotkey: "1",
+                                partIndex: 1,
+                                partCount: 2,
+                                lines: [
+                                    {
+                                        text: "Amazing grace",
+                                        chords: [{ position: 0, text: "G" }],
+                                    },
+                                ],
+                                translationLines: ["Ọọrẹ-ọfẹ"],
+                                footerCopyright:
+                                    "Amazing Grace · Public Domain",
+                            },
+                        ],
+                    },
+                },
+            },
+        },
+    });
+    assert.deepEqual(
+        fromBinary(EnvelopeSchema, toBinary(EnvelopeSchema, splitReply)),
+        splitReply,
     );
 });
