@@ -243,18 +243,31 @@
                         <TextBlock Classes="label" Text="{Binding Header}" />
                       </DockPanel>
                       <Border Background="{DynamicResource Brush.PreviewBg}" CornerRadius="{DynamicResource Radius.Input}"
-                              Padding="8" MinHeight="88">
-                        <StackPanel Spacing="4">
-                          <TextBlock Foreground="{DynamicResource Brush.Warning}" Classes="caption"
-                                     IsVisible="{Binding HasChords}" Text="{Binding ChordsLine}" />
-                          <TextBlock Foreground="#FFFFFF" Text="{Binding Body}" TextWrapping="Wrap" />
-                          <TextBlock Foreground="#D1D1D6" Classes="caption" IsVisible="{Binding HasFooter}" Text="{Binding Footer}" />
-                        </StackPanel>
+                              Padding="4" MinHeight="104" ClipToBounds="True">
+                        <Panel>
+                          <Image Source="{Binding Thumbnail}" Stretch="Uniform" IsVisible="{Binding HasThumbnail}" />
+                          <StackPanel Spacing="4" Margin="4" IsVisible="{Binding !HasThumbnail}">
+                            <TextBlock Foreground="{DynamicResource Brush.Warning}" Classes="caption"
+                                       IsVisible="{Binding HasChords}" Text="{Binding ChordsLine}" />
+                            <TextBlock Foreground="#FFFFFF" Text="{Binding Body}" TextWrapping="Wrap" />
+                            <TextBlock Foreground="#D1D1D6" Classes="caption" IsVisible="{Binding HasFooter}" Text="{Binding Footer}" />
+                          </StackPanel>
+                        </Panel>
                       </Border>
-                      <Border Background="{DynamicResource Brush.SuccessBg}" CornerRadius="4" Padding="6,2" HorizontalAlignment="Left">
-                        <TextBlock Classes="caption" Foreground="{DynamicResource Brush.SuccessText}"
-                                   Text="{Binding [editor-fits-badge], Source={x:Static s:Localizer.Instance}}" />
-                      </Border>
+                      <WrapPanel ItemSpacing="6" LineSpacing="6" VerticalAlignment="Center">
+                        <Border Background="{DynamicResource Brush.SuccessBg}" CornerRadius="4" Padding="6,2">
+                          <TextBlock Classes="caption" Foreground="{DynamicResource Brush.SuccessText}"
+                                     Text="{Binding [editor-fits-badge], Source={x:Static s:Localizer.Instance}}" />
+                        </Border>
+                        <Border Background="{DynamicResource Brush.WarningBg}" CornerRadius="4" Padding="6,2"
+                                IsVisible="{Binding HasFlashWarning}">
+                          <TextBlock Classes="caption" Foreground="{DynamicResource Brush.Text}"
+                                     Text="{Binding [editor-flash-badge], Source={x:Static s:Localizer.Instance}}" />
+                        </Border>
+                        <Button Classes="quiet" Padding="8,2" MinHeight="24" Click="OnStageSlideClick">
+                          <TextBlock Classes="caption" Text="{Binding [editor-stage-slide], Source={x:Static s:Localizer.Instance}}" />
+                        </Button>
+                      </WrapPanel>
                     </StackPanel>
                   </Border>
                 </DataTemplate>

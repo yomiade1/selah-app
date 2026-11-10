@@ -5,7 +5,8 @@
 //! broadcasts `FrameShown`. The emergency lane takes the same lock, so it waits behind nothing
 //! but a state update, and the render thread picks it up on the next frame (SAFE-03).
 use std::collections::{BTreeMap, HashSet};
-use std::path::PathBuf;
+use std::io::Read;
+use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 use std::sync::{Arc, Condvar, Mutex};
 use std::time::{Duration, Instant};
@@ -18,10 +19,15 @@ use selah_proto::v1::{
     event, layer_spec, render_command, reply,
 };
 use selah_render::Compositor;
+use selah_render::png::decode as decode_png;
 use selah_render::transitions::{LayerTransitionBlend, RenderTransitionPlan};
+use selah_render::video::Nv12Frame;
 
 use crate::media_playback::{MediaPlaybackManager, default_decode_mode, resolve_media_root};
-use crate::outputs::{OutputMessage, OutputSurface, PreviewWriter, apply_output_message};
+use crate::outputs::{
+    OutputMessage, OutputSurface, PREVIEW_HEIGHT, PREVIEW_WIDTH, PreviewWriter,
+    apply_output_message,
+};
 use crate::scheduler::{FrameScheduler, SchedulerStats};
 
 /// 60 Hz output clock.
@@ -47,9 +53,25 @@ struct Shown {
     emergency: Option<(bool, u64)>,
 }
 
+/// One offscreen staged preview frame on its way to the frames thread (isolated from live; SAFE-06).
+struct ShownPreview {
+    output_index: u32,
+    frame: selah_render::Frame,
+    revision: u64,
+    shown_ns: u64,
+    received_ns: u64,
+}
+
+enum FrameWork {
+    Live(Vec<Shown>),
+    Preview(ShownPreview),
+}
+
 struct State {
     scene: Scene,
     preview_scene: Option<Scene>,
+    preview_dirty: bool,
+    preview_received_ns: u64,
     output_configs: Vec<OutputConfig>,
     explicit_output_configs: bool,
     pending_preload: Vec<PreloadHint>,
@@ -63,6 +85,7 @@ struct State {
     media_root_override: Option<PathBuf>,
     media_root_dirty: bool,
     last_frames: BTreeMap<u32, FrameShown>,
+    last_preview_frame: Option<FrameShown>,
     output_statuses: BTreeMap<u32, OutputFrameStatus>,
     scheduler_stats: SchedulerStats,
     cache_stats: (u64, u64),
@@ -146,6 +169,8 @@ impl Engine {
                     ..Default::default()
                 },
                 preview_scene: None,
+                preview_dirty: false,
+                preview_received_ns: 0,
                 output_configs: vec![default_output_config()],
                 explicit_output_configs: false,
                 pending_preload: Vec::new(),
@@ -156,6 +181,7 @@ impl Engine {
                 media_root_override: None,
                 media_root_dirty: true,
                 last_frames: BTreeMap::new(),
+                last_preview_frame: None,
                 output_statuses: BTreeMap::new(),
                 scheduler_stats: SchedulerStats::default(),
                 cache_stats: (0, 0),
@@ -248,6 +274,11 @@ impl Engine {
         self.lock().active_video_streams
     }
 
+    #[cfg(test)]
+    pub fn last_preview_frame(&self) -> Option<FrameShown> {
+        self.lock().last_preview_frame.clone()
+    }
+
     fn now_ns(&self) -> u64 {
         self.epoch.elapsed().as_nanos() as u64
     }
@@ -259,10 +290,19 @@ impl Engine {
     }
 
     pub fn add_client(&self, sender: FrameSender) {
-        // A (re)connecting core learns what's on every output straight away.
-        let last_frames: Vec<FrameShown> = self.lock().last_frames.values().cloned().collect();
+        // A (re)connecting core learns what's on every output (and staged preview) straight away.
+        let (last_frames, last_preview) = {
+            let state = self.lock();
+            (
+                state.last_frames.values().cloned().collect::<Vec<_>>(),
+                state.last_preview_frame.clone(),
+            )
+        };
         for last in last_frames {
             let _ = sender.try_send(self.event(event::Notification::FrameShown(last)));
+        }
+        if let Some(preview) = last_preview {
+            let _ = sender.try_send(self.event(event::Notification::FrameShown(preview)));
         }
         let mut clients = self.clients.lock().unwrap_or_else(|p| p.into_inner());
         clients.retain(|client| !client.is_closed());
@@ -357,7 +397,21 @@ impl Engine {
                         .pending_preload
                         .extend(scene.preload_items.iter().cloned());
                 }
+                if preview.scene == state.preview_scene {
+                    let cached = state.last_preview_frame.clone();
+                    let need_preload = !state.pending_preload.is_empty();
+                    if need_preload {
+                        self.wake.notify_all();
+                    }
+                    drop(state);
+                    if let Some(frame) = cached {
+                        self.broadcast(event::Notification::FrameShown(frame));
+                    }
+                    return;
+                }
                 state.preview_scene = preview.scene.clone();
+                state.preview_dirty = true;
+                state.preview_received_ns = received;
             }
             Some(render_command::Action::PreloadItems(preload)) => {
                 if preload.items.is_empty() {
@@ -377,6 +431,10 @@ impl Engine {
                 }
                 state.dirty = true;
                 state.received_ns = received;
+                if state.preview_scene.is_some() {
+                    state.preview_dirty = true;
+                    state.preview_received_ns = received;
+                }
             }
             None => return,
         }
@@ -417,9 +475,13 @@ impl Engine {
         }));
         compositor.set_media_root(Some(media_root.clone()));
 
+        // Isolated CPU compositor strictly for offscreen staged preview (SAFE-06).
+        let mut preview_compositor = selah_render::cpu::CpuCompositor::default();
+        preview_compositor.set_media_root(Some(media_root.clone()));
+
         // Checksums, FrameShown and previews happen on their own thread, in order, so the render
         // thread is free for the next command as soon as a frame is presented.
-        let (after, frames) = std::sync::mpsc::channel::<Vec<Shown>>();
+        let (after, frames) = std::sync::mpsc::channel::<FrameWork>();
         let engine = self.clone();
         let _ = std::thread::Builder::new()
             .name("selah-frames".into())
@@ -442,12 +504,14 @@ impl Engine {
                 tick_due,
                 preload,
                 media_root_update,
+                preview_request,
             ) = {
                 let mut state = self.lock();
                 let animating = state.active_transitions
                     || selah_render::scene::scene_is_continuously_animated(&state.scene);
                 let mut timed_out = false;
                 while !state.dirty
+                    && !state.preview_dirty
                     && !state.media_root_dirty
                     && state.outputs.is_empty()
                     && state.pending_preload.is_empty()
@@ -471,6 +535,9 @@ impl Engine {
                     }
                 }
                 let dirty = std::mem::take(&mut state.dirty);
+                let preview_dirty = std::mem::take(&mut state.preview_dirty);
+                let preview_request =
+                    preview_dirty.then(|| (state.preview_scene.clone(), state.preview_received_ns));
                 let emergency = state.pending_emergency.take();
                 if emergency.is_some() {
                     self.emergency_pending.store(false, Ordering::Release);
@@ -491,12 +558,14 @@ impl Engine {
                     timed_out,
                     std::mem::take(&mut state.pending_preload),
                     root_update,
+                    preview_request,
                 )
             };
 
             if let Some(new_root) = media_root_update {
                 media_root = new_root;
                 compositor.set_media_root(Some(media_root.clone()));
+                preview_compositor.set_media_root(Some(media_root.clone()));
             }
 
             let resized = !messages.is_empty();
@@ -506,107 +575,93 @@ impl Engine {
                 }
             }
 
-            let should_render = dirty || tick_due;
-            if !should_render {
-                if resized {
-                    self.present(&mut compositor, &mut surfaces);
-                }
-                if !preload.is_empty() {
-                    if let Err(error) = compositor.prerasterise_hints(&preload) {
-                        tracing::warn!(%error, "prerasterise failed");
+            'live: {
+                let should_render = dirty || tick_due;
+                if !should_render {
+                    if resized {
+                        self.present(&mut compositor, &mut surfaces);
                     }
-                    self.lock().cache_stats = compositor.cache_stats();
-                }
-                continue;
-            }
-
-            let emergency_active =
-                emergency.is_some() || self.emergency_pending.load(Ordering::Acquire);
-            if emergency_active {
-                active_output_transitions.clear();
-                active_layer_transitions.clear();
-                if emergency.is_some() {
-                    prev_scene = Some(scene.clone());
-                }
-            }
-
-            let targets =
-                selah_render::scene::resolve_targets(&scene, &output_configs, explicit_configs);
-
-            if !emergency_active && prev_scene.as_ref() != Some(&scene) {
-                update_transitions_for_scene(
-                    prev_scene.as_ref(),
-                    &scene,
-                    &targets,
-                    &mut active_output_transitions,
-                    &mut active_layer_transitions,
-                );
-            }
-
-            let retained_hashes = if emergency_active || scene.cleared {
-                HashSet::new()
-            } else {
-                collect_transition_media_hashes(
-                    &active_output_transitions,
-                    &active_layer_transitions,
-                )
-            };
-
-            let media_updated = playback.sync_and_push_with_retained(
-                &scene,
-                &media_root,
-                decode_mode,
-                compositor.as_mut(),
-                &retained_hashes,
-            );
-
-            let has_active_transitions =
-                !active_output_transitions.is_empty() || !active_layer_transitions.is_empty();
-
-            if !dirty
-                && emergency.is_none()
-                && !media_updated
-                && !has_active_transitions
-                && !scene_needs_non_media_tick(&scene)
-            {
-                scheduler.advance_idle(Instant::now());
-                self.lock().active_transitions = false;
-                continue;
-            }
-
-            if emergency.is_none() && self.emergency_pending.load(Ordering::Acquire) {
-                active_output_transitions.clear();
-                active_layer_transitions.clear();
-                self.lock().active_transitions = false;
-                continue;
-            }
-
-            let render_started = self.now_ns();
-            let render_now = Instant::now();
-            let mut rendered = Vec::with_capacity(targets.len());
-            let mut render_ok = true;
-            for (output_index, (width, height)) in targets {
-                if emergency.is_none() && self.emergency_pending.load(Ordering::Acquire) {
-                    render_ok = false;
-                    break;
-                }
-                let mut plan = RenderTransitionPlan::default();
-                if let Some(tr) = active_output_transitions.get(&output_index) {
-                    let elapsed_ms = render_now
-                        .saturating_duration_since(tr.started)
-                        .as_millis()
-                        .min(u128::from(u32::MAX)) as u32;
-                    let progress =
-                        selah_render::transitions::transition_progress(Some(&tr.spec), elapsed_ms);
-                    if progress < 1.0 {
-                        plan.output_transition =
-                            Some((tr.from_scene.clone(), tr.kind, tr.direction, progress));
-                    }
-                } else {
-                    for ((out_idx, _), tr) in &active_layer_transitions {
-                        if *out_idx != output_index {
-                            continue;
+                    if !preload.is_empty() {
+                        if let Err(error) = compositor.prerasterise_hints(&preload) {
+                            tracing::warn!(%error, "prerasterise failed");
                         }
+                        self.lock().cache_stats = compositor.cache_stats();
+                    }
+                    break 'live;
+                }
+
+                let emergency_active =
+                    emergency.is_some() || self.emergency_pending.load(Ordering::Acquire);
+                if emergency_active {
+                    active_output_transitions.clear();
+                    active_layer_transitions.clear();
+                    if emergency.is_some() {
+                        prev_scene = Some(scene.clone());
+                    }
+                }
+
+                let targets =
+                    selah_render::scene::resolve_targets(&scene, &output_configs, explicit_configs);
+
+                if !emergency_active && prev_scene.as_ref() != Some(&scene) {
+                    update_transitions_for_scene(
+                        prev_scene.as_ref(),
+                        &scene,
+                        &targets,
+                        &mut active_output_transitions,
+                        &mut active_layer_transitions,
+                    );
+                }
+
+                let retained_hashes = if emergency_active || scene.cleared {
+                    HashSet::new()
+                } else {
+                    collect_transition_media_hashes(
+                        &active_output_transitions,
+                        &active_layer_transitions,
+                    )
+                };
+
+                let media_updated = playback.sync_and_push_with_retained(
+                    &scene,
+                    &media_root,
+                    decode_mode,
+                    compositor.as_mut(),
+                    &retained_hashes,
+                );
+
+                let has_active_transitions =
+                    !active_output_transitions.is_empty() || !active_layer_transitions.is_empty();
+
+                if !dirty
+                    && emergency.is_none()
+                    && !media_updated
+                    && !has_active_transitions
+                    && !scene_needs_non_media_tick(&scene)
+                {
+                    scheduler.advance_idle(Instant::now());
+                    self.lock().active_transitions = false;
+                    break 'live;
+                }
+
+                if emergency.is_none() && self.emergency_pending.load(Ordering::Acquire) {
+                    active_output_transitions.clear();
+                    active_layer_transitions.clear();
+                    self.lock().active_transitions = false;
+                    break 'live;
+                }
+
+                let render_started = self.now_ns();
+                let render_now = Instant::now();
+                let mut rendered = Vec::with_capacity(targets.len());
+                let mut render_ok = true;
+                for (output_index, (width, height)) in targets {
+                    if emergency.is_none() && self.emergency_pending.load(Ordering::Acquire) {
+                        render_ok = false;
+                        break;
+                    }
+                    let mut plan = RenderTransitionPlan::default();
+                    if let Some(tr) = active_output_transitions.get(&output_index) {
                         let elapsed_ms = render_now
                             .saturating_duration_since(tr.started)
                             .as_millis()
@@ -617,196 +672,262 @@ impl Engine {
                             elapsed_ms,
                         );
                         if progress < 1.0 {
-                            plan.layer_transitions.push(LayerTransitionBlend {
-                                kind: tr.kind,
-                                from_layer: tr.from_layer.clone(),
-                                transition: tr.transition,
-                                direction: tr.direction,
-                                progress,
-                            });
+                            plan.output_transition =
+                                Some((tr.from_scene.clone(), tr.kind, tr.direction, progress));
+                        }
+                    } else {
+                        for ((out_idx, _), tr) in &active_layer_transitions {
+                            if *out_idx != output_index {
+                                continue;
+                            }
+                            let elapsed_ms = render_now
+                                .saturating_duration_since(tr.started)
+                                .as_millis()
+                                .min(u128::from(u32::MAX))
+                                as u32;
+                            let progress = selah_render::transitions::transition_progress(
+                                Some(&tr.spec),
+                                elapsed_ms,
+                            );
+                            if progress < 1.0 {
+                                plan.layer_transitions.push(LayerTransitionBlend {
+                                    kind: tr.kind,
+                                    from_layer: tr.from_layer.clone(),
+                                    transition: tr.transition,
+                                    direction: tr.direction,
+                                    progress,
+                                });
+                            }
+                        }
+                    }
+                    match compositor.render_output_with_plan(
+                        &scene,
+                        output_index,
+                        width,
+                        height,
+                        &plan,
+                    ) {
+                        Ok(frame) => {
+                            let norm = selah_render::scene::normalize_output_scene(
+                                &scene,
+                                output_index,
+                                width,
+                                height,
+                            );
+                            rendered.push((output_index, norm.live, frame));
+                        }
+                        Err(error) => {
+                            tracing::error!(output_index, %error, "render failed; keeping the last frame");
+                            render_ok = false;
+                            break;
                         }
                     }
                 }
-                match compositor.render_output_with_plan(&scene, output_index, width, height, &plan)
+                if !render_ok
+                    || (emergency.is_none() && self.emergency_pending.load(Ordering::Acquire))
                 {
-                    Ok(frame) => {
-                        let norm = selah_render::scene::normalize_output_scene(
-                            &scene,
-                            output_index,
-                            width,
-                            height,
-                        );
-                        rendered.push((output_index, norm.live, frame));
-                    }
-                    Err(error) => {
-                        tracing::error!(output_index, %error, "render failed; keeping the last frame");
-                        render_ok = false;
-                        break;
-                    }
+                    break 'live;
                 }
-            }
-            if !render_ok || (emergency.is_none() && self.emergency_pending.load(Ordering::Acquire))
-            {
-                continue;
-            }
-            prev_scene = Some(scene.clone());
+                prev_scene = Some(scene.clone());
 
-            let finish_now = Instant::now();
-            active_output_transitions.retain(|_, tr| {
-                finish_now.saturating_duration_since(tr.started).as_millis()
-                    < u128::from(tr.spec.duration_ms)
-            });
-            active_layer_transitions.retain(|_, tr| {
-                finish_now.saturating_duration_since(tr.started).as_millis()
-                    < u128::from(tr.spec.duration_ms)
-            });
-            let remaining_transitions =
-                !active_output_transitions.is_empty() || !active_layer_transitions.is_empty();
-
-            tracing::debug!(
-                revision = scene.revision,
-                outputs = rendered.len(),
-                waited_ms = render_started.saturating_sub(received_ns) as f64 / 1e6,
-                render_ms = (self.now_ns() - render_started) as f64 / 1e6,
-                "frame rendered"
-            );
-            let presented = self.present(&mut compositor, &mut surfaces);
-            // A frame is "shown" when it's handed over for display: the swap-chain present with
-            // windows, the GPU queue submit when headless (the same moment in both modes).
-            let shown_at = presented
-                .or_else(|| compositor.last_submitted())
-                .or_else(|| compositor.last_rendered())
-                .unwrap_or_else(Instant::now);
-            scheduler.record_present(shown_at);
-            let sched_stats = scheduler.stats();
-
-            let (floor, cache_stats) = {
-                let mut state = self.lock();
-                state.scheduler_stats = sched_stats;
-                state.cache_stats = compositor.cache_stats();
-                state.active_video_streams = playback.active_stream_count();
-                state.active_transitions = remaining_transitions;
-                (state.emergency_floor.unwrap_or(0), state.cache_stats)
-            };
-            let _ = cache_stats;
-            let shown_ns = shown_at.saturating_duration_since(self.epoch).as_nanos() as u64;
-            let mut batch = Vec::with_capacity(rendered.len());
-            for (idx, (output_index, live, frame)) in rendered.into_iter().enumerate() {
-                batch.push(Shown {
-                    output_index,
-                    live,
-                    frame,
-                    revision: scene.revision,
-                    shown_ns,
-                    received_ns,
-                    emergency: if idx == 0 {
-                        emergency.map(|show_logo| (show_logo, floor))
-                    } else {
-                        None
-                    },
+                let finish_now = Instant::now();
+                active_output_transitions.retain(|_, tr| {
+                    finish_now.saturating_duration_since(tr.started).as_millis()
+                        < u128::from(tr.spec.duration_ms)
                 });
-            }
-            let _ = after.send(batch);
+                active_layer_transitions.retain(|_, tr| {
+                    finish_now.saturating_duration_since(tr.started).as_millis()
+                        < u128::from(tr.spec.duration_ms)
+                });
+                let remaining_transitions =
+                    !active_output_transitions.is_empty() || !active_layer_transitions.is_empty();
 
-            // Warm caches for upcoming items after the live frame is handed off.
-            if !preload.is_empty() {
-                if let Err(error) = compositor.prerasterise_hints(&preload) {
-                    tracing::warn!(%error, "post-frame prerasterise failed");
+                tracing::debug!(
+                    revision = scene.revision,
+                    outputs = rendered.len(),
+                    waited_ms = render_started.saturating_sub(received_ns) as f64 / 1e6,
+                    render_ms = (self.now_ns() - render_started) as f64 / 1e6,
+                    "frame rendered"
+                );
+                let presented = self.present(&mut compositor, &mut surfaces);
+                // A frame is "shown" when it's handed over for display: the swap-chain present with
+                // windows, the GPU queue submit when headless (the same moment in both modes).
+                let shown_at = presented
+                    .or_else(|| compositor.last_submitted())
+                    .or_else(|| compositor.last_rendered())
+                    .unwrap_or_else(Instant::now);
+                scheduler.record_present(shown_at);
+                let sched_stats = scheduler.stats();
+
+                let (floor, cache_stats) = {
+                    let mut state = self.lock();
+                    state.scheduler_stats = sched_stats;
+                    state.cache_stats = compositor.cache_stats();
+                    state.active_video_streams = playback.active_stream_count();
+                    state.active_transitions = remaining_transitions;
+                    (state.emergency_floor.unwrap_or(0), state.cache_stats)
+                };
+                let _ = cache_stats;
+                let shown_ns = shown_at.saturating_duration_since(self.epoch).as_nanos() as u64;
+                let mut batch = Vec::with_capacity(rendered.len());
+                for (idx, (output_index, live, frame)) in rendered.into_iter().enumerate() {
+                    batch.push(Shown {
+                        output_index,
+                        live,
+                        frame,
+                        revision: scene.revision,
+                        shown_ns,
+                        received_ns,
+                        emergency: if idx == 0 {
+                            emergency.map(|show_logo| (show_logo, floor))
+                        } else {
+                            None
+                        },
+                    });
                 }
-                self.lock().cache_stats = compositor.cache_stats();
+                let _ = after.send(FrameWork::Live(batch));
+
+                // Warm caches for upcoming items after the live frame is handed off.
+                if !preload.is_empty() {
+                    if let Err(error) = compositor.prerasterise_hints(&preload) {
+                        tracing::warn!(%error, "post-frame prerasterise failed");
+                    }
+                    self.lock().cache_stats = compositor.cache_stats();
+                }
+            }
+
+            if let Some((maybe_preview_scene, preview_received_ns)) = preview_request
+                && !self.emergency_pending.load(Ordering::Acquire)
+            {
+                let staged = render_staged_preview(
+                    &mut preview_compositor,
+                    &media_root,
+                    maybe_preview_scene,
+                    self.now_ns(),
+                    preview_received_ns,
+                );
+                if let Some(staged) = staged {
+                    let _ = after.send(FrameWork::Preview(staged));
+                }
             }
         }
     }
 
     /// Runs on the frames thread: checksum, tell core and other clients, publish the preview.
-    fn after_frames(self: Arc<Self>, frames: std::sync::mpsc::Receiver<Vec<Shown>>) {
+    fn after_frames(self: Arc<Self>, frames: std::sync::mpsc::Receiver<FrameWork>) {
         let mut preview = PreviewWriter::open();
+        let mut stage_preview = PreviewWriter::open_stage();
         let mut flash_analyzers: BTreeMap<u32, selah_render::flash::FlashAnalyzer> =
             BTreeMap::new();
-        while let Ok(batch) = frames.recv() {
-            if batch.is_empty() {
-                continue;
-            }
-            let active_indices: Vec<u32> = batch.iter().map(|s| s.output_index).collect();
-            flash_analyzers.retain(|idx, _| active_indices.contains(idx));
-            let batch_emergency = batch.iter().any(|s| s.emergency.is_some());
-            let mut messages = Vec::with_capacity(batch.len());
-            let mut new_statuses = Vec::with_capacity(batch.len());
-            let mut emergency_applied = None;
-
-            for shown in &batch {
-                if let Some((show_logo, floor)) = shown.emergency {
-                    emergency_applied = Some(EmergencyApplied {
-                        show_logo,
-                        scene_revision: floor,
-                        monotonic_nanoseconds: shown.shown_ns,
-                    });
-                }
-                let flash_warning = if batch_emergency || !shown.live {
-                    if let Some(analyzer) = flash_analyzers.get_mut(&shown.output_index) {
-                        analyzer.reset();
+        while let Ok(work) = frames.recv() {
+            match work {
+                FrameWork::Live(batch) => {
+                    if batch.is_empty() {
+                        continue;
                     }
-                    false
-                } else {
-                    let analyzer = flash_analyzers.entry(shown.output_index).or_default();
-                    analyzer
-                        .push_frame(&shown.frame, shown.shown_ns)
-                        .flash_warning
-                };
-                let checksum = shown.frame.checksum().to_vec();
-                let res = Resolution {
-                    width: shown.frame.width,
-                    height: shown.frame.height,
-                };
-                let message = FrameShown {
-                    scene_revision: shown.revision,
-                    monotonic_nanoseconds: shown.shown_ns,
-                    frame_checksum: checksum.clone(),
-                    command_received_nanoseconds: shown.received_ns,
-                    output_index: shown.output_index,
-                    frame_period_nanoseconds: FRAME_PERIOD.as_nanos() as u64,
-                    resolution: Some(res),
-                    is_preview: false,
-                    flash_warning,
-                };
-                let status = OutputFrameStatus {
-                    output_index: shown.output_index,
-                    scene_revision: shown.revision,
-                    frame_checksum: checksum,
-                    resolution: Some(res),
-                    live: shown.live,
-                    flash_warning,
-                };
-                messages.push(message);
-                new_statuses.push(status);
-            }
+                    let active_indices: Vec<u32> = batch.iter().map(|s| s.output_index).collect();
+                    flash_analyzers.retain(|idx, _| active_indices.contains(idx));
+                    let batch_emergency = batch.iter().any(|s| s.emergency.is_some());
+                    let mut messages = Vec::with_capacity(batch.len());
+                    let mut new_statuses = Vec::with_capacity(batch.len());
+                    let mut emergency_applied = None;
 
-            {
-                let mut state = self.lock();
-                state
-                    .last_frames
-                    .retain(|idx, _| active_indices.contains(idx));
-                state
-                    .output_statuses
-                    .retain(|idx, _| active_indices.contains(idx));
-                for message in &messages {
-                    state
-                        .last_frames
-                        .insert(message.output_index, message.clone());
-                }
-                for status in new_statuses {
-                    state.output_statuses.insert(status.output_index, status);
-                }
-            }
+                    for shown in &batch {
+                        if let Some((show_logo, floor)) = shown.emergency {
+                            emergency_applied = Some(EmergencyApplied {
+                                show_logo,
+                                scene_revision: floor,
+                                monotonic_nanoseconds: shown.shown_ns,
+                            });
+                        }
+                        let flash_warning = if batch_emergency || !shown.live {
+                            if let Some(analyzer) = flash_analyzers.get_mut(&shown.output_index) {
+                                analyzer.reset();
+                            }
+                            false
+                        } else {
+                            let analyzer = flash_analyzers.entry(shown.output_index).or_default();
+                            analyzer
+                                .push_frame(&shown.frame, shown.shown_ns)
+                                .flash_warning
+                        };
+                        let checksum = shown.frame.checksum().to_vec();
+                        let res = Resolution {
+                            width: shown.frame.width,
+                            height: shown.frame.height,
+                        };
+                        let message = FrameShown {
+                            scene_revision: shown.revision,
+                            monotonic_nanoseconds: shown.shown_ns,
+                            frame_checksum: checksum.clone(),
+                            command_received_nanoseconds: shown.received_ns,
+                            output_index: shown.output_index,
+                            frame_period_nanoseconds: FRAME_PERIOD.as_nanos() as u64,
+                            resolution: Some(res),
+                            is_preview: false,
+                            flash_warning,
+                        };
+                        let status = OutputFrameStatus {
+                            output_index: shown.output_index,
+                            scene_revision: shown.revision,
+                            frame_checksum: checksum,
+                            resolution: Some(res),
+                            live: shown.live,
+                            flash_warning,
+                        };
+                        messages.push(message);
+                        new_statuses.push(status);
+                    }
 
-            if let Some(applied) = emergency_applied {
-                self.broadcast(event::Notification::EmergencyApplied(applied));
-            }
-            for message in messages {
-                self.broadcast(event::Notification::FrameShown(message));
-            }
-            if let Some(primary) = batch.iter().find(|s| s.output_index == 0) {
-                preview.publish(&primary.frame, Duration::from_nanos(primary.shown_ns));
+                    {
+                        let mut state = self.lock();
+                        state
+                            .last_frames
+                            .retain(|idx, _| active_indices.contains(idx));
+                        state
+                            .output_statuses
+                            .retain(|idx, _| active_indices.contains(idx));
+                        for message in &messages {
+                            state
+                                .last_frames
+                                .insert(message.output_index, message.clone());
+                        }
+                        for status in new_statuses {
+                            state.output_statuses.insert(status.output_index, status);
+                        }
+                    }
+
+                    if let Some(primary) = batch.iter().find(|s| s.output_index == 0) {
+                        preview.publish(&primary.frame, Duration::from_nanos(primary.shown_ns));
+                    }
+                    if let Some(applied) = emergency_applied {
+                        self.broadcast(event::Notification::EmergencyApplied(applied));
+                    }
+                    for message in messages {
+                        self.broadcast(event::Notification::FrameShown(message));
+                    }
+                }
+                FrameWork::Preview(staged) => {
+                    stage_preview.publish(&staged.frame, Duration::from_nanos(staged.shown_ns));
+                    let checksum = staged.frame.checksum().to_vec();
+                    let res = Resolution {
+                        width: staged.frame.width,
+                        height: staged.frame.height,
+                    };
+                    let message = FrameShown {
+                        scene_revision: staged.revision,
+                        monotonic_nanoseconds: staged.shown_ns,
+                        frame_checksum: checksum,
+                        command_received_nanoseconds: staged.received_ns,
+                        output_index: staged.output_index,
+                        frame_period_nanoseconds: FRAME_PERIOD.as_nanos() as u64,
+                        resolution: Some(res),
+                        is_preview: true,
+                        flash_warning: false,
+                    };
+                    self.lock().last_preview_frame = Some(message.clone());
+                    self.broadcast(event::Notification::FrameShown(message));
+                }
             }
         }
     }
@@ -899,6 +1020,151 @@ impl Engine {
             "SEL-IPC-0001",
             "error-unsupported-request",
         )
+    }
+}
+
+const MAX_STAGED_POSTER_BYTES: u64 = 16 * 1024 * 1024;
+
+fn is_valid_hex_hash(hash: &str) -> bool {
+    hash.len() == 64
+        && hash
+            .bytes()
+            .all(|b| b.is_ascii_digit() || (b'a'..=b'f').contains(&b))
+}
+
+fn read_validated_staged_poster(thumbs_root: &Path, path: &Path) -> Option<Nv12Frame> {
+    let meta = std::fs::symlink_metadata(path).ok()?;
+    if meta.file_type().is_symlink() || !meta.is_file() || meta.len() > MAX_STAGED_POSTER_BYTES {
+        return None;
+    }
+    let canon = path.canonicalize().ok()?;
+    if !canon.starts_with(thumbs_root) {
+        return None;
+    }
+    let file = std::fs::File::open(&canon).ok()?;
+    let mut bytes = Vec::with_capacity(meta.len().min(MAX_STAGED_POSTER_BYTES) as usize);
+    file.take(MAX_STAGED_POSTER_BYTES + 1)
+        .read_to_end(&mut bytes)
+        .ok()?;
+    if bytes.len() as u64 > MAX_STAGED_POSTER_BYTES {
+        return None;
+    }
+    let frame = decode_png(&bytes).ok()?;
+    Nv12Frame::from_rgba(&frame).ok()
+}
+
+fn load_staged_video_posters(
+    compositor: &mut selah_render::cpu::CpuCompositor,
+    media_root: &Path,
+    scene: &Scene,
+    output_index: u32,
+) -> Vec<String> {
+    if scene.cleared {
+        return Vec::new();
+    }
+    let Some(out) = scene
+        .outputs
+        .iter()
+        .find(|o| o.output_index == output_index)
+    else {
+        return Vec::new();
+    };
+    if out.cleared || out.show_logo {
+        return Vec::new();
+    }
+    let mut hashes = HashSet::new();
+    for layer in &out.layers {
+        if !layer.enabled {
+            continue;
+        }
+        if let Some(layer_spec::Content::Media(m)) = layer.content.as_ref()
+            && m.media_kind == "video"
+        {
+            let hash = m.content_hash.trim();
+            if is_valid_hex_hash(hash) {
+                hashes.insert(hash.to_owned());
+            }
+        }
+    }
+    if hashes.is_empty() {
+        return Vec::new();
+    }
+
+    let Some(thumbs_candidate) = media_root.parent().map(|p| p.join("thumbnails")) else {
+        return Vec::new();
+    };
+    let Ok(thumbs_meta) = std::fs::symlink_metadata(&thumbs_candidate) else {
+        return Vec::new();
+    };
+    if thumbs_meta.file_type().is_symlink() || !thumbs_meta.is_dir() {
+        return Vec::new();
+    }
+    let Ok(thumbs_root) = thumbs_candidate.canonicalize() else {
+        return Vec::new();
+    };
+
+    let mut loaded = Vec::new();
+    for hash in hashes {
+        let default_path = thumbs_root.join(format!("{hash}_320x180.png"));
+        let mut poster = read_validated_staged_poster(&thumbs_root, &default_path);
+        if poster.is_none()
+            && let Ok(entries) = std::fs::read_dir(&thumbs_root)
+        {
+            let prefix = format!("{hash}_");
+            for entry in entries.flatten() {
+                let file_name = entry.file_name();
+                let name = file_name.to_string_lossy();
+                if name.starts_with(&prefix) && name.ends_with(".png") {
+                    poster = read_validated_staged_poster(&thumbs_root, &entry.path());
+                    if poster.is_some() {
+                        break;
+                    }
+                }
+            }
+        }
+        if let Some(nv12) = poster
+            && compositor.set_video_for_hash(&hash, Some(nv12)).is_ok()
+        {
+            loaded.push(hash);
+        }
+    }
+    loaded
+}
+
+fn render_staged_preview(
+    compositor: &mut selah_render::cpu::CpuCompositor,
+    media_root: &Path,
+    maybe_scene: Option<Scene>,
+    shown_ns: u64,
+    received_ns: u64,
+) -> Option<ShownPreview> {
+    let scene = maybe_scene.unwrap_or_else(|| Scene {
+        revision: 0,
+        cleared: true,
+        ..Default::default()
+    });
+    let output_index = if scene.outputs.iter().any(|o| o.output_index == 0) {
+        0
+    } else {
+        scene.outputs.first().map_or(0, |o| o.output_index)
+    };
+    let loaded_posters = load_staged_video_posters(compositor, media_root, &scene, output_index);
+    let result = compositor.render_output(&scene, output_index, PREVIEW_WIDTH, PREVIEW_HEIGHT);
+    for hash in loaded_posters {
+        let _ = compositor.set_video_for_hash(&hash, None);
+    }
+    match result {
+        Ok(frame) => Some(ShownPreview {
+            output_index,
+            frame,
+            revision: scene.revision,
+            shown_ns,
+            received_ns,
+        }),
+        Err(error) => {
+            tracing::warn!(%error, revision = scene.revision, "staged preview render failed");
+            None
+        }
     }
 }
 
@@ -1623,5 +1889,202 @@ mod tests {
             engine.scheduler_stats().scheduled_frames,
             frames_after_clear
         );
+    }
+
+    #[tokio::test]
+    async fn engine_stages_preview_ring_without_affecting_live_outputs() {
+        // safe: SAFE-06
+        let lib_dir = tempfile::tempdir().expect("tempdir");
+        let media_dir = lib_dir.path().join("media");
+        let thumbs_dir = lib_dir.path().join("thumbnails");
+        std::fs::create_dir_all(&media_dir).expect("create media dir");
+        std::fs::create_dir_all(&thumbs_dir).expect("create thumbnails dir");
+
+        // Pre-seed a video poster PNG for a dummy clip hash so staged preview exercises poster lookup.
+        let poster_hash = "a".repeat(64);
+        let mut poster_frame = selah_render::Frame::new(320, 180);
+        for px in poster_frame.pixels.chunks_exact_mut(4) {
+            px.copy_from_slice(&[20, 140, 210, 255]);
+        }
+        let poster_png = selah_render::png::encode(&poster_frame).expect("encode poster");
+        std::fs::write(
+            thumbs_dir.join(format!("{poster_hash}_320x180.png")),
+            poster_png,
+        )
+        .expect("write poster");
+
+        let (engine, _) = Engine::start(Mode::Headless).expect("engine starts headless");
+        engine.set_media_root_for_test(media_dir);
+
+        // Wait for initial cleared live frame (output 0, revision 0).
+        let deadline = Instant::now() + Duration::from_secs(5);
+        let cleared_live_checksum = loop {
+            let st = engine.status();
+            if !st.frame_checksum.is_empty() && !st.live {
+                break st.frame_checksum;
+            }
+            assert!(
+                Instant::now() < deadline,
+                "timed out waiting for initial engine status"
+            );
+            tokio::time::sleep(Duration::from_millis(10)).await;
+        };
+
+        // Stage a preview scene with video poster + slide text while live remains cleared.
+        let preview_scene = Scene {
+            revision: 7,
+            is_preview: true,
+            outputs: vec![OutputScene {
+                output_index: 0,
+                layers: vec![
+                    LayerSpec {
+                        kind: LayerKind::Media as i32,
+                        enabled: true,
+                        content: Some(layer_spec::Content::Media(
+                            selah_proto::v1::MediaLayerSpec {
+                                content_hash: poster_hash,
+                                media_kind: "video".into(),
+                                media_extension: "mp4".into(),
+                                ..Default::default()
+                            },
+                        )),
+                        ..Default::default()
+                    },
+                    LayerSpec {
+                        kind: LayerKind::Slide as i32,
+                        enabled: true,
+                        content: Some(layer_spec::Content::Slide(SlideLayerSpec {
+                            text: "Next Hymn".into(),
+                            ..Default::default()
+                        })),
+                        ..Default::default()
+                    },
+                ],
+                ..Default::default()
+            }],
+            ..Default::default()
+        };
+        engine.apply(&RenderCommand {
+            action: Some(render_command::Action::SetPreviewScene(
+                selah_proto::v1::SetPreviewScene {
+                    scene: Some(preview_scene),
+                },
+            )),
+        });
+
+        let preview_deadline = Instant::now() + Duration::from_secs(5);
+        let preview_event = loop {
+            if let Some(frame) = engine.last_preview_frame()
+                && frame.is_preview
+                && frame.scene_revision == 7
+            {
+                break frame;
+            }
+            assert!(
+                Instant::now() < preview_deadline,
+                "timed out waiting for FrameShown {{ is_preview: true }}"
+            );
+            tokio::time::sleep(Duration::from_millis(10)).await;
+        };
+
+        assert_eq!(preview_event.output_index, 0);
+        assert!(!preview_event.flash_warning);
+        assert_eq!(
+            preview_event.resolution,
+            Some(Resolution {
+                width: PREVIEW_WIDTH,
+                height: PREVIEW_HEIGHT,
+            })
+        );
+        assert_ne!(preview_event.frame_checksum, cleared_live_checksum);
+
+        // Live state and checksum must remain untouched (SAFE-06).
+        let st = engine.status();
+        assert!(!st.live);
+        assert_eq!(st.scene_revision, 0);
+        assert_eq!(st.preview_scene_revision, 7);
+        assert_eq!(st.frame_checksum, cleared_live_checksum);
+
+        // Now go live with a different scene, then stage a second preview scene:
+        // live checksum must stay pinned to the live scene while staged checksum updates.
+        engine.apply(&RenderCommand {
+            action: Some(render_command::Action::SetScene(Scene {
+                revision: 2,
+                outputs: vec![OutputScene {
+                    output_index: 0,
+                    layers: vec![LayerSpec {
+                        kind: LayerKind::Slide as i32,
+                        enabled: true,
+                        content: Some(layer_spec::Content::Slide(SlideLayerSpec {
+                            text: "Live Verse".into(),
+                            ..Default::default()
+                        })),
+                        ..Default::default()
+                    }],
+                    ..Default::default()
+                }],
+                ..Default::default()
+            })),
+        });
+        let live_deadline = Instant::now() + Duration::from_secs(5);
+        let live_checksum = loop {
+            let s = engine.status();
+            if s.live && s.engine_scene_revision == 2 {
+                break s.frame_checksum;
+            }
+            assert!(
+                Instant::now() < live_deadline,
+                "timed out waiting for live revision 2"
+            );
+            tokio::time::sleep(Duration::from_millis(10)).await;
+        };
+
+        engine.apply(&RenderCommand {
+            action: Some(render_command::Action::SetPreviewScene(
+                selah_proto::v1::SetPreviewScene {
+                    scene: Some(Scene {
+                        revision: 8,
+                        is_preview: true,
+                        outputs: vec![OutputScene {
+                            output_index: 0,
+                            layers: vec![LayerSpec {
+                                kind: LayerKind::Slide as i32,
+                                enabled: true,
+                                content: Some(layer_spec::Content::Slide(SlideLayerSpec {
+                                    text: "Second Preview".into(),
+                                    ..Default::default()
+                                })),
+                                ..Default::default()
+                            }],
+                            ..Default::default()
+                        }],
+                        ..Default::default()
+                    }),
+                },
+            )),
+        });
+
+        let preview2_deadline = Instant::now() + Duration::from_secs(5);
+        let preview2 = loop {
+            if let Some(frame) = engine.last_preview_frame()
+                && frame.is_preview
+                && frame.scene_revision == 8
+            {
+                break frame;
+            }
+            assert!(
+                Instant::now() < preview2_deadline,
+                "timed out waiting for second staged preview FrameShown"
+            );
+            tokio::time::sleep(Duration::from_millis(10)).await;
+        };
+
+        assert_ne!(preview2.frame_checksum, preview_event.frame_checksum);
+        assert_ne!(preview2.frame_checksum, live_checksum);
+        let st_after = engine.status();
+        assert!(st_after.live);
+        assert_eq!(st_after.engine_scene_revision, 2);
+        assert_eq!(st_after.frame_checksum, live_checksum);
+        assert_eq!(st_after.preview_scene_revision, 8);
     }
 }

@@ -17,7 +17,14 @@ public sealed class CoreException(string code, string messageKey, string fixArti
 }
 
 /// <summary>A snapshot of what the UI knows about core and the screens.</summary>
-public sealed record ConnectionSnapshot(bool Connected, bool EngineConnected, bool SafeMode, bool Live, ulong Generation);
+public sealed record ConnectionSnapshot(
+    bool Connected,
+    bool EngineConnected,
+    bool SafeMode,
+    bool Live,
+    ulong Generation,
+    ulong PreviewSceneRevision = 0,
+    bool FlashWarning = false);
 
 /// <summary>
 /// The UI's links to the other processes (ADR-001, ADR-004):
@@ -49,12 +56,16 @@ public sealed class CoreConnection : IAsyncDisposable, Selah.UI.ViewModels.IHelp
     {
         var actor = new Actor { UserId = "local-owner", DeviceId = "ui", Origin = ActorOrigin.Ui };
         var coreEndpoint = ns is null ? IpcEndpoint.ForCurrentUser(IpcService.Core) : IpcEndpoint.Create(ns, IpcService.Core);
+        Namespace = coreEndpoint.Namespace;
         core = new IpcClient(coreEndpoint, actor);
         watchdog = new IpcClient(coreEndpoint.Sibling(IpcService.Watchdog), actor);
         emergency = new IpcClient(coreEndpoint.Sibling(IpcService.Emergency), actor);
         core.StateChanged += OnCoreStateChanged;
         core.EnvelopeReceived += OnCoreEnvelope;
     }
+
+    /// <summary>The IPC / shared-memory namespace for this connection.</summary>
+    public string Namespace { get; }
 
     /// <summary>Raised (on a thread-pool thread) whenever the snapshot changes.</summary>
     public event EventHandler<ConnectionSnapshot>? Changed;
@@ -558,6 +569,32 @@ public sealed class CoreConnection : IAsyncDisposable, Selah.UI.ViewModels.IHelp
         return reply.Reply?.MediaThumbnail ?? new MediaThumbnail();
     }
 
+    public async Task<SceneThumbnail> RenderSceneThumbnailAsync(Scene scene, uint outputIndex = 0, uint maxWidth = 320, uint maxHeight = 180)
+    {
+        var reply = await RequestAsync(new Envelope
+        {
+            Query = new Query
+            {
+                RenderSceneThumbnail = new RenderSceneThumbnail
+                {
+                    Scene = scene,
+                    OutputIndex = outputIndex,
+                    MaxWidth = maxWidth,
+                    MaxHeight = maxHeight,
+                },
+            },
+        }, TimeSpan.FromSeconds(10)).ConfigureAwait(false);
+        return reply.Reply?.SceneThumbnail ?? new SceneThumbnail();
+    }
+
+    public async Task StagePreviewSceneAsync(Scene scene)
+    {
+        await RequestAsync(new Envelope
+        {
+            Command = new Command { StagePreviewScene = new StagePreviewScene { Scene = scene } },
+        }).ConfigureAwait(false);
+    }
+
     public async Task<ExportedSelahBundle> ExportSelahBundleAsync(ExportSelahBundle request)
     {
         var reply = await RequestAsync(new Envelope { Command = new Command { ExportSelahBundle = request } }, SlowRequestTimeout)
@@ -699,7 +736,14 @@ public sealed class CoreConnection : IAsyncDisposable, Selah.UI.ViewModels.IHelp
         lock (gate)
         {
             status = current;
-            next = new ConnectionSnapshot(connected, connected && current.EngineConnected, current.SafeMode, connected && current.Live, generation);
+            next = new ConnectionSnapshot(
+                connected,
+                connected && current.EngineConnected,
+                current.SafeMode,
+                connected && current.Live,
+                generation,
+                current.PreviewSceneRevision,
+                connected && current.FlashWarning);
             if (next == snapshot)
             {
                 return;

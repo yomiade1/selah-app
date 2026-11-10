@@ -3,8 +3,8 @@
 //! Repository writes are storage primitives; the command bus adds authorisation,
 //! operation logging and events before exposing mutations over IPC.
 mod archive;
-mod exchange;
-mod media;
+pub(crate) mod exchange;
+pub(crate) mod media;
 mod ops;
 mod policy;
 mod repository;
@@ -66,6 +66,7 @@ pub struct LibraryPaths {
     pub bibles: PathBuf,
     pub packs: PathBuf,
     pub backups: PathBuf,
+    pub thumbnails: PathBuf,
 }
 
 impl LibraryPaths {
@@ -78,9 +79,16 @@ impl LibraryPaths {
             bibles: root.join("bibles"),
             packs: root.join("packs"),
             backups: root.join("backups"),
+            thumbnails: root.join("thumbnails"),
             root,
         };
-        for directory in [&paths.media, &paths.bibles, &paths.packs, &paths.backups] {
+        for directory in [
+            &paths.media,
+            &paths.bibles,
+            &paths.packs,
+            &paths.backups,
+            &paths.thumbnails,
+        ] {
             std::fs::create_dir_all(directory)?;
             ensure!(
                 directory.canonicalize()?.starts_with(&paths.root),

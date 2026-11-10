@@ -103,7 +103,22 @@ async fn multi_output_layer_scenes_present_independently_and_clear_all_on_emerge
     assert_eq!(list.outputs.len(), 3);
     assert_eq!(list.outputs[1].name, "Ultra-Wide LED");
 
-    // Stage a preview scene before going live: it must NEVER mark rooms live.
+    let mut core_events = stack.core().events();
+    stack
+        .core()
+        .request(
+            envelope::Body::Query(Query {
+                request: Some(query::Request::Subscribe(Subscribe {
+                    event_names: vec!["frames".into()],
+                })),
+            }),
+            Duration::from_secs(5),
+        )
+        .await
+        .expect("core subscribe");
+
+    // Stage a preview scene before going live: it must NEVER mark rooms live, and must write to
+    // the isolated stage-0.ring without touching live preview-0.ring (SAFE-06).
     let stage_reply = stack
         .core()
         .request(
@@ -138,9 +153,63 @@ async fn multi_output_layer_scenes_present_independently_and_clear_all_on_emerge
             result: Some(reply::Result::Acknowledged(true))
         }))
     ));
+
+    let preview_frame = tokio::time::timeout(Duration::from_secs(10), async {
+        loop {
+            let message = core_events.recv().await.expect("core event");
+            if let Some(envelope::Body::Event(selah_proto::v1::Event {
+                notification: Some(event::Notification::FrameShown(frame)),
+            })) = message.body
+                && frame.is_preview
+                && frame.scene_revision == 1
+            {
+                return frame;
+            }
+        }
+    })
+    .await
+    .expect("FrameShown { is_preview: true } for staged preview");
+    assert_eq!(preview_frame.output_index, 0);
+    assert!(!preview_frame.flash_warning);
+    assert_eq!(
+        preview_frame.resolution,
+        Some(Resolution {
+            width: 480,
+            height: 270
+        })
+    );
+
+    let ring_dir = selah_ipc::runtime_dir().expect("runtime dir");
+    let stage_ring_path = ring_dir.join(format!("{}-stage-0.ring", stack.namespace));
+    let live_ring_path = ring_dir.join(format!("{}-preview-0.ring", stack.namespace));
+    let staged_px = selah_ipc::shm::RingReader::open(&stage_ring_path)
+        .expect("open stage-0.ring")
+        .latest()
+        .expect("staged preview ring has frame");
+    assert_eq!((staged_px.width, staged_px.height), (480, 270));
+    assert!(
+        staged_px
+            .pixels
+            .chunks_exact(4)
+            .any(|bgra| bgra[0] > 0 || bgra[1] > 0 || bgra[2] > 0),
+        "staged preview ring must contain rendered text pixels"
+    );
+    if let Ok(live_ring) = selah_ipc::shm::RingReader::open(&live_ring_path)
+        && let Some(live_px) = live_ring.latest()
+    {
+        assert!(
+            live_px
+                .pixels
+                .chunks_exact(4)
+                .all(|bgra| bgra[0] == 0 && bgra[1] == 0 && bgra[2] == 0),
+            "live preview-0.ring must stay cleared while only staged preview changed"
+        );
+    }
+
     let preview_status = stack.core_status().await.expect("status after preview");
     assert!(!preview_status.live);
     assert_eq!(preview_status.preview_scene_revision, 1);
+    assert_eq!(preview_status.engine_scene_revision, 0);
 
     // Warm caches via PreloadItems.
     let preload_reply = stack
@@ -171,20 +240,6 @@ async fn multi_output_layer_scenes_present_independently_and_clear_all_on_emerge
             result: Some(reply::Result::Acknowledged(true))
         }))
     ));
-
-    let mut core_events = stack.core().events();
-    stack
-        .core()
-        .request(
-            envelope::Body::Query(Query {
-                request: Some(query::Request::Subscribe(Subscribe {
-                    event_names: vec!["frames".into()],
-                })),
-            }),
-            Duration::from_secs(5),
-        )
-        .await
-        .expect("core subscribe");
 
     // Present 3 distinct scenes with canonical layers (including scrambled order on output 0).
     let scene = Scene {
@@ -304,6 +359,7 @@ async fn multi_output_layer_scenes_present_independently_and_clear_all_on_emerge
             if let Some(envelope::Body::Event(selah_proto::v1::Event {
                 notification: Some(event::Notification::FrameShown(frame)),
             })) = message.body
+                && !frame.is_preview
                 && frame.scene_revision == target_rev
             {
                 shown_by_output.insert(frame.output_index, frame);
@@ -354,6 +410,64 @@ async fn multi_output_layer_scenes_present_independently_and_clear_all_on_emerge
         shown_by_output[&0].frame_checksum
     );
 
+    // Stage a second preview while live is active: stage-0.ring updates while live output 0 keeps its checksum.
+    stack
+        .core()
+        .request(
+            envelope::Body::Command(Command {
+                action: Some(command::Action::StagePreviewScene(StagePreviewScene {
+                    scene: Some(Scene {
+                        outputs: vec![OutputScene {
+                            output_index: 0,
+                            layers: vec![LayerSpec {
+                                kind: LayerKind::Slide as i32,
+                                enabled: true,
+                                content: Some(layer_spec::Content::Slide(SlideLayerSpec {
+                                    text: "Next Song Item".into(),
+                                    ..Default::default()
+                                })),
+                                ..Default::default()
+                            }],
+                            ..Default::default()
+                        }],
+                        ..Default::default()
+                    }),
+                })),
+                ..Default::default()
+            }),
+            Duration::from_secs(5),
+        )
+        .await
+        .expect("second StagePreviewScene reply");
+    tokio::time::timeout(Duration::from_secs(10), async {
+        loop {
+            let message = core_events.recv().await.expect("core event");
+            if let Some(envelope::Body::Event(selah_proto::v1::Event {
+                notification: Some(event::Notification::FrameShown(frame)),
+            })) = message.body
+                && frame.is_preview
+                && frame.scene_revision == 2
+            {
+                break;
+            }
+        }
+    })
+    .await
+    .expect("second staged preview FrameShown");
+    let staged_px2 = selah_ipc::shm::RingReader::open(&stage_ring_path)
+        .expect("reopen stage-0.ring")
+        .latest()
+        .expect("second staged preview ring frame");
+    assert_ne!(staged_px2.pixels, staged_px.pixels);
+    let live_after_stage = stack.core_status().await.expect("live status after stage");
+    assert!(live_after_stage.live);
+    assert_eq!(
+        live_after_stage.frame_checksum,
+        shown_by_output[&0].frame_checksum
+    );
+    assert_eq!(live_after_stage.engine_scene_revision, target_rev);
+    assert_eq!(live_after_stage.preview_scene_revision, 2);
+
     // SAFE-03: Freeze core, hit emergency ClearEverything, and verify EVERY enabled output clears!
     let mut engine_events = stack.engine().events();
     stack
@@ -397,6 +511,7 @@ async fn multi_output_layer_scenes_present_independently_and_clear_all_on_emerge
             if let Some(envelope::Body::Event(selah_proto::v1::Event {
                 notification: Some(event::Notification::FrameShown(frame)),
             })) = message.body
+                && !frame.is_preview
                 && frame.frame_checksum != shown_by_output[&frame.output_index].frame_checksum
             {
                 cleared_outputs.insert(frame.output_index, frame);

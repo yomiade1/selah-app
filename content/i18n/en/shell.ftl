@@ -39,6 +39,10 @@ sidebar-help-articles = Help articles
 preview-on-screen = On screen
 preview-nothing = Nothing is on the screens.
 preview-live = LIVE
+preview-staged-heading = Staged preview
+preview-staged-tag = NEXT
+preview-staged-nothing = Stage a slide to preview what comes next.
+preview-flash-warning = Flash alert: rapid brightness or red shifts may affect viewers.
 
 ## Inspector
 inspector-heading = Details

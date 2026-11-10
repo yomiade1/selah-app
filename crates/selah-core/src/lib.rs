@@ -10,6 +10,7 @@ pub mod service;
 pub mod settings;
 pub mod songs;
 pub mod support;
+pub mod thumbnails;
 pub mod update;
 
 pub use service::{CoreService, Outcome, Work};

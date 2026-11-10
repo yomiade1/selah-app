@@ -1410,6 +1410,12 @@ impl CoreService {
                     }),
                 )
             }
+            Some(query::Request::RenderSceneThumbnail(q)) => {
+                match crate::thumbnails::render_scene_thumbnail(&self.library, &self.live, q) {
+                    Ok(thumb) => self.reply(request, reply::Result::SceneThumbnail(thumb)),
+                    Err(error) => self.bus_error(request, &error),
+                }
+            }
             Some(query::Request::GetWatchdogStatus(_)) | None => {
                 self.error(request, codes::UNSUPPORTED, "error-unsupported-request")
             }

@@ -8,8 +8,8 @@ using Selah.UI.Services;
 
 namespace Selah.UI.ViewModels;
 
-/// <summary>Slide preview card shared by the library song preview and scripture preview panes.</summary>
-public sealed class SlidePreviewCard
+/// <summary>Slide preview card shared by the library song preview, scripture preview, and song editor panes.</summary>
+public sealed partial class SlidePreviewCard : ObservableObject
 {
     public required int Number { get; init; }
 
@@ -23,9 +23,69 @@ public sealed class SlidePreviewCard
 
     public string Footer { get; init; } = string.Empty;
 
+    public Scene? PreviewScene { get; init; }
+
     public bool HasChords => !string.IsNullOrWhiteSpace(ChordsLine);
 
     public bool HasFooter => !string.IsNullOrWhiteSpace(Footer);
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasThumbnail))]
+    private Bitmap? thumbnail;
+
+    [ObservableProperty]
+    private bool hasFlashWarning;
+
+    public bool HasThumbnail => Thumbnail is not null;
+
+    public static Scene BuildSlideScene(
+        string body,
+        string footer = "",
+        string referenceText = "",
+        string titleText = "",
+        string chordsJson = "",
+        string translationText = "",
+        uint width = 1920,
+        uint height = 1080,
+        string styleJson = "")
+    {
+        var res = new Resolution { Width = width, Height = height };
+        var output = new OutputScene
+        {
+            OutputIndex = 0,
+            Role = OutputRole.Main,
+            Resolution = res,
+        };
+        output.Layers.Add(new LayerSpec
+        {
+            Kind = LayerKind.Media,
+            Enabled = true,
+            Media = new MediaLayerSpec
+            {
+                SolidColor = new Color { Red = 0.06f, Green = 0.09f, Blue = 0.14f, Alpha = 1f },
+            },
+        });
+        output.Layers.Add(new LayerSpec
+        {
+            Kind = LayerKind.Slide,
+            Enabled = true,
+            Slide = new SlideLayerSpec
+            {
+                Text = body,
+                FooterText = footer,
+                ReferenceText = referenceText,
+                TitleText = titleText,
+                ChordsJson = chordsJson,
+                TranslationText = translationText,
+                StyleJson = styleJson,
+            },
+        });
+        return new Scene
+        {
+            Resolution = res,
+            Outputs = { output },
+        };
+    }
 }
 
 /// <summary>Media card in the Library ▸ Media bin, including decoded PNG thumbnail preview.</summary>
@@ -96,6 +156,8 @@ public sealed partial class MediaCardViewModel : ObservableObject
 public sealed partial class LibraryViewModel : ObservableObject
 {
     private readonly ILibraryService? library;
+    private int songThumbGeneration;
+    private int scriptureThumbGeneration;
 
     public LibraryViewModel(ILibraryService? library)
     {
@@ -261,6 +323,8 @@ public sealed partial class LibraryViewModel : ObservableObject
 
     public event EventHandler<Song?>? EditSongRequested;
 
+    public event EventHandler? SceneStaged;
+
     [RelayCommand]
     public void SelectTab(string tabName)
     {
@@ -404,6 +468,7 @@ public sealed partial class LibraryViewModel : ObservableObject
         {
             return;
         }
+        var generation = Interlocked.Increment(ref songThumbGeneration);
         try
         {
             var generated = await library.SplitSongSlidesAsync(new SplitSongSlides
@@ -412,24 +477,89 @@ public sealed partial class LibraryViewModel : ObservableObject
                 MaxLines = 4,
                 CopyrightPlacement = CopyrightPlacement.FirstAndLast,
             });
+            if (Volatile.Read(ref songThumbGeneration) != generation)
+            {
+                return;
+            }
             SongPreviewSlides.Clear();
+            var cards = new List<SlidePreviewCard>(generated.Slides.Count);
             var idx = 1;
             foreach (var slide in generated.Slides)
             {
-                SongPreviewSlides.Add(new SlidePreviewCard
+                var body = string.Join("\n", slide.Lines.Select(l => l.Text));
+                var titleText = slide.IsTitle ? slide.SectionLabel : string.Empty;
+                var card = new SlidePreviewCard
                 {
                     Number = idx++,
                     Header = slide.SectionLabel,
                     ColorHex = LibraryIds.SectionColorHex(slide.SectionKind),
-                    Body = string.Join("\n", slide.Lines.Select(l => l.Text)),
+                    Body = body,
                     Footer = slide.FooterCopyright,
-                });
+                    PreviewScene = SlidePreviewCard.BuildSlideScene(
+                        body,
+                        footer: slide.FooterCopyright,
+                        titleText: titleText),
+                };
+                SongPreviewSlides.Add(card);
+                cards.Add(card);
             }
             OnPropertyChanged(nameof(SelectedSongSlidesLabel));
+            await PopulateThumbnailsAsync(cards, 320, 180, () => Volatile.Read(ref songThumbGeneration) == generation);
         }
         catch (Exception)
         {
         }
+    }
+
+    internal async Task PopulateThumbnailsAsync(
+        IReadOnlyList<SlidePreviewCard> cards,
+        uint maxWidth,
+        uint maxHeight,
+        Func<bool> isCurrent)
+    {
+        if (library is null)
+        {
+            return;
+        }
+        foreach (var card in cards)
+        {
+            if (!isCurrent())
+            {
+                return;
+            }
+            if (card.PreviewScene is not { } scene)
+            {
+                continue;
+            }
+            try
+            {
+                var reply = await library.RenderSceneThumbnailAsync(scene, 0, maxWidth, maxHeight);
+                if (!isCurrent())
+                {
+                    return;
+                }
+                card.Thumbnail = MediaCardViewModel.DecodePng(reply.PngBytes.ToByteArray());
+                card.HasFlashWarning = reply.FlashWarning;
+            }
+            catch (Exception)
+            {
+            }
+        }
+    }
+
+    [RelayCommand]
+    public async Task StageSlideAsync(SlidePreviewCard? slide)
+    {
+        if (library is null || slide?.PreviewScene is not { } scene)
+        {
+            return;
+        }
+        await RunSafeAsync(async () =>
+        {
+            await library.StagePreviewSceneAsync(scene);
+            StatusMessage = Localizer.Instance["editor-staged-status"];
+            SceneStaged?.Invoke(this, EventArgs.Empty);
+        });
     }
 
     [RelayCommand]
@@ -648,6 +778,7 @@ public sealed partial class LibraryViewModel : ObservableObject
             ScripturePreviewSlides.Clear();
             return;
         }
+        var generation = Interlocked.Increment(ref scriptureThumbGeneration);
         await RunSafeAsync(async () =>
         {
             var placement = ScriptureReferencePlacementIndex switch
@@ -671,22 +802,36 @@ public sealed partial class LibraryViewModel : ObservableObject
             };
             request.Verses.AddRange(Verses);
             var generated = await library.SplitScriptureSlidesAsync(request);
+            if (Volatile.Read(ref scriptureThumbGeneration) != generation)
+            {
+                return;
+            }
             ScripturePreviewSlides.Clear();
+            var cards = new List<SlidePreviewCard>(generated.Slides.Count);
             var idx = 1;
             foreach (var slide in generated.Slides)
             {
                 var header = !string.IsNullOrWhiteSpace(slide.HeaderReference)
                     ? slide.HeaderReference
                     : slide.Reference;
-                ScripturePreviewSlides.Add(new SlidePreviewCard
+                var body = string.Join("\n", slide.Lines);
+                var card = new SlidePreviewCard
                 {
                     Number = idx++,
                     Header = header,
                     ColorHex = "#005EA2",
-                    Body = string.Join("\n", slide.Lines),
+                    Body = body,
                     Footer = slide.FooterReference,
-                });
+                    PreviewScene = SlidePreviewCard.BuildSlideScene(
+                        slide.IsTitle ? string.Empty : body,
+                        footer: slide.FooterReference,
+                        referenceText: slide.HeaderReference,
+                        titleText: slide.IsTitle ? header : string.Empty),
+                };
+                ScripturePreviewSlides.Add(card);
+                cards.Add(card);
             }
+            await PopulateThumbnailsAsync(cards, 320, 180, () => Volatile.Read(ref scriptureThumbGeneration) == generation);
         });
     }
 

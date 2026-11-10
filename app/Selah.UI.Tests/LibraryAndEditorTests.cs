@@ -143,6 +143,11 @@ public sealed partial class LibraryAndEditorTests : IDisposable
         Assert.Equal(SongEditorStep.Sections, model.SongEditor.CurrentStep);
         Assert.True(model.SongEditor.GeneratedSlides.Count >= 2);
         Assert.Contains(model.SongEditor.GeneratedSlides, s => s.ChordsLine.Contains("G", StringComparison.Ordinal));
+        Assert.All(model.SongEditor.GeneratedSlides, s =>
+        {
+            Assert.True(s.HasThumbnail);
+            Assert.NotNull(s.Thumbnail);
+        });
 
         var alert = ControlByName<Border>(window, "DetectionAlert");
         Assert.True(alert.IsEffectivelyVisible);
@@ -239,6 +244,11 @@ public sealed partial class LibraryAndEditorTests : IDisposable
         model.Library.SplitScriptureSlidesAsync().GetAwaiter().GetResult();
         Dispatcher.UIThread.RunJobs();
         Assert.Equal(4, model.Library.ScripturePreviewSlides.Count);
+        Assert.All(model.Library.ScripturePreviewSlides, s =>
+        {
+            Assert.True(s.HasThumbnail);
+            Assert.NotNull(s.Thumbnail);
+        });
 
         model.Library.ScriptureSearchQuery = "loved";
         model.Library.SearchScriptureCommand.ExecuteAsync(null).GetAwaiter().GetResult();
@@ -378,6 +388,72 @@ public sealed partial class LibraryAndEditorTests : IDisposable
         window.Close();
     }
 
+    [AvaloniaTheory]
+    [MemberData(nameof(ModesMatrix))]
+    public void Dual_preview_and_slide_staging_render_thumbnails_and_preserve_critical_labels(int scale, string appearance, string language)
+    {
+        Configure(scale, appearance, language);
+        var library = new FakeLibrary();
+        var model = new MainViewModel(null, null, library, new FakeHelp());
+        model.Apply(new ConnectionSnapshot(true, true, SafeMode: false, Live: true, Generation: 1, PreviewSceneRevision: 0, FlashWarning: true));
+        var window = OpenWindow(model);
+
+        var previewImage = ControlByName<Image>(window, "PreviewImage");
+        var stageImage = ControlByName<Image>(window, "StagePreviewImage");
+        var programSurface = ControlByName<Grid>(window, "ProgramPreviewSurface");
+        var stageSurface = ControlByName<Grid>(window, "StagePreviewSurface");
+        var flashBanner = ControlByName<TextBlock>(window, "PreviewFlashWarningText");
+        Assert.True(previewImage.IsEffectivelyVisible);
+        Assert.True(stageImage.IsEffectivelyVisible);
+        Assert.True(programSurface.Bounds.Width > 0 && programSurface.Bounds.Height > 0);
+        Assert.True(stageSurface.Bounds.Width > 0 && stageSurface.Bounds.Height > 0);
+        var programOrigin = programSurface.TranslatePoint(default, window) ?? default;
+        var stageOrigin = stageSurface.TranslatePoint(default, window) ?? default;
+        if (scale == 100)
+        {
+            Assert.True(stageOrigin.X > programOrigin.X, "At 100%, Staged preview sits beside Program preview.");
+        }
+        else
+        {
+            Assert.True(stageOrigin.Y > programOrigin.Y, "At 200%, Staged preview stacks below Program preview.");
+        }
+        Assert.True(flashBanner.IsEffectivelyVisible);
+        Assert.Empty(ActiveCriticalLabelProblems(window, model));
+
+        // Load library song previews and verify offscreen thumbnails are populated.
+        model.SelectModeCommand.Execute("Library");
+        model.Library.LoadCommand.ExecuteAsync(null).GetAwaiter().GetResult();
+        Dispatcher.UIThread.RunJobs();
+        var selectedSong = Assert.Single(model.Library.Songs);
+        model.Library.SelectedSong = selectedSong;
+        Dispatcher.UIThread.RunJobs();
+        Assert.NotEmpty(model.Library.SongPreviewSlides);
+        Assert.All(model.Library.SongPreviewSlides, card => Assert.True(card.HasThumbnail));
+
+        // Edit song, switch to 32:9 target (wider thumbnail), then stage first slide to Next preview.
+        model.Library.EditSelectedSongCommand.Execute(null);
+        Dispatcher.UIThread.RunJobs();
+        model.SongEditor.SelectPreviewTargetCommand.Execute("Led");
+        model.SongEditor.RefreshSlidesAsync().GetAwaiter().GetResult();
+        Dispatcher.UIThread.RunJobs();
+
+        var firstSlide = model.SongEditor.GeneratedSlides[0];
+        Assert.True(firstSlide.HasThumbnail);
+        Assert.Equal(3840u, firstSlide.PreviewScene?.Resolution?.Width);
+        Assert.Equal(320, firstSlide.Thumbnail!.PixelSize.Width);
+        Assert.Equal(90, firstSlide.Thumbnail!.PixelSize.Height);
+
+        model.SongEditor.StageSlideCommand.ExecuteAsync(firstSlide).GetAwaiter().GetResult();
+        Dispatcher.UIThread.RunJobs();
+
+        Assert.Single(library.StagedScenes);
+        Assert.True(model.HasStagedPreview);
+        Assert.Equal(Localizer.Instance["editor-staged-status"], model.SongEditor.StatusMessage);
+        Assert.Empty(ActiveCriticalLabelProblems(window, model));
+
+        window.Close();
+    }
+
     private sealed class FakeHelp : IHelpSource
     {
         private static readonly string Ast = File.ReadAllText(Repo.PathOf("tests", "fixtures", "kb", "show-a-song.ast.json"));
@@ -401,6 +477,7 @@ public sealed partial class LibraryAndEditorTests : IDisposable
     {
         public List<Song> Songs { get; } = [];
         public List<MediaItem> Media { get; } = [];
+        public List<Scene> StagedScenes { get; } = [];
         public Dictionary<string, byte[]> Thumbnails { get; } = new();
         public List<BibleTranslation> Bibles { get; } =
         [
@@ -719,6 +796,27 @@ public sealed partial class LibraryAndEditorTests : IDisposable
                 Height = 18,
                 PngBytes = ByteString.CopyFrom(bytes ?? []),
             });
+        }
+
+        public Task<SceneThumbnail> RenderSceneThumbnailAsync(Scene scene, uint outputIndex = 0, uint maxWidth = 320, uint maxHeight = 180)
+        {
+            var res = scene.Resolution ?? new Resolution { Width = 1920, Height = 1080 };
+            var scale = Math.Min((double)maxWidth / Math.Max(1u, res.Width), (double)maxHeight / Math.Max(1u, res.Height));
+            var thumbW = Math.Clamp((int)Math.Round(res.Width * scale), 16, 1024);
+            var thumbH = Math.Clamp((int)Math.Round(res.Height * scale), 16, 1024);
+            return Task.FromResult(new SceneThumbnail
+            {
+                PngBytes = ByteString.CopyFrom(CreateValidPngBytes(thumbW, thumbH)),
+                Width = (uint)thumbW,
+                Height = (uint)thumbH,
+                CacheKey = $"fake-{scene.Resolution?.Width}x{scene.Resolution?.Height}",
+            });
+        }
+
+        public Task StagePreviewSceneAsync(Scene scene)
+        {
+            StagedScenes.Add(scene.Clone());
+            return Task.CompletedTask;
         }
 
         public Task<ExportedSelahBundle> ExportSelahBundleAsync(ExportSelahBundle request) =>

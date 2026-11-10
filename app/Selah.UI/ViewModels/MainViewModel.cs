@@ -49,7 +49,9 @@ public sealed partial class MainViewModel : ObservableObject
         CommandPalette = new CommandPaletteViewModel(resolvedLibrary, resolvedHelp);
 
         Library.EditSongRequested += (_, song) => _ = EditSongInEditorAsync(song);
+        Library.SceneStaged += (_, _) => HasStagedPreview = true;
         SongEditor.SongSaved += (_, song) => _ = OnSongSavedAsync(song);
+        SongEditor.SceneStaged += (_, _) => HasStagedPreview = true;
 
         RegisterPaletteCommands();
         CommandPalette.SongChosen += (_, song) => _ = EditSongInEditorAsync(song);
@@ -134,7 +136,15 @@ public sealed partial class MainViewModel : ObservableObject
     private bool isLive;
 
     [ObservableProperty]
+    private bool hasStagedPreview;
+
+    [ObservableProperty]
+    private bool hasPreviewFlashWarning;
+
+    [ObservableProperty]
     private bool isSettingsOpen;
+
+    internal string? IpcNamespace => connection?.Namespace;
 
     /// <summary>The question shown under the toolbar while something is on the screens (SAFE-06).</summary>
     [ObservableProperty]
@@ -219,6 +229,8 @@ public sealed partial class MainViewModel : ObservableObject
         IsEngineConnected = snapshot.EngineConnected;
         IsSafeMode = snapshot.SafeMode;
         IsLive = snapshot.Live;
+        HasStagedPreview = snapshot.PreviewSceneRevision > 0;
+        HasPreviewFlashWarning = snapshot.FlashWarning;
         OnPropertyChanged(nameof(StatusKey));
         if (snapshot.Connected && !wasConnected)
         {

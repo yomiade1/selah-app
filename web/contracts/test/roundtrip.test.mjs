@@ -922,3 +922,72 @@ test("M3.5 flash warning, transitions and effects round trip", () => {
         sceneCmd,
     );
 });
+
+test("M3.6 scene thumbnail query and reply round trip", () => {
+    const query = create(EnvelopeSchema, {
+        id: 6101n,
+        body: {
+            case: "query",
+            value: {
+                request: {
+                    case: "renderSceneThumbnail",
+                    value: {
+                        outputIndex: 0,
+                        maxWidth: 320,
+                        maxHeight: 180,
+                        scene: {
+                            revision: 3n,
+                            outputs: [
+                                {
+                                    outputIndex: 0,
+                                    role: OutputRole.MAIN,
+                                    resolution: { width: 1920, height: 1080 },
+                                    layers: [
+                                        {
+                                            kind: LayerKind.SLIDE,
+                                            enabled: true,
+                                            content: {
+                                                case: "slide",
+                                                value: {
+                                                    text: "Blessed Assurance",
+                                                },
+                                            },
+                                        },
+                                    ],
+                                },
+                            ],
+                        },
+                    },
+                },
+            },
+        },
+    });
+    assert.deepEqual(
+        fromBinary(EnvelopeSchema, toBinary(EnvelopeSchema, query)),
+        query,
+    );
+
+    const reply = create(EnvelopeSchema, {
+        id: 6102n,
+        correlationId: 6101n,
+        body: {
+            case: "reply",
+            value: {
+                result: {
+                    case: "sceneThumbnail",
+                    value: {
+                        pngBytes: new Uint8Array([0x89, 0x50, 0x4e, 0x47]),
+                        width: 320,
+                        height: 180,
+                        cacheKey: "abc123",
+                        flashWarning: true,
+                    },
+                },
+            },
+        },
+    });
+    assert.deepEqual(
+        fromBinary(EnvelopeSchema, toBinary(EnvelopeSchema, reply)),
+        reply,
+    );
+});

@@ -124,8 +124,15 @@
                               <TextBlock DockPanel.Dock="Right" Classes="caption" Text="{Binding Number}" />
                               <TextBlock Classes="label" Text="{Binding Header}" />
                             </DockPanel>
-                            <TextBlock Text="{Binding Body}" TextWrapping="Wrap" />
-                            <TextBlock Classes="caption" Text="{Binding Footer}" IsVisible="{Binding HasFooter}" />
+                            <Border Height="108" Background="{DynamicResource Brush.PreviewBg}" CornerRadius="{DynamicResource Radius.Input}" ClipToBounds="True">
+                              <Panel>
+                                <Image Source="{Binding Thumbnail}" Stretch="Uniform" IsVisible="{Binding HasThumbnail}" />
+                                <StackPanel Spacing="2" Margin="6" IsVisible="{Binding !HasThumbnail}">
+                                  <TextBlock Foreground="#FFFFFF" Text="{Binding Body}" TextWrapping="Wrap" />
+                                  <TextBlock Foreground="#D1D1D6" Classes="caption" Text="{Binding Footer}" IsVisible="{Binding HasFooter}" />
+                                </StackPanel>
+                              </Panel>
+                            </Border>
                           </StackPanel>
                         </Border>
                       </DataTemplate>
@@ -351,13 +358,20 @@
                       <Border Background="{DynamicResource Brush.Surface2}"
                               BorderBrush="{DynamicResource Brush.Primary}" BorderThickness="4,1,1,1"
                               CornerRadius="{DynamicResource Radius.Button}" Padding="{DynamicResource Space.Text.Small}" Margin="0,4">
-                        <StackPanel Spacing="4">
+                        <StackPanel Spacing="6">
                           <DockPanel>
                             <TextBlock DockPanel.Dock="Right" Classes="caption" Text="{Binding Number}" />
                             <TextBlock Classes="label" Text="{Binding Header}" />
                           </DockPanel>
-                          <TextBlock Text="{Binding Body}" TextWrapping="Wrap" />
-                          <TextBlock Classes="caption" Text="{Binding Footer}" IsVisible="{Binding HasFooter}" />
+                          <Border Height="108" Background="{DynamicResource Brush.PreviewBg}" CornerRadius="{DynamicResource Radius.Input}" ClipToBounds="True">
+                            <Panel>
+                              <Image Source="{Binding Thumbnail}" Stretch="Uniform" IsVisible="{Binding HasThumbnail}" />
+                              <StackPanel Spacing="2" Margin="6" IsVisible="{Binding !HasThumbnail}">
+                                <TextBlock Foreground="#FFFFFF" Text="{Binding Body}" TextWrapping="Wrap" />
+                                <TextBlock Foreground="#D1D1D6" Classes="caption" Text="{Binding Footer}" IsVisible="{Binding HasFooter}" />
+                              </StackPanel>
+                            </Panel>
+                          </Border>
                         </StackPanel>
                       </Border>
                     </DataTemplate>

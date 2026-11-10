@@ -34,7 +34,7 @@ fn check_dimensions(width: i32, height: i32) -> Result<(u32, u32)> {
     Ok((w, h))
 }
 
-fn fit_dimensions(src_w: u32, src_h: u32, max_w: u32, max_h: u32) -> (u32, u32) {
+pub fn fit_dimensions(src_w: u32, src_h: u32, max_w: u32, max_h: u32) -> (u32, u32) {
     let max_w = max_w.clamp(16, 1024);
     let max_h = max_h.clamp(16, 1024);
     if src_w <= max_w && src_h <= max_h {

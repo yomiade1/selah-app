@@ -934,4 +934,63 @@ public sealed class ContractTests
         };
         Assert.Equal(statusWithFlash, Envelope.Parser.ParseFrom(statusWithFlash.ToByteArray()));
     }
+
+    [Fact]
+    public void M36SceneThumbnailRoundTrip()
+    {
+        var thumbQuery = new Envelope
+        {
+            Id = 6101,
+            Query = new Query
+            {
+                RenderSceneThumbnail = new RenderSceneThumbnail
+                {
+                    OutputIndex = 0,
+                    MaxWidth = 320,
+                    MaxHeight = 180,
+                    Scene = new Scene
+                    {
+                        Revision = 3,
+                        Outputs =
+                        {
+                            new OutputScene
+                            {
+                                OutputIndex = 0,
+                                Role = OutputRole.Main,
+                                Resolution = new Resolution { Width = 1920, Height = 1080 },
+                                Layers =
+                                {
+                                    new LayerSpec
+                                    {
+                                        Kind = LayerKind.Slide,
+                                        Enabled = true,
+                                        Slide = new SlideLayerSpec { Text = "Blessed Assurance" },
+                                    },
+                                },
+                            },
+                        },
+                    },
+                },
+            },
+        };
+        Assert.Equal(thumbQuery, Envelope.Parser.ParseFrom(thumbQuery.ToByteArray()));
+
+        var thumbReply = new Envelope
+        {
+            Id = 6102,
+            CorrelationId = 6101,
+            Reply = new Reply
+            {
+                SceneThumbnail = new SceneThumbnail
+                {
+                    PngBytes = ByteString.CopyFrom(new byte[] { 0x89, 0x50, 0x4E, 0x47 }),
+                    Width = 320,
+                    Height = 180,
+                    CacheKey = "abc123",
+                    FlashWarning = true,
+                },
+            },
+        };
+        Assert.Equal(thumbReply, Envelope.Parser.ParseFrom(thumbReply.ToByteArray()));
+    }
 }

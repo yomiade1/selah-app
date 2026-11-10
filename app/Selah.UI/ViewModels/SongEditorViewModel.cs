@@ -1,6 +1,7 @@
 using System.Collections.ObjectModel;
 using System.Globalization;
 using System.Text;
+using System.Text.Json;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -231,8 +232,12 @@ public enum SongPreviewTarget
 /// </summary>
 public sealed partial class SongEditorViewModel : ObservableObject
 {
+    private const string ChordsEnabledStyleJson =
+        """{"roles":{"chords":{"font_family":"JetBrains Mono","size":36,"min_size":18,"weight":700,"color":"#FFBE2E","align_h":"left","align_v":"top","visible":true}}}""";
+
     private readonly ILibraryService? library;
     private bool suppressCallbacks;
+    private int slideThumbGeneration;
 
     public SongEditorViewModel(ILibraryService? library)
     {
@@ -455,6 +460,8 @@ public sealed partial class SongEditorViewModel : ObservableObject
         Localizer.Instance.Get("editor-slides-summary", ("count", GeneratedSlides.Count));
 
     public event EventHandler<Song>? SongSaved;
+
+    public event EventHandler? SceneStaged;
 
     partial void OnTitleChanged(string value) => OnModelMutated();
 
@@ -1023,12 +1030,38 @@ public sealed partial class SongEditorViewModel : ObservableObject
         return song;
     }
 
+    [RelayCommand]
+    public async Task StageSlideAsync(SlidePreviewCard? slide)
+    {
+        if (library is null || slide?.PreviewScene is not { } scene)
+        {
+            return;
+        }
+        ErrorMessage = null;
+        try
+        {
+            await library.StagePreviewSceneAsync(scene);
+            StatusMessage = Localizer.Instance["editor-staged-status"];
+            SceneStaged?.Invoke(this, EventArgs.Empty);
+        }
+        catch (CoreException error)
+        {
+            ErrorMessage = Localizer.Instance[error.MessageKey];
+            ErrorFixArticleId = string.IsNullOrWhiteSpace(error.FixArticleId) ? null : error.FixArticleId;
+        }
+        catch (Exception error) when (error is TimeoutException or IOException or InvalidOperationException)
+        {
+            ErrorMessage = Localizer.Instance["error-not-connected"];
+        }
+    }
+
     public async Task RefreshSlidesAsync()
     {
         if (library is null)
         {
             return;
         }
+        var generation = Interlocked.Increment(ref slideThumbGeneration);
         try
         {
             var placement = CopyrightPlacementIndex switch
@@ -1053,7 +1086,15 @@ public sealed partial class SongEditorViewModel : ObservableObject
                 request.ArrangementId = arr.Id;
             }
             var reply = await library.SplitSongSlidesAsync(request);
+            if (Volatile.Read(ref slideThumbGeneration) != generation)
+            {
+                return;
+            }
+            var (targetW, targetH) = PreviewTarget == SongPreviewTarget.Led32x9
+                ? (3840u, 1080u)
+                : (1920u, 1080u);
             GeneratedSlides.Clear();
+            var cards = new List<SlidePreviewCard>(reply.Slides.Count);
             var idx = 1;
             foreach (var slide in reply.Slides)
             {
@@ -1063,21 +1104,78 @@ public sealed partial class SongEditorViewModel : ObservableObject
                 var chords = ShowChordsInSlides
                     ? string.Join(" · ", slide.Lines.SelectMany(l => l.Chords).Select(c => c.Text).Where(c => !string.IsNullOrEmpty(c)))
                     : string.Empty;
-                GeneratedSlides.Add(new SlidePreviewCard
+                var body = string.Join("\n", slide.Lines.Select(l => l.Text));
+                var translationText = string.Join("\n", slide.TranslationLines);
+                var chordsJson = ShowChordsInSlides ? BuildChordsJson(slide) : string.Empty;
+                var styleJson = ShowChordsInSlides && !string.IsNullOrEmpty(chordsJson)
+                    ? ChordsEnabledStyleJson
+                    : string.Empty;
+                var card = new SlidePreviewCard
                 {
                     Number = idx++,
                     Header = header,
                     ColorHex = LibraryIds.SectionColorHex(slide.SectionKind),
-                    Body = string.Join("\n", slide.Lines.Select(l => l.Text)),
+                    Body = body,
                     ChordsLine = chords,
                     Footer = slide.FooterCopyright,
-                });
+                    PreviewScene = SlidePreviewCard.BuildSlideScene(
+                        slide.IsTitle ? string.Empty : body,
+                        footer: slide.FooterCopyright,
+                        titleText: slide.IsTitle ? slide.SectionLabel : string.Empty,
+                        chordsJson: chordsJson,
+                        translationText: translationText,
+                        width: targetW,
+                        height: targetH,
+                        styleJson: styleJson),
+                };
+                GeneratedSlides.Add(card);
+                cards.Add(card);
             }
             OnPropertyChanged(nameof(SlidesSummaryText));
+            foreach (var card in cards)
+            {
+                if (Volatile.Read(ref slideThumbGeneration) != generation)
+                {
+                    return;
+                }
+                if (card.PreviewScene is not { } scene)
+                {
+                    continue;
+                }
+                try
+                {
+                    var thumbReply = await library.RenderSceneThumbnailAsync(scene, 0, 320, 180);
+                    if (Volatile.Read(ref slideThumbGeneration) != generation)
+                    {
+                        return;
+                    }
+                    card.Thumbnail = MediaCardViewModel.DecodePng(thumbReply.PngBytes.ToByteArray());
+                    card.HasFlashWarning = thumbReply.FlashWarning;
+                }
+                catch (Exception)
+                {
+                }
+            }
         }
         catch (Exception)
         {
         }
+    }
+
+    private static string BuildChordsJson(GeneratedSlide slide)
+    {
+        var anchors = new List<object>();
+        for (var lineIdx = 0; lineIdx < slide.Lines.Count; lineIdx++)
+        {
+            foreach (var chord in slide.Lines[lineIdx].Chords)
+            {
+                if (!string.IsNullOrWhiteSpace(chord.Text))
+                {
+                    anchors.Add(new { line = lineIdx, position = chord.Position, text = chord.Text });
+                }
+            }
+        }
+        return anchors.Count == 0 ? string.Empty : JsonSerializer.Serialize(anchors);
     }
 
     private void OnModelMutated()

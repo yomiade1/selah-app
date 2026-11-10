@@ -150,6 +150,7 @@ message Query {
     GetMediaThumbnail get_media_thumbnail = 35;
     GetOutputConfigs get_output_configs = 36;
     AnalyzeFlashRisk analyze_flash_risk = 37;
+    RenderSceneThumbnail render_scene_thumbnail = 38;
   }
 }
 
@@ -255,6 +256,7 @@ message Reply {
     RestoreLibraryBackupResult restore_library_backup_result = 41;
     OutputConfigList output_config_list = 42;
     FlashRiskReport flash_risk_report = 43;
+    SceneThumbnail scene_thumbnail = 44;
   }
 }
 

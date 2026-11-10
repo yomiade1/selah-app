@@ -204,23 +204,61 @@
 
     <!-- Main workspace below the toolbar: Preview, Library, Song Editor, plus Ctrl+K palette overlay. -->
     <Panel>
-      <!-- Program preview: never covered while live (DESIGN-SYSTEM §1). -->
-      <Grid Name="PreviewWorkspace" IsVisible="{Binding IsPreviewMode}" RowDefinitions="Auto,*,Auto" Margin="{DynamicResource Space.Text.Medium}"
+      <!-- Program and Staged Previews: never covered while live (DESIGN-SYSTEM §1, M3.6). -->
+      <Grid Name="PreviewWorkspace" IsVisible="{Binding IsPreviewMode}" RowDefinitions="Auto,*" Margin="{DynamicResource Space.Text.Medium}"
             s:Help.Anchor="shell.preview">
-        <WrapPanel ItemSpacing="{DynamicResource Space.2}" VerticalAlignment="Center">
-          <TextBlock Classes="title-2" VerticalAlignment="Center" Text="{Binding [preview-on-screen], Source={x:Static s:Localizer.Instance}}" />
-          <views:InfoButton Name="PreviewInfoButton" Anchor="shell.preview" />
-        </WrapPanel>
-        <Border Grid.Row="1" Classes="card" Margin="{DynamicResource Space.Text.Small}">
-          <Viewbox Stretch="Uniform">
-            <Grid Width="480" Height="270">
-              <Rectangle Fill="{DynamicResource Brush.PreviewBg}" />
-              <Image Name="PreviewImage" Stretch="Uniform" />
-            </Grid>
-          </Viewbox>
+        <Border Grid.Row="0" Classes="alert-warning" IsVisible="{Binding HasPreviewFlashWarning}" Margin="0,0,0,8">
+          <TextBlock Name="PreviewFlashWarningText" Text="{Binding [preview-flash-warning], Source={x:Static s:Localizer.Instance}}" />
         </Border>
-        <views:HintText Grid.Row="2" IsVisible="{Binding !IsLive}"
-                        Text="{Binding [preview-nothing], Source={x:Static s:Localizer.Instance}}" />
+
+        <Grid Name="PreviewDualGrid" Grid.Row="1" ColumnDefinitions="*,*" RowDefinitions="*" ColumnSpacing="12" RowSpacing="12">
+          <!-- Program (live output) ring -->
+          <Border Name="ProgramPreviewCard" Grid.Column="0" Grid.Row="0" Classes="card"
+                  BorderBrush="{DynamicResource Brush.Live}" BorderThickness="2">
+            <Grid RowDefinitions="Auto,*,Auto" RowSpacing="8">
+              <WrapPanel Grid.Row="0" ItemSpacing="{DynamicResource Space.2}" VerticalAlignment="Center">
+                <TextBlock Classes="title-3" VerticalAlignment="Center" Text="{Binding [preview-on-screen], Source={x:Static s:Localizer.Instance}}" />
+                <Border Classes="pill" IsVisible="{Binding IsLive}" VerticalAlignment="Center"
+                        Background="{DynamicResource Brush.Live}">
+                  <TextBlock Classes="tag" Foreground="{DynamicResource Brush.OnPrimary}"
+                             Text="{Binding [preview-live], Source={x:Static s:Localizer.Instance}}" />
+                </Border>
+                <views:InfoButton Name="PreviewInfoButton" Anchor="shell.preview" />
+              </WrapPanel>
+              <Viewbox Grid.Row="1" Stretch="Uniform">
+                <Grid Name="ProgramPreviewSurface" Width="480" Height="270">
+                  <Rectangle Fill="{DynamicResource Brush.PreviewBg}" />
+                  <Image Name="PreviewImage" Stretch="Uniform" />
+                </Grid>
+              </Viewbox>
+              <views:HintText Grid.Row="2" IsVisible="{Binding !IsLive}"
+                              Text="{Binding [preview-nothing], Source={x:Static s:Localizer.Instance}}" />
+            </Grid>
+          </Border>
+
+          <!-- Staged preview (next) ring -->
+          <Border Name="StagePreviewCard" Grid.Column="1" Grid.Row="0" Classes="card"
+                  BorderBrush="{DynamicResource Brush.Success}" BorderThickness="2">
+            <Grid RowDefinitions="Auto,*,Auto" RowSpacing="8">
+              <WrapPanel Grid.Row="0" ItemSpacing="{DynamicResource Space.2}" VerticalAlignment="Center">
+                <TextBlock Classes="title-3" VerticalAlignment="Center" Text="{Binding [preview-staged-heading], Source={x:Static s:Localizer.Instance}}" />
+                <Border Classes="pill" VerticalAlignment="Center"
+                        Background="{DynamicResource Brush.Success}">
+                  <TextBlock Classes="tag" Foreground="{DynamicResource Brush.OnPrimary}"
+                             Text="{Binding [preview-staged-tag], Source={x:Static s:Localizer.Instance}}" />
+                </Border>
+              </WrapPanel>
+              <Viewbox Grid.Row="1" Stretch="Uniform">
+                <Grid Name="StagePreviewSurface" Width="480" Height="270">
+                  <Rectangle Fill="{DynamicResource Brush.PreviewBg}" />
+                  <Image Name="StagePreviewImage" Stretch="Uniform" />
+                </Grid>
+              </Viewbox>
+              <views:HintText Grid.Row="2" IsVisible="{Binding !HasStagedPreview}"
+                              Text="{Binding [preview-staged-nothing], Source={x:Static s:Localizer.Instance}}" />
+            </Grid>
+          </Border>
+        </Grid>
       </Grid>
 
       <Panel Name="LibraryWorkspace" IsVisible="{Binding IsLibraryMode}">

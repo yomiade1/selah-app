@@ -325,3 +325,18 @@ message EmergencyApplied {
   uint64 scene_revision = 2;
   uint64 monotonic_nanoseconds = 3;
 }
+
+message RenderSceneThumbnail {
+  Scene scene = 1;
+  uint32 output_index = 2;
+  uint32 max_width = 3;
+  uint32 max_height = 4;
+}
+
+message SceneThumbnail {
+  bytes png_bytes = 1;
+  uint32 width = 2;
+  uint32 height = 3;
+  string cache_key = 4;
+  bool flash_warning = 5;
+}

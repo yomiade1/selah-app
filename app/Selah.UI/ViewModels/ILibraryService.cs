@@ -132,6 +132,10 @@ public interface ILibraryService
 
     Task<MediaThumbnail> GetMediaThumbnailAsync(Id mediaId, uint maxWidth = 320, uint maxHeight = 180);
 
+    Task<SceneThumbnail> RenderSceneThumbnailAsync(Scene scene, uint outputIndex = 0, uint maxWidth = 320, uint maxHeight = 180);
+
+    Task StagePreviewSceneAsync(Scene scene);
+
     Task<ExportedSelahBundle> ExportSelahBundleAsync(ExportSelahBundle request);
 
     Task<ImportedSelahBundle> ImportSelahBundleAsync(ImportSelahBundle request);

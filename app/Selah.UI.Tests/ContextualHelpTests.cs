@@ -290,6 +290,9 @@ public sealed class ContextualHelpTests : IDisposable
         public Task DeleteMediaItemAsync(Id id) => Task.CompletedTask;
         public Task<MediaThumbnail> GetMediaThumbnailAsync(Id mediaId, uint maxWidth = 320, uint maxHeight = 180) =>
             Task.FromResult(new MediaThumbnail());
+        public Task<SceneThumbnail> RenderSceneThumbnailAsync(Scene scene, uint outputIndex = 0, uint maxWidth = 320, uint maxHeight = 180) =>
+            Task.FromResult(new SceneThumbnail());
+        public Task StagePreviewSceneAsync(Scene scene) => Task.CompletedTask;
         public Task<ExportedSelahBundle> ExportSelahBundleAsync(ExportSelahBundle request) =>
             Task.FromResult(new ExportedSelahBundle());
         public Task<ImportedSelahBundle> ImportSelahBundleAsync(ImportSelahBundle request) =>

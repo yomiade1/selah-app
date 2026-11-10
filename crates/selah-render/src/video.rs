@@ -50,6 +50,80 @@ impl Nv12Frame {
         );
         Ok(())
     }
+
+    /// Convert an RGBA8 [`Frame`] into a BT.709 limited-range NV12 frame (e.g. a cached video
+    /// poster frame for offscreen scene thumbnails).
+    pub fn from_rgba(frame: &Frame) -> anyhow::Result<Self> {
+        let expected_len = frame
+            .width
+            .checked_mul(frame.height)
+            .and_then(|px| px.checked_mul(4))
+            .ok_or_else(|| anyhow::anyhow!("frame dimensions overflow"))?
+            as usize;
+        anyhow::ensure!(
+            frame.width > 0 && frame.height > 0 && frame.pixels.len() == expected_len,
+            "invalid RGBA frame buffer for NV12 conversion ({}×{})",
+            frame.width,
+            frame.height
+        );
+        let w = frame.width as usize;
+        let h = frame.height as usize;
+        let cw = frame.width.div_ceil(2) as usize;
+        let ch = frame.height.div_ceil(2) as usize;
+        let mut y = vec![16_u8; w * h];
+        let mut uv = vec![128_u8; cw * ch * 2];
+
+        for py in 0..h {
+            for px in 0..w {
+                let idx = (py * w + px) * 4;
+                let r = f32::from(frame.pixels[idx]) / 255.0;
+                let g = f32::from(frame.pixels[idx + 1]) / 255.0;
+                let b = f32::from(frame.pixels[idx + 2]) / 255.0;
+                let y_norm = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+                y[py * w + px] = (16.0 + 219.0 * y_norm).round().clamp(16.0, 235.0) as u8;
+            }
+        }
+
+        for cy in 0..ch {
+            let y0 = cy * 2;
+            let y1 = (y0 + 1).min(h - 1);
+            for cx in 0..cw {
+                let x0 = cx * 2;
+                let x1 = (x0 + 1).min(w - 1);
+                let mut sum_r = 0.0_f32;
+                let mut sum_g = 0.0_f32;
+                let mut sum_b = 0.0_f32;
+                for py in [y0, y1] {
+                    for px in [x0, x1] {
+                        let idx = (py * w + px) * 4;
+                        sum_r += f32::from(frame.pixels[idx]) / 255.0;
+                        sum_g += f32::from(frame.pixels[idx + 1]) / 255.0;
+                        sum_b += f32::from(frame.pixels[idx + 2]) / 255.0;
+                    }
+                }
+                let r = sum_r * 0.25;
+                let g = sum_g * 0.25;
+                let b = sum_b * 0.25;
+                let y_norm = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+                let cb_norm = (b - y_norm) / 1.8556;
+                let cr_norm = (r - y_norm) / 1.5748;
+                let off = (cy * cw + cx) * 2;
+                uv[off] = (128.0 + 224.0 * cb_norm).round().clamp(16.0, 240.0) as u8;
+                uv[off + 1] = (128.0 + 224.0 * cr_norm).round().clamp(16.0, 240.0) as u8;
+            }
+        }
+
+        let out = Self {
+            width: frame.width,
+            height: frame.height,
+            y,
+            uv,
+            matrix: YuvMatrix::Bt709,
+            full_range: false,
+        };
+        out.validate()?;
+        Ok(out)
+    }
 }
 
 fn yuv_to_rgb_f32(y8: f32, u8_: f32, v8: f32, matrix: YuvMatrix, full_range: bool) -> [f32; 3] {
@@ -730,5 +804,31 @@ mod tests {
             full_range: false,
         };
         assert!(video.validate().is_err());
+    }
+
+    #[test]
+    fn from_rgba_round_trips_solid_colors_and_gradients() {
+        let mut src = Frame::new(8, 4);
+        for y in 0..4u32 {
+            for x in 0..8u32 {
+                let idx = (y as usize * 8 + x as usize) * 4;
+                let px = if x < 4 {
+                    [200, 40, 30, 255]
+                } else {
+                    [20, 160, 220, 255]
+                };
+                src.pixels[idx..idx + 4].copy_from_slice(&px);
+            }
+        }
+        let nv12 = Nv12Frame::from_rgba(&src).expect("from_rgba");
+        let mut out = Frame::new(8, 4);
+        draw_cpu_layer(&mut out, &nv12, MediaFitMode::Fill, 1.0).expect("draw_cpu_layer");
+        for (px, exp) in [([1, 2], [200_u8, 40, 30]), ([6, 2], [20, 160, 220])] {
+            let idx = (px[1] * 8 + px[0]) * 4;
+            assert!(out.pixels[idx].abs_diff(exp[0]) <= 3);
+            assert!(out.pixels[idx + 1].abs_diff(exp[1]) <= 3);
+            assert!(out.pixels[idx + 2].abs_diff(exp[2]) <= 3);
+            assert_eq!(out.pixels[idx + 3], 255);
+        }
     }
 }

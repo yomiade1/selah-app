@@ -511,6 +511,22 @@ impl Library {
         tx.commit()?;
         Ok(())
     }
+
+    pub(crate) fn media_flash_warning_by_hash(&self, content_hash: &str) -> anyhow::Result<bool> {
+        let mut stmt = self
+            .db
+            .prepare("SELECT data FROM media_items WHERE content_hash = ?1")?;
+        let mut rows = stmt.query([content_hash])?;
+        while let Some(row) = rows.next()? {
+            let data: Vec<u8> = row.get(0)?;
+            if let Ok(item) = MediaItem::decode(data.as_slice())
+                && item.flash_warning
+            {
+                return Ok(true);
+            }
+        }
+        Ok(false)
+    }
 }
 
 pub(super) fn read_snapshot_in_tx(
