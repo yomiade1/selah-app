@@ -40,11 +40,33 @@ jobs:
         run: bash tools/cloud-setup.sh
       - name: Pinned third-party files
         run: python3 tools/third-party.py --extract
+      - name: FFmpeg for macOS
+        if: runner.os == 'macOS'
+        run: bash tools/build-ffmpeg-macos.sh --if-missing
       - name: Render (blessing writes the references instead of comparing)
         shell: bash
         env:
           SELAH_BLESS_GOLDEN: "1"
-        run: cargo test --locked -p selah-testkit --features golden --test golden_text
+        run: |
+          set -euo pipefail
+          ffmpeg_inc="$(find third_party/ffmpeg -path '*/shared/ffmpeg-*/include' -print -quit 2>/dev/null || true)"
+          if [ -n "$ffmpeg_inc" ]; then
+            ffmpeg_home="$(cd "$(dirname "$ffmpeg_inc")" && pwd)"
+            export FFMPEG_DIR="$ffmpeg_home"
+            export PATH="$ffmpeg_home/bin:$PATH"
+            export LD_LIBRARY_PATH="$ffmpeg_home/lib:${LD_LIBRARY_PATH:-}"
+          fi
+          case "${RUNNER_OS:-}" in
+            Windows) sys="windows" ;;
+            macOS)   sys="macos" ;;
+            *)       sys="linux" ;;
+          esac
+          arch="x64"
+          case "$(uname -m)" in
+            arm64|aarch64) arch="arm64" ;;
+          esac
+          export SKIA_BINARIES_URL="file://$(pwd)/third_party/skia/${sys}-${arch}/skia-binaries-{key}.tar.gz"
+          cargo test --locked -p selah-testkit --features golden --test golden_text --test golden_m3
       - name: Upload the rendered frames
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:

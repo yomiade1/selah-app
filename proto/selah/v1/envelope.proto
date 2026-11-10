@@ -300,4 +300,6 @@ message DiagnosticsReport {
   uint64 video_dropped = 7;
   double video_composite_p99_ms = 8;
   bool video_pass = 9;
+  double m3_p99_ms = 10;
+  bool m3_pass = 11;
 }

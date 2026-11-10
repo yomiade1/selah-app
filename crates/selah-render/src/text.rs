@@ -402,13 +402,27 @@ impl TextRenderer {
         }
         let body_families = self.slot_font_families(&body_style.font_family, body_style.weight);
         let chord_families = self.slot_font_families(&chord_style.font_family, chord_style.weight);
+        let box_pad_left = body_style
+            .background_box
+            .as_ref()
+            .map_or(0.0, |b| b.padding_x + b.accent_bar_width);
+        let box_pad_right = body_style
+            .background_box
+            .as_ref()
+            .map_or(0.0, |b| b.padding_x);
+        let box_pad_y = body_style
+            .background_box
+            .as_ref()
+            .map_or(0.0, |b| b.padding_y);
         let stroke_pad = body_style.outline.as_ref().map_or(0.0, |o| o.width);
         let shadow_pad = body_style
             .shadow
             .as_ref()
             .filter(|s| s.color[3] > 0)
             .map_or(0.0, |s| s.offset_x.abs() + s.blur * 0.5);
-        let layout_w = (area_width - stroke_pad * 2.0 - shadow_pad * 2.0 - 2.0).max(1.0);
+        let layout_w =
+            (area_width - box_pad_left - box_pad_right - stroke_pad * 2.0 - shadow_pad * 2.0 - 2.0)
+                .max(1.0);
         let line_gap = (body_style.size * 0.2).max(2.0).round();
         let unclipped_body = SlotTextStyle {
             max_lines: None,
@@ -441,7 +455,7 @@ impl TextRenderer {
                 total_h += line_gap;
             }
         }
-        total_h += stroke_pad * 2.0;
+        total_h += box_pad_y * 2.0 + stroke_pad * 2.0;
 
         if let Some((t_text, t_style)) = translation
             && !t_text.trim().is_empty()
@@ -846,22 +860,42 @@ impl TextRenderer {
             content_left: f32,
         }
 
+        let box_pad_left = body_style
+            .background_box
+            .as_ref()
+            .map_or(0.0, |b| b.padding_x + b.accent_bar_width);
+        let box_pad_right = body_style
+            .background_box
+            .as_ref()
+            .map_or(0.0, |b| b.padding_x);
+        let box_pad_y = body_style
+            .background_box
+            .as_ref()
+            .map_or(0.0, |b| b.padding_y);
         let stroke_pad = body_style.outline.as_ref().map_or(0.0, |o| o.width);
         let shadow_pad = body_style
             .shadow
             .as_ref()
             .filter(|s| s.color[3] > 0)
             .map_or(0.0, |s| s.offset_x.abs() + s.blur * 0.5);
-        let content_left = (area.left + stroke_pad + shadow_pad).ceil();
-        let layout_w = ((area.right - stroke_pad - shadow_pad).floor() - content_left).max(1.0);
+        let content_left = (area.left + box_pad_left + stroke_pad + shadow_pad).ceil();
+        let layout_w = ((area.right - box_pad_right - stroke_pad - shadow_pad).floor()
+            - content_left)
+            .max(1.0);
         let mut rows = Vec::with_capacity(lines.len());
-        let mut total_h = stroke_pad * 2.0;
+        let mut rows_h = 0.0f32;
         let line_gap = (body_style.size * 0.2).max(2.0).round();
+        let mut min_line_left = f32::MAX;
+        let mut max_line_right = 0.0f32;
 
         for (idx, line) in lines.iter().enumerate() {
             let mut p = build_slot_paragraph(&self.fonts, &body_families, line, body_style, None);
             p.layout(layout_w);
             let m = measure_laid_out_paragraph(&mut p, layout_w);
+            if m.max_right_nonzero() {
+                min_line_left = min_line_left.min(m.min_line_left);
+                max_line_right = max_line_right.max(m.max_line_right);
+            }
             let line_chords = chords_by_line.get(&idx).cloned().unwrap_or_default();
             let chord_h = if line_chords.is_empty() {
                 0.0
@@ -905,12 +939,14 @@ impl TextRenderer {
                     let cw = cp.max_intrinsic_width().max(chord_style.size * 0.5);
                     let x = desired_x.min((layout_w - cw).max(0.0));
                     cursor_right = x + cw + 8.0;
+                    min_line_left = min_line_left.min(x);
+                    max_line_right = max_line_right.max(x + cw);
                     placed_chords.push((x, chord_text));
                 }
             }
-            total_h += chord_h + m.height;
+            rows_h += chord_h + m.height;
             if idx + 1 < lines.len() {
-                total_h += line_gap;
+                rows_h += line_gap;
             }
             rows.push(LineRow {
                 line_text: (*line).to_owned(),
@@ -920,23 +956,55 @@ impl TextRenderer {
                 content_left,
             });
         }
+        if min_line_left == f32::MAX {
+            min_line_left = 0.0;
+            max_line_right = 0.0;
+        }
 
+        let trans_gap = (body_style.size * 0.3).max(4.0).round();
         let trans_h = translation.map_or(0.0, |(t, ts)| {
             self.measure_slot(t, ts, area.width)
                 .total_height_with_decorations(ts)
-                + (body_style.size * 0.3).max(4.0).round()
+                + trans_gap
         });
-        let full_h = total_h + trans_h;
+        let box_block_h = rows_h + box_pad_y * 2.0 + stroke_pad * 2.0;
+        let full_h = box_block_h + trans_h;
 
-        let mut y = match body_style.align_v {
-            TextAlignV::Top => area.top + stroke_pad,
-            TextAlignV::Middle => {
-                area.top + ((area.height - full_h) / 2.0).max(0.0).floor() + stroke_pad
-            }
-            TextAlignV::Bottom => (area.bottom - full_h).max(area.top).floor() + stroke_pad,
+        let box_top = match body_style.align_v {
+            TextAlignV::Top => area.top,
+            TextAlignV::Middle => area.top + ((area.height - full_h) / 2.0).max(0.0).floor(),
+            TextAlignV::Bottom => (area.bottom - full_h).max(area.top).floor(),
+        };
+        let text_top = (box_top + box_pad_y + stroke_pad).ceil();
+
+        if let Some(bg) = &body_style.background_box
+            && bg.color[3] > 0
+        {
+            let card_metrics = SlotMeasurement {
+                layout_width: layout_w,
+                height: rows_h,
+                min_intrinsic_width: 0.0,
+                max_intrinsic_width: (max_line_right - min_line_left).max(0.0),
+                longest_line: (max_line_right - min_line_left).max(0.0),
+                line_count: rows.len(),
+                line_widths: Vec::new(),
+                min_line_left,
+                max_line_right,
+                did_exceed_max_lines: false,
+                unresolved_glyphs: 0,
+            };
+            draw_background_box(
+                bg,
+                area,
+                &card_metrics,
+                content_left,
+                text_top,
+                stroke_pad,
+                canvas,
+            );
         }
-        .ceil();
 
+        let mut y = text_top;
         for row in rows {
             if row.chord_h > 0.0 {
                 let single_chord_style = SlotTextStyle {
@@ -944,18 +1012,72 @@ impl TextRenderer {
                     ..chord_style.clone()
                 };
                 for (cx, chord_text) in row.chords {
-                    let cp = build_slot_paragraph(
+                    let mut cp = build_slot_paragraph(
                         &self.fonts,
                         &chord_families,
                         &chord_text,
                         &single_chord_style,
                         None,
                     );
-                    let mut cp = cp;
                     cp.layout(layout_w);
                     cp.paint(canvas, (row.content_left + cx, y));
                 }
                 y += row.chord_h;
+            }
+            if let Some(sh) = &body_style.shadow
+                && sh.color[3] > 0
+            {
+                let mut sp = Paint::default();
+                sp.set_anti_alias(true);
+                sp.set_style(PaintStyle::Fill);
+                sp.set_color(Color::from_argb(
+                    sh.color[3],
+                    sh.color[0],
+                    sh.color[1],
+                    sh.color[2],
+                ));
+                if sh.blur > 0.1 {
+                    sp.set_mask_filter(MaskFilter::blur(
+                        BlurStyle::Normal,
+                        (sh.blur * 0.5).max(0.1),
+                        false,
+                    ));
+                }
+                let mut shadow_para = build_slot_paragraph(
+                    &self.fonts,
+                    &body_families,
+                    &row.line_text,
+                    body_style,
+                    Some(&sp),
+                );
+                shadow_para.layout(layout_w);
+                shadow_para.paint(canvas, (row.content_left + sh.offset_x, y + sh.offset_y));
+            }
+            if let Some(ol) = &body_style.outline
+                && ol.width > 0.0
+                && ol.color[3] > 0
+            {
+                let mut op = Paint::default();
+                op.set_anti_alias(true);
+                op.set_style(PaintStyle::Stroke);
+                op.set_stroke_width((ol.width * 2.0).clamp(0.5, 128.0));
+                op.set_stroke_join(Join::Round);
+                op.set_stroke_cap(Cap::Round);
+                op.set_color(Color::from_argb(
+                    ol.color[3],
+                    ol.color[0],
+                    ol.color[1],
+                    ol.color[2],
+                ));
+                let mut outline_para = build_slot_paragraph(
+                    &self.fonts,
+                    &body_families,
+                    &row.line_text,
+                    body_style,
+                    Some(&op),
+                );
+                outline_para.layout(layout_w);
+                outline_para.paint(canvas, (row.content_left, y));
             }
             let mut lp = build_slot_paragraph(
                 &self.fonts,
@@ -968,6 +1090,7 @@ impl TextRenderer {
             lp.paint(canvas, (row.content_left, y));
             y += row.lyric_h + line_gap;
         }
+        y = (box_top + box_block_h + trans_gap).min(area.bottom);
 
         if let Some((t_text, t_style)) = translation {
             let trans_style = SlotTextStyle {

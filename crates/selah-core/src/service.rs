@@ -1801,6 +1801,8 @@ impl CoreService {
                     video_dropped: summary.video_dropped,
                     video_composite_p99_ms: summary.video_composite_p99_ms,
                     video_pass: summary.video_pass,
+                    m3_p99_ms: summary.m3_p99_ms,
+                    m3_pass: summary.m3_pass,
                 }),
             ),
             Err(error) => {

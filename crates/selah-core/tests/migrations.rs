@@ -1,9 +1,11 @@
-//! M2-A9 / Stage 10 migration checks: every historical fixture opens, migrates cleanly,
-//! passes SQLite integrity checks, and preserves seeded documents, search indexes, and ops.
+//! M2-A9 / M3-A7 / Stage 10 migration checks: every historical fixture opens, migrates
+//! cleanly, passes SQLite integrity checks, and preserves seeded documents, search indexes, and ops.
 use std::path::{Path, PathBuf};
 
 use selah_core::library::{CURRENT_SCHEMA_VERSION, CommandMeta, Library, PolicyLevel};
 use selah_proto::v1::*;
+use selah_render::slide_elements::{ShapeKind, SlideElementKind, SlideElementsDocument};
+use selah_render::template::TemplateStyle;
 use serde_json::json;
 
 fn fixtures_dir() -> PathBuf {
@@ -30,6 +32,7 @@ fn every_historical_database_fixture_opens_migrates_and_passes_integrity() {
         .collect();
     assert!(names.contains(&"schema-v1.db".to_owned()), "{names:?}");
     assert!(names.contains(&"m2.db".to_owned()), "{names:?}");
+    assert!(names.contains(&"m3.db".to_owned()), "{names:?}");
 
     for fixture in fixtures {
         let root = tempfile::tempdir().unwrap();
@@ -202,6 +205,146 @@ fn m2_fixture_preserves_all_seeded_documents_search_buffers_feedback_and_undo() 
         updated_songs
             .iter()
             .any(|s| s.title == "Synthetic Morning Anthem (Edited)")
+    );
+    library.integrity_check().unwrap();
+}
+
+#[test]
+fn m3_fixture_preserves_templates_policies_custom_elements_and_flash_tags() {
+    let m3_path = fixtures_dir().join("m3.db");
+    let root = tempfile::tempdir().unwrap();
+    std::fs::copy(&m3_path, root.path().join("library.db")).unwrap();
+
+    let mut library = Library::open(root.path()).unwrap();
+    assert_eq!(library.schema_version().unwrap(), CURRENT_SCHEMA_VERSION);
+    library.integrity_check().unwrap();
+
+    // Rich M3 Template preserves 3 aspect variants, outline, shadow, background_box, safe_area.
+    let templates = library.list::<Template>(50, 0).unwrap();
+    assert_eq!(templates.len(), 2);
+    let m3_tmpl = templates
+        .iter()
+        .find(|t| t.name == "Synthetic Sanctuary Style")
+        .expect("M3 sanctuary style template present");
+    assert_eq!(m3_tmpl.variants.len(), 3);
+    let parsed_style = TemplateStyle::from_proto_template(m3_tmpl).unwrap();
+    assert_eq!(parsed_style.name, "Synthetic Sanctuary Style");
+    assert!(parsed_style.roles.body.outline.is_some());
+    assert!(parsed_style.roles.body.shadow.is_some());
+    let bg_box = parsed_style
+        .roles
+        .body
+        .background_box
+        .as_ref()
+        .expect("background_box preserved");
+    assert!(bg_box.accent_bar_color.is_some());
+    assert_eq!(parsed_style.variants.len(), 3);
+    let led_variant = parsed_style
+        .variants
+        .iter()
+        .find(|v| v.reference_width == 3840 && v.reference_height == 1080)
+        .expect("32:9 LED variant present");
+    assert_eq!(led_variant.max_lines, Some(2));
+    assert!((led_variant.safe_area.unwrap().left - 0.04).abs() < 1e-4);
+
+    // Template policy settings store valid 32-char lowercase hex matching m3_tmpl.id.
+    let expected_hex: String = m3_tmpl
+        .id
+        .as_ref()
+        .unwrap()
+        .value
+        .iter()
+        .map(|b| format!("{b:02x}"))
+        .collect();
+    assert_eq!(expected_hex.len(), 32);
+
+    let song_policy = library.setting("templates.default.song").unwrap().unwrap();
+    assert_eq!(song_policy.value, json!(expected_hex));
+    assert_eq!(song_policy.level, PolicyLevel::User);
+
+    let scripture_policy = library
+        .setting("templates.default.scripture")
+        .unwrap()
+        .unwrap();
+    assert_eq!(scripture_policy.value, json!(expected_hex));
+    assert_eq!(scripture_policy.level, PolicyLevel::Organisation);
+
+    // Flash-flagged M3 video media survives migration and search indexing.
+    let media = library.list::<MediaItem>(50, 0).unwrap();
+    assert_eq!(media.len(), 2);
+    let flash_video = media
+        .iter()
+        .find(|m| m.name == "Synthetic Flashing Motion Loop")
+        .expect("M3 flashing motion video present");
+    assert_eq!(flash_video.kind, MediaKind::Video as i32);
+    assert!(flash_video.flash_warning);
+    assert!(flash_video.tags.contains(&"Motion".to_owned()));
+    assert!(flash_video.tags.contains(&"Flashing".to_owned()));
+
+    let flash_hits = library
+        .search_media("Flashing", MediaKind::Video, 10, 0)
+        .unwrap();
+    assert_eq!(flash_hits.hits.len(), 1);
+    assert_eq!(
+        flash_hits.hits[0].media_item.as_ref().unwrap().name,
+        "Synthetic Flashing Motion Loop"
+    );
+
+    // Custom SlideElementsDocument v1 presentation preserves dynamic tokens, shapes, transitions, effects.
+    let presentations = library.list::<Presentation>(50, 0).unwrap();
+    assert_eq!(presentations.len(), 2);
+    let m3_pres = presentations
+        .iter()
+        .find(|p| p.name == "Synthetic M3 Custom Deck")
+        .expect("M3 custom presentation present");
+    assert_eq!(m3_pres.slides.len(), 2);
+    assert_eq!(m3_pres.template_id, m3_tmpl.id);
+
+    let slide1_doc =
+        SlideElementsDocument::from_json_strict(&m3_pres.slides[0].elements_json).unwrap();
+    assert_eq!(slide1_doc.elements.len(), 3);
+    assert_eq!(slide1_doc.elements[0].kind, SlideElementKind::Text);
+    assert!(slide1_doc.elements[0].text.contains("{clock}"));
+    assert!(slide1_doc.elements[0].text.contains("{timer}"));
+    assert_eq!(slide1_doc.elements[0].timer_duration_secs, Some(300));
+    assert_eq!(slide1_doc.elements[1].kind, SlideElementKind::Shape);
+    assert_eq!(slide1_doc.elements[1].shape_kind, ShapeKind::RoundedRect);
+    assert_eq!(slide1_doc.elements[2].kind, SlideElementKind::Image);
+    assert_eq!(
+        slide1_doc
+            .transition
+            .as_ref()
+            .map(|t| (t.kind.as_str(), t.duration_ms)),
+        Some(("fade", 600))
+    );
+    assert_eq!(slide1_doc.effects.len(), 1);
+    assert_eq!(slide1_doc.effects[0].kind, "vignette");
+
+    let slide2_doc =
+        SlideElementsDocument::from_json_strict(&m3_pres.slides[1].elements_json).unwrap();
+    assert_eq!(slide2_doc.elements.len(), 1);
+    assert_eq!(slide2_doc.elements[0].kind, SlideElementKind::Video);
+
+    // Undo / redo history on the M3 presentation remains live.
+    let state = library.undo_state(None).unwrap();
+    assert!(state.can_undo && state.can_redo);
+    let actor = Actor {
+        user_id: "fixture-owner".into(),
+        device_id: "fixture-device".into(),
+        origin: ActorOrigin::Ui as i32,
+    };
+    let meta = CommandMeta {
+        actor: &actor,
+        envelope_id: 9002,
+        command_hash: [8u8; 32],
+        undo_group: None,
+    };
+    library.redo_op(None, &meta).unwrap();
+    let updated_pres = library.list::<Presentation>(50, 0).unwrap();
+    assert!(
+        updated_pres
+            .iter()
+            .any(|p| p.name == "Synthetic M3 Custom Deck (Edited)")
     );
     library.integrity_check().unwrap();
 }

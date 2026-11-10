@@ -39,3 +39,32 @@ platform-specific images in `tests/golden/<platform>/`.
 - Rendered on: the PR's `macos` CI job (macos-15, software rendering), run 42410558009, taken
   from its failure report. `bless-golden.yml` can't render on macOS yet because it doesn't build
   the macOS FFmpeg (follow-up in PROGRESS.md). Reviewed by eye against the reference.
+
+## 2026-11-10 — reference (M3.8: 55 `m3-*` frames)
+
+- Reason: M3-A1 golden-frame suite (`crates/selah-testkit/tests/golden_m3.rs`):
+  - Style & typography (`m3-style-roles-decorations`, `m3-style-alignments-safe-area`,
+    `m3-style-min-size-shrink`, `m3-style-custom-elements`, `m3-style-fonts-weights`,
+    `m3-style-aspect-32x9`, `m3-style-aspect-4x3`, `m3-style-aspect-9x16`,
+    `m3-style-preset-warm-serif` — 9 frames): covers all 5 text role slots (`title`, `reference`,
+    `body` + interleaved `chords` + `translation`, `footer`), outlines, shadows, card boxes with
+    accent bars, H/V alignments, safe-area margins, min-size metric shrink via `fit_song_slides`,
+    all 7 bundled OFL variable fonts across weights `100..=900` and Latin/Yorùbá/Korean/Arabic,
+    custom `SlideElementsDocument` (`Rect`/`RoundedRect`/`Ellipse`/`Line`, fixed `{clock}` and
+    `{timer}` tokens, `Props`, `Messages`), and 16:9 / 32:9 / 4:3 / 9:16 aspect variants.
+  - Transitions (`m3-tr-{cut,fade,dissolve,fade-through-black,push,wipe,zoom,slide}-t{0.00,0.25,0.50,0.75,1.00}`
+    — 40 frames): all 8 transitions across 5 timestamps (`0.00`, `0.25`, `0.50`, `0.75`, `1.00`)
+    using deterministic geometric scenes (no glyphs).
+  - Built-in effects (`m3-fx-{blur,colour-adjust,vignette,background-blur,colour-key,mask}` — 6 frames):
+    all 6 closed built-in post/layer shader effects using SMPTE bars, gradient, and vector shapes.
+- Also fixed `TextRenderer::{measure,paint}_body_with_chords` (`crates/selah-render/src/text.rs`) so
+  chorded body slides render `background_box`, `outline`, and `shadow` identically to unchorded
+  slots, then re-blessed `m3-style-roles-decorations.png`.
+- Reviewed by eye: verified card box + amber accent bar, outlines, shadows, chord alignment, all 7
+  fonts without fallback boxes, aspect variants, transition midpoints (`fade-through-black` at
+  black, `dissolve` dither, `push`/`wipe`/`zoom`/`slide`), and all 6 effects (`colour-key` cleanly
+  keying green, `mask` feathered rounded rect, `background-blur` central frost). Also verified GPU
+  (`AdapterChoice::Software`) vs CPU compositor parity (`m3_golden_gpu_and_cpu_parity_agree`).
+- Rendered on: Windows x64, WARP (`SELAH_GPU=software`). Style frames compare across platforms
+  with `TOLERANCE_STYLE` (channel ≤ 10, ≤ 2% pixels for DirectWrite/FreeType/CoreText AA edges);
+  transition and effect frames compare with `TOLERANCE_SHADER` (channel ≤ 3, ≤ 0.2% pixels).

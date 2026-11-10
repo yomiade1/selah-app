@@ -2,6 +2,7 @@
 //! macOS, Vulkan (lavapipe in the cloud and CI) on Linux.
 use std::collections::{BTreeMap, HashMap};
 use std::path::PathBuf;
+use std::sync::Arc;
 use std::time::Instant;
 
 use anyhow::{Context, Result, anyhow};
@@ -77,8 +78,6 @@ impl TexPair {
 }
 
 struct ScratchSet {
-    width: u32,
-    height: u32,
     ping_a: TexPair,
     ping_b: TexPair,
     backdrop: TexPair,
@@ -93,8 +92,6 @@ struct ScratchSet {
 impl ScratchSet {
     fn new(device: &wgpu::Device, width: u32, height: u32) -> Self {
         Self {
-            width,
-            height,
             ping_a: TexPair::new(device, "scratch-ping-a", width, height),
             ping_b: TexPair::new(device, "scratch-ping-b", width, height),
             backdrop: TexPair::new(device, "scratch-backdrop", width, height),
@@ -129,7 +126,8 @@ pub struct GpuCompositor {
     pattern_pool: Vec<(wgpu::Buffer, wgpu::BindGroup)>,
     pattern_cursor: usize,
     targets: BTreeMap<u32, Target>,
-    scratch: Option<ScratchSet>,
+    scratches: HashMap<(u32, u32), ScratchSet>,
+    scratch_order: Vec<(u32, u32)>,
     name: String,
     pub timing: FrameTiming,
     text: Option<crate::text::TextRenderer>,
@@ -139,7 +137,7 @@ pub struct GpuCompositor {
     layer_blitter: crate::blit::Blitter,
     video: crate::video::VideoLayer,
     video_frame: Option<crate::video::Nv12Frame>,
-    video_frames: HashMap<String, (u64, crate::video::Nv12Frame)>,
+    video_frames: HashMap<String, (u64, Arc<crate::video::Nv12Frame>)>,
     video_seq: u64,
     blur: crate::blur::BlurPipeline,
     effects: crate::effects::EffectsPipeline,
@@ -333,7 +331,8 @@ impl GpuCompositor {
             pattern_pool: Vec::new(),
             pattern_cursor: 0,
             targets: BTreeMap::new(),
-            scratch: None,
+            scratches: HashMap::new(),
+            scratch_order: Vec::new(),
             name,
             timing: FrameTiming::default(),
             text: None,
@@ -355,6 +354,14 @@ impl GpuCompositor {
 
     pub fn adapter_info(&self) -> &wgpu::AdapterInfo {
         &self.adapter
+    }
+
+    pub fn is_software_adapter(&self) -> bool {
+        self.adapter.device_type == wgpu::DeviceType::Cpu
+    }
+
+    pub fn is_virtual_adapter(&self) -> bool {
+        self.adapter.device_type == wgpu::DeviceType::VirtualGpu
     }
 
     pub fn instance(&self) -> &wgpu::Instance {
@@ -457,13 +464,19 @@ impl GpuCompositor {
     }
 
     fn ensure_scratch(&mut self, width: u32, height: u32) {
-        let recreate = self
-            .scratch
-            .as_ref()
-            .is_none_or(|s| s.width != width || s.height != height);
-        if recreate {
-            self.scratch = Some(ScratchSet::new(&self.device, width, height));
+        let key = (width, height);
+        if self.scratches.contains_key(&key) {
+            self.scratch_order.retain(|k| *k != key);
+            self.scratch_order.push(key);
+            return;
         }
+        while self.scratches.len() >= 4 && !self.scratch_order.is_empty() {
+            let oldest = self.scratch_order.remove(0);
+            self.scratches.remove(&oldest);
+        }
+        self.scratches
+            .insert(key, ScratchSet::new(&self.device, width, height));
+        self.scratch_order.push(key);
     }
 
     fn upload_overlay_keyed(&mut self, key: [u8; 32], frame: &Frame) -> ([u8; 32], u32, u32) {
@@ -624,21 +637,35 @@ impl GpuCompositor {
         if layer.kind == LayerKind::Media
             && let Some(layer_spec::Content::Media(m)) = layer.spec.content.as_ref()
             && m.media_kind == "video"
-            && let Some((seq, nv12)) = self.video_frames.get(&m.content_hash).cloned()
+            && let Some((seq, nv12)) = self
+                .video_frames
+                .get(&m.content_hash)
+                .map(|(seq, frame)| (*seq, Arc::clone(frame)))
         {
-            let bg_key = if let Some(mut bg) = crate::scene::media_backdrop_frame(
-                m,
-                width,
-                height,
-                self.media_root.as_deref(),
-                false,
-            )? {
-                crate::scene::scale_frame_opacity(&mut bg, layer.opacity);
+            let has_static_bg = m.solid_color.is_some_and(|c| c.alpha > 0.0)
+                || m.gradient.as_ref().is_some_and(|g| !g.stops.is_empty());
+            let bg_key = if has_static_bg {
                 let mut key_h = blake3::Hasher::new();
                 key_h.update(&layer.cache_key);
                 key_h.update(b"video-bg");
                 let k = *key_h.finalize().as_bytes();
-                Some(self.upload_overlay_keyed(k, &bg))
+                let full_key = (k, width.max(1), height.max(1));
+                if self.overlay_slots.contains_key(&full_key) {
+                    self.overlay_order.retain(|item| *item != full_key);
+                    self.overlay_order.push(full_key);
+                    Some(full_key)
+                } else if let Some(mut bg) = crate::scene::media_backdrop_frame(
+                    m,
+                    width,
+                    height,
+                    self.media_root.as_deref(),
+                    false,
+                )? {
+                    crate::scene::scale_frame_opacity(&mut bg, layer.opacity);
+                    Some(self.upload_overlay_keyed(k, &bg))
+                } else {
+                    None
+                }
             } else {
                 None
             };
@@ -862,7 +889,7 @@ fn draw_raw_prepared_layer(
     overlay_slots: &HashMap<([u8; 32], u32, u32), OverlaySlot>,
     layer_blitter: &crate::blit::Blitter,
     video: &mut crate::video::VideoLayer,
-    video_frames: &HashMap<String, (u64, crate::video::Nv12Frame)>,
+    video_frames: &HashMap<String, (u64, Arc<crate::video::Nv12Frame>)>,
     blur: &mut crate::blur::BlurPipeline,
     video_draw_cursor: &mut u32,
     width: u32,
@@ -952,7 +979,7 @@ fn draw_layer_with_effects(
     overlay_slots: &HashMap<([u8; 32], u32, u32), OverlaySlot>,
     layer_blitter: &crate::blit::Blitter,
     video: &mut crate::video::VideoLayer,
-    video_frames: &HashMap<String, (u64, crate::video::Nv12Frame)>,
+    video_frames: &HashMap<String, (u64, Arc<crate::video::Nv12Frame>)>,
     blur: &mut crate::blur::BlurPipeline,
     effects_pipe: &mut crate::effects::EffectsPipeline,
     scratch: Option<&ScratchSet>,
@@ -1073,7 +1100,7 @@ fn encode_prepared_scene(
     overlay_slots: &HashMap<([u8; 32], u32, u32), OverlaySlot>,
     layer_blitter: &crate::blit::Blitter,
     video: &mut crate::video::VideoLayer,
-    video_frames: &HashMap<String, (u64, crate::video::Nv12Frame)>,
+    video_frames: &HashMap<String, (u64, Arc<crate::video::Nv12Frame>)>,
     blur: &mut crate::blur::BlurPipeline,
     effects_pipe: &mut crate::effects::EffectsPipeline,
     transitions_pipe: &mut crate::transitions::TransitionPipeline,
@@ -1296,7 +1323,7 @@ impl Compositor for GpuCompositor {
                 frame.validate()?;
                 self.video_seq = self.video_seq.saturating_add(1);
                 self.video_frames
-                    .insert(hash.to_owned(), (self.video_seq, frame));
+                    .insert(hash.to_owned(), (self.video_seq, Arc::new(frame)));
             }
             None => {
                 self.video_frames.remove(hash);
@@ -1400,7 +1427,7 @@ impl GpuCompositor {
             .targets
             .get(&output_index)
             .expect("target exists for output");
-        let scratch_ref = self.scratch.as_ref();
+        let scratch_ref = self.scratches.get(&(width, height));
         let mut video_draw_cursor = 0_u32;
 
         let mut encoder = self
@@ -1485,6 +1512,78 @@ impl GpuCompositor {
                 width,
                 height,
                 &prepared_to,
+                &target.texture,
+                &target.view,
+            );
+        }
+
+        self.queue.submit([encoder.finish()]);
+        self.timing.submitted = Some(Instant::now());
+        self.wait()?;
+        self.timing.rendered = Some(Instant::now());
+        Ok(())
+    }
+
+    /// Composite multiple outputs into their offscreen textures in a single GPU submission.
+    pub fn composite_outputs(&mut self, scene: &Scene, outputs: &[(u32, u32, u32)]) -> Result<()> {
+        if outputs.is_empty() {
+            return Ok(());
+        }
+        self.pattern_cursor = 0;
+        self.blur.begin_frame();
+        self.effects.begin_frame();
+        self.transitions.begin_frame();
+
+        let mut prepared = Vec::with_capacity(outputs.len());
+        let mut scratch_sizes = Vec::new();
+        for &(output_index, width, height) in outputs {
+            let p = self.prepare_scene(scene, output_index, width, height, &[])?;
+            let needs_scratch = !p.output_effects.is_empty()
+                || p.ops.iter().any(|op| match op {
+                    PreparedDrawOp::Direct(e) => !e.effects().is_empty(),
+                    PreparedDrawOp::Transition { .. } => true,
+                });
+            self.ensure_target(output_index, width, height);
+            if needs_scratch && !scratch_sizes.contains(&(width, height)) {
+                scratch_sizes.push((width, height));
+            }
+            prepared.push((output_index, width, height, p));
+        }
+        for (sw, sh) in scratch_sizes {
+            self.ensure_scratch(sw, sh);
+        }
+
+        let mut encoder = self
+            .device
+            .create_command_encoder(&wgpu::CommandEncoderDescriptor {
+                label: Some("multi-output-frame"),
+            });
+        let mut video_draw_cursor = 0_u32;
+
+        for (output_index, width, height, p) in &prepared {
+            let target = self
+                .targets
+                .get(output_index)
+                .expect("target exists for output");
+            let scratch_ref = self.scratches.get(&(*width, *height));
+            encode_prepared_scene(
+                &self.device,
+                &self.queue,
+                &mut encoder,
+                &self.pipeline,
+                &self.pattern_pool,
+                &self.overlay_slots,
+                &self.layer_blitter,
+                &mut self.video,
+                &self.video_frames,
+                &mut self.blur,
+                &mut self.effects,
+                &mut self.transitions,
+                scratch_ref,
+                &mut video_draw_cursor,
+                *width,
+                *height,
+                p,
                 &target.texture,
                 &target.view,
             );

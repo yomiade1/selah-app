@@ -100,6 +100,12 @@ impl VideoFrameSource for std::collections::HashMap<String, (u64, Nv12Frame)> {
     }
 }
 
+impl VideoFrameSource for std::collections::HashMap<String, (u64, std::sync::Arc<Nv12Frame>)> {
+    fn get_video(&self, hash: &str) -> Option<&Nv12Frame> {
+        self.get(hash).map(|(_, frame)| frame.as_ref())
+    }
+}
+
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum SlideElementKind {

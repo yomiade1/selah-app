@@ -2,6 +2,17 @@
 
 ## Unreleased
 
+Milestone 3: the render engine, templates and the slide editor. Still a work-in-progress preview build with no live Sunday service runner yet (coming in M4).
+
+- Multi-layer render engine & independent screens: composes Video Input, Media, Slide, Props and Messages layers at 60 Hz across independent screen resolutions with upcoming-slide pre-rasterisation.
+- Templates & starter looks: edit fonts (across all 7 bundled variable fonts), weights, outlines, drop shadows, rounded card boxes with accent bars, line/letter spacing, safe margins and screen-shape variants (`16:9`, `32:9` LED, `4:3`, `9:16`), starting from 4 built-in presets (Sanctuary, Warm Serif, Lower Third, Stage Monitor) and assigning default templates per song, scripture or screen.
+- Words that fit every screen: automatically shrinks long lyrics or Bible verses down to your template's minimum readable size, then cleanly splits onto extra slides before overflowing safe margins, showing a per-screen fit report (`SHRUNK_TO_FIT`, `EXTRA_SPLIT`, `AT_MIN_SIZE`) across every connected display shape.
+- Backgrounds & looping media: image (`Fit`, `Fill`, `Stretch`, blur, opacity), solid/gradient backdrops, and gap-free 1080p/4K looping video backgrounds synchronised to the audio device clock with trim in/out points, speed control (`0.1×`–`4.0×`), smooth 25 ms fade-outs when cleared, and an always-on `-1 dBTP` master limiter so loud audio cannot clip through your PA.
+- Transitions, built-in effects & flash protection: 8 transitions (`Cut`, `Fade`, `Dissolve`, `FadeThroughBlack`, `Push`, `Wipe`, `Zoom`, `Slide` with direction and easing) and 6 built-in visual effects (`Blur`, `ColourAdjust`, `Vignette`, `BackgroundBlur`, `ColourKey`, `Mask`), backed by an automatic WCAG 2.3.1 flashing-content analyser on imported videos, rapid transitions and live frames that requires confirmation before staging flagged items.
+- Offscreen thumbnails & dual previews: real rendered thumbnails across song grids, Bible splits and editors, alongside isolated live **Program** and **Staged Next** previews.
+- Custom slide editor: design custom slides with rich text, live `{clock}` and `{timer}` tokens, shapes (`Rect`, `RoundedRect`, `Ellipse`, `Line`), images and videos, using multi-select align, group/ungroup, layer order, locking and undo/redo.
+- Expanded help & benchmark: 20 new M3 help articles on templates, safe areas, transitions, effects and flash warnings (57 guides total), plus the new 2×1080p + 4K video test in **Help ▸ Diagnostics**.
+
 Milestone 2: library, songs, Scripture and the help system. Still a work-in-progress preview build, not for a live Sunday service yet.
 
 - Songs library: create, edit, save, tag, arrange and delete songs with automatic background saving, per-song and global undo/redo, and multi-language search that tolerates typos and diacritics (tested with Yorùbá, Korean and Spanish).

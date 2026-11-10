@@ -1,4 +1,4 @@
-# Problem reports and Diagnostics (M1.13)
+# Problem reports and Diagnostics (M1.13, extended M3-A6)
 
 Requirements: SEC-05, SEC-06, SAFE-06, ADR-023 (hardware results come from the user's PC).
 
@@ -26,16 +26,20 @@ back for tests.
 - **Details:** `GetDiagnostics` returns the version, OS and architecture, safe mode, and the
   engine's renderer (for example `wgpu Dx12 NVIDIA GeForce MX350`) and output size.
 - **Run benchmark:** `RunDiagnostics` is refused while anything is live (`SEL-DIAG-0001`).
-  Otherwise core runs the installed `selah-bench`: `ipc --iterations 10000`, then
-  `video --clip bench/hevc-2160p60.mp4` (a quick run uses 500 round trips and the 1080p H.264
-  clip). It saves `selah-diagnostics-<UTC stamp>.json` in the support folder (both bench
-  reports, a summary and the details above, redacted) and replies with the summary. The window
-  shows the results and **Show the report**.
+  Otherwise core runs the installed `selah-bench` across three stages:
+  1. `ipc --iterations 10000` (quick run: `500`),
+  2. `video --clip bench/hevc-2160p60.mp4` (quick run: `h264-1080p60.mp4`),
+  3. `m3 --iterations 30 --clip bench/hevc-2160p60.mp4` (quick run: `4` iterations on `h264-1080p60.mp4`, falling back to synthetic 4K NV12 frames when the clip is under 4K) measuring dual 1080p outputs over a 4K video background (`OUTPUT_P99_BUDGET_MS = 8.0` on hardware adapters).
+  Core saves `selah-diagnostics-<UTC stamp>.json` (holding `ipc`, `video`, `m3`, `summary`, and
+  `context`, redacted) in the support folder and replies with `DiagnosticsReport` including
+  `m3_p99_ms` and `m3_pass`. The Diagnostics window displays all three benchmark results and
+  **Show the report**.
 
 ## Tests
 
 `a_bundle_has_logs_and_versions_but_no_secrets_or_user_name` (seeded secret, email, user name,
-token in the update address), `report_a_problem_saves_a_bundle_with_the_version` and
-`diagnostics_shows_the_engine_and_writes_a_benchmark_report` on the real processes,
-`DiagnosticsTests` in the UI (including the Diagnostics window at every text size, appearance
-and language).
+token in the update address), `report_a_problem_saves_a_bundle_with_the_version`,
+`diagnostics_shows_the_engine_and_writes_a_benchmark_report` on the real processes (asserting `ipc`,
+`video`, and `m3` sections in the saved report JSON), `diagnostics::tests` (`the_summary_reads_all_three_reports`),
+`DiagnosticsTests` (17 UI tests including the Diagnostics window across 100/150/200%, Light/Booth,
+`en`/`en-XA`), `ContractTests` (C#), and `web/contracts` round-trip tests.

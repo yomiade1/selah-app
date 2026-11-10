@@ -992,5 +992,29 @@ public sealed class ContractTests
             },
         };
         Assert.Equal(thumbReply, Envelope.Parser.ParseFrom(thumbReply.ToByteArray()));
+
+        var diagReply = new Envelope
+        {
+            Id = 6103,
+            CorrelationId = 6101,
+            Reply = new Reply
+            {
+                DiagnosticsReport = new DiagnosticsReport
+                {
+                    Path = "C:/support/selah-diagnostics.json",
+                    IpcP99Ms = 0.096,
+                    IpcPass = true,
+                    VideoClip = "hevc-2160p60.mp4",
+                    VideoDecode = "d3d11va",
+                    VideoFrames = 60,
+                    VideoDropped = 0,
+                    VideoCompositeP99Ms = 13.5,
+                    VideoPass = false,
+                    M3P99Ms = 14.8,
+                    M3Pass = false,
+                },
+            },
+        };
+        Assert.Equal(diagReply, Envelope.Parser.ParseFrom(diagReply.ToByteArray()));
     }
 }

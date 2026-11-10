@@ -1,10 +1,11 @@
-//! **Help ▸ Diagnostics ▸ Run benchmark** (M1.13, ADR-023): measures this computer and saves a
-//! report the person can attach to a PR or a problem report. This is how hardware results reach
-//! cloud sessions.
+//! **Help ▸ Diagnostics ▸ Run benchmark** (M1.13, M3-A6, ADR-023): measures this computer and
+//! saves a report the person can attach to a PR or a problem report. This is how hardware results
+//! reach cloud sessions.
 //!
-//! It runs `selah-bench` (installed next to the other programs): the IPC round trip and a video
-//! decode-and-composite run on the 4K60 HEVC clip (the 1080p H.264 clip for a quick run). It's
-//! refused while anything is on the screens, because it loads the GPU and CPU (SAFE-06).
+//! It runs `selah-bench`: the IPC round trip, a video decode-and-composite run on the 4K60 HEVC
+//! clip (the 1080p H.264 clip for a quick run), and the M3 dual-1080p + 4K video compositor
+//! benchmark. It's refused while anything is on the screens, because it loads the GPU and CPU
+//! (SAFE-06).
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
@@ -50,6 +51,7 @@ pub struct Plan {
     pub bench: PathBuf,
     pub clip: PathBuf,
     pub ipc_iterations: u32,
+    pub m3_iterations: u32,
 }
 
 /// The numbers the Diagnostics window shows.
@@ -63,6 +65,8 @@ pub struct Summary {
     pub video_dropped: u64,
     pub video_composite_p99_ms: f64,
     pub video_pass: bool,
+    pub m3_p99_ms: f64,
+    pub m3_pass: bool,
 }
 
 /// Find `selah-bench` and a clip next to the running programs (`bench/`), or in the repository
@@ -98,6 +102,7 @@ pub fn plan(exe_dir: &Path, quick: bool) -> Result<Plan, DiagnosticsError> {
         bench,
         clip,
         ipc_iterations: if quick { 500 } else { 10_000 },
+        m3_iterations: if quick { 4 } else { 30 },
     })
 }
 
@@ -149,8 +154,16 @@ fn text(value: &serde_json::Value, key: &str) -> String {
         .to_owned()
 }
 
-/// Summarise the two `selah-bench` reports.
-pub fn summarise(ipc: &serde_json::Value, video: &serde_json::Value) -> Summary {
+/// Summarise the `selah-bench` reports (`ipc`, `video`, and `m3`).
+pub fn summarise(
+    ipc: &serde_json::Value,
+    video: &serde_json::Value,
+    m3: &serde_json::Value,
+) -> Summary {
+    let m3_pass = m3
+        .get("hardware_pass")
+        .and_then(serde_json::Value::as_bool)
+        .unwrap_or_else(|| flag(m3, "pass"));
     Summary {
         ipc_p99_ms: number(ipc, "p99_ms"),
         ipc_pass: flag(ipc, "pass"),
@@ -163,11 +176,13 @@ pub fn summarise(ipc: &serde_json::Value, video: &serde_json::Value) -> Summary 
         video_dropped: number(video, "dropped") as u64,
         video_composite_p99_ms: number(video, "composite_p99_ms"),
         video_pass: flag(video, "pass"),
+        m3_p99_ms: number(m3, "p99_ms"),
+        m3_pass,
     }
 }
 
-/// Run both benchmarks and save the combined report in `out_dir`. `context` (version, safe mode,
-/// renderer…) goes in the report as it is.
+/// Run the IPC, video, and M3 benchmarks and save the combined report in `out_dir`. `context`
+/// (version, safe mode, renderer…) goes in the report as it is.
 pub fn run(
     plan: &Plan,
     out_dir: &Path,
@@ -187,10 +202,24 @@ pub fn run(
             &work.join("video.json"),
         )
     });
+    let m3 = video.as_ref().and_then(|res| res.as_ref().ok()).map(|_| {
+        run_bench(
+            plan,
+            &[
+                "m3",
+                "--iterations",
+                &plan.m3_iterations.to_string(),
+                "--clip",
+                &plan.clip.to_string_lossy(),
+            ],
+            &work.join("m3.json"),
+        )
+    });
     let _ = std::fs::remove_dir_all(&work);
     let ipc = ipc?;
     let video = video.unwrap_or_else(|| Err(DiagnosticsError::Failed("not run".into())))?;
-    let summary = summarise(&ipc, &video);
+    let m3 = m3.unwrap_or_else(|| Err(DiagnosticsError::Failed("not run".into())))?;
+    let summary = summarise(&ipc, &video, &m3);
     let stamp = crate::support::file_stamp(std::time::SystemTime::now());
     let report = serde_json::json!({
         "report": "selah-diagnostics",
@@ -202,6 +231,7 @@ pub fn run(
         "summary": summary,
         "ipc": ipc,
         "video": video,
+        "m3": m3,
     });
     let path = out_dir.join(format!("selah-diagnostics-{stamp}.json"));
     let text = serde_json::to_string_pretty(&report)
@@ -223,16 +253,21 @@ mod tests {
     use super::*;
 
     #[test]
-    fn the_summary_reads_both_reports() {
+    fn the_summary_reads_all_three_reports() {
         let ipc = serde_json::json!({"p99_ms": 0.12, "pass": true});
         let video = serde_json::json!({
             "clip": "C:/x/bench/hevc-2160p60.mp4", "decode": "d3d11va", "frames": 180,
             "dropped": 9, "composite_p99_ms": 16.0, "pass": false
         });
-        let summary = summarise(&ipc, &video);
+        let m3 = serde_json::json!({
+            "outputs": 2, "p99_ms": 14.8, "hardware_pass": false, "pass": false
+        });
+        let summary = summarise(&ipc, &video, &m3);
         assert_eq!(summary.video_clip, "hevc-2160p60.mp4");
         assert_eq!(summary.video_dropped, 9);
         assert!(summary.ipc_pass && !summary.video_pass);
+        assert_eq!(summary.m3_p99_ms, 14.8);
+        assert!(!summary.m3_pass);
     }
 
     #[test]

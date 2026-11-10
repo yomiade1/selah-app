@@ -4,11 +4,11 @@ Detailed specifications are written **as each milestone builds the thing they de
 
 | Spec | Written in |
 |---|---|
-| `command-bus.md`: envelope, commands, queries, events, errors, IPC behaviour | M1–M2 |
+| `command-bus.md`: envelope, commands, queries, events, errors, IPC behaviour | M1–M3 |
 | `spike-report.md`: measured results against budgets, go/no-go | M1 |
 | `foundations.md`: toolchains, contracts, IPC, processes, rendering, the gate | M1 |
 | `installer-and-updates.md`: Windows installer, installer check, updater | M1 |
-| `support-and-diagnostics.md`: Report a problem, Diagnostics, Run benchmark | M1 |
+| `support-and-diagnostics.md`: Report a problem, Diagnostics, Run benchmark | M1, M3 |
 | `data-model.md`: tables, migrations, op log, file layout | M2 |
 | `search.md`: FTS5/trigram search, folding, Bible index reader | M2 |
 | `songs.md`: 4-format paste parser, chord transposition, sections, slide splitting | M2 |

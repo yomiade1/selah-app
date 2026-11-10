@@ -990,4 +990,34 @@ test("M3.6 scene thumbnail query and reply round trip", () => {
         fromBinary(EnvelopeSchema, toBinary(EnvelopeSchema, reply)),
         reply,
     );
+
+    const diagnosticsReply = create(EnvelopeSchema, {
+        id: 6103n,
+        correlationId: 6101n,
+        body: {
+            case: "reply",
+            value: {
+                result: {
+                    case: "diagnosticsReport",
+                    value: {
+                        path: "C:/support/selah-diagnostics.json",
+                        ipcP99Ms: 0.096,
+                        ipcPass: true,
+                        videoClip: "hevc-2160p60.mp4",
+                        videoDecode: "d3d11va",
+                        videoFrames: 60n,
+                        videoDropped: 0n,
+                        videoCompositeP99Ms: 13.5,
+                        videoPass: false,
+                        m3P99Ms: 14.8,
+                        m3Pass: false,
+                    },
+                },
+            },
+        },
+    });
+    assert.deepEqual(
+        fromBinary(EnvelopeSchema, toBinary(EnvelopeSchema, diagnosticsReply)),
+        diagnosticsReply,
+    );
 });
