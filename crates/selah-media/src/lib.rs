@@ -21,7 +21,9 @@ use ffmpeg::util::color;
 use ffmpeg_next as ffmpeg;
 use serde::{Deserialize, Serialize};
 
+pub mod audio;
 mod hw;
+pub mod player;
 
 /// FFmpeg demuxers a file item may use. Names as FFmpeg reports them.
 pub const DEMUXERS: &[&str] = &[
@@ -170,7 +172,7 @@ impl VideoFrame {
     }
 }
 
-fn init() {
+pub(crate) fn init() {
     static INIT: Once = Once::new();
     INIT.call_once(|| {
         if let Err(error) = ffmpeg::init() {
@@ -215,13 +217,13 @@ pub fn check_local_path(path: &Path) -> Result<PathBuf> {
 
 /// FFmpeg's name for a local path: `file:` forces the file protocol, so nothing in the name
 /// can select another one. `canonicalize` on Windows returns `\\?\C:\…`; FFmpeg wants `C:\…`.
-fn ffmpeg_url(path: &Path) -> String {
+pub(crate) fn ffmpeg_url(path: &Path) -> String {
     let text = path.to_string_lossy();
     let text = text.strip_prefix(r"\\?\").unwrap_or(&text);
     format!("file:{text}")
 }
 
-fn open_options() -> ffmpeg::Dictionary<'static> {
+pub(crate) fn open_options() -> ffmpeg::Dictionary<'static> {
     let mut options = ffmpeg::Dictionary::new();
     options.set("protocol_whitelist", FILE_PROTOCOLS);
     options.set("format_whitelist", &DEMUXERS.join(","));
@@ -234,7 +236,7 @@ fn open_options() -> ffmpeg::Dictionary<'static> {
     options
 }
 
-fn check_demuxer(input: &ffmpeg::format::context::Input) -> Result<String> {
+pub(crate) fn check_demuxer(input: &ffmpeg::format::context::Input) -> Result<String> {
     let demuxer_name = input.format().name().to_owned();
     if !demuxer_name.split(',').any(|name| DEMUXERS.contains(&name)) {
         return Err(MediaError::Open(ffmpeg::Error::DemuxerNotFound));
@@ -242,7 +244,7 @@ fn check_demuxer(input: &ffmpeg::format::context::Input) -> Result<String> {
     Ok(demuxer_name)
 }
 
-fn duration_milliseconds(
+pub(crate) fn duration_milliseconds(
     input: &ffmpeg::format::context::Input,
     stream: &ffmpeg::Stream<'_>,
 ) -> u64 {
@@ -275,6 +277,7 @@ pub struct VideoDecoder {
     hardware: Option<hw::Device>,
     eof_sent: bool,
     next_index: u64,
+    skip_until_seconds: f64,
     decoder_name: String,
     demuxer_name: String,
 }
@@ -341,6 +344,7 @@ impl VideoDecoder {
             hardware,
             eof_sent: false,
             next_index: 0,
+            skip_until_seconds: 0.0,
             decoder_name,
             demuxer_name,
         })
@@ -377,12 +381,39 @@ impl VideoDecoder {
         self.hardware.as_ref().map(hw::Device::name)
     }
 
+    /// Seek to `position_ms` on the container and skip catchup frames earlier than `position_ms`.
+    pub fn seek_ms(&mut self, position_ms: u64) -> Result<()> {
+        if position_ms == 0 && self.next_index == 0 && !self.eof_sent {
+            self.skip_until_seconds = 0.0;
+            return Ok(());
+        }
+        let target_us = (position_ms as i64).saturating_mul(1000);
+        let _ = self.input.seek(target_us, ..target_us.saturating_add(1));
+        self.decoder.flush();
+        self.eof_sent = false;
+        self.skip_until_seconds = if position_ms == 0 {
+            0.0
+        } else {
+            (position_ms as f64 / 1000.0) - 0.000_5
+        };
+        Ok(())
+    }
+
     /// The next frame in presentation order, or `None` at the end of the stream.
     pub fn next_frame(&mut self) -> Result<Option<VideoFrame>> {
         let mut decoded = ffmpeg::frame::Video::empty();
         loop {
             match self.decoder.receive_frame(&mut decoded) {
-                Ok(()) => return self.convert(decoded).map(Some),
+                Ok(()) => {
+                    if self.skip_until_seconds > 0.0 {
+                        let pts = decoded.timestamp().or(decoded.pts()).unwrap_or(0);
+                        let seconds = (pts - self.start.unwrap_or(0)) as f64 * self.time_base;
+                        if seconds < self.skip_until_seconds {
+                            continue;
+                        }
+                    }
+                    return self.convert(decoded).map(Some);
+                }
                 Err(ffmpeg::Error::Eof) => return Ok(None),
                 Err(ffmpeg::Error::Other { errno }) if errno == ffmpeg::error::EAGAIN => {}
                 Err(error) => return Err(MediaError::Decode(error)),

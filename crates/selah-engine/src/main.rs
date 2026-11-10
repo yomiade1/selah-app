@@ -13,6 +13,7 @@ use selah_ipc::{Connection, Endpoint, Listener, Service};
 use selah_proto::v1::{ActorOrigin, command, envelope, query, render_command};
 
 mod engine;
+mod media_playback;
 mod outputs;
 mod scheduler;
 mod windows;

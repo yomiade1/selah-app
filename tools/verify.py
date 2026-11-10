@@ -209,7 +209,7 @@ def stages(args):
     # The FFmpeg-linked crates are left out: their bindings need the Windows FFmpeg headers, and
     # the windows CI job builds them natively.
     stage("5", "windows type-check", [tool("cargo"), "check", "--workspace", "--locked", "--target", "x86_64-pc-windows-gnu",
-                                      "--exclude", "selah-media", "--exclude", "selah-bench", "--exclude", "selah-testkit"],
+                                      "--exclude", "selah-media", "--exclude", "selah-engine", "--exclude", "selah-bench", "--exclude", "selah-testkit"],
           rust_env, skip=not args.cloud)
     stage("5", "dotnet build", [tool("dotnet"), "build", "app/Selah.sln", "-c", "Release"], timeout=900)
     stage("5", "web build", pnpm("-r", "run", "build"))

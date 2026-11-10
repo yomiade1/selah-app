@@ -17,6 +17,8 @@ fn color(r: f32, g: f32, b: f32, a: f32) -> Option<Color> {
     })
 }
 
+static GPU_TEST_LOCK: std::sync::Mutex<()> = std::sync::Mutex::new(());
+
 fn pixel(frame: &selah_render::Frame, x: u32, y: u32) -> [u8; 4] {
     let at = (y as usize * frame.width as usize + x as usize) * 4;
     frame.pixels[at..at + 4].try_into().unwrap()
@@ -45,6 +47,7 @@ fn assert_frames_close(a: &selah_render::Frame, b: &selah_render::Frame, max_dif
 
 #[test]
 fn canonical_five_layer_stack_renders_in_z_order_and_matches_cpu_gpu() {
+    let _gpu_guard = GPU_TEST_LOCK.lock().unwrap_or_else(|p| p.into_inner());
     let mut cpu = CpuCompositor::default();
     let mut gpu = GpuCompositor::new(AdapterChoice::Software).expect("software GPU adapter");
 
@@ -175,6 +178,7 @@ fn canonical_five_layer_stack_renders_in_z_order_and_matches_cpu_gpu() {
 
 #[test]
 fn multiple_outputs_render_at_independent_resolutions_simultaneously() {
+    let _gpu_guard = GPU_TEST_LOCK.lock().unwrap_or_else(|p| p.into_inner());
     let mut cpu = CpuCompositor::default();
     let mut gpu = GpuCompositor::new(AdapterChoice::Software).expect("software GPU adapter");
 
@@ -285,4 +289,324 @@ fn prerasterise_hints_warm_caches_for_upcoming_slides() {
     let (hits_after, misses_after) = cpu.cache_stats();
     assert!(hits_after > hits_before, "expected cache hit after preload");
     assert_eq!(misses_after, misses_before);
+}
+
+struct TestDir(std::path::PathBuf);
+
+impl TestDir {
+    fn new(prefix: &str) -> Self {
+        static SEQ: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+        let id = SEQ.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+        let dir = std::env::temp_dir().join(format!(
+            "selah-render-test-{prefix}-{}-{id}",
+            std::process::id()
+        ));
+        std::fs::create_dir_all(&dir).unwrap();
+        Self(dir)
+    }
+
+    fn store_media(&self, ext: &str, bytes: &[u8]) -> String {
+        let hash = blake3::hash(bytes).to_hex().to_string();
+        let shard = self.0.join(&hash[..2]);
+        std::fs::create_dir_all(&shard).unwrap();
+        std::fs::write(shard.join(format!("{hash}.{ext}")), bytes).unwrap();
+        hash
+    }
+}
+
+impl Drop for TestDir {
+    fn drop(&mut self) {
+        let _ = std::fs::remove_dir_all(&self.0);
+    }
+}
+
+#[test]
+fn image_background_supports_fit_fill_stretch_blur_and_opacity_with_cpu_gpu_parity() {
+    let _gpu_guard = GPU_TEST_LOCK.lock().unwrap_or_else(|p| p.into_inner());
+    use selah_proto::v1::MediaFitMode;
+    let store = TestDir::new("img-bg");
+
+    // 160x40 image (4:1 aspect): left half pure red, right half pure green.
+    let mut src = selah_render::Frame::new(160, 40);
+    for y in 0..40 {
+        for x in 0..160 {
+            let off = (y * 160 + x) * 4;
+            if x < 80 {
+                src.pixels[off..off + 4].copy_from_slice(&[255, 0, 0, 255]);
+            } else {
+                src.pixels[off..off + 4].copy_from_slice(&[0, 255, 0, 255]);
+            }
+        }
+    }
+    let png = selah_render::png::encode(&src).unwrap();
+    let hash = store.store_media("png", &png);
+
+    let mut cpu = CpuCompositor::default();
+    cpu.set_media_root(Some(store.0.clone()));
+    let mut gpu = GpuCompositor::new(AdapterChoice::Software).expect("software GPU");
+    gpu.set_media_root(Some(store.0.clone()));
+
+    let make_scene = |fit: MediaFitMode, blur_radius: f32, opacity: f32| Scene {
+        revision: 1,
+        outputs: vec![OutputScene {
+            output_index: 0,
+            layers: vec![
+                LayerSpec {
+                    kind: LayerKind::VideoInput as i32,
+                    enabled: true,
+                    content: Some(layer_spec::Content::VideoInput(VideoInputLayerSpec {
+                        fallback_color: color(0.0, 0.0, 1.0, 1.0),
+                        ..Default::default()
+                    })),
+                    ..Default::default()
+                },
+                LayerSpec {
+                    kind: LayerKind::Media as i32,
+                    enabled: true,
+                    use_opacity: true,
+                    opacity,
+                    content: Some(layer_spec::Content::Media(MediaLayerSpec {
+                        content_hash: hash.clone(),
+                        media_kind: "image".into(),
+                        media_extension: "png".into(),
+                        fit: fit as i32,
+                        blur_radius,
+                        use_opacity: true,
+                        opacity,
+                        ..Default::default()
+                    })),
+                    ..Default::default()
+                },
+            ],
+            ..Default::default()
+        }],
+        ..Default::default()
+    };
+
+    // 1. Fit (4:1 inside 16:9 160x90 -> image occupies y=25..65; top/bottom transparent bars show blue).
+    let fit_cpu = cpu
+        .render_output(&make_scene(MediaFitMode::Fit, 0.0, 1.0), 0, 160, 90)
+        .unwrap();
+    let fit_gpu = gpu
+        .render_output(&make_scene(MediaFitMode::Fit, 0.0, 1.0), 0, 160, 90)
+        .unwrap();
+    assert_frames_close(&fit_gpu, &fit_cpu, 1);
+    assert_eq!(pixel(&fit_gpu, 10, 5), [0, 0, 255, 255]);
+    assert_eq!(pixel(&fit_gpu, 10, 45), [255, 0, 0, 255]);
+    assert_eq!(pixel(&fit_gpu, 140, 45), [0, 255, 0, 255]);
+
+    // 2. Fill (crops left & right of 4:1 inside 16:9 so center boundary remains visible and edges are full-bleed).
+    let fill_cpu = cpu
+        .render_output(&make_scene(MediaFitMode::Fill, 0.0, 1.0), 0, 160, 90)
+        .unwrap();
+    let fill_gpu = gpu
+        .render_output(&make_scene(MediaFitMode::Fill, 0.0, 1.0), 0, 160, 90)
+        .unwrap();
+    assert_frames_close(&fill_gpu, &fill_cpu, 1);
+    assert_eq!(pixel(&fill_gpu, 10, 5), [255, 0, 0, 255]);
+    assert_eq!(pixel(&fill_gpu, 150, 5), [0, 255, 0, 255]);
+
+    // 3. Stretch + 50% opacity blends red over blue -> purple (~128, 0, 127).
+    let st_cpu = cpu
+        .render_output(&make_scene(MediaFitMode::Stretch, 0.0, 0.5), 0, 160, 90)
+        .unwrap();
+    let st_gpu = gpu
+        .render_output(&make_scene(MediaFitMode::Stretch, 0.0, 0.5), 0, 160, 90)
+        .unwrap();
+    assert_frames_close(&st_gpu, &st_cpu, 1);
+    let blended = pixel(&st_gpu, 10, 5);
+    assert!(
+        blended[0].abs_diff(128) <= 2 && blended[1] == 0 && blended[2].abs_diff(127) <= 2,
+        "expected 50% red over blue, got {blended:?}"
+    );
+
+    // 4. Blur mixes the red/green seam smoothly.
+    let blur_cpu = cpu
+        .render_output(&make_scene(MediaFitMode::Stretch, 10.0, 1.0), 0, 160, 90)
+        .unwrap();
+    let blur_gpu = gpu
+        .render_output(&make_scene(MediaFitMode::Stretch, 10.0, 1.0), 0, 160, 90)
+        .unwrap();
+    assert_frames_close(&blur_gpu, &blur_cpu, 1);
+    let mid = pixel(&blur_gpu, 80, 45);
+    assert!(
+        mid[0] > 80 && mid[1] > 80 && mid[2] == 0,
+        "expected blurred seam mix at center, got {mid:?}"
+    );
+}
+
+#[test]
+fn video_layer_supports_fit_blur_opacity_z_order_and_cpu_gpu_parity() {
+    let _gpu_guard = GPU_TEST_LOCK.lock().unwrap_or_else(|p| p.into_inner());
+    use selah_proto::v1::MediaFitMode;
+    use selah_render::video::{Nv12Frame, YuvMatrix};
+
+    // 64x32 NV12: left half white (Y=235,U=128,V=128), right half BT.709 red (Y=51,U=109,V=212).
+    let (vw, vh) = (64_u32, 32_u32);
+    let mut y_plane = vec![0_u8; (vw * vh) as usize];
+    for row in 0..vh as usize {
+        for col in 0..vw as usize {
+            y_plane[row * vw as usize + col] = if col < 32 { 235 } else { 51 };
+        }
+    }
+    let mut uv_plane = vec![0_u8; (vw / 2 * 2 * (vh / 2)) as usize];
+    for row in 0..(vh / 2) as usize {
+        for col in 0..(vw / 2) as usize {
+            let off = (row * (vw as usize / 2) + col) * 2;
+            if col < 16 {
+                uv_plane[off] = 128;
+                uv_plane[off + 1] = 128;
+            } else {
+                uv_plane[off] = 109;
+                uv_plane[off + 1] = 212;
+            }
+        }
+    }
+    let nv12 = Nv12Frame {
+        width: vw,
+        height: vh,
+        y: y_plane,
+        uv: uv_plane,
+        matrix: YuvMatrix::Bt709,
+        full_range: false,
+    };
+    let hash = "a".repeat(64);
+
+    let mut cpu = CpuCompositor::default();
+    cpu.set_video_for_hash(&hash, Some(nv12.clone())).unwrap();
+    let mut gpu = GpuCompositor::new(AdapterChoice::Software).expect("software GPU");
+    gpu.set_video_for_hash(&hash, Some(nv12)).unwrap();
+
+    let scene = Scene {
+        revision: 10,
+        outputs: vec![OutputScene {
+            output_index: 0,
+            layers: vec![
+                LayerSpec {
+                    kind: LayerKind::VideoInput as i32,
+                    enabled: true,
+                    content: Some(layer_spec::Content::VideoInput(VideoInputLayerSpec {
+                        fallback_color: color(0.0, 0.0, 1.0, 1.0),
+                        ..Default::default()
+                    })),
+                    ..Default::default()
+                },
+                LayerSpec {
+                    kind: LayerKind::Media as i32,
+                    enabled: true,
+                    use_opacity: true,
+                    opacity: 0.75,
+                    content: Some(layer_spec::Content::Media(MediaLayerSpec {
+                        content_hash: hash.clone(),
+                        media_kind: "video".into(),
+                        media_extension: "mp4".into(),
+                        fit: MediaFitMode::Fit as i32,
+                        blur_radius: 6.0,
+                        use_opacity: true,
+                        opacity: 0.75,
+                        ..Default::default()
+                    })),
+                    ..Default::default()
+                },
+                LayerSpec {
+                    kind: LayerKind::Messages as i32,
+                    enabled: true,
+                    content: Some(layer_spec::Content::Messages(MessagesLayerSpec {
+                        text: "LIVE".into(),
+                        background_color: color(0.0, 1.0, 0.0, 1.0),
+                        text_color: color(0.0, 0.0, 0.0, 1.0),
+                        ..Default::default()
+                    })),
+                    ..Default::default()
+                },
+            ],
+            ..Default::default()
+        }],
+        ..Default::default()
+    };
+
+    // 160x160 square target: 2:1 video in Fit leaves blue bands top/bottom, blurred seam in center,
+    // and green Messages bar cleanly on top at the bottom edge.
+    let f_cpu = cpu.render_output(&scene, 0, 160, 160).unwrap();
+    let f_gpu = gpu.render_output(&scene, 0, 160, 160).unwrap();
+    assert_frames_close(&f_gpu, &f_cpu, 4);
+
+    assert!(
+        pixel(&f_gpu, 10, 8)[2] > 200,
+        "top band should show blue VideoInput"
+    );
+    let center = pixel(&f_gpu, 80, 80);
+    assert!(
+        center[0] > 100 && center[1] > 40,
+        "blurred seam should mix white+red: {center:?}"
+    );
+    let msg = pixel(&f_gpu, 4, 156);
+    assert!(
+        msg[1] > 240 && msg[0] < 10,
+        "Messages layer must stay above video: {msg:?}"
+    );
+}
+
+#[test]
+fn background_image_loader_refuses_corrupt_hash_and_oversize_bomb() {
+    let store = TestDir::new("sec04");
+    let valid_hash = "b".repeat(64);
+    let shard = store.0.join("bb");
+    std::fs::create_dir_all(&shard).unwrap();
+    // Corrupt content under hash 'bb...'.
+    let png = selah_render::png::encode(&selah_render::Frame::new(4, 4)).unwrap();
+    std::fs::write(shard.join(format!("{valid_hash}.png")), &png).unwrap();
+
+    let mut cpu = CpuCompositor::default();
+    cpu.set_media_root(Some(store.0.clone()));
+    let bad_scene = |hash: &str| Scene {
+        revision: 1,
+        outputs: vec![OutputScene {
+            output_index: 0,
+            layers: vec![LayerSpec {
+                kind: LayerKind::Media as i32,
+                enabled: true,
+                content: Some(layer_spec::Content::Media(MediaLayerSpec {
+                    content_hash: hash.into(),
+                    media_kind: "image".into(),
+                    media_extension: "png".into(),
+                    ..Default::default()
+                })),
+                ..Default::default()
+            }],
+            ..Default::default()
+        }],
+        ..Default::default()
+    };
+
+    assert!(
+        cpu.render_output(&bad_scene(&valid_hash), 0, 64, 64)
+            .is_err(),
+        "corrupted image hash must be refused (SEC-15)"
+    );
+    assert!(
+        cpu.render_output(&bad_scene("../etc/passwd"), 0, 64, 64)
+            .is_err(),
+        "path traversal hash must be refused (SEC-04)"
+    );
+
+    // 9000x9000 IHDR bomb stored under its real BLAKE3 hash must still be refused cleanly (SEC-04).
+    let mut bomb = selah_render::png::encode(&selah_render::Frame::new(1, 1)).unwrap();
+    bomb[16..20].copy_from_slice(&9000u32.to_be_bytes());
+    bomb[20..24].copy_from_slice(&9000u32.to_be_bytes());
+    let mut crc = 0xFFFF_FFFF_u32;
+    for &byte in &bomb[12..29] {
+        crc ^= u32::from(byte);
+        for _ in 0..8 {
+            let mask = (crc & 1).wrapping_neg();
+            crc = (crc >> 1) ^ (0xEDB8_8320 & mask);
+        }
+    }
+    bomb[29..33].copy_from_slice(&(!crc).to_be_bytes());
+    let bomb_hash = store.store_media("png", &bomb);
+    assert!(
+        cpu.render_output(&bad_scene(&bomb_hash), 0, 64, 64)
+            .is_err(),
+        "9000x9000 image bomb must be refused (SEC-04)"
+    );
 }

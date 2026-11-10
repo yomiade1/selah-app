@@ -77,6 +77,14 @@ impl FrameScheduler {
         self.stats.missed_vsyncs += missed;
         self.stats.max_jitter_ns = self.stats.max_jitter_ns.max(jitter);
     }
+
+    /// Advance the grid past a skipped idle tick (e.g. a video tick with no new decoded frame)
+    /// without counting a scheduled frame or missed vsync.
+    pub fn advance_idle(&mut self, at: Instant) {
+        let actual_ns = at.saturating_duration_since(self.epoch).as_nanos() as u64;
+        let (next, _, _) = advance_grid(self.next_tick_ns, actual_ns, self.period_ns);
+        self.next_tick_ns = next;
+    }
 }
 
 #[cfg(test)]

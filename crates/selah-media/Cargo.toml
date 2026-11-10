@@ -12,6 +12,8 @@ description = "Media decoding through FFmpeg with a protocol, demuxer and decode
 # tools/tool-env.ps1). Only avcodec, avformat and avutil: the macOS build is decode-only.
 ffmpeg-next = { version = "=9.0.0", default-features = false, features = ["codec", "format"] }
 selah-render = { path = "../selah-render" }
+cpal.workspace = true
+blake3.workspace = true
 serde.workspace = true
 serde_json.workspace = true
 thiserror.workspace = true

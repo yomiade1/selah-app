@@ -1,13 +1,14 @@
 //! Scene graph normalization, canonical 5-layer stack, overlay rasterisation, and cache (M3.1).
 use std::collections::HashMap;
+use std::path::Path;
 use std::sync::Arc;
 
-use anyhow::Result;
+use anyhow::{Context, Result};
 use prost::Message;
 use selah_proto::v1::{
-    Color, GradientKind, GradientSpec, LayerKind, LayerSpec, MessagesLayerSpec, OutputConfig,
-    OutputRole, OutputScene, PreloadHint, PropsLayerSpec, Resolution, Scene, SlideLayerSpec,
-    TestPattern, VideoInputLayerSpec, layer_spec,
+    Color, GradientKind, GradientSpec, LayerKind, LayerSpec, MediaFitMode, MediaLayerSpec,
+    MessagesLayerSpec, OutputConfig, OutputRole, OutputScene, PreloadHint, PropsLayerSpec,
+    Resolution, Scene, SlideLayerSpec, TestPattern, VideoInputLayerSpec, layer_spec,
 };
 
 use crate::Frame;
@@ -434,6 +435,11 @@ impl OverlayCache {
         self.misses
     }
 
+    pub fn clear(&mut self) {
+        self.cache.clear();
+        self.order.clear();
+    }
+
     pub fn get(&mut self, key: &[u8; 32]) -> Option<Arc<Frame>> {
         if let Some(hit) = self.cache.get(key) {
             self.hits += 1;
@@ -473,7 +479,7 @@ fn premultiply(rgba: [u8; 4]) -> [u8; 4] {
     ]
 }
 
-fn scale_frame_opacity(frame: &mut Frame, opacity: f32) {
+pub fn scale_frame_opacity(frame: &mut Frame, opacity: f32) {
     let scale = (opacity.clamp(0.0, 1.0) * 255.0).round() as u32;
     if scale >= 255 {
         return;
@@ -562,6 +568,60 @@ fn gradient_frame(gradient: &GradientSpec, width: u32, height: u32) -> Frame {
     frame
 }
 
+/// Rasterise static `solid_color`, `gradient`, and (when `include_image`) verified `content_hash`
+/// background image for a [`MediaLayerSpec`].
+pub fn media_backdrop_frame(
+    m: &MediaLayerSpec,
+    width: u32,
+    height: u32,
+    media_root: Option<&Path>,
+    include_image: bool,
+) -> Result<Option<Frame>> {
+    let mut base = m
+        .solid_color
+        .filter(|c| c.alpha > 0.0)
+        .map(|c| solid_frame(color_to_rgba(Some(c), [0, 0, 0, 255]), width, height));
+
+    if let Some(grad) = m.gradient.as_ref().filter(|g| !g.stops.is_empty()) {
+        let grad_frame = gradient_frame(grad, width, height);
+        match &mut base {
+            Some(b) => composite_over(b, &grad_frame),
+            None => base = Some(grad_frame),
+        }
+    }
+
+    if include_image && !m.content_hash.trim().is_empty() && m.media_kind != "video" {
+        if let Some(b) = base.take() {
+            base = Some(crate::media_bg::blur_frame_skia(&b, m.blur_radius)?);
+        }
+        let root = media_root.with_context(|| {
+            format!(
+                "media root unavailable for background image {}",
+                m.content_hash
+            )
+        })?;
+        let ext = if m.media_extension.trim().is_empty() {
+            "png"
+        } else {
+            m.media_extension.trim()
+        };
+        let image = crate::media_bg::load_verified_image(root, m.content_hash.trim(), ext)?;
+        let fit = MediaFitMode::try_from(m.fit).unwrap_or(MediaFitMode::Fill);
+        let img_frame =
+            crate::media_bg::render_image_frame(&image, fit, m.blur_radius, width, height)?;
+        match &mut base {
+            Some(b) => composite_over(b, &img_frame),
+            None => base = Some(img_frame),
+        }
+        return Ok(base);
+    }
+
+    match base {
+        Some(b) => Ok(Some(crate::media_bg::blur_frame_skia(&b, m.blur_radius)?)),
+        None => Ok(None),
+    }
+}
+
 /// Rasterise (or return cached) premultiplied RGBA overlay for one normalized layer.
 pub fn rasterise_layer_overlay(
     layer: &NormalizedLayer,
@@ -569,6 +629,7 @@ pub fn rasterise_layer_overlay(
     height: u32,
     text_renderer: &mut Option<TextRenderer>,
     cache: &mut OverlayCache,
+    media_root: Option<&Path>,
 ) -> Result<Option<Arc<Frame>>> {
     if let Some(hit) = cache.get(&layer.cache_key) {
         return Ok(Some(hit));
@@ -584,13 +645,7 @@ pub fn rasterise_layer_overlay(
             }
         }
         Some(layer_spec::Content::Media(m)) => {
-            if let Some(grad) = m.gradient.as_ref().filter(|g| !g.stops.is_empty()) {
-                Some(gradient_frame(grad, width, height))
-            } else {
-                m.solid_color
-                    .filter(|c| c.alpha > 0.0)
-                    .map(|c| solid_frame(color_to_rgba(Some(c), [0, 0, 0, 255]), width, height))
-            }
+            media_backdrop_frame(m, width, height, media_root, true)?
         }
         Some(layer_spec::Content::Slide(s)) => {
             let pattern = TestPattern::try_from(s.test_pattern).unwrap_or(TestPattern::Unspecified);

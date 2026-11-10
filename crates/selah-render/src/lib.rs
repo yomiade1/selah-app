@@ -1,9 +1,11 @@
 #![forbid(unsafe_code)]
 //! The compositor interface (ADR-005) and the frame type the engine presents.
 pub mod blit;
+pub mod blur;
 pub mod cpu;
 pub mod fit;
 pub mod gpu;
+pub mod media_bg;
 pub mod png;
 pub mod scene;
 pub mod template;
@@ -76,6 +78,18 @@ pub trait Compositor {
     /// The video frame drawn under the text on the next renders (`None` removes it). The video
     /// layer replaces the test pattern; a cleared scene shows no video.
     fn set_video(&mut self, frame: Option<video::Nv12Frame>) -> anyhow::Result<()>;
+
+    /// Configure the content-addressed media directory used by background image layers.
+    fn set_media_root(&mut self, _root: Option<std::path::PathBuf>) {}
+
+    /// Supply (or clear) a live NV12 video frame keyed by its 64-char BLAKE3 content hash.
+    fn set_video_for_hash(
+        &mut self,
+        _hash: &str,
+        _frame: Option<video::Nv12Frame>,
+    ) -> anyhow::Result<()> {
+        Ok(())
+    }
 
     /// The GPU compositor, when this is one (windows can only present GPU output).
     fn as_gpu(&mut self) -> Option<&mut gpu::GpuCompositor> {

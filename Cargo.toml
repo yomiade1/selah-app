@@ -32,6 +32,7 @@ pollster = "1"
 # in an unmaintained font parser (RUSTSEC-2026-0192).
 winit = { version = "0.30", default-features = false, features = ["rwh_06", "x11", "wayland", "wayland-dlopen"] }
 skia-safe = { version = "0", features = ["textlayout"] }
+cpal = "0.18.2"
 blake3 = { version = "1", features = ["pure"] }
 semver = "1"
 flate2 = "1"

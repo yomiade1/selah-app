@@ -4,10 +4,11 @@
 //! M1 draws the layer stack's first layer, a test pattern, into an offscreen `Rgba8Unorm`
 //! target. Text (M1.6) and video (M1.7) layers composite on top of it in later steps.
 use std::collections::{BTreeMap, HashMap};
+use std::path::PathBuf;
 use std::time::Instant;
 
 use anyhow::{Context, Result, anyhow};
-use selah_proto::v1::{PreloadHint, Scene};
+use selah_proto::v1::{LayerKind, MediaFitMode, PreloadHint, Scene, layer_spec};
 
 use crate::{Compositor, Frame};
 
@@ -78,6 +79,10 @@ pub struct GpuCompositor {
     layer_blitter: crate::blit::Blitter,
     video: crate::video::VideoLayer,
     video_frame: Option<crate::video::Nv12Frame>,
+    video_frames: HashMap<String, (u64, crate::video::Nv12Frame)>,
+    video_seq: u64,
+    blur: crate::blur::BlurPipeline,
+    media_root: Option<PathBuf>,
 }
 
 fn backends() -> wgpu::Backends {
@@ -92,6 +97,8 @@ fn backends() -> wgpu::Backends {
 
 impl GpuCompositor {
     pub fn new(choice: AdapterChoice) -> Result<Self> {
+        static GPU_INIT_LOCK: std::sync::Mutex<()> = std::sync::Mutex::new(());
+        let _init_guard = GPU_INIT_LOCK.lock().unwrap_or_else(|p| p.into_inner());
         let mut descriptor = wgpu::InstanceDescriptor::new_without_display_handle();
         descriptor.backends = backends();
         let instance = wgpu::Instance::new(descriptor);
@@ -181,6 +188,7 @@ impl GpuCompositor {
         });
         let layer_blitter = crate::blit::Blitter::new_layer(&device, TARGET_FORMAT);
         let video = crate::video::VideoLayer::new(&device, TARGET_FORMAT);
+        let blur = crate::blur::BlurPipeline::new(&device, TARGET_FORMAT);
         let name = format!("wgpu {:?} {}", info.backend, info.name);
         tracing::info!(adapter = %info.name, backend = ?info.backend, device_type = ?info.device_type, "GPU compositor ready");
         Ok(Self {
@@ -201,6 +209,10 @@ impl GpuCompositor {
             layer_blitter,
             video,
             video_frame: None,
+            video_frames: HashMap::new(),
+            video_seq: 0,
+            blur,
+            media_root: crate::media_bg::default_media_root_from_env(),
         })
     }
 
@@ -434,6 +446,32 @@ impl Compositor for GpuCompositor {
         Ok(())
     }
 
+    fn set_media_root(&mut self, root: Option<PathBuf>) {
+        self.media_root = root;
+        self.overlays.clear();
+        self.overlay_slots.clear();
+    }
+
+    fn set_video_for_hash(
+        &mut self,
+        hash: &str,
+        frame: Option<crate::video::Nv12Frame>,
+    ) -> Result<()> {
+        match frame {
+            Some(frame) => {
+                frame.validate()?;
+                self.video_seq = self.video_seq.saturating_add(1);
+                self.video_frames
+                    .insert(hash.to_owned(), (self.video_seq, frame));
+            }
+            None => {
+                self.video_frames.remove(hash);
+                self.video.remove_key(hash);
+            }
+        }
+        Ok(())
+    }
+
     fn render(&mut self, scene: &Scene, width: u32, height: u32) -> Result<Frame> {
         self.render_output(scene, 0, width, height)
     }
@@ -448,6 +486,16 @@ impl Compositor for GpuCompositor {
         self.composite_output(scene, output_index, width, height)?;
         self.read_back_output(output_index, width, height)
     }
+}
+
+enum GpuDrawOp {
+    OverlaySlot(u8),
+    Video {
+        hash: String,
+        fit: MediaFitMode,
+        blur_radius: f32,
+        opacity: f32,
+    },
 }
 
 impl GpuCompositor {
@@ -474,10 +522,10 @@ impl GpuCompositor {
         let bytes: Vec<u8> = words.iter().flat_map(|w| w.to_le_bytes()).collect();
         self.queue.write_buffer(&self.params, 0, &bytes);
 
-        let mut active_slots: Vec<u8> = Vec::new();
-        let has_video = if normalized.is_legacy {
+        let mut draw_ops: Vec<GpuDrawOp> = Vec::new();
+        let has_legacy_video = if normalized.is_legacy {
             if self.upload_legacy_text_layer(scene, output_index, width, height)? {
-                active_slots.push(255);
+                draw_ops.push(GpuDrawOp::OverlaySlot(255));
             }
             match self.video_frame.as_ref() {
                 Some(video) if !normalized.cleared => {
@@ -489,17 +537,69 @@ impl GpuCompositor {
             }
         } else {
             if !normalized.cleared {
-                for (idx, layer) in normalized.layers.iter().enumerate() {
-                    let slot = u8::try_from(idx.min(254)).unwrap_or(254);
+                let mut next_slot = 0_u8;
+                let mut alloc_slot = || -> u8 {
+                    let s = next_slot.min(254);
+                    next_slot = next_slot.saturating_add(1);
+                    s
+                };
+                for layer in &normalized.layers {
+                    if layer.kind == LayerKind::Media
+                        && let Some(layer_spec::Content::Media(m)) = layer.spec.content.as_ref()
+                        && m.media_kind == "video"
+                        && let Some((seq, nv12)) = self.video_frames.get(&m.content_hash).cloned()
+                    {
+                        if let Some(mut bg) = crate::scene::media_backdrop_frame(
+                            m,
+                            width,
+                            height,
+                            self.media_root.as_deref(),
+                            false,
+                        )? {
+                            crate::scene::scale_frame_opacity(&mut bg, layer.opacity);
+                            let mut key_h = blake3::Hasher::new();
+                            key_h.update(&layer.cache_key);
+                            key_h.update(b"video-bg");
+                            let bg_key = *key_h.finalize().as_bytes();
+                            let slot = alloc_slot();
+                            self.upload_overlay_slot(output_index, slot, bg_key, &bg);
+                            draw_ops.push(GpuDrawOp::OverlaySlot(slot));
+                        }
+                        self.video.upload_keyed(
+                            &self.device,
+                            &self.queue,
+                            &m.content_hash,
+                            seq,
+                            &nv12,
+                        )?;
+                        let fit = MediaFitMode::try_from(m.fit).unwrap_or(MediaFitMode::Fill);
+                        if m.blur_radius > 0.05 && m.blur_radius.is_finite() {
+                            self.blur.ensure_source_view(
+                                &self.device,
+                                width,
+                                height,
+                                m.blur_radius,
+                            );
+                        }
+                        draw_ops.push(GpuDrawOp::Video {
+                            hash: m.content_hash.clone(),
+                            fit,
+                            blur_radius: m.blur_radius,
+                            opacity: layer.opacity,
+                        });
+                        continue;
+                    }
                     if let Some(overlay) = crate::scene::rasterise_layer_overlay(
                         layer,
                         width,
                         height,
                         &mut self.text,
                         &mut self.overlays,
+                        self.media_root.as_deref(),
                     )? {
+                        let slot = alloc_slot();
                         self.upload_overlay_slot(output_index, slot, layer.cache_key, &overlay);
-                        active_slots.push(slot);
+                        draw_ops.push(GpuDrawOp::OverlaySlot(slot));
                     }
                 }
             }
@@ -535,13 +635,70 @@ impl GpuCompositor {
             pass.set_bind_group(0, &self.bind_group, &[]);
             pass.draw(0..3, 0..1);
         }
-        if has_video {
+        if has_legacy_video {
             self.video.draw(&mut encoder, &target.view);
         }
-        for slot_idx in active_slots {
-            if let Some(slot) = self.overlay_slots.get(&(output_index, slot_idx)) {
-                self.layer_blitter
-                    .draw(&self.device, &mut encoder, &slot.view, &target.view);
+        for (draw_slot, op) in draw_ops.into_iter().enumerate() {
+            match op {
+                GpuDrawOp::OverlaySlot(slot_idx) => {
+                    if let Some(slot) = self.overlay_slots.get(&(output_index, slot_idx)) {
+                        self.layer_blitter.draw(
+                            &self.device,
+                            &mut encoder,
+                            &slot.view,
+                            &target.view,
+                        );
+                    }
+                }
+                GpuDrawOp::Video {
+                    hash,
+                    fit,
+                    blur_radius,
+                    opacity,
+                } => {
+                    if let Some((_, nv12)) = self.video_frames.get(&hash) {
+                        if blur_radius > 0.05 && blur_radius.is_finite() {
+                            if let Some(blur_src) = self.blur.targets_src_view() {
+                                self.video.draw_layer(
+                                    &self.device,
+                                    &self.queue,
+                                    &mut encoder,
+                                    draw_slot as u32,
+                                    &hash,
+                                    nv12,
+                                    width,
+                                    height,
+                                    fit,
+                                    1.0,
+                                    true,
+                                    blur_src,
+                                );
+                                self.blur.blur_and_blend(
+                                    &self.device,
+                                    &mut encoder,
+                                    &target.view,
+                                    blur_radius,
+                                    opacity,
+                                );
+                            }
+                        } else {
+                            self.video.draw_layer(
+                                &self.device,
+                                &self.queue,
+                                &mut encoder,
+                                draw_slot as u32,
+                                &hash,
+                                nv12,
+                                width,
+                                height,
+                                fit,
+                                opacity,
+                                false,
+                                &target.view,
+                            );
+                        }
+                    }
+                }
             }
         }
         self.queue.submit([encoder.finish()]);

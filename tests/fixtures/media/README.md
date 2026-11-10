@@ -13,10 +13,14 @@ tests must measure the decoded signal, including codec delay.
 
 Generated binaries are ignored by Git and can be rebuilt offline.
 
-## Committed clip
+## Committed clips
 
 `committed/h264-1080p60.mp4` (about 350 KB) is checked in for the video correctness test
 (`crates/selah-testkit/tests/video.rs`, M1-A7), because the macOS FFmpeg build is decode-only
 and can't generate clips. It's 60 frames of FFmpeg's synthetic `testsrc2` pattern at 1080p60,
-H.264 (OpenH264), no audio, with a white frame at frame 30. Regenerate it with
+H.264 (OpenH264), no audio, with a white frame at frame 30.
+
+`committed/flash-beep-360p60.mp4` (~80 KB) is checked in for cross-platform A/V sync verification
+(M3-A4): 640×360 H.264 (OpenH264) at 60 fps + 48 kHz AAC audio with the white flash at frame 30
+and a 1 kHz beep from 0.50 s to 0.52 s. Regenerate committed fixtures with
 `python tools/generate-media.py --committed`.

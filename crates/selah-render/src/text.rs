@@ -203,6 +203,8 @@ pub struct TextRenderer {
 
 impl TextRenderer {
     pub fn new(dir: &Path) -> Result<Self> {
+        static FONT_INIT_LOCK: std::sync::Mutex<()> = std::sync::Mutex::new(());
+        let _guard = FONT_INIT_LOCK.lock().unwrap_or_else(|p| p.into_inner());
         let decoder = FontMgr::new();
         let mut provider = TypefaceFontProvider::new();
         let mut base_typefaces = Vec::with_capacity(ALL_FONTS.len());

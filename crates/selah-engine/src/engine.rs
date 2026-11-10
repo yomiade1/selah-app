@@ -5,7 +5,8 @@
 //! broadcasts `FrameShown`. The emergency lane takes the same lock, so it waits behind nothing
 //! but a state update, and the render thread picks it up on the next frame (SAFE-03).
 use std::collections::BTreeMap;
-use std::sync::atomic::{AtomicU64, Ordering};
+use std::path::PathBuf;
+use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 use std::sync::{Arc, Condvar, Mutex};
 use std::time::{Duration, Instant};
 
@@ -17,6 +18,7 @@ use selah_proto::v1::{
 };
 use selah_render::Compositor;
 
+use crate::media_playback::{MediaPlaybackManager, default_decode_mode, resolve_media_root};
 use crate::outputs::{OutputMessage, OutputSurface, PreviewWriter, apply_output_message};
 use crate::scheduler::{FrameScheduler, SchedulerStats};
 
@@ -56,10 +58,13 @@ struct State {
     dirty: bool,
     received_ns: u64,
     pending_emergency: Option<bool>,
+    media_root_override: Option<PathBuf>,
+    media_root_dirty: bool,
     last_frames: BTreeMap<u32, FrameShown>,
     output_statuses: BTreeMap<u32, OutputFrameStatus>,
     scheduler_stats: SchedulerStats,
     cache_stats: (u64, u64),
+    active_video_streams: usize,
 }
 
 pub struct Engine {
@@ -71,6 +76,7 @@ pub struct Engine {
     actor: Actor,
     compositor_name: std::sync::OnceLock<String>,
     next_id: AtomicU64,
+    emergency_pending: AtomicBool,
 }
 
 fn origin_actor() -> Actor {
@@ -125,10 +131,13 @@ impl Engine {
                 dirty: true,
                 received_ns: 0,
                 pending_emergency: None,
+                media_root_override: None,
+                media_root_dirty: true,
                 last_frames: BTreeMap::new(),
                 output_statuses: BTreeMap::new(),
                 scheduler_stats: SchedulerStats::default(),
                 cache_stats: (0, 0),
+                active_video_streams: 0,
             }),
             wake: Condvar::new(),
             clients: Mutex::new(Vec::new()),
@@ -136,6 +145,7 @@ impl Engine {
             actor: origin_actor(),
             compositor_name: std::sync::OnceLock::new(),
             next_id: AtomicU64::new(1),
+            emergency_pending: AtomicBool::new(false),
         });
         let render = engine.clone();
         // The compositor lives on the render thread (Skia's text objects can't move threads).
@@ -200,6 +210,19 @@ impl Engine {
     #[cfg(test)]
     pub fn compositor_cache_stats(&self) -> (u64, u64) {
         self.lock().cache_stats
+    }
+
+    #[cfg(test)]
+    pub fn set_media_root_for_test(&self, root: PathBuf) {
+        let mut state = self.lock();
+        state.media_root_override = Some(root);
+        state.media_root_dirty = true;
+        self.wake.notify_all();
+    }
+
+    #[cfg(test)]
+    pub fn active_video_streams(&self) -> usize {
+        self.lock().active_video_streams
     }
 
     fn now_ns(&self) -> u64 {
@@ -340,6 +363,7 @@ impl Engine {
     /// The emergency lane (SAFE-03): clear every output now, whatever core is doing.
     pub fn emergency(&self, show_logo: bool) {
         let received = self.now_ns();
+        self.emergency_pending.store(true, Ordering::Release);
         let mut state = self.lock();
         let floor = state.emergency_floor.unwrap_or(0).max(state.scene.revision);
         state.emergency_floor = Some(floor);
@@ -360,6 +384,16 @@ impl Engine {
     fn render_loop(self: Arc<Self>, mut compositor: Box<dyn Compositor>) {
         let mut surfaces: Vec<OutputSurface> = Vec::new();
         let mut scheduler = FrameScheduler::with_default_period(self.epoch);
+        let mut media_root = resolve_media_root();
+        let decode_mode = default_decode_mode();
+        let wake_engine = self.clone();
+        let mut playback = MediaPlaybackManager::new(Arc::new(move || {
+            let mut st = wake_engine.lock();
+            st.dirty = true;
+            wake_engine.wake.notify_all();
+        }));
+        compositor.set_media_root(Some(media_root.clone()));
+
         // Checksums, FrameShown and previews happen on their own thread, in order, so the render
         // thread is free for the next command as soon as a frame is presented.
         let (after, frames) = std::sync::mpsc::channel::<Vec<Shown>>();
@@ -378,11 +412,16 @@ impl Engine {
                 dirty,
                 tick_due,
                 preload,
+                media_root_update,
             ) = {
                 let mut state = self.lock();
                 let animating = selah_render::scene::scene_is_time_varying(&state.scene);
                 let mut timed_out = false;
-                while !state.dirty && state.outputs.is_empty() && state.pending_preload.is_empty() {
+                while !state.dirty
+                    && !state.media_root_dirty
+                    && state.outputs.is_empty()
+                    && state.pending_preload.is_empty()
+                {
                     if let Some(wait) = scheduler.wait_timeout(Instant::now(), animating) {
                         if wait.is_zero() {
                             timed_out = true;
@@ -402,18 +441,33 @@ impl Engine {
                     }
                 }
                 let dirty = std::mem::take(&mut state.dirty);
+                let emergency = state.pending_emergency.take();
+                if emergency.is_some() {
+                    self.emergency_pending.store(false, Ordering::Release);
+                }
+                let root_update = if std::mem::take(&mut state.media_root_dirty) {
+                    state.media_root_override.clone()
+                } else {
+                    None
+                };
                 (
                     state.scene.clone(),
                     state.output_configs.clone(),
                     state.explicit_output_configs,
                     state.received_ns,
-                    state.pending_emergency.take(),
+                    emergency,
                     std::mem::take(&mut state.outputs),
                     dirty,
                     timed_out,
                     std::mem::take(&mut state.pending_preload),
+                    root_update,
                 )
             };
+
+            if let Some(new_root) = media_root_update {
+                media_root = new_root;
+                compositor.set_media_root(Some(media_root.clone()));
+            }
 
             let resized = !messages.is_empty();
             if let Some(gpu) = compositor.as_gpu() {
@@ -436,12 +490,32 @@ impl Engine {
                 continue;
             }
 
+            let media_updated =
+                playback.sync_and_push(&scene, &media_root, decode_mode, compositor.as_mut());
+
+            if !dirty
+                && emergency.is_none()
+                && !media_updated
+                && !scene_needs_non_media_tick(&scene)
+            {
+                scheduler.advance_idle(Instant::now());
+                continue;
+            }
+
+            if emergency.is_none() && self.emergency_pending.load(Ordering::Acquire) {
+                continue;
+            }
+
             let targets =
                 selah_render::scene::resolve_targets(&scene, &output_configs, explicit_configs);
             let render_started = self.now_ns();
             let mut rendered = Vec::with_capacity(targets.len());
             let mut render_ok = true;
             for (output_index, (width, height)) in targets {
+                if emergency.is_none() && self.emergency_pending.load(Ordering::Acquire) {
+                    render_ok = false;
+                    break;
+                }
                 match compositor.render_output(&scene, output_index, width, height) {
                     Ok(frame) => {
                         let norm = selah_render::scene::normalize_output_scene(
@@ -459,7 +533,8 @@ impl Engine {
                     }
                 }
             }
-            if !render_ok {
+            if !render_ok || (emergency.is_none() && self.emergency_pending.load(Ordering::Acquire))
+            {
                 continue;
             }
 
@@ -484,6 +559,7 @@ impl Engine {
                 let mut state = self.lock();
                 state.scheduler_stats = sched_stats;
                 state.cache_stats = compositor.cache_stats();
+                state.active_video_streams = playback.active_stream_count();
                 (state.emergency_floor.unwrap_or(0), state.cache_stats)
             };
             let _ = cache_stats;
@@ -682,6 +758,54 @@ impl Engine {
     }
 }
 
+fn scene_needs_non_media_tick(scene: &Scene) -> bool {
+    if scene.cleared {
+        return false;
+    }
+    scene.outputs.iter().any(|out| {
+        if out.cleared || out.show_logo {
+            return false;
+        }
+        if out
+            .transition
+            .as_ref()
+            .is_some_and(|t| t.duration_ms > 0 && t.kind > 1)
+        {
+            return true;
+        }
+        out.layers.iter().any(|layer| {
+            if !layer.enabled {
+                return false;
+            }
+            if layer
+                .transition
+                .as_ref()
+                .is_some_and(|t| t.duration_ms > 0 && t.kind > 1)
+            {
+                return true;
+            }
+            match layer.content.as_ref() {
+                Some(selah_proto::v1::layer_spec::Content::Slide(s)) => {
+                    s.text.contains("{clock}")
+                        || s.text.contains("{timer}")
+                        || s.elements_json.contains("{clock}")
+                        || s.elements_json.contains("{timer}")
+                }
+                Some(selah_proto::v1::layer_spec::Content::Props(p)) => {
+                    p.label.contains("{clock}")
+                        || p.label.contains("{timer}")
+                        || p.elements_json.contains("{clock}")
+                        || p.elements_json.contains("{timer}")
+                }
+                Some(selah_proto::v1::layer_spec::Content::Messages(m)) => {
+                    m.ticker || m.text.contains("{clock}") || m.text.contains("{timer}")
+                }
+                _ => false,
+            }
+        })
+    })
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -857,5 +981,126 @@ mod tests {
             tokio::time::sleep(Duration::from_millis(10)).await;
         }
         assert!(engine.scheduler_stats().scheduled_frames >= 2);
+    }
+
+    #[tokio::test]
+    async fn engine_shares_one_video_player_across_outputs_and_clears_smoothly() {
+        let store_dir = tempfile::tempdir().expect("tempdir");
+        let clip_src = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../tests/fixtures/media/committed/flash-beep-360p60.mp4");
+        let clip_bytes = std::fs::read(&clip_src).expect("read flash-beep clip");
+        let hash = blake3::hash(&clip_bytes).to_hex().to_string();
+        let shard = store_dir.path().join(&hash[..2]);
+        std::fs::create_dir_all(&shard).expect("create shard dir");
+        std::fs::write(shard.join(format!("{hash}.mp4")), clip_bytes).expect("write stored clip");
+
+        let (engine, _) = Engine::start(Mode::Headless).expect("engine starts headless");
+        engine.set_media_root_for_test(store_dir.path().to_path_buf());
+        engine.apply(&RenderCommand {
+            action: Some(render_command::Action::SetOutputConfigs(
+                selah_proto::v1::SetOutputConfigs {
+                    outputs: vec![
+                        OutputConfig {
+                            output_index: 0,
+                            name: "Main".into(),
+                            role: OutputRole::Main as i32,
+                            resolution: Some(Resolution {
+                                width: 320,
+                                height: 180,
+                            }),
+                            enabled: true,
+                            ..Default::default()
+                        },
+                        OutputConfig {
+                            output_index: 1,
+                            name: "Stream".into(),
+                            role: OutputRole::Stream as i32,
+                            resolution: Some(Resolution {
+                                width: 640,
+                                height: 180,
+                            }),
+                            enabled: true,
+                            ..Default::default()
+                        },
+                    ],
+                },
+            )),
+        });
+
+        let make_video_layer = || LayerSpec {
+            kind: LayerKind::Media as i32,
+            enabled: true,
+            content: Some(layer_spec::Content::Media(
+                selah_proto::v1::MediaLayerSpec {
+                    content_hash: hash.clone(),
+                    media_kind: "video".into(),
+                    media_extension: "mp4".into(),
+                    fit: selah_proto::v1::MediaFitMode::Fill as i32,
+                    loop_media: true,
+                    muted: true,
+                    ..Default::default()
+                },
+            )),
+            ..Default::default()
+        };
+
+        engine.apply(&RenderCommand {
+            action: Some(render_command::Action::SetScene(Scene {
+                revision: 10,
+                outputs: vec![
+                    OutputScene {
+                        output_index: 0,
+                        layers: vec![make_video_layer()],
+                        ..Default::default()
+                    },
+                    OutputScene {
+                        output_index: 1,
+                        layers: vec![make_video_layer()],
+                        ..Default::default()
+                    },
+                ],
+                ..Default::default()
+            })),
+        });
+
+        // Two outputs sharing one content hash must spawn at most one MediaPlayer and advance frames.
+        let mut distinct_checksums = std::collections::HashSet::new();
+        let deadline = Instant::now() + Duration::from_secs(6);
+        while distinct_checksums.len() < 3 {
+            let status = engine.status();
+            if status.output_statuses.len() == 2
+                && status
+                    .output_statuses
+                    .iter()
+                    .all(|s| s.scene_revision == 10 && s.live)
+            {
+                assert!(engine.active_video_streams() <= 1);
+                distinct_checksums.insert(status.output_statuses[0].frame_checksum.clone());
+            }
+            assert!(
+                Instant::now() < deadline,
+                "timed out waiting for video background frame progression"
+            );
+            tokio::time::sleep(Duration::from_millis(16)).await;
+        }
+        assert_eq!(engine.active_video_streams(), 1);
+
+        // Emergency clear stops visual output immediately (<= 1 frame) and drops active streams.
+        engine.emergency(false);
+        let clear_deadline = Instant::now() + Duration::from_secs(3);
+        loop {
+            let status = engine.status();
+            if status.output_statuses.len() == 2
+                && status.output_statuses.iter().all(|s| !s.live)
+                && engine.active_video_streams() == 0
+            {
+                break;
+            }
+            assert!(
+                Instant::now() < clear_deadline,
+                "timed out waiting for emergency clear of background video"
+            );
+            tokio::time::sleep(Duration::from_millis(10)).await;
+        }
     }
 }

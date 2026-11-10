@@ -1,6 +1,9 @@
 //! A small CPU compositor. Used as the fallback when no GPU adapter is available, and as the
 //! reference the GPU test patterns are compared with.
-use selah_proto::v1::{Scene, TestPattern};
+use std::collections::HashMap;
+use std::path::PathBuf;
+
+use selah_proto::v1::{LayerKind, MediaFitMode, Scene, TestPattern, layer_spec};
 
 use crate::{Compositor, Frame};
 
@@ -54,11 +57,24 @@ pub fn pattern_pixel(pattern: TestPattern, x: u32, y: u32, width: u32, height: u
     }
 }
 
-#[derive(Default)]
 pub struct CpuCompositor {
     text: Option<crate::text::TextRenderer>,
     video: Option<crate::video::Nv12Frame>,
+    video_frames: HashMap<String, crate::video::Nv12Frame>,
     overlays: crate::scene::OverlayCache,
+    media_root: Option<PathBuf>,
+}
+
+impl Default for CpuCompositor {
+    fn default() -> Self {
+        Self {
+            text: None,
+            video: None,
+            video_frames: HashMap::new(),
+            overlays: crate::scene::OverlayCache::default(),
+            media_root: crate::media_bg::default_media_root_from_env(),
+        }
+    }
 }
 
 impl CpuCompositor {
@@ -106,6 +122,28 @@ impl Compositor for CpuCompositor {
             frame.validate()?;
         }
         self.video = frame;
+        Ok(())
+    }
+
+    fn set_media_root(&mut self, root: Option<PathBuf>) {
+        self.media_root = root;
+        self.overlays.clear();
+    }
+
+    fn set_video_for_hash(
+        &mut self,
+        hash: &str,
+        frame: Option<crate::video::Nv12Frame>,
+    ) -> anyhow::Result<()> {
+        match frame {
+            Some(frame) => {
+                frame.validate()?;
+                self.video_frames.insert(hash.to_owned(), frame);
+            }
+            None => {
+                self.video_frames.remove(hash);
+            }
+        }
         Ok(())
     }
 
@@ -171,12 +209,39 @@ impl Compositor for CpuCompositor {
         }
         if !normalized.cleared {
             for layer in &normalized.layers {
+                if layer.kind == LayerKind::Media
+                    && let Some(layer_spec::Content::Media(m)) = layer.spec.content.as_ref()
+                    && m.media_kind == "video"
+                    && let Some(nv12) = self.video_frames.get(&m.content_hash)
+                {
+                    if let Some(mut bg) = crate::scene::media_backdrop_frame(
+                        m,
+                        width,
+                        height,
+                        self.media_root.as_deref(),
+                        false,
+                    )? {
+                        crate::scene::scale_frame_opacity(&mut bg, layer.opacity);
+                        crate::text::composite_over(&mut frame, &bg);
+                    }
+                    let fit = MediaFitMode::try_from(m.fit).unwrap_or(MediaFitMode::Fill);
+                    if m.blur_radius > 0.05 && m.blur_radius.is_finite() {
+                        let mut tmp = Frame::new(width, height);
+                        crate::video::draw_cpu_layer(&mut tmp, nv12, fit, 1.0)?;
+                        let blurred = crate::blur::blur_cpu(&tmp, m.blur_radius, layer.opacity);
+                        crate::text::composite_over(&mut frame, &blurred);
+                    } else {
+                        crate::video::draw_cpu_layer(&mut frame, nv12, fit, layer.opacity)?;
+                    }
+                    continue;
+                }
                 if let Some(overlay) = crate::scene::rasterise_layer_overlay(
                     layer,
                     width,
                     height,
                     &mut self.text,
                     &mut self.overlays,
+                    self.media_root.as_deref(),
                 )? {
                     crate::text::composite_over(&mut frame, &overlay);
                 }
