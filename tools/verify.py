@@ -160,6 +160,18 @@ def ffmpeg_env():
     return env
 
 
+def previous_milestone_tag():
+    """Most recent milestone tag reachable from HEAD (m1, m2, ...) for buf breaking."""
+    result = subprocess.run(
+        ["git", "describe", "--tags", "--abbrev=0", "--match", "m[0-9]*"],
+        cwd=ROOT,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    return result.stdout.strip() or "m1"
+
+
 def stages(args):
     rust_env = {"CARGO_TERM_COLOR": "never", "SELAH_GPU": "software",
                 "SKIA_BINARIES_URL": skia_binaries_url(), "@ffmpeg": "1"}
@@ -191,6 +203,7 @@ def stages(args):
     stage("3", "clippy", [tool("cargo"), "clippy", "--workspace", "--all-targets", "--locked", "--", "-D", "warnings"], rust_env)
     stage("3", "web lint", pnpm("-r", "run", "lint"))
     stage("4", "buf lint", pnpm("exec", "buf", "lint"))
+    stage("4", "buf breaking", pnpm("exec", "buf", "breaking", "--against", f".git#tag={previous_milestone_tag()}"))
     stage("4", "generated contracts are current", [PY, "tools/check-generated.py"])
     stage("5", "cargo build", [tool("cargo"), "build", "--workspace", "--all-targets", "--locked"], rust_env)
     # The FFmpeg-linked crates are left out: their bindings need the Windows FFmpeg headers, and
@@ -208,6 +221,8 @@ def stages(args):
     stage("6", "python tool tests", [PY, "-m", "unittest", "discover", "-s", "tests/tools"])
     stage("6", "ipc benchmark", [tool("cargo"), "run", "--release", "--locked", "-q", "-p", "selah-bench", "--",
                                  "ipc", "--check", "--json", "target/verify-report/bench-ipc.json"], rust_env)
+    stage("6", "search benchmark", [tool("cargo"), "run", "--release", "--locked", "-q", "-p", "selah-bench", "--",
+                                    "search", "--check", "--json", "target/verify-report/bench-search.json"], rust_env)
     stage("7", "golden frames", [tool("cargo"), "test", "--locked", "-p", "selah-testkit", "--features", "golden",
                                  "--test", "golden_text"], rust_env, skip=args.fast)
     # Stage 8: headless UI tests at 100/150/200%, Light and Booth, en and en-XA (M1-A9).
@@ -218,6 +233,8 @@ def stages(args):
     kb_flags = ["--release"] if args.release else []
     stage("9", "kb lint", [tool("cargo"), "run", "-q", "--locked", "-p", "selah-kb-lint", "--", *kb_flags], rust_env)
     stage("9", "kb build", [tool("cargo"), "run", "-q", "--locked", "-p", "selah-kb", "--bin", "selah-kb", "--", "build", *kb_flags], rust_env)
+    # Stage 10: saved DB fixtures must migrate and open cleanly without data loss (TESTING-AND-QUALITY §1, §3.4).
+    stage("10", "migrations", [tool("cargo"), "test", "--locked", "-p", "selah-core", "--test", "migrations"], rust_env)
     stage("13", "test ledger", [PY, "tools/test-ledger.py", "--check"])
     stage("14", "cargo deny", ["@cargo-deny", "check"])
     stage("14", "dotnet vulnerable packages", [PY, "tools/check-vulnerable.py", "dotnet"])
@@ -229,6 +246,8 @@ def stages(args):
 
 
 def main():
+    if hasattr(sys.stdout, "reconfigure"):
+        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--cloud", action="store_true")
     parser.add_argument("--ci", action="store_true")

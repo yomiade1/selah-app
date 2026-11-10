@@ -4,12 +4,16 @@ Detailed specifications are written **as each milestone builds the thing they de
 
 | Spec | Written in |
 |---|---|
-| `command-bus.md`: envelope, commands, queries, events, errors, IPC behaviour | M1 |
+| `command-bus.md`: envelope, commands, queries, events, errors, IPC behaviour | M1–M2 |
 | `spike-report.md`: measured results against budgets, go/no-go | M1 |
 | `foundations.md`: toolchains, contracts, IPC, processes, rendering, the gate | M1 |
 | `installer-and-updates.md`: Windows installer, installer check, updater | M1 |
 | `support-and-diagnostics.md`: Report a problem, Diagnostics, Run benchmark | M1 |
 | `data-model.md`: tables, migrations, op log, file layout | M2 |
+| `search.md`: FTS5/trigram search, folding, Bible index reader | M2 |
+| `songs.md`: 4-format paste parser, chord transposition, sections, slide splitting | M2 |
+| `scripture.md`: KJV/WEB seeding, 6-language reference parser, OSIS/USFM/Zefania importers, slide splitting | M2 |
+| `media-and-exchange.md`: probe worker, thumbnails, `.selah` bundles, bounded ZIP, library backups | M2 |
 | `slide-generation.md`: sections, rules, metric fit, fit report | M2–M3 |
 | `render-pipeline.md`: scene, layers, cache, transitions, effects | M3 |
 | `live-state.md`: state machine, looks, timers, macros, undo in Live | M4 |

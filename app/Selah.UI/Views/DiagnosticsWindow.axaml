@@ -1,6 +1,7 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:vm="using:Selah.UI.ViewModels"
+        xmlns:views="using:Selah.UI.Views"
         xmlns:s="using:Selah.UI.Services"
         x:Class="Selah.UI.Views.DiagnosticsWindow"
         x:DataType="vm:DiagnosticsViewModel"
@@ -8,9 +9,13 @@
         Width="720" Height="640" MinWidth="420" MinHeight="360">
   <!-- Help ▸ Diagnostics (M1.13): details about this computer and Run benchmark. -->
   <ScrollViewer>
-    <StackPanel Spacing="{DynamicResource Space.5}" Margin="{DynamicResource Space.Text.Large}">
-      <TextBlock Classes="title-1" Text="{Binding [diagnostics-title], Source={x:Static s:Localizer.Instance}}" />
-      <TextBlock Classes="hint" TextWrapping="Wrap" Text="{Binding [diagnostics-intro], Source={x:Static s:Localizer.Instance}}" />
+    <StackPanel Spacing="{DynamicResource Space.5}" Margin="{DynamicResource Space.Text.Large}"
+                s:Help.Anchor="help.diagnostics">
+      <WrapPanel ItemSpacing="{DynamicResource Space.2}" VerticalAlignment="Center">
+        <TextBlock Classes="title-1" VerticalAlignment="Center" Text="{Binding [diagnostics-title], Source={x:Static s:Localizer.Instance}}" />
+        <views:InfoButton Anchor="help.diagnostics" />
+      </WrapPanel>
+      <views:HintText Text="{Binding [diagnostics-intro], Source={x:Static s:Localizer.Instance}}" />
 
       <Border Name="DiagnosticsDetails" Classes="card">
         <ItemsControl ItemsSource="{Binding Rows}">
@@ -34,7 +39,7 @@
           <TextBlock Text="{Binding [diagnostics-show-report], Source={x:Static s:Localizer.Instance}}" />
         </Button>
       </WrapPanel>
-      <TextBlock Classes="hint" TextWrapping="Wrap" Text="{Binding [diagnostics-run-hint], Source={x:Static s:Localizer.Instance}}" />
+      <views:HintText Text="{Binding [diagnostics-run-hint], Source={x:Static s:Localizer.Instance}}" />
       <TextBlock Name="DiagnosticsMessage" TextWrapping="Wrap" Text="{Binding Message}"
                  IsVisible="{Binding Message, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
 

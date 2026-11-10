@@ -12,11 +12,47 @@ cargo-fuzz = true
 
 [dependencies]
 libfuzzer-sys = "0.4"
+selah-core = { path = "../crates/selah-core" }
 selah-ipc = { path = "../crates/selah-ipc" }
 
 [[bin]]
 name = "ipc_frame"
 path = "fuzz_targets/ipc_frame.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "chordpro"
+path = "fuzz_targets/chordpro.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "bible_osis"
+path = "fuzz_targets/bible_osis.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "bible_usfm"
+path = "fuzz_targets/bible_usfm.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "bible_zefania"
+path = "fuzz_targets/bible_zefania.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "selah_bundle"
+path = "fuzz_targets/selah_bundle.rs"
 test = false
 doc = false
 bench = false

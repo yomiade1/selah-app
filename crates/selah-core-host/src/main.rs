@@ -11,14 +11,16 @@ use anyhow::Context;
 use selah_core::update::{self, Install};
 use selah_core::{CoreService, Work};
 use selah_ipc::{Client, Connection, Endpoint, FrameSender, Listener, Service};
-use selah_proto::v1::{Command, Envelope, Event, command, envelope};
-use tokio::sync::Mutex;
+use selah_proto::v1::{Command, Envelope, Event, command, envelope, query};
+use tokio::sync::{Mutex, Notify, watch};
 
 struct Shared {
     service: Mutex<CoreService>,
     subscribers: Mutex<Vec<FrameSender>>,
     engine: Client,
     next_event_id: AtomicU64,
+    bible_ready: watch::Receiver<bool>,
+    bible_wake: Arc<Notify>,
     /// The only way out to the network (SEC-13). Core sets its policy from the settings.
     net: Arc<selah_net::Net>,
     /// Velopack's Update.exe, when Selah was installed by Setup.
@@ -173,6 +175,14 @@ impl From<selah_proto::v1::Diagnostics> for DiagnosticsContext {
 }
 
 impl Shared {
+    async fn wait_for_bundled_bibles(&self) {
+        let mut rx = self.bible_ready.clone();
+        if !*rx.borrow() {
+            self.bible_wake.notify_one();
+            let _ = rx.wait_for(|&ready| ready).await;
+        }
+    }
+
     async fn broadcast(&self, events: Vec<Event>) {
         if events.is_empty() {
             return;
@@ -199,10 +209,35 @@ impl Shared {
     async fn send_to_engine(&self, command: selah_proto::v1::RenderCommand) {
         let body = envelope::Body::Command(Command {
             action: Some(command::Action::Render(command)),
+            ..Default::default()
         });
         if let Err(error) = self.engine.send(body).await {
             tracing::warn!(%error, "engine is not connected; it will be resynchronised");
         }
+    }
+}
+
+fn request_needs_bundled_bibles(request: &Envelope) -> bool {
+    match request.body.as_ref() {
+        Some(envelope::Body::Command(cmd)) => matches!(
+            cmd.action.as_ref(),
+            Some(
+                command::Action::ImportBible(_)
+                    | command::Action::DeleteBible(_)
+                    | command::Action::CreateLibraryBackup(_)
+                    | command::Action::RestoreLibraryBackup(_)
+            )
+        ),
+        Some(envelope::Body::Query(q)) => matches!(
+            q.request.as_ref(),
+            Some(
+                query::Request::ListBibles(_)
+                    | query::Request::GetScripturePassages(_)
+                    | query::Request::SearchScripture(_)
+                    | query::Request::SearchLibrary(_)
+            )
+        ),
+        _ => false,
     }
 }
 
@@ -218,6 +253,9 @@ async fn serve_connection(shared: Arc<Shared>, connection: Connection) {
                 return;
             }
         };
+        if request_needs_bundled_bibles(&request) {
+            shared.wait_for_bundled_bibles().await;
+        }
         let outcome = shared.service.lock().await.handle(&request);
         if let Some(work) = outcome.work {
             tokio::spawn(run_work(
@@ -318,15 +356,21 @@ async fn main() -> anyhow::Result<()> {
     if safe_mode {
         tracing::warn!("starting in safe mode (SAFE-07)");
     }
+    let library_dir = std::env::var_os("SELAH_LIBRARY_DIR")
+        .filter(|value| !value.is_empty())
+        .map(std::path::PathBuf::from)
+        .unwrap_or_else(|| paths.library.clone());
     let endpoint = Endpoint::for_current_user(Service::Core);
     // SEC-13: one gate for every outgoing connection; offline until a setting allows a purpose.
     let net = Arc::new(selah_net::Net::https());
-    let mut service = CoreService::with_platform(
+    let mut service = CoreService::open_with_platform(
         &paths.config,
+        &library_dir,
         safe_mode,
         net.clone(),
         selah_runtime::power::platform(),
-    );
+    )
+    .context("could not open the library")?;
     match help_index() {
         Some((path, help)) => {
             tracing::info!(path = %path.display(), "help index loaded");
@@ -335,11 +379,37 @@ async fn main() -> anyhow::Result<()> {
         None => tracing::warn!("kb.db not found; help search answers nothing"),
     }
     let actor = service.actor().clone();
+    let bibles_dir = service.library().paths().bibles.clone();
+    let (bible_ready_tx, bible_ready_rx) = watch::channel(false);
+    let bible_wake = Arc::new(Notify::new());
+    let bible_wake_bg = bible_wake.clone();
+    tokio::spawn(async move {
+        tokio::select! {
+            _ = bible_wake_bg.notified() => {}
+            _ = tokio::time::sleep(Duration::from_secs(5)) => {}
+        }
+        match tokio::task::spawn_blocking(move || {
+            selah_core::scripture::ensure_bundled_bibles(&bibles_dir)
+        })
+        .await
+        {
+            Ok(Ok(seeded)) => {
+                if seeded {
+                    tracing::info!("bundled KJV and WEB Bibles initialised");
+                }
+            }
+            Ok(Err(error)) => tracing::warn!(%error, "bundled Bible setup failed"),
+            Err(error) => tracing::warn!(%error, "bundled Bible setup task failed"),
+        }
+        let _ = bible_ready_tx.send(true);
+    });
     let shared = Arc::new(Shared {
         service: Mutex::new(service),
         subscribers: Mutex::new(Vec::new()),
         engine: Client::start(endpoint.sibling(Service::Engine), actor.clone()),
         next_event_id: AtomicU64::new(1),
+        bible_ready: bible_ready_rx,
+        bible_wake,
         net,
         installer: update::VelopackInstaller::for_this_installation()
             .map(|installer| Arc::new(installer) as Arc<dyn Install>),

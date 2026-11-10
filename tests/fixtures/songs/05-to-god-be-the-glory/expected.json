@@ -1,0 +1,320 @@
+{
+  "title": "To God Be the Glory",
+  "author": "Fanny J. Crosby (1820-1915)",
+  "key": "G",
+  "public_domain": true,
+  "arrangement": [
+    "Verse 1",
+    "Chorus",
+    "Verse 2",
+    "Chorus",
+    "Verse 3",
+    "Chorus"
+  ],
+  "sections": [
+    {
+      "label": "Verse 1",
+      "kind": "verse",
+      "color_hex": "#2378C3",
+      "hotkey": "1",
+      "lines": [
+        {
+          "text": "To God be the glory, great things He hath done;",
+          "chords": [
+            {
+              "position": 3,
+              "text": "G"
+            },
+            {
+              "position": 27,
+              "text": "D"
+            },
+            {
+              "position": 42,
+              "text": "G"
+            }
+          ]
+        },
+        {
+          "text": "So loved He the world that He gave us His Son,",
+          "chords": [
+            {
+              "position": 3,
+              "text": "C"
+            },
+            {
+              "position": 16,
+              "text": "G"
+            },
+            {
+              "position": 30,
+              "text": "A"
+            },
+            {
+              "position": 42,
+              "text": "D"
+            }
+          ]
+        },
+        {
+          "text": "Who yielded His life an atonement for sin,",
+          "chords": [
+            {
+              "position": 4,
+              "text": "G"
+            },
+            {
+              "position": 25,
+              "text": "C"
+            }
+          ]
+        },
+        {
+          "text": "And opened the life gate that all may go in.",
+          "chords": [
+            {
+              "position": 4,
+              "text": "G"
+            },
+            {
+              "position": 30,
+              "text": "D"
+            },
+            {
+              "position": 41,
+              "text": "G"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "label": "Chorus",
+      "kind": "chorus",
+      "color_hex": "#C84281",
+      "hotkey": "C",
+      "lines": [
+        {
+          "text": "Praise the Lord, praise the Lord, let the earth hear His voice!",
+          "chords": [
+            {
+              "position": 0,
+              "text": "G"
+            },
+            {
+              "position": 42,
+              "text": "D"
+            }
+          ]
+        },
+        {
+          "text": "Praise the Lord, praise the Lord, let the people rejoice!",
+          "chords": [
+            {
+              "position": 0,
+              "text": "D"
+            },
+            {
+              "position": 42,
+              "text": "G"
+            },
+            {
+              "position": 51,
+              "text": "G7"
+            }
+          ]
+        },
+        {
+          "text": "O come to the Father through Jesus the Son,",
+          "chords": [
+            {
+              "position": 2,
+              "text": "C"
+            },
+            {
+              "position": 29,
+              "text": "G"
+            },
+            {
+              "position": 39,
+              "text": "Em"
+            }
+          ]
+        },
+        {
+          "text": "And give Him the glory, great things He hath done.",
+          "chords": [
+            {
+              "position": 4,
+              "text": "G"
+            },
+            {
+              "position": 30,
+              "text": "D"
+            },
+            {
+              "position": 45,
+              "text": "G"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "label": "Verse 2",
+      "kind": "verse",
+      "color_hex": "#2378C3",
+      "hotkey": "2",
+      "lines": [
+        {
+          "text": "O perfect redemption, the purchase of blood,",
+          "chords": [
+            {
+              "position": 2,
+              "text": "G"
+            },
+            {
+              "position": 26,
+              "text": "D"
+            },
+            {
+              "position": 38,
+              "text": "G"
+            }
+          ]
+        },
+        {
+          "text": "To every believer the promise of God;",
+          "chords": [
+            {
+              "position": 3,
+              "text": "C"
+            },
+            {
+              "position": 11,
+              "text": "G"
+            },
+            {
+              "position": 22,
+              "text": "A"
+            },
+            {
+              "position": 33,
+              "text": "D"
+            }
+          ]
+        },
+        {
+          "text": "The vilest offender who truly believes,",
+          "chords": [
+            {
+              "position": 4,
+              "text": "G"
+            },
+            {
+              "position": 24,
+              "text": "C"
+            },
+            {
+              "position": 32,
+              "text": "Am"
+            }
+          ]
+        },
+        {
+          "text": "That moment from Jesus a pardon receives.",
+          "chords": [
+            {
+              "position": 5,
+              "text": "G"
+            },
+            {
+              "position": 25,
+              "text": "D"
+            },
+            {
+              "position": 34,
+              "text": "G"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "label": "Verse 3",
+      "kind": "verse",
+      "color_hex": "#2378C3",
+      "hotkey": "3",
+      "lines": [
+        {
+          "text": "Great things He hath taught us, great things He hath done,",
+          "chords": [
+            {
+              "position": 6,
+              "text": "G"
+            },
+            {
+              "position": 38,
+              "text": "D"
+            },
+            {
+              "position": 53,
+              "text": "G"
+            }
+          ]
+        },
+        {
+          "text": "And great our rejoicing through Jesus the Son;",
+          "chords": [
+            {
+              "position": 4,
+              "text": "C"
+            },
+            {
+              "position": 16,
+              "text": "G"
+            },
+            {
+              "position": 32,
+              "text": "A"
+            },
+            {
+              "position": 42,
+              "text": "D"
+            }
+          ]
+        },
+        {
+          "text": "But purer, and higher, and greater will be",
+          "chords": [
+            {
+              "position": 4,
+              "text": "G"
+            },
+            {
+              "position": 27,
+              "text": "C"
+            }
+          ]
+        },
+        {
+          "text": "Our wonder, our victory, when Jesus we see.",
+          "chords": [
+            {
+              "position": 4,
+              "text": "G"
+            },
+            {
+              "position": 30,
+              "text": "D"
+            },
+            {
+              "position": 39,
+              "text": "G"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

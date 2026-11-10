@@ -1,0 +1,414 @@
+{
+  "title": "Crown Him with Many Crowns",
+  "author": "Matthew Bridges (1800-1894) & Godfrey Thring (1823-1903)",
+  "key": "D",
+  "public_domain": true,
+  "arrangement": [
+    "Verse 1",
+    "Verse 2",
+    "Verse 3",
+    "Verse 4"
+  ],
+  "sections": [
+    {
+      "label": "Verse 1",
+      "kind": "verse",
+      "color_hex": "#2378C3",
+      "hotkey": "1",
+      "lines": [
+        {
+          "text": "Crown Him with many crowns, the Lamb upon His throne;",
+          "chords": [
+            {
+              "position": 0,
+              "text": "D"
+            },
+            {
+              "position": 15,
+              "text": "Bm"
+            },
+            {
+              "position": 32,
+              "text": "G"
+            },
+            {
+              "position": 46,
+              "text": "A"
+            }
+          ]
+        },
+        {
+          "text": "Hark! how the heavenly anthem drowns all music but its own.",
+          "chords": [
+            {
+              "position": 0,
+              "text": "D"
+            },
+            {
+              "position": 14,
+              "text": "Bm"
+            },
+            {
+              "position": 41,
+              "text": "E"
+            },
+            {
+              "position": 55,
+              "text": "A"
+            }
+          ]
+        },
+        {
+          "text": "Awake, my soul, and sing of Him who died for thee,",
+          "chords": [
+            {
+              "position": 0,
+              "text": "D"
+            },
+            {
+              "position": 10,
+              "text": "G"
+            },
+            {
+              "position": 28,
+              "text": "E"
+            },
+            {
+              "position": 45,
+              "text": "A"
+            }
+          ]
+        },
+        {
+          "text": "And hail Him as thy matchless King through all eternity.",
+          "chords": [
+            {
+              "position": 4,
+              "text": "D"
+            },
+            {
+              "position": 13,
+              "text": "G"
+            },
+            {
+              "position": 20,
+              "text": "D"
+            },
+            {
+              "position": 43,
+              "text": "G"
+            },
+            {
+              "position": 48,
+              "text": "A"
+            },
+            {
+              "position": 53,
+              "text": "D"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "label": "Verse 2",
+      "kind": "verse",
+      "color_hex": "#2378C3",
+      "hotkey": "2",
+      "lines": [
+        {
+          "text": "Crown Him the Lord of love! Behold His hands and side,",
+          "chords": [
+            {
+              "position": 0,
+              "text": "D"
+            },
+            {
+              "position": 14,
+              "text": "Bm"
+            },
+            {
+              "position": 30,
+              "text": "G"
+            },
+            {
+              "position": 49,
+              "text": "A"
+            }
+          ]
+        },
+        {
+          "text": "Those wounds, yet visible above, in beauty glorified.",
+          "chords": [
+            {
+              "position": 0,
+              "text": "D"
+            },
+            {
+              "position": 18,
+              "text": "Bm"
+            },
+            {
+              "position": 36,
+              "text": "E"
+            },
+            {
+              "position": 48,
+              "text": "A"
+            }
+          ]
+        },
+        {
+          "text": "No angel in the sky can fully bear that sight,",
+          "chords": [
+            {
+              "position": 0,
+              "text": "D"
+            },
+            {
+              "position": 9,
+              "text": "G"
+            },
+            {
+              "position": 24,
+              "text": "E"
+            },
+            {
+              "position": 40,
+              "text": "A"
+            }
+          ]
+        },
+        {
+          "text": "But downward bends his wondering eye at mysteries so bright.",
+          "chords": [
+            {
+              "position": 4,
+              "text": "D"
+            },
+            {
+              "position": 13,
+              "text": "G"
+            },
+            {
+              "position": 23,
+              "text": "D"
+            },
+            {
+              "position": 40,
+              "text": "G"
+            },
+            {
+              "position": 50,
+              "text": "A"
+            },
+            {
+              "position": 53,
+              "text": "D"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "label": "Verse 3",
+      "kind": "verse",
+      "color_hex": "#2378C3",
+      "hotkey": "3",
+      "lines": [
+        {
+          "text": "Crown Him the Lord of peace, whose power a scepter sways",
+          "chords": [
+            {
+              "position": 0,
+              "text": "D"
+            },
+            {
+              "position": 14,
+              "text": "Bm"
+            },
+            {
+              "position": 35,
+              "text": "G"
+            },
+            {
+              "position": 51,
+              "text": "A"
+            }
+          ]
+        },
+        {
+          "text": "From pole to pole, that wars may cease, absorbed in prayer and praise.",
+          "chords": [
+            {
+              "position": 0,
+              "text": "D"
+            },
+            {
+              "position": 13,
+              "text": "Bm"
+            },
+            {
+              "position": 42,
+              "text": "E"
+            },
+            {
+              "position": 63,
+              "text": "A"
+            }
+          ]
+        },
+        {
+          "text": "His reign shall know no end, and round His pierced feet",
+          "chords": [
+            {
+              "position": 0,
+              "text": "D"
+            },
+            {
+              "position": 16,
+              "text": "G"
+            },
+            {
+              "position": 33,
+              "text": "E"
+            },
+            {
+              "position": 51,
+              "text": "A"
+            }
+          ]
+        },
+        {
+          "text": "Fair flowers of paradise extend their fragrance ever sweet.",
+          "chords": [
+            {
+              "position": 5,
+              "text": "D"
+            },
+            {
+              "position": 16,
+              "text": "G"
+            },
+            {
+              "position": 25,
+              "text": "D"
+            },
+            {
+              "position": 38,
+              "text": "G"
+            },
+            {
+              "position": 48,
+              "text": "A"
+            },
+            {
+              "position": 53,
+              "text": "D"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "label": "Verse 4",
+      "kind": "verse",
+      "color_hex": "#2378C3",
+      "hotkey": "4",
+      "lines": [
+        {
+          "text": "Crown Him the Lord of years, the Potentate of time,",
+          "chords": [
+            {
+              "position": 0,
+              "text": "D"
+            },
+            {
+              "position": 14,
+              "text": "Bm"
+            },
+            {
+              "position": 33,
+              "text": "G"
+            },
+            {
+              "position": 46,
+              "text": "A"
+            }
+          ]
+        },
+        {
+          "text": "Creator of the rolling spheres, ineffably sublime.",
+          "chords": [
+            {
+              "position": 0,
+              "text": "D"
+            },
+            {
+              "position": 8,
+              "text": "Bm"
+            },
+            {
+              "position": 34,
+              "text": "E"
+            },
+            {
+              "position": 45,
+              "text": "A"
+            }
+          ]
+        },
+        {
+          "text": "All hail, Redeemer, hail! For Thou hast died for me;",
+          "chords": [
+            {
+              "position": 0,
+              "text": "D"
+            },
+            {
+              "position": 12,
+              "text": "G"
+            },
+            {
+              "position": 30,
+              "text": "E"
+            },
+            {
+              "position": 49,
+              "text": "A"
+            }
+          ]
+        },
+        {
+          "text": "Thy praise and glory shall not fail throughout eternity.",
+          "chords": [
+            {
+              "position": 4,
+              "text": "D"
+            },
+            {
+              "position": 15,
+              "text": "G"
+            },
+            {
+              "position": 21,
+              "text": "D"
+            },
+            {
+              "position": 43,
+              "text": "G"
+            },
+            {
+              "position": 48,
+              "text": "A"
+            },
+            {
+              "position": 53,
+              "text": "D"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

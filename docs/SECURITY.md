@@ -43,19 +43,34 @@ To report a vulnerability, see [SECURITY.md](../SECURITY.md) in the repository r
 | Build and CI | Strangers' pull requests and forks while public, compromised dependencies or actions | Stolen tokens, poisoned builds | SEC-09, SEC-10 |
 | Installer and updater (M1) | The update feed and package host the person configured; Velopack's `Update.exe` running as the user | A tampered or swapped package; an update that interrupts a service; an installer that asks for admin | SEC-01, SEC-12, SEC-13, SAFE-06 |
 | Support files (M1) | The public problem-report form where the person attaches a support bundle or a Diagnostics report | Secrets, names, email addresses or church data leaking into a public issue | SEC-05, SEC-06 |
+| Library storage (M2.1) | Existing database pages, media paths and bytes on the user's disk | Corrupt or future databases reset without warning; partial writes; path traversal; damaged media reused | SEC-03, SEC-15: integrity checks, immutable migration history, bounded validation, transactional documents, content-addressed verified media |
+| Song, Bible and bundle parsers (M2.4–M2.6) | User-pasted lyrics and ChordPro text, imported OSIS/USFM/Zefania Bible files, and `.selah` or backup `.zip` archives | Parser hangs, zip or entity bombs, deep XML nesting, path traversal (`..`, symlinks, drive letters), oversized payloads | SEC-03, SEC-15: byte, line, depth, entry-count and deflate-ratio bounds, XML DOCTYPE/entity refusal, path normalisation, canonical manifest checks, 5 fuzz targets |
+| Media probe worker (M2.6) | Imported local audio, image and video files inspected for metadata and thumbnails | Crash or memory exhaustion in media decoders bringing down `selah-core` | SEC-01, SEC-03, SEC-04: isolated one-shot `selah-media-worker` subprocess, file/pipe FFmpeg whitelist, image pixel-count limit, BLAKE3 verification |
 
 The threat model is reviewed at the end of every milestone (TESTING-AND-QUALITY §4.2). New boundaries get a row before their feature is merged. The full review with a penetration test is M10.6 (H-21).
 
-**M1 review (2026-11-07).** M1 added two boundaries (the last two rows). Residual risks: until signing (H-15), the update package is only as trustworthy as the feed it came from. HTTPS and the feed's SHA-256 stop tampering on the way, but not a compromised feed host, so feeds stay opt-in and set by the person. Support bundles are redacted by pattern and by registered secrets; free text that a person typed into a song or note could still name people, so the problem-report form tells them to check the file before attaching it.
+**M1 review (2026-11-07).** M1 added two boundaries (installer/updater and support files). Residual risks: until signing (H-15), the update package is only as trustworthy as the feed it came from. HTTPS and the feed's SHA-256 stop tampering on the way, but not a compromised feed host, so feeds stay opt-in and set by the person. Support bundles are redacted by pattern and by registered secrets; free text that a person typed into a song or note could still name people, so the problem-report form tells them to check the file before attaching it.
+
+**M2 review (2026-11-09).** M2 added library storage (`selah-core::library`), four song paste parsers, three Bible importers (`OSIS`, `USFM`, `Zefania`), bounded ZIP archive reading for `.selah` bundles and full library backups, an isolated `selah-media-worker` subprocess, 34-command `SEC-14` permission checks, and UI contextual help with `F12` live-safety bypass. Residual risks: `selah-media-worker` isolates decoder faults out of `selah-core` as a same-user subprocess without Windows job-object / macOS sandbox hardening yet (scheduled in M6); `.selah` bundles check BLAKE3 media hashes and strict schema rules rather than creator signatures (signed Content Packs arrive in M8); bundled/imported Bibles are operator-curated rather than cryptographically attested (`H-06`); and multi-user permissions remain local-owner only until roles arrive in M4/M7/M9.
 
 ## 4. Security requirements
+
+**M2.1 storage review (2026-11-09).** Database failures retain the original file.
+Documents and ordered child rows commit together; media bytes are synced and
+published before metadata can reference them. Hashes, extensions and canonical
+paths are checked, and streams are bounded. A saved schema fixture tests future
+migration compatibility. No new IPC commands or outgoing connections are added.
+Residual risks: another process with the same user's filesystem permissions can
+change an open file; hash checks detect corruption but do not provide isolation
+from that process. Media decoding, bundle verification, backups and restore are
+still M2.6 work; storage does not decode or display imported bytes.
 
 | ID | Requirement | Verified by | Milestones |
 |---|---|---|---|
 | **SEC-01** | **Least privilege.** Selah installs per user and runs without administrator rights. Nothing runs as a service or with elevation. Workers (imports, speech) run with reduced rights: a Windows job object with limits and a low-integrity token, and a macOS sandbox profile from M6. | Installer test checks for no elevation; worker token tests | M1, M6 |
 | **SEC-02** | **Local IPC is private to the user.** Named pipes have a DACL for the current user only and `PIPE_REJECT_REMOTE_CLIENTS`. The server checks the peer process. Unix sockets live in a `0700` directory. Frames over 16 MiB, unknown message types and bad lengths are rejected without crashing. | `selah-ipc` tests; IPC fuzz target | M1 |
 | **SEC-03** | **Outside input is untrusted.** Parsers run in workers (ADR-020) with limits on size, depth, item count and time. Archive paths are normalised (no `..`, no absolute paths). Every parser and the IPC decoder has a fuzz target: a 30-second smoke run in CI, longer runs in cloud sessions. | Fuzz targets; limit tests | M1 (IPC), M2 (bundles, Bibles, ChordPro), M6 (importers), M8 (packs) |
-| **SEC-04** | **Media decoding is limited.** FFmpeg opens local files with `protocol_whitelist=file,pipe`. Network protocols are allowed only for stream items the user added. Demuxers and decoders come from an allowlist. Images are decoded with a pixel-count limit. | Tests: an `http://` path in a file item is refused; an oversized image is refused | M1, M3 |
+| **SEC-04** | **Media decoding is limited.** FFmpeg opens local files with `protocol_whitelist=file,pipe`. Network protocols are allowed only for stream items the user added. Demuxers and decoders come from an allowlist. Images are decoded with a pixel-count limit. | Tests: an `http://` path in a file item is refused; an oversized image is refused | M1, M2, M3 |
 | **SEC-05** | **Secrets live only in the OS keychain**, through one `SecretStore` interface (Windows Credential Manager with DPAPI, macOS Keychain, an in-memory fake for tests and Linux). Secrets never appear in SQLite, settings files, logs, the op log, support bundles, crash dumps or exports. | Seeded-secret tests scan every output | M1, M6, M8, M9 |
 | **SEC-06** | **Logs and support bundles are redacted.** A `tracing` layer removes secrets, tokens, email addresses and the user's name in paths. Support bundles are built from redacted data only. Crash dumps stay on the computer unless the user chooses to send them. | Redaction tests with seeded data | M1, M6, M9 |
 | **SEC-07** | **The gateway is safe on a shared network.** Off by default and LAN-only. TLS with a self-signed certificate pinned by the QR code. Pairing by QR. Scoped, expiring, revocable tokens. Rate limits, origin and CORS checks, request size limits. No default passwords. Every API action is recorded in the op log. | M7-A2; API fuzzing (M10.6) | M7, M10 |
@@ -110,14 +125,14 @@ The repository is public for a limited time so that GitHub Actions minutes are f
 3. Fix in a PR marked as a security fix. Before v1.0, the fix ships in the next milestone build. After v1.0, a patch release goes to every update ring, and the release notes say what was fixed in plain words once users have had time to update.
 4. If a release could harm churches (for example, a broken updater), pull it from the feed first, then fix it.
 
-## 9. Where the M1 baseline lives
+## 9. Where the M1 and M2 controls live
 
 | ID | Implementation | Tests |
 |---|---|---|
-| SEC-01 | Velopack per-user install (`tools/package.ps1`, `packaging/velopack/`) | `tools/test-installer.ps1`: no elevation in any manifest, no service, no machine-wide entry |
+| SEC-01 | Velopack per-user install (`tools/package.ps1`, `packaging/velopack/`); one-shot `selah-media-worker` subprocess isolates media probing from `selah-core` | `tools/test-installer.ps1`: no elevation in any manifest, no service, no machine-wide entry |
 | SEC-02 | `selah-ipc` (pipe DACL, remote clients rejected, peer check, `0700` socket folder, 16 MiB limit) | `selah-ipc` tests |
-| SEC-03 | Frame decoder fuzz target; update feeds and support bundles parsed with limits | `fuzz_smoke`, `feeds_are_parsed_with_limits`, `responses_over_the_limit_are_refused` |
-| SEC-04 | `selah-media` protocol whitelist and demuxer/decoder allowlist | `opening_an_http_url_is_refused`, `a_local_playlist_cant_reach_the_network` |
+| SEC-03 | Frame decoder, ChordPro, OSIS/USFM/Zefania Bible, and `.selah` bundle fuzz targets; update feeds, support bundles, song paste, Bible XML/USFM, search queries, and ZIP archive readers enforce size, depth, count and ratio bounds | `fuzz_smoke`, `songs_fuzz_smoke`, `scripture_fuzz_smoke`, `exchange_fuzz_smoke`, `sec03_parser_enforces_all_bounds_cleanly`, `m2_a5_osis_usfm_and_zefania_importers_parse_and_enforce_security_limits`, `m2_a11_crafted_zip_bundles_and_corrupt_backups_fail_closed` |
+| SEC-04 | `selah-media` protocol whitelist (`file,pipe`), demuxer/decoder allowlist, `MAX_DIMENSION` (8K) and image file cap, symlink/URL refusal; invoked via `selah-media-worker` for media import and thumbnails | `opening_an_http_url_is_refused`, `a_local_playlist_cant_reach_the_network`, `media_import_refuses_urls_protocols_and_dimension_bombs` |
 | SEC-05 | `selah-secrets` (`SecretStore`: Credential Manager, Keychain, memory) | `values_round_trip_and_are_redacted_from_logs`, `the_platform_keychain_round_trips`, the support-bundle seeded-secret test |
 | SEC-06 | `selah_runtime::redact` on every log line and every support-bundle file | `seeded_secrets_and_identifiers_are_removed`, `redacting_writer_removes_seeded_secrets_before_writing`, `a_bundle_has_logs_and_versions_but_no_secrets_or_user_name` |
 | SEC-09 | Lockfiles, `deny.toml`, pinned third-party files | Gate stage 14 |
@@ -125,8 +140,9 @@ The repository is public for a limited time so that GitHub Actions minutes are f
 | SEC-11 | `#![forbid(unsafe_code)]`, `tools/unsafe-allowlist.txt` | `tools/check-unsafe.py` |
 | SEC-12 | `selah-core::update` (https feeds, size and SHA-256 checks, live deferral) | `a_package_with_the_wrong_hash_or_size_is_never_saved`, `updates_never_install_while_something_is_on_the_screens` |
 | SEC-13 | `selah-net` (purposes, default-off policy, connection log); core sets the policy from settings | `the_default_policy_connects_to_nothing`, `only_selah_net_reaches_the_network`, `update_checks_are_off_at_default_settings`, `default_settings_make_no_outgoing_connections` (real processes) |
-| SEC-14 | `selah-core::permissions` (every command, exhaustive) | `permission_matrix_covers_every_origin_and_command` |
-| SAFE-01 | Same as SEC-14; only the local owner changes the screens in M1 | `refused_commands_change_nothing` |
-| SAFE-03 | Emergency lane: UI → engine pipe, handled ahead of rendering | Emergency-lane chaos test (core frozen) |
+| SEC-14 | `selah-core::permissions` (all 34 M1+M2 commands, exhaustive) | `permission_matrix_covers_every_origin_and_command`, `unauthorized_library_commands_are_refused_before_touching_database` |
+| SEC-15 | `selah-core::library` (SQLite STRICT/WAL/FULL, append-only checksummed migrations, transactional ops, BLAKE3 media blobs, canonical `.selah` bundles, full backup/restore) and `tests/fixtures/db/` | `selah-core/tests/library.rs`, `selah-core/tests/migrations.rs` (Stage 10), `selah-testkit::library_crash` (`M2-A3`), `selah-core/tests/media_exchange.rs` (`M2-A6`, `M2-A11`) |
+| SAFE-01 | Same as SEC-14; only the local owner changes the screens in M1–M2; help overlays and Ctrl+K palette never bypass live controls or alter outputs | `refused_commands_change_nothing`, `ContextualHelpTests::Whats_this_inspects_without_firing_live_actions_and_esc_dismisses` |
+| SAFE-03 | Emergency lane: UI → engine pipe, handled ahead of rendering; `F12` bypasses help search and What's this overlays | Emergency-lane chaos test (core frozen), `ContextualHelpTests::Live_safety_f12_bypasses_help_search_and_help_never_covers_live_controls` |
 | SAFE-06 | Quit and update guards in the UI; core refuses updates while live; `selah_runtime::power` keeps the computer awake while live | `LiveGuardTests`, `UpdateTests`, `the_computer_stays_awake_only_while_something_is_on_the_screens` |
 | SAFE-07 | Watchdog safe mode (3 crashes in 60 s or Shift), banner, **Restart normally** | `three_crashes_in_a_minute_start_safe_mode`, `restart_normally_leaves_safe_mode_and_keeps_the_screens` |

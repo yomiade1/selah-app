@@ -1,0 +1,713 @@
+syntax = "proto3";
+
+package selah.v1;
+
+import "selah/v1/common.proto";
+
+option csharp_namespace = "Selah.Contracts.V1";
+
+enum SectionKind {
+  SECTION_KIND_UNSPECIFIED = 0;
+  SECTION_KIND_VERSE = 1;
+  SECTION_KIND_CHORUS = 2;
+  SECTION_KIND_BRIDGE = 3;
+  SECTION_KIND_TAG = 4;
+  SECTION_KIND_INTRO = 5;
+  SECTION_KIND_OUTRO = 6;
+  SECTION_KIND_OTHER = 7;
+}
+
+message Chord {
+  // Unicode character offset in the lyric line, not a UTF-8 byte offset.
+  uint32 position = 1;
+  string text = 2;
+}
+
+message LyricLine {
+  string text = 1;
+  repeated Chord chords = 2;
+}
+
+message TranslationLines {
+  repeated string lines = 1;
+}
+
+message Section {
+  Id id = 1;
+  string label = 2;
+  SectionKind kind = 3;
+  Color color = 4;
+  string hotkey = 5;
+  repeated LyricLine lines = 6;
+  map<string, TranslationLines> translations = 7;
+}
+
+message Arrangement {
+  Id id = 1;
+  string name = 2;
+  repeated Id section_ids = 3;
+}
+
+message Song {
+  Id id = 1;
+  string title = 2;
+  repeated string authors = 3;
+  string ccli_number = 4;
+  string copyright = 5;
+  string key = 6;
+  double tempo = 7;
+  repeated string tags = 8;
+  bool public_domain = 9;
+  repeated Section sections = 10;
+  repeated Arrangement arrangements = 11;
+}
+
+message TemplateVariant {
+  Id id = 1;
+  Resolution resolution = 2;
+  uint32 max_lines = 3;
+  // Reserved for the metric text styles delivered in M3.
+  string style_json = 4;
+}
+
+message Template {
+  Id id = 1;
+  string name = 2;
+  repeated TemplateVariant variants = 3;
+}
+
+enum MediaKind {
+  MEDIA_KIND_UNSPECIFIED = 0;
+  MEDIA_KIND_IMAGE = 1;
+  MEDIA_KIND_VIDEO = 2;
+  MEDIA_KIND_AUDIO = 3;
+}
+
+message MediaItem {
+  Id id = 1;
+  string name = 2;
+  MediaKind kind = 3;
+  // Lower-case BLAKE3 hex; never an outside file path.
+  string content_hash = 4;
+  string extension = 5;
+  uint64 size_bytes = 6;
+  Resolution resolution = 7;
+  uint64 duration_milliseconds = 8;
+  repeated string tags = 9;
+}
+
+message Slide {
+  Id id = 1;
+  string text = 2;
+  Id media_id = 3;
+  // M3 extends this with structured elements. Generated song slides are not stored.
+  string elements_json = 4;
+}
+
+message Presentation {
+  Id id = 1;
+  string name = 2;
+  repeated Slide slides = 3;
+  Id template_id = 4;
+}
+
+message Tag {
+  Id id = 1;
+  string name = 2;
+}
+
+enum DocumentType {
+  DOCUMENT_TYPE_UNSPECIFIED = 0;
+  DOCUMENT_TYPE_SONG = 1;
+  DOCUMENT_TYPE_TEMPLATE = 2;
+  DOCUMENT_TYPE_MEDIA = 3;
+  DOCUMENT_TYPE_PRESENTATION = 4;
+  DOCUMENT_TYPE_SERVICE = 5;
+  DOCUMENT_TYPE_SERVICE_TYPE = 6;
+  DOCUMENT_TYPE_TEAM = 7;
+  DOCUMENT_TYPE_TAG = 8;
+}
+
+enum LibraryChangeKind {
+  LIBRARY_CHANGE_KIND_UNSPECIFIED = 0;
+  LIBRARY_CHANGE_KIND_SAVED = 1;
+  LIBRARY_CHANGE_KIND_DELETED = 2;
+}
+
+// Serialised into ops.command and ops.inverse as a document snapshot or delete marker.
+message OpState {
+  bool present = 1;
+  bytes data = 2;
+}
+
+message SaveSong {
+  Song song = 1;
+}
+
+message DeleteSong {
+  Id id = 1;
+}
+
+message GetSong {
+  Id id = 1;
+}
+
+message ListSongs {
+  uint32 limit = 1;
+  uint32 offset = 2;
+}
+
+message SongList {
+  repeated Song songs = 1;
+}
+
+message SaveTemplate {
+  Template template = 1;
+}
+
+message DeleteTemplate {
+  Id id = 1;
+}
+
+message GetTemplate {
+  Id id = 1;
+}
+
+message ListTemplates {
+  uint32 limit = 1;
+  uint32 offset = 2;
+}
+
+message TemplateList {
+  repeated Template templates = 1;
+}
+
+message SaveMediaItem {
+  MediaItem media_item = 1;
+}
+
+message DeleteMediaItem {
+  Id id = 1;
+}
+
+message GetMediaItem {
+  Id id = 1;
+}
+
+message ListMediaItems {
+  uint32 limit = 1;
+  uint32 offset = 2;
+}
+
+message MediaItemList {
+  repeated MediaItem media_items = 1;
+}
+
+message SavePresentation {
+  Presentation presentation = 1;
+}
+
+message DeletePresentation {
+  Id id = 1;
+}
+
+message GetPresentation {
+  Id id = 1;
+}
+
+message ListPresentations {
+  uint32 limit = 1;
+  uint32 offset = 2;
+}
+
+message PresentationList {
+  repeated Presentation presentations = 1;
+}
+
+message SaveTag {
+  Tag tag = 1;
+}
+
+message DeleteTag {
+  Id id = 1;
+}
+
+message GetTag {
+  Id id = 1;
+}
+
+message ListTags {
+  uint32 limit = 1;
+  uint32 offset = 2;
+}
+
+message TagList {
+  repeated Tag tags = 1;
+}
+
+message Undo {
+  // Optional: when set, undoes the latest active undo group for this document only.
+  Id doc_id = 1;
+}
+
+message Redo {
+  // Optional: when set, redoes the most recently undone group for this document only.
+  Id doc_id = 1;
+}
+
+message GetUndoState {
+  // Optional: when set, returns the undo/redo stack state for this document.
+  Id doc_id = 1;
+}
+
+message UndoState {
+  bool can_undo = 1;
+  bool can_redo = 2;
+  uint32 undo_depth = 3;
+  uint32 redo_depth = 4;
+}
+
+message EditorBuffer {
+  Id doc_id = 1;
+  DocumentType doc_type = 2;
+  string content = 3;
+  Timestamp updated_at = 4;
+}
+
+message SaveEditorBuffer {
+  Id doc_id = 1;
+  DocumentType doc_type = 2;
+  string content = 3;
+}
+
+message DiscardEditorBuffer {
+  Id doc_id = 1;
+}
+
+message GetEditorBuffer {
+  Id doc_id = 1;
+}
+
+message EditorBufferReply {
+  bool found = 1;
+  EditorBuffer buffer = 2;
+}
+
+message ListEditorBuffers {
+  uint32 limit = 1;
+  uint32 offset = 2;
+}
+
+message EditorBufferList {
+  repeated EditorBuffer buffers = 1;
+}
+
+message ListOps {
+  uint64 after_seq = 1;
+  uint32 limit = 2;
+  Id doc_id = 3;
+}
+
+message OpRecord {
+  uint64 seq = 1;
+  Id op_id = 2;
+  Timestamp timestamp = 3;
+  string user_id = 4;
+  string device_id = 5;
+  string origin = 6;
+  DocumentType doc_type = 7;
+  Id doc_id = 8;
+  bytes command = 9;
+  bytes inverse = 10;
+  Id undo_group = 11;
+  int32 sync_status = 12;
+}
+
+message OpList {
+  repeated OpRecord ops = 1;
+}
+
+message LibraryChanged {
+  DocumentType doc_type = 1;
+  Id doc_id = 2;
+  LibraryChangeKind change = 3;
+  uint64 op_seq = 4;
+  Id undo_group = 5;
+  bool from_undo_redo = 6;
+}
+
+message UndoStateChanged {
+  UndoState global = 1;
+  Id doc_id = 2;
+  UndoState document = 3;
+}
+
+// Queries validate limit between 1 and 200.
+message SearchSongs {
+  string query = 1;
+  uint32 limit = 2;
+  uint32 offset = 3;
+}
+
+message SongSearchHit {
+  Song song = 1;
+  double score = 2;
+  string snippet = 3;
+  repeated string matched_fields = 4;
+}
+
+message SongSearchResults {
+  repeated SongSearchHit hits = 1;
+  uint32 total = 2;
+}
+
+message SearchMedia {
+  string query = 1;
+  MediaKind kind = 2;
+  uint32 limit = 3;
+  uint32 offset = 4;
+}
+
+message MediaSearchHit {
+  MediaItem media_item = 1;
+  double score = 2;
+  string snippet = 3;
+  repeated string matched_fields = 4;
+}
+
+message MediaSearchResults {
+  repeated MediaSearchHit hits = 1;
+  uint32 total = 2;
+}
+
+message SearchScripture {
+  string query = 1;
+  // Empty searches every installed Bible database under library/bibles/.
+  string translation = 2;
+  uint32 limit = 3;
+  uint32 offset = 4;
+}
+
+message ScriptureVerseHit {
+  string translation = 1;
+  string book = 2;
+  string book_name = 3;
+  uint32 chapter = 4;
+  uint32 verse = 5;
+  string text = 6;
+  double score = 7;
+}
+
+message ScriptureSearchResults {
+  repeated ScriptureVerseHit hits = 1;
+  uint32 total = 2;
+}
+
+enum SearchScope {
+  SEARCH_SCOPE_UNSPECIFIED = 0;
+  SEARCH_SCOPE_ALL = 1;
+  SEARCH_SCOPE_SONGS = 2;
+  SEARCH_SCOPE_MEDIA = 3;
+  SEARCH_SCOPE_SCRIPTURE = 4;
+}
+
+message SearchLibrary {
+  string query = 1;
+  SearchScope scope = 2;
+  string translation = 3;
+  uint32 limit = 4;
+}
+
+message LibrarySearchResults {
+  repeated SongSearchHit songs = 1;
+  repeated MediaSearchHit media = 2;
+  repeated ScriptureVerseHit scripture = 3;
+}
+
+enum SongPasteFormat {
+  SONG_PASTE_FORMAT_UNSPECIFIED = 0;
+  SONG_PASTE_FORMAT_PLAIN = 1;
+  SONG_PASTE_FORMAT_MARKERS = 2;
+  SONG_PASTE_FORMAT_CHORDS_OVER_LYRICS = 3;
+  SONG_PASTE_FORMAT_CHORD_PRO = 4;
+}
+
+enum CopyrightPlacement {
+  COPYRIGHT_PLACEMENT_UNSPECIFIED = 0;
+  COPYRIGHT_PLACEMENT_NONE = 1;
+  COPYRIGHT_PLACEMENT_FIRST = 2;
+  COPYRIGHT_PLACEMENT_LAST = 3;
+  COPYRIGHT_PLACEMENT_FIRST_AND_LAST = 4;
+  COPYRIGHT_PLACEMENT_ALL = 5;
+}
+
+enum AccidentalSpelling {
+  ACCIDENTAL_SPELLING_UNSPECIFIED = 0;
+  ACCIDENTAL_SPELLING_SHARPS = 1;
+  ACCIDENTAL_SPELLING_FLATS = 2;
+}
+
+message ParsePastedSong {
+  string raw_text = 1;
+  SongPasteFormat format = 2;
+  string default_title = 3;
+}
+
+message ParsePastedSongReply {
+  Song song = 1;
+  SongPasteFormat detected_format = 2;
+  repeated string warnings = 3;
+}
+
+message TransposeSong {
+  Song song = 1;
+  int32 semitones = 2;
+  AccidentalSpelling accidental_spelling = 3;
+}
+
+message SplitSongSlides {
+  Song song = 1;
+  Id arrangement_id = 2;
+  uint32 max_lines = 3;
+  CopyrightPlacement copyright_placement = 4;
+  bool title_slide = 5;
+  bool blank_slide_at_end = 6;
+  string translation_language = 7;
+}
+
+message GeneratedSlide {
+  Id section_id = 1;
+  string section_label = 2;
+  SectionKind section_kind = 3;
+  Color section_color = 4;
+  string section_hotkey = 5;
+  uint32 part_index = 6;
+  uint32 part_count = 7;
+  repeated LyricLine lines = 8;
+  repeated string translation_lines = 9;
+  string footer_copyright = 10;
+  bool is_title = 11;
+  bool is_blank = 12;
+}
+
+message GeneratedSongSlides {
+  repeated GeneratedSlide slides = 1;
+  string copyright_line = 2;
+}
+
+enum BibleFormat {
+  BIBLE_FORMAT_UNSPECIFIED = 0;
+  BIBLE_FORMAT_OSIS = 1;
+  BIBLE_FORMAT_USFM = 2;
+  BIBLE_FORMAT_ZEFANIA = 3;
+}
+
+enum ReferencePlacement {
+  REFERENCE_PLACEMENT_UNSPECIFIED = 0;
+  REFERENCE_PLACEMENT_NONE = 1;
+  REFERENCE_PLACEMENT_SLIDE_HEADER = 2;
+  REFERENCE_PLACEMENT_SLIDE_FOOTER = 3;
+}
+
+message BibleBookInfo {
+  uint32 book_num = 1;
+  string code = 2;
+  string name = 3;
+  uint32 chapter_count = 4;
+  repeated uint32 verse_counts = 5;
+}
+
+message BibleTranslation {
+  string code = 1;
+  string name = 2;
+  string language = 3;
+  uint32 book_count = 4;
+  uint32 verse_count = 5;
+  bool is_bundled = 6;
+  repeated BibleBookInfo books = 7;
+}
+
+message ListBibles {
+  bool include_books = 1;
+}
+
+message BibleList {
+  repeated BibleTranslation bibles = 1;
+}
+
+message ScriptureSpan {
+  uint32 book_num = 1;
+  string book_code = 2;
+  string book_name = 3;
+  uint32 start_chapter = 4;
+  uint32 start_verse = 5;
+  uint32 end_chapter = 6;
+  uint32 end_verse = 7;
+  string normalized = 8;
+}
+
+message ParseScriptureReference {
+  string reference = 1;
+  string language_hint = 2;
+}
+
+message ParseScriptureReferenceReply {
+  repeated ScriptureSpan spans = 1;
+  string normalized = 2;
+}
+
+message ScriptureVerse {
+  string translation = 1;
+  uint32 book_num = 2;
+  string book_code = 3;
+  string book_name = 4;
+  uint32 chapter = 5;
+  uint32 verse = 6;
+  string text = 7;
+}
+
+message GetScripturePassages {
+  string translation = 1;
+  // Either parseable scripture reference text or explicit spans.
+  string reference = 2;
+  repeated ScriptureSpan spans = 3;
+  string language_hint = 4;
+}
+
+message ScripturePassages {
+  BibleTranslation translation = 1;
+  string normalized_reference = 2;
+  repeated ScriptureVerse verses = 3;
+}
+
+message SplitScriptureSlides {
+  string translation = 1;
+  string translation_name = 2;
+  string reference = 3;
+  repeated ScriptureVerse verses = 4;
+  uint32 max_lines = 5;
+  uint32 max_chars_per_line = 6;
+  uint32 verses_per_slide = 7;
+  bool one_verse_per_slide = 8;
+  bool show_verse_numbers = 9;
+  ReferencePlacement reference_placement = 10;
+  bool title_slide = 11;
+  bool blank_slide_at_end = 12;
+}
+
+message GeneratedScriptureSlide {
+  string reference = 1;
+  uint32 part_index = 2;
+  uint32 part_count = 3;
+  repeated string lines = 4;
+  string header_reference = 5;
+  string footer_reference = 6;
+  bool is_title = 7;
+  bool is_blank = 8;
+}
+
+message GeneratedScriptureSlides {
+  string translation = 1;
+  string translation_name = 2;
+  string reference_label = 3;
+  repeated GeneratedScriptureSlide slides = 4;
+}
+
+message ImportBible {
+  // Either a local file path or raw bytes (for drag/drop or tests).
+  string source_path = 1;
+  bytes raw_bytes = 2;
+  BibleFormat format = 3;
+  string code = 4;
+  string name = 5;
+  string language = 6;
+  bool replace_existing = 7;
+}
+
+message DeleteBible {
+  string code = 1;
+}
+
+message ImportMedia {
+  // Local file path to import; regular files only (SEC-04: no URLs, symlinks, or protocol prefixes).
+  string source_path = 1;
+  // Optional display name override; defaults to the file stem.
+  string name = 2;
+  repeated string tags = 3;
+}
+
+message GetMediaThumbnail {
+  Id media_id = 1;
+  uint32 max_width = 2;
+  uint32 max_height = 3;
+}
+
+message MediaThumbnail {
+  Id media_id = 1;
+  uint32 width = 2;
+  uint32 height = 3;
+  bytes png_bytes = 4;
+}
+
+message ExportSelahBundle {
+  string output_path = 1;
+  repeated Id song_ids = 2;
+  repeated Id template_ids = 3;
+  repeated Id media_ids = 4;
+  repeated Id presentation_ids = 5;
+  repeated Id tag_ids = 6;
+  bool include_media = 7;
+}
+
+message ExportedSelahBundle {
+  string output_path = 1;
+  string canonical_manifest_json = 2;
+  uint32 song_count = 3;
+  uint32 template_count = 4;
+  uint32 media_count = 5;
+  uint32 presentation_count = 6;
+  uint32 tag_count = 7;
+  uint64 total_bytes = 8;
+}
+
+message ImportSelahBundle {
+  string source_path = 1;
+  bytes raw_bytes = 2;
+  bool overwrite_existing = 3;
+}
+
+message ImportedSelahBundle {
+  uint32 song_count = 1;
+  uint32 template_count = 2;
+  uint32 media_count = 3;
+  uint32 presentation_count = 4;
+  uint32 tag_count = 5;
+}
+
+message CreateLibraryBackup {
+  // Optional output path; empty writes to library/backups/selah-backup-<timestamp>.zip.
+  string output_path = 1;
+}
+
+message LibraryBackupInfo {
+  string backup_path = 1;
+  uint32 schema_version = 2;
+  uint64 size_bytes = 3;
+  uint32 media_blob_count = 4;
+  uint32 bible_count = 5;
+}
+
+message RestoreLibraryBackup {
+  string backup_path = 1;
+}
+
+message RestoreLibraryBackupResult {
+  uint32 schema_version = 1;
+  uint32 song_count = 2;
+  uint32 template_count = 3;
+  uint32 media_count = 4;
+  uint32 presentation_count = 5;
+  uint32 tag_count = 6;
+  uint32 media_blob_count = 7;
+  uint32 bible_count = 8;
+}

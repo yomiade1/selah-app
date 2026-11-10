@@ -25,8 +25,9 @@ def main():
     subprocess.run(pnpm("exec", "buf", "generate"), cwd=ROOT, check=True)
     if (ROOT / "app/Selah.UI").is_dir():
         subprocess.run(pnpm("run", "tokens"), cwd=ROOT, check=True)
+        subprocess.run([sys.executable, "tools/gen_help_anchors.py"], cwd=ROOT, check=True)
         GENERATED.extend(["app/Selah.UI/Styles/Tokens.g.axaml", "app/Selah.UI/Styles/Tokens.g.cs",
-                          "web/tokens/tokens.css"])
+                          "app/Selah.UI/Services/HelpAnchors.g.cs", "web/tokens/tokens.css"])
     existing = [p for p in GENERATED if (ROOT / p).exists()]
     diff = subprocess.run(["git", "status", "--porcelain", "--", *existing], cwd=ROOT,
                           capture_output=True, text=True, check=True).stdout

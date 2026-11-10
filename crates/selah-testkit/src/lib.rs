@@ -266,6 +266,7 @@ impl Stack {
                     action: Some(command::Action::ShowTestPattern(ShowTestPattern {
                         pattern: pattern as i32,
                     })),
+                    ..Default::default()
                 }),
                 Duration::from_secs(5),
             )
@@ -300,20 +301,43 @@ impl Stack {
         &self.home
     }
 
-    /// Stop everything: the watchdog first so nothing is restarted, then every known child.
-    pub async fn shutdown(mut self) {
+    /// Stop every process while keeping `home()` on disk for post-shutdown verification.
+    pub async fn stop_processes(&mut self) {
         let _ = self.watchdog_status().await;
         self.kill_all();
+    }
+
+    /// Stop everything: the watchdog first so nothing is restarted, then every known child.
+    pub async fn shutdown(mut self) {
+        self.stop_processes().await;
     }
 
     fn kill_all(&mut self) {
         let _ = self.watchdog.kill();
         let _ = self.watchdog.wait();
-        let pids = self
+        let mut pids = self
             .known_pids
             .lock()
             .unwrap_or_else(|p| p.into_inner())
             .clone();
+        if let Ok(text) = std::fs::read_to_string(self.home.join("pids.txt")) {
+            for line in text.lines() {
+                if let Ok(pid) = line.trim().parse::<u32>()
+                    && pid != 0
+                    && !pids.contains(&pid)
+                {
+                    pids.push(pid);
+                }
+            }
+        }
+        if let Ok(text) = std::fs::read_to_string(self.home.join("ui.txt"))
+            && let Some(first) = text.split_whitespace().next()
+            && let Ok(pid) = first.parse::<u32>()
+            && pid != 0
+            && !pids.contains(&pid)
+        {
+            pids.push(pid);
+        }
         for pid in pids {
             kill_pid(pid);
         }

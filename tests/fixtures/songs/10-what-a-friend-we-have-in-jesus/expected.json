@@ -1,0 +1,277 @@
+{
+  "title": "What a Friend We Have in Jesus",
+  "author": "Joseph M. Scriven (1819-1886)",
+  "key": "F",
+  "public_domain": true,
+  "arrangement": [
+    "Verse 1",
+    "Verse 2",
+    "Verse 3"
+  ],
+  "sections": [
+    {
+      "label": "Verse 1",
+      "kind": "verse",
+      "color_hex": "#2378C3",
+      "hotkey": "1",
+      "lines": [
+        {
+          "text": "What a friend we have in Jesus, all our sins and griefs to bear!",
+          "chords": [
+            {
+              "position": 0,
+              "text": "F"
+            },
+            {
+              "position": 32,
+              "text": "Bb"
+            },
+            {
+              "position": 59,
+              "text": "F"
+            }
+          ]
+        },
+        {
+          "text": "What a privilege to carry everything to God in prayer!",
+          "chords": [
+            {
+              "position": 0,
+              "text": "F"
+            },
+            {
+              "position": 20,
+              "text": "Dm"
+            },
+            {
+              "position": 26,
+              "text": "C"
+            },
+            {
+              "position": 47,
+              "text": "F"
+            }
+          ]
+        },
+        {
+          "text": "O what peace we often forfeit, O what needless pain we bear,",
+          "chords": [
+            {
+              "position": 0,
+              "text": "C"
+            },
+            {
+              "position": 22,
+              "text": "F"
+            },
+            {
+              "position": 31,
+              "text": "Bb"
+            },
+            {
+              "position": 55,
+              "text": "C"
+            }
+          ]
+        },
+        {
+          "text": "All because we do not carry everything to God in prayer.",
+          "chords": [
+            {
+              "position": 0,
+              "text": "F"
+            },
+            {
+              "position": 22,
+              "text": "Bb"
+            },
+            {
+              "position": 28,
+              "text": "C"
+            },
+            {
+              "position": 49,
+              "text": "F"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "label": "Verse 2",
+      "kind": "verse",
+      "color_hex": "#2378C3",
+      "hotkey": "2",
+      "lines": [
+        {
+          "text": "Have we trials and temptations? Is there trouble anywhere?",
+          "chords": [
+            {
+              "position": 0,
+              "text": "F"
+            },
+            {
+              "position": 23,
+              "text": "Bb"
+            },
+            {
+              "position": 52,
+              "text": "F"
+            }
+          ]
+        },
+        {
+          "text": "We should never be discouraged; take it to the Lord in prayer.",
+          "chords": [
+            {
+              "position": 0,
+              "text": "F"
+            },
+            {
+              "position": 22,
+              "text": "Dm"
+            },
+            {
+              "position": 32,
+              "text": "C"
+            },
+            {
+              "position": 55,
+              "text": "F"
+            }
+          ]
+        },
+        {
+          "text": "Can we find a friend so faithful who will all our sorrows share?",
+          "chords": [
+            {
+              "position": 0,
+              "text": "C"
+            },
+            {
+              "position": 24,
+              "text": "F"
+            },
+            {
+              "position": 33,
+              "text": "Bb"
+            },
+            {
+              "position": 58,
+              "text": "C"
+            }
+          ]
+        },
+        {
+          "text": "Jesus knows our every weakness; take it to the Lord in prayer.",
+          "chords": [
+            {
+              "position": 0,
+              "text": "F"
+            },
+            {
+              "position": 22,
+              "text": "Bb"
+            },
+            {
+              "position": 32,
+              "text": "C"
+            },
+            {
+              "position": 55,
+              "text": "F"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "label": "Verse 3",
+      "kind": "verse",
+      "color_hex": "#2378C3",
+      "hotkey": "3",
+      "lines": [
+        {
+          "text": "Are we weak and heavy laden, cumbered with a load of care?",
+          "chords": [
+            {
+              "position": 0,
+              "text": "F"
+            },
+            {
+              "position": 22,
+              "text": "Bb"
+            },
+            {
+              "position": 53,
+              "text": "F"
+            }
+          ]
+        },
+        {
+          "text": "Precious Savior, still our refuge— take it to the Lord in prayer.",
+          "chords": [
+            {
+              "position": 0,
+              "text": "F"
+            },
+            {
+              "position": 27,
+              "text": "Dm"
+            },
+            {
+              "position": 35,
+              "text": "C"
+            },
+            {
+              "position": 58,
+              "text": "F"
+            }
+          ]
+        },
+        {
+          "text": "Do thy friends despise, forsake thee? Take it to the Lord in prayer;",
+          "chords": [
+            {
+              "position": 0,
+              "text": "C"
+            },
+            {
+              "position": 27,
+              "text": "F"
+            },
+            {
+              "position": 38,
+              "text": "Bb"
+            },
+            {
+              "position": 61,
+              "text": "C"
+            }
+          ]
+        },
+        {
+          "text": "In His arms He’ll take and shield thee; thou wilt find a solace there.",
+          "chords": [
+            {
+              "position": 0,
+              "text": "F"
+            },
+            {
+              "position": 27,
+              "text": "Bb"
+            },
+            {
+              "position": 40,
+              "text": "C"
+            },
+            {
+              "position": 64,
+              "text": "F"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

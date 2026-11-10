@@ -1,0 +1,382 @@
+{
+  "title": "Fairest Lord Jesus",
+  "author": "Munster Gesangbuch (1677); anon. tr. c. 1850 / Joseph A. Seiss (1823-1904)",
+  "key": "Eb",
+  "public_domain": true,
+  "arrangement": [
+    "Verse 1",
+    "Verse 2",
+    "Verse 3",
+    "Verse 4"
+  ],
+  "sections": [
+    {
+      "label": "Verse 1",
+      "kind": "verse",
+      "color_hex": "#2378C3",
+      "hotkey": "1",
+      "lines": [
+        {
+          "text": "Fairest Lord Jesus, Ruler of all nature,",
+          "chords": [
+            {
+              "position": 0,
+              "text": "Eb"
+            },
+            {
+              "position": 20,
+              "text": "Ab"
+            },
+            {
+              "position": 29,
+              "text": "Bb"
+            },
+            {
+              "position": 35,
+              "text": "Eb"
+            }
+          ]
+        },
+        {
+          "text": "O Thou of God and man the Son,",
+          "chords": [
+            {
+              "position": 0,
+              "text": "Eb"
+            },
+            {
+              "position": 10,
+              "text": "Cm"
+            },
+            {
+              "position": 18,
+              "text": "Fm"
+            },
+            {
+              "position": 26,
+              "text": "Bb"
+            }
+          ]
+        },
+        {
+          "text": "Thee will I cherish, Thee will I honor,",
+          "chords": [
+            {
+              "position": 0,
+              "text": "Ab"
+            },
+            {
+              "position": 12,
+              "text": "Eb"
+            },
+            {
+              "position": 21,
+              "text": "Bb"
+            },
+            {
+              "position": 33,
+              "text": "Cm"
+            }
+          ]
+        },
+        {
+          "text": "Thou, my soul’s glory, joy, and crown.",
+          "chords": [
+            {
+              "position": 0,
+              "text": "Eb"
+            },
+            {
+              "position": 16,
+              "text": "Ab"
+            },
+            {
+              "position": 23,
+              "text": "Bb"
+            },
+            {
+              "position": 32,
+              "text": "Eb"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "label": "Verse 2",
+      "kind": "verse",
+      "color_hex": "#2378C3",
+      "hotkey": "2",
+      "lines": [
+        {
+          "text": "Fair are the meadows, fairer still the woodlands,",
+          "chords": [
+            {
+              "position": 0,
+              "text": "Eb"
+            },
+            {
+              "position": 22,
+              "text": "Ab"
+            },
+            {
+              "position": 35,
+              "text": "Bb"
+            },
+            {
+              "position": 43,
+              "text": "Eb"
+            }
+          ]
+        },
+        {
+          "text": "Robed in the blooming garb of spring;",
+          "chords": [
+            {
+              "position": 0,
+              "text": "Eb"
+            },
+            {
+              "position": 13,
+              "text": "Cm"
+            },
+            {
+              "position": 22,
+              "text": "Fm"
+            },
+            {
+              "position": 30,
+              "text": "Bb"
+            }
+          ]
+        },
+        {
+          "text": "Jesus is fairer, Jesus is purer,",
+          "chords": [
+            {
+              "position": 0,
+              "text": "Ab"
+            },
+            {
+              "position": 9,
+              "text": "Eb"
+            },
+            {
+              "position": 17,
+              "text": "Bb"
+            },
+            {
+              "position": 26,
+              "text": "Cm"
+            }
+          ]
+        },
+        {
+          "text": "Who makes the woeful heart to sing.",
+          "chords": [
+            {
+              "position": 0,
+              "text": "Eb"
+            },
+            {
+              "position": 14,
+              "text": "Ab"
+            },
+            {
+              "position": 21,
+              "text": "Bb"
+            },
+            {
+              "position": 30,
+              "text": "Eb"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "label": "Verse 3",
+      "kind": "verse",
+      "color_hex": "#2378C3",
+      "hotkey": "3",
+      "lines": [
+        {
+          "text": "Fair is the sunshine, fairer still the moonlight,",
+          "chords": [
+            {
+              "position": 0,
+              "text": "Eb"
+            },
+            {
+              "position": 22,
+              "text": "Ab"
+            },
+            {
+              "position": 35,
+              "text": "Bb"
+            },
+            {
+              "position": 43,
+              "text": "Eb"
+            }
+          ]
+        },
+        {
+          "text": "And all the twinkling starry host;",
+          "chords": [
+            {
+              "position": 0,
+              "text": "Eb"
+            },
+            {
+              "position": 12,
+              "text": "Cm"
+            },
+            {
+              "position": 22,
+              "text": "Fm"
+            },
+            {
+              "position": 29,
+              "text": "Bb"
+            }
+          ]
+        },
+        {
+          "text": "Jesus shines brighter, Jesus shines purer",
+          "chords": [
+            {
+              "position": 0,
+              "text": "Ab"
+            },
+            {
+              "position": 13,
+              "text": "Eb"
+            },
+            {
+              "position": 23,
+              "text": "Bb"
+            },
+            {
+              "position": 36,
+              "text": "Cm"
+            }
+          ]
+        },
+        {
+          "text": "Than all the angels heaven can boast.",
+          "chords": [
+            {
+              "position": 0,
+              "text": "Eb"
+            },
+            {
+              "position": 13,
+              "text": "Ab"
+            },
+            {
+              "position": 20,
+              "text": "Bb"
+            },
+            {
+              "position": 31,
+              "text": "Eb"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "label": "Verse 4",
+      "kind": "verse",
+      "color_hex": "#2378C3",
+      "hotkey": "4",
+      "lines": [
+        {
+          "text": "Beautiful Savior! Lord of all the nations!",
+          "chords": [
+            {
+              "position": 0,
+              "text": "Eb"
+            },
+            {
+              "position": 18,
+              "text": "Ab"
+            },
+            {
+              "position": 26,
+              "text": "Bb"
+            },
+            {
+              "position": 36,
+              "text": "Eb"
+            }
+          ]
+        },
+        {
+          "text": "Son of God and Son of Man!",
+          "chords": [
+            {
+              "position": 0,
+              "text": "Eb"
+            },
+            {
+              "position": 7,
+              "text": "Cm"
+            },
+            {
+              "position": 15,
+              "text": "Fm"
+            },
+            {
+              "position": 22,
+              "text": "Bb"
+            }
+          ]
+        },
+        {
+          "text": "Glory and honor, praise, adoration,",
+          "chords": [
+            {
+              "position": 0,
+              "text": "Ab"
+            },
+            {
+              "position": 10,
+              "text": "Eb"
+            },
+            {
+              "position": 17,
+              "text": "Bb"
+            },
+            {
+              "position": 28,
+              "text": "Cm"
+            }
+          ]
+        },
+        {
+          "text": "Now and forevermore be Thine.",
+          "chords": [
+            {
+              "position": 0,
+              "text": "Eb"
+            },
+            {
+              "position": 11,
+              "text": "Ab"
+            },
+            {
+              "position": 15,
+              "text": "Bb"
+            },
+            {
+              "position": 23,
+              "text": "Eb"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

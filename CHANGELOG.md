@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+Milestone 2: library, songs, Scripture and the help system. Still a work-in-progress preview build, not for a live Sunday service yet.
+
+- Songs library: create, edit, save, tag, arrange and delete songs with automatic background saving, per-song and global undo/redo, and multi-language search that tolerates typos and diacritics (tested with Yorùbá, Korean and Spanish).
+- Four-format song pasting: paste plain lyrics, `[Verse]` / `[Chorus]` sections, chords above lyrics, or ChordPro `[C]` markup; transpose keys with sharp or flat spelling; and split slides cleanly by line limit or section breaks with preview across 16:9, LED 32:9, Stage and Stream views.
+- Scripture offline and importable: includes the public-domain King James Version (KJV) and World English Bible (WEB), a 6-language verse reference parser (English, Spanish, Portuguese, French, Korean and Yorùbá), full-text Bible search, automatic verse-to-slide splitting, and offline import of OSIS, USFM and Zefania Bible files.
+- Media bin and exchange: import images, videos and audio verified by content hash with automatic thumbnails decoded in an isolated worker process; export and import portable `.selah` bundles; and create or restore verified full-library backup archives.
+- Library protection: database writes use atomic transactions, an append-only operation log, idempotent command replay, integrity checks on open, and preserved schema migrations.
+- Help built into every screen: press **F1** for context-aware help, **Shift+F1** to point at any control ("What's this?"), **Ctrl+K** / **Cmd+K** to find songs, Scripture, media, commands or help articles, and read 37 built-in guides with helpfulness feedback — while **F12** (**Clear everything**) keeps working even inside help overlays.
+
 Milestone 1: the foundations. This is a test build for checking the basics, not for a service yet.
 
 - Selah has a Windows installer. It installs just for you, without administrator rights, and

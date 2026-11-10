@@ -1,0 +1,352 @@
+{
+  "title": "Blessed Assurance",
+  "author": "Fanny J. Crosby (1820-1915)",
+  "key": "D",
+  "public_domain": true,
+  "arrangement": [
+    "Verse 1",
+    "Chorus",
+    "Verse 2",
+    "Chorus",
+    "Verse 3",
+    "Chorus"
+  ],
+  "sections": [
+    {
+      "label": "Verse 1",
+      "kind": "verse",
+      "color_hex": "#2378C3",
+      "hotkey": "1",
+      "lines": [
+        {
+          "text": "Blessed assurance, Jesus is mine!",
+          "chords": [
+            {
+              "position": 0,
+              "text": "D"
+            },
+            {
+              "position": 10,
+              "text": "G"
+            },
+            {
+              "position": 19,
+              "text": "D"
+            },
+            {
+              "position": 28,
+              "text": "A"
+            }
+          ]
+        },
+        {
+          "text": "O what a foretaste of glory divine!",
+          "chords": [
+            {
+              "position": 0,
+              "text": "D"
+            },
+            {
+              "position": 9,
+              "text": "Bm"
+            },
+            {
+              "position": 22,
+              "text": "E"
+            },
+            {
+              "position": 30,
+              "text": "A"
+            }
+          ]
+        },
+        {
+          "text": "Heir of salvation, purchase of God,",
+          "chords": [
+            {
+              "position": 0,
+              "text": "D"
+            },
+            {
+              "position": 11,
+              "text": "G"
+            },
+            {
+              "position": 19,
+              "text": "D"
+            }
+          ]
+        },
+        {
+          "text": "Born of His Spirit, washed in His blood.",
+          "chords": [
+            {
+              "position": 0,
+              "text": "G"
+            },
+            {
+              "position": 20,
+              "text": "A"
+            },
+            {
+              "position": 34,
+              "text": "D"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "label": "Chorus",
+      "kind": "chorus",
+      "color_hex": "#C84281",
+      "hotkey": "C",
+      "lines": [
+        {
+          "text": "This is my story, this is my song,",
+          "chords": [
+            {
+              "position": 11,
+              "text": "D"
+            },
+            {
+              "position": 18,
+              "text": "G"
+            },
+            {
+              "position": 29,
+              "text": "D"
+            }
+          ]
+        },
+        {
+          "text": "Praising my Savior all the day long;",
+          "chords": [
+            {
+              "position": 12,
+              "text": "G"
+            },
+            {
+              "position": 19,
+              "text": "E"
+            },
+            {
+              "position": 31,
+              "text": "A"
+            }
+          ]
+        },
+        {
+          "text": "This is my story, this is my song,",
+          "chords": [
+            {
+              "position": 11,
+              "text": "D"
+            },
+            {
+              "position": 18,
+              "text": "G"
+            },
+            {
+              "position": 29,
+              "text": "D"
+            }
+          ]
+        },
+        {
+          "text": "Praising my Savior all the day long.",
+          "chords": [
+            {
+              "position": 12,
+              "text": "G"
+            },
+            {
+              "position": 19,
+              "text": "A"
+            },
+            {
+              "position": 31,
+              "text": "D"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "label": "Verse 2",
+      "kind": "verse",
+      "color_hex": "#2378C3",
+      "hotkey": "2",
+      "lines": [
+        {
+          "text": "Perfect submission, perfect delight,",
+          "chords": [
+            {
+              "position": 0,
+              "text": "D"
+            },
+            {
+              "position": 11,
+              "text": "G"
+            },
+            {
+              "position": 20,
+              "text": "D"
+            },
+            {
+              "position": 30,
+              "text": "A"
+            }
+          ]
+        },
+        {
+          "text": "Visions of rapture now burst on my sight;",
+          "chords": [
+            {
+              "position": 0,
+              "text": "D"
+            },
+            {
+              "position": 11,
+              "text": "Bm"
+            },
+            {
+              "position": 23,
+              "text": "E"
+            },
+            {
+              "position": 35,
+              "text": "A"
+            }
+          ]
+        },
+        {
+          "text": "Angels descending bring from above",
+          "chords": [
+            {
+              "position": 0,
+              "text": "D"
+            },
+            {
+              "position": 9,
+              "text": "G"
+            },
+            {
+              "position": 18,
+              "text": "D"
+            },
+            {
+              "position": 30,
+              "text": "Bm"
+            }
+          ]
+        },
+        {
+          "text": "Echoes of mercy, whispers of love.",
+          "chords": [
+            {
+              "position": 0,
+              "text": "G"
+            },
+            {
+              "position": 17,
+              "text": "A"
+            },
+            {
+              "position": 29,
+              "text": "D"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "label": "Verse 3",
+      "kind": "verse",
+      "color_hex": "#2378C3",
+      "hotkey": "3",
+      "lines": [
+        {
+          "text": "Perfect submission, all is at rest,",
+          "chords": [
+            {
+              "position": 0,
+              "text": "D"
+            },
+            {
+              "position": 11,
+              "text": "G"
+            },
+            {
+              "position": 20,
+              "text": "D"
+            },
+            {
+              "position": 30,
+              "text": "A"
+            }
+          ]
+        },
+        {
+          "text": "I in my Savior am happy and blest,",
+          "chords": [
+            {
+              "position": 0,
+              "text": "D"
+            },
+            {
+              "position": 8,
+              "text": "Bm"
+            },
+            {
+              "position": 18,
+              "text": "E"
+            },
+            {
+              "position": 28,
+              "text": "A"
+            }
+          ]
+        },
+        {
+          "text": "Watching and waiting, looking above,",
+          "chords": [
+            {
+              "position": 0,
+              "text": "D"
+            },
+            {
+              "position": 13,
+              "text": "G"
+            },
+            {
+              "position": 22,
+              "text": "D"
+            },
+            {
+              "position": 31,
+              "text": "Bm"
+            }
+          ]
+        },
+        {
+          "text": "Filled with His goodness, lost in His love.",
+          "chords": [
+            {
+              "position": 0,
+              "text": "G"
+            },
+            {
+              "position": 26,
+              "text": "A"
+            },
+            {
+              "position": 38,
+              "text": "D"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

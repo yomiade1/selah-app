@@ -1,0 +1,341 @@
+{
+  "title": "My Hope Is Built on Nothing Less",
+  "author": "Edward Mote (1797-1874)",
+  "key": "F",
+  "public_domain": true,
+  "arrangement": [
+    "Verse 1",
+    "Chorus",
+    "Verse 2",
+    "Chorus",
+    "Verse 3",
+    "Chorus",
+    "Verse 4",
+    "Chorus"
+  ],
+  "sections": [
+    {
+      "label": "Verse 1",
+      "kind": "verse",
+      "color_hex": "#2378C3",
+      "hotkey": "1",
+      "lines": [
+        {
+          "text": "My hope is built on nothing less",
+          "chords": [
+            {
+              "position": 3,
+              "text": "F"
+            },
+            {
+              "position": 20,
+              "text": "C"
+            }
+          ]
+        },
+        {
+          "text": "Than Jesus’ blood and righteousness;",
+          "chords": [
+            {
+              "position": 5,
+              "text": "Bb"
+            },
+            {
+              "position": 22,
+              "text": "C"
+            },
+            {
+              "position": 31,
+              "text": "F"
+            }
+          ]
+        },
+        {
+          "text": "I dare not trust the sweetest frame,",
+          "chords": [
+            {
+              "position": 2,
+              "text": "F"
+            },
+            {
+              "position": 21,
+              "text": "C"
+            }
+          ]
+        },
+        {
+          "text": "But wholly lean on Jesus’ name.",
+          "chords": [
+            {
+              "position": 4,
+              "text": "Bb"
+            },
+            {
+              "position": 19,
+              "text": "C"
+            },
+            {
+              "position": 26,
+              "text": "F"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "label": "Chorus",
+      "kind": "chorus",
+      "color_hex": "#C84281",
+      "hotkey": "C",
+      "lines": [
+        {
+          "text": "On Christ, the solid Rock, I stand,",
+          "chords": [
+            {
+              "position": 3,
+              "text": "F"
+            },
+            {
+              "position": 21,
+              "text": "Bb"
+            }
+          ]
+        },
+        {
+          "text": "All other ground is sinking sand,",
+          "chords": [
+            {
+              "position": 4,
+              "text": "F"
+            },
+            {
+              "position": 20,
+              "text": "C"
+            }
+          ]
+        },
+        {
+          "text": "All other ground is sinking sand.",
+          "chords": [
+            {
+              "position": 4,
+              "text": "Bb"
+            },
+            {
+              "position": 20,
+              "text": "C"
+            },
+            {
+              "position": 28,
+              "text": "F"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "label": "Verse 2",
+      "kind": "verse",
+      "color_hex": "#2378C3",
+      "hotkey": "2",
+      "lines": [
+        {
+          "text": "When darkness veils His lovely face,",
+          "chords": [
+            {
+              "position": 5,
+              "text": "F"
+            },
+            {
+              "position": 24,
+              "text": "C"
+            }
+          ]
+        },
+        {
+          "text": "I rest on His unchanging grace;",
+          "chords": [
+            {
+              "position": 2,
+              "text": "Bb"
+            },
+            {
+              "position": 16,
+              "text": "C"
+            },
+            {
+              "position": 25,
+              "text": "F"
+            }
+          ]
+        },
+        {
+          "text": "In every high and stormy gale,",
+          "chords": [
+            {
+              "position": 3,
+              "text": "F"
+            },
+            {
+              "position": 18,
+              "text": "C"
+            }
+          ]
+        },
+        {
+          "text": "My anchor holds within the veil.",
+          "chords": [
+            {
+              "position": 3,
+              "text": "Bb"
+            },
+            {
+              "position": 20,
+              "text": "C"
+            },
+            {
+              "position": 27,
+              "text": "F"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "label": "Verse 3",
+      "kind": "verse",
+      "color_hex": "#2378C3",
+      "hotkey": "3",
+      "lines": [
+        {
+          "text": "His oath, His covenant, His blood,",
+          "chords": [
+            {
+              "position": 4,
+              "text": "F"
+            },
+            {
+              "position": 24,
+              "text": "C"
+            }
+          ]
+        },
+        {
+          "text": "Support me in the whelming flood;",
+          "chords": [
+            {
+              "position": 3,
+              "text": "Bb"
+            },
+            {
+              "position": 18,
+              "text": "C"
+            },
+            {
+              "position": 27,
+              "text": "F"
+            }
+          ]
+        },
+        {
+          "text": "When all around my soul gives way,",
+          "chords": [
+            {
+              "position": 5,
+              "text": "F"
+            },
+            {
+              "position": 19,
+              "text": "C"
+            }
+          ]
+        },
+        {
+          "text": "He then is all my hope and stay.",
+          "chords": [
+            {
+              "position": 3,
+              "text": "Bb"
+            },
+            {
+              "position": 18,
+              "text": "C"
+            },
+            {
+              "position": 27,
+              "text": "F"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "label": "Verse 4",
+      "kind": "verse",
+      "color_hex": "#2378C3",
+      "hotkey": "4",
+      "lines": [
+        {
+          "text": "When He shall come with trumpet sound,",
+          "chords": [
+            {
+              "position": 5,
+              "text": "F"
+            },
+            {
+              "position": 24,
+              "text": "C"
+            }
+          ]
+        },
+        {
+          "text": "O may I then in Him be found,",
+          "chords": [
+            {
+              "position": 2,
+              "text": "Bb"
+            },
+            {
+              "position": 16,
+              "text": "C"
+            },
+            {
+              "position": 23,
+              "text": "F"
+            }
+          ]
+        },
+        {
+          "text": "Dressed in His righteousness alone,",
+          "chords": [
+            {
+              "position": 8,
+              "text": "F"
+            },
+            {
+              "position": 24,
+              "text": "C"
+            }
+          ]
+        },
+        {
+          "text": "Faultless to stand before the throne.",
+          "chords": [
+            {
+              "position": 5,
+              "text": "Bb"
+            },
+            {
+              "position": 21,
+              "text": "C"
+            },
+            {
+              "position": 30,
+              "text": "F"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

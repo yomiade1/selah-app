@@ -1,0 +1,12 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="Selah.UI.Views.ErrorAlert">
+  <Border Classes="alert-warning">
+    <WrapPanel ItemSpacing="{DynamicResource Space.3}" LineSpacing="{DynamicResource Space.2}" VerticalAlignment="Center">
+      <TextBlock Name="MessageBlock" TextWrapping="Wrap" VerticalAlignment="Center" />
+      <Button Name="HowToFixButton" Classes="link" Click="OnHowToFixClick" VerticalAlignment="Center">
+        <TextBlock Name="HowToFixText" TextDecorations="Underline" />
+      </Button>
+    </WrapPanel>
+  </Border>
+</UserControl>

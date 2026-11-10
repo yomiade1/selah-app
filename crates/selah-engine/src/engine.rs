@@ -115,21 +115,27 @@ impl Engine {
                 let (compositor, instance): (Box<dyn Compositor>, Option<wgpu::Instance>) =
                     match selah_render::gpu::GpuCompositor::new(choice) {
                         Ok(gpu) => {
-                            let instance = gpu.instance().clone();
-                            (Box::new(gpu), Some(instance))
+                            let instance = (mode == Mode::Windowed).then(|| gpu.instance().clone());
+                            (Box::new(gpu), instance)
                         }
                         Err(error) => {
                             tracing::error!(%error, "no usable GPU; using the CPU compositor (no windows)");
                             (Box::new(selah_render::cpu::CpuCompositor::default()), None)
                         }
                     };
-                let _ = ready.send((compositor.name().to_owned(), instance));
+                let _ = render.compositor_name.set(compositor.name().to_owned());
+                let _ = ready.send(instance);
                 render.render_loop(compositor);
             })?;
-        let (name, instance) = started
-            .recv()
-            .map_err(|_| anyhow::anyhow!("the render thread didn't start"))?;
-        let _ = engine.compositor_name.set(name);
+        // In headless mode, bind IPC immediately so a reconnecting core attaches during GPU/WARP
+        // init and delivers the current scene without waiting behind reconnect backoff.
+        let instance = if mode == Mode::Windowed {
+            started
+                .recv()
+                .map_err(|_| anyhow::anyhow!("the render thread didn't start"))?
+        } else {
+            None
+        };
         Ok((engine, instance))
     }
 

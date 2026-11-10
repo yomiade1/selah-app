@@ -1,0 +1,461 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://selah.app/schemas/selah-bundle/v1.json",
+  "title": "Selah Library Exchange Bundle Manifest",
+  "description": "Canonical, timestamp-free manifest stored at manifest.json inside a .selah exchange archive.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "format",
+    "media_items",
+    "presentations",
+    "schema_version",
+    "songs",
+    "tags",
+    "templates"
+  ],
+  "properties": {
+    "format": {
+      "const": "selah-bundle"
+    },
+    "schema_version": {
+      "type": "integer",
+      "const": 1
+    },
+    "songs": {
+      "type": "array",
+      "maxItems": 4096,
+      "items": {
+        "$ref": "#/$defs/Song"
+      }
+    },
+    "templates": {
+      "type": "array",
+      "maxItems": 4096,
+      "items": {
+        "$ref": "#/$defs/Template"
+      }
+    },
+    "media_items": {
+      "type": "array",
+      "maxItems": 4096,
+      "items": {
+        "$ref": "#/$defs/MediaItem"
+      }
+    },
+    "presentations": {
+      "type": "array",
+      "maxItems": 4096,
+      "items": {
+        "$ref": "#/$defs/Presentation"
+      }
+    },
+    "tags": {
+      "type": "array",
+      "maxItems": 4096,
+      "items": {
+        "$ref": "#/$defs/Tag"
+      }
+    }
+  },
+  "$defs": {
+    "UuidV7": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"
+    },
+    "Label": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 512
+    },
+    "Resolution": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["height", "width"],
+      "properties": {
+        "width": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 16384
+        },
+        "height": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 16384
+        }
+      }
+    },
+    "Color": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["alpha", "blue", "green", "red"],
+      "properties": {
+        "red": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "green": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "blue": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "alpha": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        }
+      }
+    },
+    "Chord": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["position", "text"],
+      "properties": {
+        "position": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 65535
+        },
+        "text": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64
+        }
+      }
+    },
+    "LyricLine": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["chords", "text"],
+      "properties": {
+        "text": {
+          "type": "string",
+          "maxLength": 65536
+        },
+        "chords": {
+          "type": "array",
+          "maxItems": 4096,
+          "items": {
+            "$ref": "#/$defs/Chord"
+          }
+        }
+      }
+    },
+    "Section": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "hotkey",
+        "id",
+        "kind",
+        "label",
+        "lines",
+        "translations"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/UuidV7"
+        },
+        "label": {
+          "$ref": "#/$defs/Label"
+        },
+        "kind": {
+          "type": "string",
+          "enum": [
+            "verse",
+            "chorus",
+            "bridge",
+            "tag",
+            "intro",
+            "outro",
+            "other"
+          ]
+        },
+        "color": {
+          "$ref": "#/$defs/Color"
+        },
+        "hotkey": {
+          "type": "string",
+          "maxLength": 16
+        },
+        "lines": {
+          "type": "array",
+          "maxItems": 4096,
+          "items": {
+            "$ref": "#/$defs/LyricLine"
+          }
+        },
+        "translations": {
+          "type": "object",
+          "maxProperties": 64,
+          "propertyNames": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 35
+          },
+          "additionalProperties": {
+            "type": "array",
+            "maxItems": 4096,
+            "items": {
+              "type": "string",
+              "maxLength": 65536
+            }
+          }
+        }
+      }
+    },
+    "Arrangement": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "name", "section_ids"],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/UuidV7"
+        },
+        "name": {
+          "$ref": "#/$defs/Label"
+        },
+        "section_ids": {
+          "type": "array",
+          "maxItems": 4096,
+          "items": {
+            "$ref": "#/$defs/UuidV7"
+          }
+        }
+      }
+    },
+    "Song": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "arrangements",
+        "authors",
+        "ccli_number",
+        "copyright",
+        "id",
+        "key",
+        "public_domain",
+        "sections",
+        "tags",
+        "tempo",
+        "title"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/UuidV7"
+        },
+        "title": {
+          "$ref": "#/$defs/Label"
+        },
+        "authors": {
+          "type": "array",
+          "maxItems": 4096,
+          "items": {
+            "type": "string",
+            "maxLength": 512
+          }
+        },
+        "ccli_number": {
+          "type": "string",
+          "maxLength": 64
+        },
+        "copyright": {
+          "type": "string",
+          "maxLength": 2048
+        },
+        "key": {
+          "type": "string",
+          "maxLength": 32
+        },
+        "tempo": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1000
+        },
+        "tags": {
+          "type": "array",
+          "maxItems": 4096,
+          "items": {
+            "type": "string",
+            "maxLength": 512
+          }
+        },
+        "public_domain": {
+          "type": "boolean"
+        },
+        "sections": {
+          "type": "array",
+          "maxItems": 4096,
+          "items": {
+            "$ref": "#/$defs/Section"
+          }
+        },
+        "arrangements": {
+          "type": "array",
+          "maxItems": 4096,
+          "items": {
+            "$ref": "#/$defs/Arrangement"
+          }
+        }
+      }
+    },
+    "TemplateVariant": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "max_lines", "resolution", "style_json"],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/UuidV7"
+        },
+        "resolution": {
+          "$ref": "#/$defs/Resolution"
+        },
+        "max_lines": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 100
+        },
+        "style_json": {
+          "type": "string",
+          "maxLength": 65536
+        }
+      }
+    },
+    "Template": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "name", "variants"],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/UuidV7"
+        },
+        "name": {
+          "$ref": "#/$defs/Label"
+        },
+        "variants": {
+          "type": "array",
+          "maxItems": 4096,
+          "items": {
+            "$ref": "#/$defs/TemplateVariant"
+          }
+        }
+      }
+    },
+    "MediaItem": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "content_hash",
+        "duration_milliseconds",
+        "extension",
+        "id",
+        "kind",
+        "name",
+        "size_bytes",
+        "tags"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/UuidV7"
+        },
+        "name": {
+          "$ref": "#/$defs/Label"
+        },
+        "kind": {
+          "type": "string",
+          "enum": ["image", "video", "audio"]
+        },
+        "content_hash": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "extension": {
+          "type": "string",
+          "pattern": "^[a-z0-9]{1,10}$"
+        },
+        "size_bytes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 8589934592
+        },
+        "resolution": {
+          "$ref": "#/$defs/Resolution"
+        },
+        "duration_milliseconds": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "tags": {
+          "type": "array",
+          "maxItems": 4096,
+          "items": {
+            "$ref": "#/$defs/Label"
+          }
+        }
+      }
+    },
+    "Slide": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["elements_json", "id", "text"],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/UuidV7"
+        },
+        "text": {
+          "type": "string",
+          "maxLength": 65536
+        },
+        "media_id": {
+          "$ref": "#/$defs/UuidV7"
+        },
+        "elements_json": {
+          "type": "string",
+          "maxLength": 1048576
+        }
+      }
+    },
+    "Presentation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "name", "slides"],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/UuidV7"
+        },
+        "name": {
+          "$ref": "#/$defs/Label"
+        },
+        "slides": {
+          "type": "array",
+          "maxItems": 4096,
+          "items": {
+            "$ref": "#/$defs/Slide"
+          }
+        },
+        "template_id": {
+          "$ref": "#/$defs/UuidV7"
+        }
+      }
+    },
+    "Tag": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "name"],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/UuidV7"
+        },
+        "name": {
+          "$ref": "#/$defs/Label"
+        }
+      }
+    }
+  }
+}

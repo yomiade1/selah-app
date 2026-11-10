@@ -1,0 +1,394 @@
+{
+  "title": "I Surrender All",
+  "author": "Judson W. Van DeVenter (1855-1939)",
+  "key": "D",
+  "public_domain": true,
+  "arrangement": [
+    "Verse 1",
+    "Chorus",
+    "Verse 2",
+    "Chorus",
+    "Verse 3",
+    "Chorus",
+    "Verse 4",
+    "Chorus"
+  ],
+  "sections": [
+    {
+      "label": "Verse 1",
+      "kind": "verse",
+      "color_hex": "#2378C3",
+      "hotkey": "1",
+      "lines": [
+        {
+          "text": "All to Jesus I surrender;",
+          "chords": [
+            {
+              "position": 0,
+              "text": "D"
+            },
+            {
+              "position": 13,
+              "text": "A"
+            },
+            {
+              "position": 18,
+              "text": "D"
+            }
+          ]
+        },
+        {
+          "text": "All to Him I freely give;",
+          "chords": [
+            {
+              "position": 0,
+              "text": "G"
+            },
+            {
+              "position": 13,
+              "text": "A"
+            },
+            {
+              "position": 20,
+              "text": "D"
+            }
+          ]
+        },
+        {
+          "text": "I will ever love and trust Him,",
+          "chords": [
+            {
+              "position": 0,
+              "text": "D"
+            },
+            {
+              "position": 12,
+              "text": "A"
+            },
+            {
+              "position": 21,
+              "text": "Bm"
+            }
+          ]
+        },
+        {
+          "text": "In His presence daily live.",
+          "chords": [
+            {
+              "position": 0,
+              "text": "G"
+            },
+            {
+              "position": 16,
+              "text": "A"
+            },
+            {
+              "position": 22,
+              "text": "D"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "label": "Chorus",
+      "kind": "chorus",
+      "color_hex": "#C84281",
+      "hotkey": "C",
+      "lines": [
+        {
+          "text": "I surrender all,",
+          "chords": [
+            {
+              "position": 0,
+              "text": "D"
+            },
+            {
+              "position": 5,
+              "text": "Bm"
+            },
+            {
+              "position": 12,
+              "text": "A"
+            }
+          ]
+        },
+        {
+          "text": "I surrender all;",
+          "chords": [
+            {
+              "position": 0,
+              "text": "A"
+            },
+            {
+              "position": 5,
+              "text": "Em"
+            },
+            {
+              "position": 12,
+              "text": "D"
+            }
+          ]
+        },
+        {
+          "text": "All to Thee, my blessed Savior,",
+          "chords": [
+            {
+              "position": 0,
+              "text": "D"
+            },
+            {
+              "position": 16,
+              "text": "G"
+            }
+          ]
+        },
+        {
+          "text": "I surrender all.",
+          "chords": [
+            {
+              "position": 0,
+              "text": "A"
+            },
+            {
+              "position": 5,
+              "text": "Em"
+            },
+            {
+              "position": 12,
+              "text": "D"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "label": "Verse 2",
+      "kind": "verse",
+      "color_hex": "#2378C3",
+      "hotkey": "2",
+      "lines": [
+        {
+          "text": "All to Jesus I surrender;",
+          "chords": [
+            {
+              "position": 0,
+              "text": "D"
+            },
+            {
+              "position": 13,
+              "text": "A"
+            },
+            {
+              "position": 18,
+              "text": "D"
+            }
+          ]
+        },
+        {
+          "text": "Humbly at His feet I bow,",
+          "chords": [
+            {
+              "position": 0,
+              "text": "G"
+            },
+            {
+              "position": 14,
+              "text": "A"
+            },
+            {
+              "position": 21,
+              "text": "D"
+            }
+          ]
+        },
+        {
+          "text": "Worldly pleasures all forsaken;",
+          "chords": [
+            {
+              "position": 0,
+              "text": "D"
+            },
+            {
+              "position": 18,
+              "text": "A"
+            },
+            {
+              "position": 25,
+              "text": "Bm"
+            }
+          ]
+        },
+        {
+          "text": "Take me, Jesus, take me now.",
+          "chords": [
+            {
+              "position": 0,
+              "text": "G"
+            },
+            {
+              "position": 16,
+              "text": "A"
+            },
+            {
+              "position": 24,
+              "text": "D"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "label": "Verse 3",
+      "kind": "verse",
+      "color_hex": "#2378C3",
+      "hotkey": "3",
+      "lines": [
+        {
+          "text": "All to Jesus I surrender;",
+          "chords": [
+            {
+              "position": 0,
+              "text": "D"
+            },
+            {
+              "position": 13,
+              "text": "A"
+            },
+            {
+              "position": 18,
+              "text": "D"
+            }
+          ]
+        },
+        {
+          "text": "Make me, Savior, wholly Thine;",
+          "chords": [
+            {
+              "position": 0,
+              "text": "G"
+            },
+            {
+              "position": 17,
+              "text": "A"
+            },
+            {
+              "position": 24,
+              "text": "D"
+            }
+          ]
+        },
+        {
+          "text": "Let me feel the Holy Spirit,",
+          "chords": [
+            {
+              "position": 0,
+              "text": "D"
+            },
+            {
+              "position": 16,
+              "text": "A"
+            },
+            {
+              "position": 21,
+              "text": "Bm"
+            }
+          ]
+        },
+        {
+          "text": "Truly know that Thou art mine.",
+          "chords": [
+            {
+              "position": 0,
+              "text": "G"
+            },
+            {
+              "position": 16,
+              "text": "A"
+            },
+            {
+              "position": 25,
+              "text": "D"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "label": "Verse 4",
+      "kind": "verse",
+      "color_hex": "#2378C3",
+      "hotkey": "4",
+      "lines": [
+        {
+          "text": "All to Jesus I surrender;",
+          "chords": [
+            {
+              "position": 0,
+              "text": "D"
+            },
+            {
+              "position": 13,
+              "text": "A"
+            },
+            {
+              "position": 18,
+              "text": "D"
+            }
+          ]
+        },
+        {
+          "text": "Lord, I give myself to Thee;",
+          "chords": [
+            {
+              "position": 0,
+              "text": "G"
+            },
+            {
+              "position": 15,
+              "text": "A"
+            },
+            {
+              "position": 23,
+              "text": "D"
+            }
+          ]
+        },
+        {
+          "text": "Fill me with Thy love and power,",
+          "chords": [
+            {
+              "position": 0,
+              "text": "D"
+            },
+            {
+              "position": 17,
+              "text": "A"
+            },
+            {
+              "position": 26,
+              "text": "Bm"
+            }
+          ]
+        },
+        {
+          "text": "Let Thy blessing fall on me.",
+          "chords": [
+            {
+              "position": 0,
+              "text": "G"
+            },
+            {
+              "position": 17,
+              "text": "A"
+            },
+            {
+              "position": 25,
+              "text": "D"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

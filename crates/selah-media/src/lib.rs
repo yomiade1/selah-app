@@ -1,41 +1,50 @@
 #![deny(unsafe_code)]
-//! Video decoding through FFmpeg (M1.7, ADR-005), limited by SEC-04:
+//! Media decoding, probing and thumbnailing through FFmpeg and Skia (M1.7, M2.6, ADR-005),
+//! limited by SEC-04:
 //!
-//! - **Local files only.** [`check_local_path`] refuses URLs and other protocol prefixes before
-//!   FFmpeg sees the path, and FFmpeg opens it with `protocol_whitelist=file,pipe`, so a file
-//!   can't pull in a network resource either (an HLS playlist pointing at `http://` fails).
+//! - **Local files only.** [`check_local_path`] refuses URLs, protocol prefixes, and symlinks
+//!   before FFmpeg sees the path, and FFmpeg opens it with `protocol_whitelist=file,pipe`, so a
+//!   file can't pull in a network resource either (an HLS playlist pointing at `http://` fails).
 //! - **Allowlisted demuxers and decoders.** [`DEMUXERS`] goes to FFmpeg as `format_whitelist`;
-//!   [`VIDEO_DECODERS`] is checked before a decoder opens and is FFmpeg's `codec_whitelist`.
+//!   [`VIDEO_DECODERS`] and [`AUDIO_DECODERS`] are checked before a decoder opens and form
+//!   FFmpeg's `codec_whitelist`.
 //!
 //! Frames come out as 8-bit NV12 ([`VideoFrame`]): the compositor uploads the two planes and
 //! converts them to RGB in a shader. Hardware decode (D3D11VA on Windows, VideoToolbox on
 //! macOS) is tried first when asked for, and falls back to software decode.
+use std::io::Read;
 use std::path::{Path, PathBuf};
 use std::sync::Once;
 
 use ffmpeg::format::Pixel;
 use ffmpeg::util::color;
 use ffmpeg_next as ffmpeg;
+use serde::{Deserialize, Serialize};
 
 mod hw;
 
 /// FFmpeg demuxers a file item may use. Names as FFmpeg reports them.
-pub const DEMUXERS: &[&str] = &["mov", "mp4", "m4a", "3gp", "3g2", "mj2", "matroska", "webm"];
+pub const DEMUXERS: &[&str] = &[
+    "mov", "mp4", "m4a", "3gp", "3g2", "mj2", "matroska", "webm", "mp3", "wav", "flac", "ogg",
+];
 
 /// Video decoders a file item may use.
 pub const VIDEO_DECODERS: &[&str] = &["h264", "hevc", "vp9", "av1", "prores"];
 
 /// Audio decoders a file item may use (audio playback arrives in M3.4 and M5.7; probing a
-/// video file opens its audio stream's decoder too).
+/// video or audio file checks its audio stream's decoder against this allowlist).
 pub const AUDIO_DECODERS: &[&str] = &[
     "aac",
     "mp3float",
     "mp3",
     "opus",
     "flac",
+    "vorbis",
     "pcm_s16le",
     "pcm_s24le",
+    "pcm_s32le",
     "pcm_f32le",
+    "pcm_u8",
 ];
 
 /// Protocols FFmpeg may use for a file item (SEC-04). Network protocols are for stream items,
@@ -45,27 +54,59 @@ pub const FILE_PROTOCOLS: &str = "file,pipe";
 /// The largest frame the decoder accepts (8K), so a crafted header can't ask for huge buffers.
 pub const MAX_DIMENSION: u32 = 8192;
 
+/// Maximum encoded image file read when probing or thumbnailing (128 MiB).
+pub const MAX_IMAGE_FILE_BYTES: u64 = 128 * 1024 * 1024;
+
 #[derive(Debug, thiserror::Error)]
 pub enum MediaError {
     #[error("only local files can be opened as file items (SEC-04): {0}")]
     NotLocal(String),
-    #[error("the file doesn't exist or isn't a regular file: {0}")]
+    #[error("the file doesn't exist, is a symlink, or isn't a regular file: {0}")]
     NotAFile(PathBuf),
     #[error("FFmpeg refused the file: {0}")]
     Open(ffmpeg::Error),
     #[error("the file has no video stream")]
     NoVideo,
+    #[error("the file has no audio stream")]
+    NoAudio,
     #[error("the {0} decoder isn't allowed (SEC-04)")]
     DecoderNotAllowed(String),
-    #[error("the video is {0}×{1}, larger than the {MAX_DIMENSION} pixel limit")]
+    #[error("the video is {0}×{1}, larger than the {MAX_DIMENSION} pixel limit (SEC-04)")]
     TooLarge(u32, u32),
     #[error("unsupported pixel format {0:?} (M1 handles 8-bit 4:2:0 video)")]
     PixelFormat(Pixel),
     #[error("decoding failed: {0}")]
     Decode(ffmpeg::Error),
+    #[error("invalid or unsupported image: {0}")]
+    Image(String),
+    #[error("I/O error reading media file: {0}")]
+    Io(#[from] std::io::Error),
 }
 
 pub type Result<T> = std::result::Result<T, MediaError>;
+
+/// Detected kind of a probed media file.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum MediaProbeKind {
+    Image,
+    Video,
+    Audio,
+}
+
+/// Metadata and optional PNG thumbnail produced by probing a local media file.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct MediaProbeResult {
+    pub kind: MediaProbeKind,
+    pub width: u32,
+    pub height: u32,
+    pub duration_ms: u64,
+    pub codec: String,
+    pub container: String,
+    pub thumbnail_width: u32,
+    pub thumbnail_height: u32,
+    pub thumbnail_png: Vec<u8>,
+}
 
 /// How to decode.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -114,7 +155,6 @@ impl VideoFrame {
     }
 
     /// The compositor's frame type (moves the planes, no copy).
-    #[cfg(feature = "render")]
     pub fn into_nv12(self) -> selah_render::video::Nv12Frame {
         selah_render::video::Nv12Frame {
             width: self.width,
@@ -141,9 +181,9 @@ fn init() {
     });
 }
 
-/// SEC-04: accept only a path to an existing local regular file. Anything that looks like a
-/// URL or an FFmpeg protocol prefix (`http:`, `concat:`, `subfile,`) is refused, whatever the
-/// file system says. A single drive letter (`C:\…`) is a path, not a protocol.
+/// SEC-04: accept only a path to an existing local non-symlink regular file. Anything that looks
+/// like a URL or an FFmpeg protocol prefix (`http:`, `concat:`, `subfile,`) is refused, whatever
+/// the file system says. A single drive letter (`C:\…`) is a path, not a protocol.
 pub fn check_local_path(path: &Path) -> Result<PathBuf> {
     let text = path.to_string_lossy();
     if let Some(colon) = text.find(':') {
@@ -159,6 +199,11 @@ pub fn check_local_path(path: &Path) -> Result<PathBuf> {
     }
     if text.contains("://") {
         return Err(MediaError::NotLocal(text.into_owned()));
+    }
+    let metadata =
+        std::fs::symlink_metadata(path).map_err(|_| MediaError::NotAFile(path.to_owned()))?;
+    if metadata.file_type().is_symlink() || !metadata.is_file() {
+        return Err(MediaError::NotAFile(path.to_owned()));
     }
     let canonical =
         std::fs::canonicalize(path).map_err(|_| MediaError::NotAFile(path.to_owned()))?;
@@ -189,6 +234,35 @@ fn open_options() -> ffmpeg::Dictionary<'static> {
     options
 }
 
+fn check_demuxer(input: &ffmpeg::format::context::Input) -> Result<String> {
+    let demuxer_name = input.format().name().to_owned();
+    if !demuxer_name.split(',').any(|name| DEMUXERS.contains(&name)) {
+        return Err(MediaError::Open(ffmpeg::Error::DemuxerNotFound));
+    }
+    Ok(demuxer_name)
+}
+
+fn duration_milliseconds(
+    input: &ffmpeg::format::context::Input,
+    stream: &ffmpeg::Stream<'_>,
+) -> u64 {
+    let container_dur = input.duration();
+    if container_dur > 0 && container_dur != ffmpeg::ffi::AV_NOPTS_VALUE {
+        return (container_dur as u64) / 1000;
+    }
+    let stream_dur = stream.duration();
+    if stream_dur > 0 && stream_dur != ffmpeg::ffi::AV_NOPTS_VALUE {
+        let tb = f64::from(stream.time_base());
+        if tb.is_finite() && tb > 0.0 {
+            let ms = (stream_dur as f64) * tb * 1000.0;
+            if ms.is_finite() && ms >= 0.0 {
+                return ms.round() as u64;
+            }
+        }
+    }
+    0
+}
+
 /// A video file opened for decoding.
 pub struct VideoDecoder {
     input: ffmpeg::format::context::Input,
@@ -197,6 +271,7 @@ pub struct VideoDecoder {
     time_base: f64,
     start: Option<i64>,
     frame_rate: f64,
+    duration_ms: u64,
     hardware: Option<hw::Device>,
     eof_sent: bool,
     next_index: u64,
@@ -211,10 +286,7 @@ impl VideoDecoder {
         let path = check_local_path(path)?;
         let input = ffmpeg::format::input_with_dictionary(&ffmpeg_url(&path), open_options())
             .map_err(MediaError::Open)?;
-        let demuxer_name = input.format().name().to_owned();
-        if !demuxer_name.split(',').any(|name| DEMUXERS.contains(&name)) {
-            return Err(MediaError::Open(ffmpeg::Error::DemuxerNotFound));
-        }
+        let demuxer_name = check_demuxer(&input)?;
         let stream = input
             .streams()
             .best(ffmpeg::media::Type::Video)
@@ -223,6 +295,7 @@ impl VideoDecoder {
         let time_base = f64::from(stream.time_base());
         let start = Some(stream.start_time()).filter(|t| *t != ffmpeg::ffi::AV_NOPTS_VALUE);
         let frame_rate = f64::from(stream.avg_frame_rate());
+        let duration_ms = duration_milliseconds(&input, &stream);
         let parameters = stream.parameters();
         let codec = ffmpeg::decoder::find(parameters.id())
             .ok_or_else(|| MediaError::DecoderNotAllowed(format!("{:?}", parameters.id())))?;
@@ -242,7 +315,11 @@ impl VideoDecoder {
             ));
         }
         let decoder = context.decoder().video().map_err(MediaError::Open)?;
-        if decoder.width() > MAX_DIMENSION || decoder.height() > MAX_DIMENSION {
+        if decoder.width() == 0
+            || decoder.height() == 0
+            || decoder.width() > MAX_DIMENSION
+            || decoder.height() > MAX_DIMENSION
+        {
             return Err(MediaError::TooLarge(decoder.width(), decoder.height()));
         }
         tracing::info!(
@@ -260,6 +337,7 @@ impl VideoDecoder {
             time_base,
             start,
             frame_rate,
+            duration_ms,
             hardware,
             eof_sent: false,
             next_index: 0,
@@ -279,6 +357,11 @@ impl VideoDecoder {
     /// Average frame rate from the container (0 when unknown).
     pub fn frame_rate(&self) -> f64 {
         self.frame_rate
+    }
+
+    /// Stream/container duration in milliseconds (0 when unknown).
+    pub fn duration_ms(&self) -> u64 {
+        self.duration_ms
     }
 
     pub fn decoder_name(&self) -> &str {
@@ -336,6 +419,9 @@ impl VideoDecoder {
             decoded
         };
         let (width, height) = (frame.width(), frame.height());
+        if width == 0 || height == 0 || width > MAX_DIMENSION || height > MAX_DIMENSION {
+            return Err(MediaError::TooLarge(width, height));
+        }
         let (y, uv) = match frame.format() {
             Pixel::NV12 => (
                 copy_plane(&frame, 0, width as usize, height as usize),
@@ -381,6 +467,199 @@ impl VideoDecoder {
             hardware,
         })
     }
+}
+
+/// Probe a local media file (image, video, or audio) and optionally render a bounded PNG
+/// thumbnail (`max_width > 0 && max_height > 0`) using software decoding and Skia (SEC-04).
+pub fn probe_and_thumbnail(
+    path: &Path,
+    kind_hint: Option<MediaProbeKind>,
+    max_width: u32,
+    max_height: u32,
+) -> Result<MediaProbeResult> {
+    let canonical = check_local_path(path)?;
+    let ext = canonical
+        .extension()
+        .and_then(|e| e.to_str())
+        .map(str::to_ascii_lowercase)
+        .unwrap_or_default();
+
+    let kind = kind_hint.unwrap_or(match ext.as_str() {
+        "png" | "jpg" | "jpeg" | "bmp" | "gif" | "ico" | "webp" => MediaProbeKind::Image,
+        "mp3" | "wav" | "flac" | "ogg" | "opus" | "m4a" | "aac" => MediaProbeKind::Audio,
+        _ => MediaProbeKind::Video,
+    });
+
+    match kind {
+        MediaProbeKind::Image => probe_image(&canonical, &ext, max_width, max_height),
+        MediaProbeKind::Video => match probe_video(&canonical, max_width, max_height) {
+            Ok(result) => Ok(result),
+            Err(MediaError::NoVideo) if kind_hint.is_none() => probe_audio(&canonical),
+            Err(err) => Err(err),
+        },
+        MediaProbeKind::Audio => probe_audio(&canonical),
+    }
+}
+
+fn probe_image(
+    canonical: &Path,
+    ext: &str,
+    max_width: u32,
+    max_height: u32,
+) -> Result<MediaProbeResult> {
+    let file = std::fs::File::open(canonical)?;
+    let meta = file.metadata()?;
+    if !meta.is_file() || meta.len() > MAX_IMAGE_FILE_BYTES {
+        return Err(MediaError::Image(format!(
+            "image file exceeds {MAX_IMAGE_FILE_BYTES} bytes"
+        )));
+    }
+    let mut bytes = Vec::with_capacity((meta.len() as usize).min(4 * 1024 * 1024));
+    file.take(MAX_IMAGE_FILE_BYTES + 1)
+        .read_to_end(&mut bytes)?;
+    if bytes.len() as u64 > MAX_IMAGE_FILE_BYTES {
+        return Err(MediaError::Image(format!(
+            "image file exceeds {MAX_IMAGE_FILE_BYTES} bytes"
+        )));
+    }
+
+    if max_width > 0 && max_height > 0 {
+        let thumb = selah_render::png::thumbnail_image(&bytes, max_width, max_height)
+            .map_err(|e| MediaError::Image(e.to_string()))?;
+        Ok(MediaProbeResult {
+            kind: MediaProbeKind::Image,
+            width: thumb.source_width,
+            height: thumb.source_height,
+            duration_ms: 0,
+            codec: ext.to_owned(),
+            container: ext.to_owned(),
+            thumbnail_width: thumb.width,
+            thumbnail_height: thumb.height,
+            thumbnail_png: thumb.png_bytes,
+        })
+    } else {
+        let (width, height) = selah_render::png::probe_image_dimensions(&bytes)
+            .map_err(|e| MediaError::Image(e.to_string()))?;
+        Ok(MediaProbeResult {
+            kind: MediaProbeKind::Image,
+            width,
+            height,
+            duration_ms: 0,
+            codec: ext.to_owned(),
+            container: ext.to_owned(),
+            thumbnail_width: 0,
+            thumbnail_height: 0,
+            thumbnail_png: Vec::new(),
+        })
+    }
+}
+
+fn fit_stage_size(src_w: u32, src_h: u32, max_w: u32, max_h: u32) -> (u32, u32) {
+    let bound_w = (max_w.clamp(16, 1024)) * 2;
+    let bound_h = (max_h.clamp(16, 1024)) * 2;
+    if src_w <= bound_w && src_h <= bound_h {
+        return (src_w.max(1), src_h.max(1));
+    }
+    let scale = (f64::from(bound_w) / f64::from(src_w)).min(f64::from(bound_h) / f64::from(src_h));
+    let w = ((f64::from(src_w) * scale).round() as u32).clamp(1, src_w);
+    let h = ((f64::from(src_h) * scale).round() as u32).clamp(1, src_h);
+    (w, h)
+}
+
+fn probe_video(canonical: &Path, max_width: u32, max_height: u32) -> Result<MediaProbeResult> {
+    let mut decoder = VideoDecoder::open(canonical, DecodeMode::Software)?;
+    let width = decoder.width();
+    let height = decoder.height();
+    let duration_ms = decoder.duration_ms();
+    let codec = decoder.decoder_name().to_owned();
+    let container = decoder.demuxer_name().to_owned();
+
+    let first_frame = decoder.next_frame()?.ok_or(MediaError::NoVideo)?;
+    let (thumbnail_width, thumbnail_height, thumbnail_png) = if max_width > 0 && max_height > 0 {
+        let nv12 = first_frame.into_nv12();
+        let (stage_w, stage_h) = fit_stage_size(nv12.width, nv12.height, max_width, max_height);
+        let mut frame = selah_render::Frame::new(stage_w, stage_h);
+        selah_render::video::draw_cpu(&mut frame, &nv12);
+        selah_render::png::encode_rgba_thumbnail(&frame, max_width, max_height)
+            .map_err(|e| MediaError::Image(e.to_string()))?
+    } else {
+        (0, 0, Vec::new())
+    };
+
+    Ok(MediaProbeResult {
+        kind: MediaProbeKind::Video,
+        width,
+        height,
+        duration_ms,
+        codec,
+        container,
+        thumbnail_width,
+        thumbnail_height,
+        thumbnail_png,
+    })
+}
+
+fn probe_audio(canonical: &Path) -> Result<MediaProbeResult> {
+    init();
+    let mut input = ffmpeg::format::input_with_dictionary(&ffmpeg_url(canonical), open_options())
+        .map_err(MediaError::Open)?;
+    let container = check_demuxer(&input)?;
+    let stream = input
+        .streams()
+        .best(ffmpeg::media::Type::Audio)
+        .ok_or(MediaError::NoAudio)?;
+    let stream_index = stream.index();
+    let duration_ms = duration_milliseconds(&input, &stream);
+    let parameters = stream.parameters();
+    let codec = ffmpeg::decoder::find(parameters.id())
+        .ok_or_else(|| MediaError::DecoderNotAllowed(format!("{:?}", parameters.id())))?;
+    let decoder_name = codec.name().to_owned();
+    if !AUDIO_DECODERS.contains(&decoder_name.as_str()) {
+        return Err(MediaError::DecoderNotAllowed(decoder_name));
+    }
+    let context =
+        ffmpeg::codec::context::Context::from_parameters(parameters).map_err(MediaError::Open)?;
+    let mut decoder = context.decoder().audio().map_err(MediaError::Open)?;
+
+    // Decode up to one audio frame to confirm the stream payload is readable and valid.
+    let mut decoded = ffmpeg::frame::Audio::empty();
+    let mut eof_sent = false;
+    loop {
+        match decoder.receive_frame(&mut decoded) {
+            Ok(()) => break,
+            Err(ffmpeg::Error::Eof) => break,
+            Err(ffmpeg::Error::Other { errno }) if errno == ffmpeg::error::EAGAIN => {}
+            Err(error) => return Err(MediaError::Decode(error)),
+        }
+        if eof_sent {
+            break;
+        }
+        let mut packet = ffmpeg::Packet::empty();
+        match packet.read(&mut input) {
+            Ok(()) if packet.stream() == stream_index => match decoder.send_packet(&packet) {
+                Ok(()) | Err(ffmpeg::Error::InvalidData) => {}
+                Err(error) => return Err(MediaError::Decode(error)),
+            },
+            Ok(()) | Err(ffmpeg::Error::InvalidData) => {}
+            Err(ffmpeg::Error::Eof) => {
+                decoder.send_eof().map_err(MediaError::Decode)?;
+                eof_sent = true;
+            }
+            Err(error) => return Err(MediaError::Decode(error)),
+        }
+    }
+
+    Ok(MediaProbeResult {
+        kind: MediaProbeKind::Audio,
+        width: 0,
+        height: 0,
+        duration_ms,
+        codec: decoder_name,
+        container,
+        thumbnail_width: 0,
+        thumbnail_height: 0,
+        thumbnail_png: Vec::new(),
+    })
 }
 
 /// Copy `rows` rows of `row_bytes` from a plane, dropping the stride padding.
@@ -490,5 +769,104 @@ mod tests {
         let file = folder.path().join("clip.mp4");
         std::fs::write(&file, vec![0x5a_u8; 4096]).unwrap();
         assert!(VideoDecoder::open(&file, DecodeMode::Software).is_err());
+    }
+
+    #[test]
+    fn probes_committed_image_and_generates_png_thumbnail() {
+        let path =
+            Path::new(env!("CARGO_MANIFEST_DIR")).join("../../tests/golden/reference/text-en.png");
+        let probed = probe_and_thumbnail(&path, Some(MediaProbeKind::Image), 160, 90).unwrap();
+        assert_eq!(probed.kind, MediaProbeKind::Image);
+        assert!(probed.width > 0 && probed.height > 0);
+        assert!(probed.thumbnail_width <= 160 && probed.thumbnail_height <= 90);
+        assert!(!probed.thumbnail_png.is_empty());
+        let decoded = selah_render::png::decode(&probed.thumbnail_png).unwrap();
+        assert_eq!(
+            (decoded.width, decoded.height),
+            (probed.thumbnail_width, probed.thumbnail_height)
+        );
+    }
+
+    #[test]
+    fn probes_committed_video_and_generates_keyframe_thumbnail() {
+        let path = Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("../../tests/fixtures/media/committed/h264-1080p60.mp4");
+        let probed = probe_and_thumbnail(&path, Some(MediaProbeKind::Video), 320, 180).unwrap();
+        assert_eq!(probed.kind, MediaProbeKind::Video);
+        assert_eq!((probed.width, probed.height), (1920, 1080));
+        assert_eq!(
+            (probed.thumbnail_width, probed.thumbnail_height),
+            (320, 180)
+        );
+        assert!(probed.duration_ms > 0);
+        let decoded = selah_render::png::decode(&probed.thumbnail_png).unwrap();
+        assert_eq!((decoded.width, decoded.height), (320, 180));
+    }
+
+    #[test]
+    fn probes_synthetic_wav_audio() {
+        let dir = tempfile::tempdir().unwrap();
+        let path = dir.path().join("tone.wav");
+        let sample_rate = 48_000_u32;
+        let samples = sample_rate / 2; // 500 ms mono 16-bit PCM
+        let data_bytes = samples * 2;
+        let mut wav = Vec::with_capacity(44 + data_bytes as usize);
+        wav.extend_from_slice(b"RIFF");
+        wav.extend_from_slice(&(36 + data_bytes).to_le_bytes());
+        wav.extend_from_slice(b"WAVEfmt ");
+        wav.extend_from_slice(&16_u32.to_le_bytes());
+        wav.extend_from_slice(&1_u16.to_le_bytes()); // PCM
+        wav.extend_from_slice(&1_u16.to_le_bytes()); // mono
+        wav.extend_from_slice(&sample_rate.to_le_bytes());
+        wav.extend_from_slice(&(sample_rate * 2).to_le_bytes());
+        wav.extend_from_slice(&2_u16.to_le_bytes());
+        wav.extend_from_slice(&16_u16.to_le_bytes());
+        wav.extend_from_slice(b"data");
+        wav.extend_from_slice(&data_bytes.to_le_bytes());
+        wav.resize(44 + data_bytes as usize, 0);
+        std::fs::write(&path, wav).unwrap();
+
+        let probed = probe_and_thumbnail(&path, Some(MediaProbeKind::Audio), 320, 180).unwrap();
+        assert_eq!(probed.kind, MediaProbeKind::Audio);
+        assert_eq!(probed.codec, "pcm_s16le");
+        assert!(probed.duration_ms >= 450 && probed.duration_ms <= 550);
+        assert!(probed.thumbnail_png.is_empty());
+    }
+
+    #[test]
+    fn rejects_oversized_png_bomb() {
+        let dir = tempfile::tempdir().unwrap();
+        let path = dir.path().join("bomb.png");
+        let mut png = selah_render::png::encode(&selah_render::Frame::new(1, 1)).unwrap();
+        png[16..20].copy_from_slice(&9000u32.to_be_bytes());
+        png[20..24].copy_from_slice(&9000u32.to_be_bytes());
+        let mut crc = 0xFFFF_FFFF_u32;
+        for &byte in &png[12..29] {
+            crc ^= u32::from(byte);
+            for _ in 0..8 {
+                let mask = (crc & 1).wrapping_neg();
+                crc = (crc >> 1) ^ (0xEDB8_8320 & mask);
+            }
+        }
+        png[29..33].copy_from_slice(&(!crc).to_be_bytes());
+        std::fs::write(&path, png).unwrap();
+
+        let err = probe_and_thumbnail(&path, Some(MediaProbeKind::Image), 320, 180)
+            .expect_err("9000x9000 PNG must be refused");
+        assert!(err.to_string().contains("8192"), "{err}");
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn refuses_symlink_input_files() {
+        let dir = tempfile::tempdir().unwrap();
+        let target =
+            Path::new(env!("CARGO_MANIFEST_DIR")).join("../../tests/golden/reference/text-en.png");
+        let link = dir.path().join("link.png");
+        std::os::unix::fs::symlink(&target, &link).unwrap();
+        assert!(matches!(
+            check_local_path(&link),
+            Err(MediaError::NotAFile(_))
+        ));
     }
 }

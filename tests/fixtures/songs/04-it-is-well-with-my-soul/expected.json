@@ -1,0 +1,364 @@
+{
+  "title": "It Is Well with My Soul",
+  "author": "Horatio G. Spafford (1828-1888)",
+  "key": "C",
+  "public_domain": true,
+  "arrangement": [
+    "Verse 1",
+    "Chorus",
+    "Verse 2",
+    "Chorus",
+    "Verse 3",
+    "Chorus",
+    "Verse 4",
+    "Chorus"
+  ],
+  "sections": [
+    {
+      "label": "Verse 1",
+      "kind": "verse",
+      "color_hex": "#2378C3",
+      "hotkey": "1",
+      "lines": [
+        {
+          "text": "When peace like a river attendeth my way,",
+          "chords": [
+            {
+              "position": 5,
+              "text": "C"
+            },
+            {
+              "position": 26,
+              "text": "F"
+            },
+            {
+              "position": 37,
+              "text": "C"
+            }
+          ]
+        },
+        {
+          "text": "When sorrows like sea billows roll;",
+          "chords": [
+            {
+              "position": 5,
+              "text": "Am"
+            },
+            {
+              "position": 18,
+              "text": "D"
+            },
+            {
+              "position": 30,
+              "text": "G"
+            }
+          ]
+        },
+        {
+          "text": "Whatever my lot, Thou hast taught me to say,",
+          "chords": [
+            {
+              "position": 4,
+              "text": "C"
+            },
+            {
+              "position": 27,
+              "text": "F"
+            },
+            {
+              "position": 40,
+              "text": "Dm"
+            }
+          ]
+        },
+        {
+          "text": "It is well, it is well with my soul.",
+          "chords": [
+            {
+              "position": 6,
+              "text": "C"
+            },
+            {
+              "position": 18,
+              "text": "G"
+            },
+            {
+              "position": 31,
+              "text": "C"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "label": "Chorus",
+      "kind": "chorus",
+      "color_hex": "#C84281",
+      "hotkey": "C",
+      "lines": [
+        {
+          "text": "It is well with my soul,",
+          "chords": [
+            {
+              "position": 6,
+              "text": "C"
+            },
+            {
+              "position": 11,
+              "text": "G"
+            },
+            {
+              "position": 19,
+              "text": "C"
+            }
+          ]
+        },
+        {
+          "text": "It is well, it is well with my soul.",
+          "chords": [
+            {
+              "position": 6,
+              "text": "F"
+            },
+            {
+              "position": 18,
+              "text": "G"
+            },
+            {
+              "position": 31,
+              "text": "C"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "label": "Verse 2",
+      "kind": "verse",
+      "color_hex": "#2378C3",
+      "hotkey": "2",
+      "lines": [
+        {
+          "text": "Though Satan should buffet, though trials should come,",
+          "chords": [
+            {
+              "position": 7,
+              "text": "C"
+            },
+            {
+              "position": 35,
+              "text": "F"
+            },
+            {
+              "position": 49,
+              "text": "C"
+            }
+          ]
+        },
+        {
+          "text": "Let this blest assurance control,",
+          "chords": [
+            {
+              "position": 4,
+              "text": "Am"
+            },
+            {
+              "position": 17,
+              "text": "D"
+            },
+            {
+              "position": 28,
+              "text": "G"
+            }
+          ]
+        },
+        {
+          "text": "That Christ hath regarded my helpless estate,",
+          "chords": [
+            {
+              "position": 5,
+              "text": "C"
+            },
+            {
+              "position": 29,
+              "text": "F"
+            },
+            {
+              "position": 40,
+              "text": "Dm"
+            }
+          ]
+        },
+        {
+          "text": "And hath shed His own blood for my soul.",
+          "chords": [
+            {
+              "position": 9,
+              "text": "C"
+            },
+            {
+              "position": 22,
+              "text": "G"
+            },
+            {
+              "position": 35,
+              "text": "C"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "label": "Verse 3",
+      "kind": "verse",
+      "color_hex": "#2378C3",
+      "hotkey": "3",
+      "lines": [
+        {
+          "text": "My sin, O the bliss of this glorious thought,",
+          "chords": [
+            {
+              "position": 3,
+              "text": "C"
+            },
+            {
+              "position": 28,
+              "text": "F"
+            },
+            {
+              "position": 37,
+              "text": "C"
+            }
+          ]
+        },
+        {
+          "text": "My sin, not in part but the whole,",
+          "chords": [
+            {
+              "position": 3,
+              "text": "Am"
+            },
+            {
+              "position": 15,
+              "text": "D"
+            },
+            {
+              "position": 28,
+              "text": "G"
+            }
+          ]
+        },
+        {
+          "text": "Is nailed to the cross, and I bear it no more,",
+          "chords": [
+            {
+              "position": 3,
+              "text": "C"
+            },
+            {
+              "position": 30,
+              "text": "F"
+            },
+            {
+              "position": 41,
+              "text": "Dm"
+            }
+          ]
+        },
+        {
+          "text": "Praise the Lord, praise the Lord, O my soul!",
+          "chords": [
+            {
+              "position": 11,
+              "text": "C"
+            },
+            {
+              "position": 28,
+              "text": "G"
+            },
+            {
+              "position": 39,
+              "text": "C"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "label": "Verse 4",
+      "kind": "verse",
+      "color_hex": "#2378C3",
+      "hotkey": "4",
+      "lines": [
+        {
+          "text": "And Lord, haste the day when my faith shall be sight,",
+          "chords": [
+            {
+              "position": 4,
+              "text": "C"
+            },
+            {
+              "position": 32,
+              "text": "F"
+            },
+            {
+              "position": 47,
+              "text": "C"
+            }
+          ]
+        },
+        {
+          "text": "The clouds be rolled back as a scroll;",
+          "chords": [
+            {
+              "position": 4,
+              "text": "Am"
+            },
+            {
+              "position": 21,
+              "text": "D"
+            },
+            {
+              "position": 31,
+              "text": "G"
+            }
+          ]
+        },
+        {
+          "text": "The trump shall resound, and the Lord shall descend,",
+          "chords": [
+            {
+              "position": 4,
+              "text": "C"
+            },
+            {
+              "position": 33,
+              "text": "F"
+            },
+            {
+              "position": 46,
+              "text": "Dm"
+            }
+          ]
+        },
+        {
+          "text": "Even so, it is well with my soul.",
+          "chords": [
+            {
+              "position": 5,
+              "text": "C"
+            },
+            {
+              "position": 15,
+              "text": "G"
+            },
+            {
+              "position": 28,
+              "text": "C"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

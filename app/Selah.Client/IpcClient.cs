@@ -14,6 +14,7 @@ public readonly record struct IpcConnectionState(bool Connected, ulong Generatio
 /// </summary>
 public sealed class IpcClient : IAsyncDisposable
 {
+    private static long nextInstance;
     private readonly IpcEndpoint endpoint;
     private readonly Actor actor;
     private readonly ConcurrentDictionary<ulong, TaskCompletionSource<Envelope>> pending = new();
@@ -22,7 +23,7 @@ public sealed class IpcClient : IAsyncDisposable
     private readonly object stateLock = new();
     private Stream? stream;
     private Task? supervisor;
-    private long nextId;
+    private long nextId = InitialEnvelopeId();
     private IpcConnectionState state;
     private TaskCompletionSource connectedSignal = NewSignal();
 
@@ -110,6 +111,13 @@ public sealed class IpcClient : IAsyncDisposable
         TimeSpan.FromMilliseconds(Math.Min(500, 25 << Math.Clamp(attempt, 0, 5)));
 
     private static TaskCompletionSource NewSignal() => new(TaskCreationOptions.RunContinuationsAsynchronously);
+
+    private static long InitialEnvelopeId()
+    {
+        var ms = (ulong)Math.Max(0L, DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() - 1_700_000_000_000L) & 0x1FF_FFFF_FFFFUL;
+        var tag = ((ulong)Environment.ProcessId ^ (ulong)Interlocked.Increment(ref nextInstance)) & 0xFFFUL;
+        return (long)((ms << 22) | (tag << 10));
+    }
 
     private void Prepare(Envelope message)
     {

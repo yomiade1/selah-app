@@ -37,6 +37,7 @@ semver = "1"
 flate2 = "1"
 crc32fast = "1"
 sha2 = "0.10"
+quick-xml = { version = "0.41", default-features = false }
 
 # Frame checksums hash 8 MB per frame; keep that fast in debug builds and tests too.
 [profile.dev.package.blake3]

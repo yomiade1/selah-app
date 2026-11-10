@@ -1,0 +1,286 @@
+{
+  "title": "Take My Life and Let It Be",
+  "author": "Frances Ridley Havergal (1836-1879)",
+  "key": "F",
+  "public_domain": true,
+  "arrangement": [
+    "Verse 1",
+    "Verse 2",
+    "Verse 3",
+    "Verse 4"
+  ],
+  "sections": [
+    {
+      "label": "Verse 1",
+      "kind": "verse",
+      "color_hex": "#2378C3",
+      "hotkey": "1",
+      "lines": [
+        {
+          "text": "Take my life, and let it be",
+          "chords": [
+            {
+              "position": 0,
+              "text": "F"
+            },
+            {
+              "position": 18,
+              "text": "C"
+            }
+          ]
+        },
+        {
+          "text": "Consecrated, Lord, to Thee;",
+          "chords": [
+            {
+              "position": 0,
+              "text": "Bb"
+            },
+            {
+              "position": 13,
+              "text": "C"
+            },
+            {
+              "position": 22,
+              "text": "F"
+            }
+          ]
+        },
+        {
+          "text": "Take my moments and my days,",
+          "chords": [
+            {
+              "position": 0,
+              "text": "F"
+            },
+            {
+              "position": 16,
+              "text": "Bb"
+            }
+          ]
+        },
+        {
+          "text": "Let them flow in ceaseless praise.",
+          "chords": [
+            {
+              "position": 0,
+              "text": "Gm"
+            },
+            {
+              "position": 17,
+              "text": "C"
+            },
+            {
+              "position": 27,
+              "text": "F"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "label": "Verse 2",
+      "kind": "verse",
+      "color_hex": "#2378C3",
+      "hotkey": "2",
+      "lines": [
+        {
+          "text": "Take my hands, and let them move",
+          "chords": [
+            {
+              "position": 0,
+              "text": "F"
+            },
+            {
+              "position": 19,
+              "text": "C"
+            }
+          ]
+        },
+        {
+          "text": "At the impulse of Thy love;",
+          "chords": [
+            {
+              "position": 0,
+              "text": "Bb"
+            },
+            {
+              "position": 15,
+              "text": "C"
+            },
+            {
+              "position": 22,
+              "text": "F"
+            }
+          ]
+        },
+        {
+          "text": "Take my feet, and let them be",
+          "chords": [
+            {
+              "position": 0,
+              "text": "F"
+            },
+            {
+              "position": 18,
+              "text": "Bb"
+            }
+          ]
+        },
+        {
+          "text": "Swift and beautiful for Thee.",
+          "chords": [
+            {
+              "position": 0,
+              "text": "Gm"
+            },
+            {
+              "position": 16,
+              "text": "C"
+            },
+            {
+              "position": 24,
+              "text": "F"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "label": "Verse 3",
+      "kind": "verse",
+      "color_hex": "#2378C3",
+      "hotkey": "3",
+      "lines": [
+        {
+          "text": "Take my voice, and let me sing",
+          "chords": [
+            {
+              "position": 0,
+              "text": "F"
+            },
+            {
+              "position": 19,
+              "text": "C"
+            }
+          ]
+        },
+        {
+          "text": "Always, only, for my King;",
+          "chords": [
+            {
+              "position": 0,
+              "text": "Bb"
+            },
+            {
+              "position": 14,
+              "text": "C"
+            },
+            {
+              "position": 21,
+              "text": "F"
+            }
+          ]
+        },
+        {
+          "text": "Take my lips, and let them be",
+          "chords": [
+            {
+              "position": 0,
+              "text": "F"
+            },
+            {
+              "position": 18,
+              "text": "Bb"
+            }
+          ]
+        },
+        {
+          "text": "Filled with messages from Thee.",
+          "chords": [
+            {
+              "position": 0,
+              "text": "Gm"
+            },
+            {
+              "position": 21,
+              "text": "C"
+            },
+            {
+              "position": 26,
+              "text": "F"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "label": "Verse 4",
+      "kind": "verse",
+      "color_hex": "#2378C3",
+      "hotkey": "4",
+      "lines": [
+        {
+          "text": "Take my silver and my gold,",
+          "chords": [
+            {
+              "position": 0,
+              "text": "F"
+            },
+            {
+              "position": 15,
+              "text": "C"
+            }
+          ]
+        },
+        {
+          "text": "Not a mite would I withhold;",
+          "chords": [
+            {
+              "position": 0,
+              "text": "Bb"
+            },
+            {
+              "position": 17,
+              "text": "C"
+            },
+            {
+              "position": 23,
+              "text": "F"
+            }
+          ]
+        },
+        {
+          "text": "Take my intellect, and use",
+          "chords": [
+            {
+              "position": 0,
+              "text": "F"
+            },
+            {
+              "position": 19,
+              "text": "Bb"
+            }
+          ]
+        },
+        {
+          "text": "Every power as Thou shalt choose.",
+          "chords": [
+            {
+              "position": 0,
+              "text": "Gm"
+            },
+            {
+              "position": 15,
+              "text": "C"
+            },
+            {
+              "position": 26,
+              "text": "F"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

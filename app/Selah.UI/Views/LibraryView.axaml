@@ -1,0 +1,399 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:Selah.UI.ViewModels"
+             xmlns:pb="using:Selah.Contracts.V1"
+             xmlns:views="using:Selah.UI.Views"
+             xmlns:s="using:Selah.UI.Services"
+             x:Class="Selah.UI.Views.LibraryView"
+             x:DataType="vm:LibraryViewModel">
+  <DockPanel Margin="{DynamicResource Space.Text.Medium}">
+    <!-- Header, tabs, undo/redo -->
+    <Border DockPanel.Dock="Top" Padding="0,0,0,10" BorderBrush="{DynamicResource Brush.Line}" BorderThickness="{DynamicResource Line.Bottom}">
+      <StackPanel Spacing="{DynamicResource Space.3}">
+        <WrapPanel ItemSpacing="{DynamicResource Space.3}" LineSpacing="{DynamicResource Space.3}" VerticalAlignment="Center">
+          <TextBlock Classes="title-2" VerticalAlignment="Center"
+                     Text="{Binding [library-title], Source={x:Static s:Localizer.Instance}}" />
+          <Button Name="LibraryTabSongs" Classes.primary="{Binding IsSongsTab}"
+                  Command="{Binding SelectTabCommand}" CommandParameter="Songs">
+            <TextBlock Text="{Binding [library-tab-songs], Source={x:Static s:Localizer.Instance}}" />
+          </Button>
+          <Button Name="LibraryTabMedia" Classes.primary="{Binding IsMediaTab}"
+                  Command="{Binding SelectTabCommand}" CommandParameter="Media">
+            <TextBlock Text="{Binding [library-tab-media], Source={x:Static s:Localizer.Instance}}" />
+          </Button>
+          <Button Name="LibraryTabBibles" Classes.primary="{Binding IsBiblesTab}"
+                  Command="{Binding SelectTabCommand}" CommandParameter="Bibles">
+            <TextBlock Text="{Binding [library-tab-bibles], Source={x:Static s:Localizer.Instance}}" />
+          </Button>
+          <Button Name="LibraryUndoButton" Classes="quiet" Command="{Binding UndoCommand}" IsEnabled="{Binding CanUndo}">
+            <TextBlock Text="{Binding [library-undo], Source={x:Static s:Localizer.Instance}}" />
+          </Button>
+          <Button Name="LibraryRedoButton" Classes="quiet" Command="{Binding RedoCommand}" IsEnabled="{Binding CanRedo}">
+            <TextBlock Text="{Binding [library-redo], Source={x:Static s:Localizer.Instance}}" />
+          </Button>
+          <Button Name="LibraryRefreshButton" Classes="quiet" Command="{Binding LoadCommand}">
+            <TextBlock Text="{Binding [library-refresh], Source={x:Static s:Localizer.Instance}}" />
+          </Button>
+        </WrapPanel>
+
+        <Border Classes="alert-success" IsVisible="{Binding HasStatusMessage}">
+          <TextBlock Name="LibraryStatusText" Text="{Binding StatusMessage}" />
+        </Border>
+        <views:ErrorAlert Name="LibraryErrorAlert"
+                          Message="{Binding ErrorMessage}"
+                          FixArticleId="{Binding ErrorFixArticleId}" />
+      </StackPanel>
+    </Border>
+
+    <ScrollViewer>
+      <StackPanel Spacing="{DynamicResource Space.5}" Margin="0,12,0,12">
+        <!-- SONGS TAB -->
+        <StackPanel Name="SongsTabPanel" IsVisible="{Binding IsSongsTab}" Spacing="{DynamicResource Space.4}"
+                    s:Help.Anchor="library.songs">
+          <WrapPanel ItemSpacing="{DynamicResource Space.3}" LineSpacing="{DynamicResource Space.3}" VerticalAlignment="Center">
+            <TextBox Name="SongSearchBox" MinWidth="240" Text="{Binding SongSearchQuery}"
+                     PlaceholderText="{Binding [library-search-watermark], Source={x:Static s:Localizer.Instance}}"
+                     AutomationProperties.Name="{Binding [library-search-label], Source={x:Static s:Localizer.Instance}}" />
+            <Button Name="SongSearchButton" Command="{Binding SearchSongsCommand}">
+              <TextBlock Text="{Binding [library-search-button], Source={x:Static s:Localizer.Instance}}" />
+            </Button>
+            <Button Name="NewSongButton" Classes="primary" Command="{Binding NewSongCommand}">
+              <TextBlock Text="{Binding [library-new-song], Source={x:Static s:Localizer.Instance}}" />
+            </Button>
+            <Button Name="EditSongButton" Command="{Binding EditSelectedSongCommand}" IsEnabled="{Binding HasSelectedSong}">
+              <TextBlock Text="{Binding [library-edit-song], Source={x:Static s:Localizer.Instance}}" />
+            </Button>
+            <Button Name="DeleteSongButton" Classes="quiet" Command="{Binding DeleteSelectedSongCommand}" IsEnabled="{Binding HasSelectedSong}">
+              <TextBlock Text="{Binding [library-delete-song], Source={x:Static s:Localizer.Instance}}" />
+            </Button>
+            <views:InfoButton Name="LibrarySongsInfoButton" Anchor="library.songs" />
+          </WrapPanel>
+
+          <views:EmptyState Name="SongsEmptyState"
+                            IsVisible="{Binding HasNoSongs}"
+                            Title="{Binding [library-songs-empty], Source={x:Static s:Localizer.Instance}}"
+                            Description="{Binding [library-songs-empty-hint], Source={x:Static s:Localizer.Instance}}"
+                            ActionText="{Binding [library-new-song], Source={x:Static s:Localizer.Instance}}"
+                            ActionCommand="{Binding NewSongCommand}"
+                            HelpArticleId="songs.add-a-song-by-pasting"
+                            HelpAnchor="library.songs" />
+
+          <Grid Name="SongsSplitGrid" ColumnDefinitions="300,*" RowDefinitions="Auto,Auto" ColumnSpacing="16" RowSpacing="16"
+                IsVisible="{Binding !HasNoSongs}">
+            <Border Name="SongsListPane" Grid.Column="0" Grid.Row="0" Classes="card">
+              <ListBox Name="SongsList" ItemsSource="{Binding Songs}" SelectedItem="{Binding SelectedSong}" MaxHeight="420">
+                <ListBox.ItemTemplate>
+                  <DataTemplate x:DataType="pb:Song">
+                    <StackPanel Spacing="2" Margin="0,4">
+                      <TextBlock Classes="label" Text="{Binding Title}" TextWrapping="Wrap" />
+                      <WrapPanel ItemSpacing="8">
+                        <TextBlock Classes="caption" Text="{Binding Key}"
+                                   IsVisible="{Binding Key, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+                        <TextBlock Classes="caption" Text="{Binding Copyright}"
+                                   IsVisible="{Binding Copyright, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+                      </WrapPanel>
+                    </StackPanel>
+                  </DataTemplate>
+                </ListBox.ItemTemplate>
+              </ListBox>
+            </Border>
+
+            <Border Name="SongsDetailPane" Grid.Column="1" Grid.Row="0" Classes="card">
+              <StackPanel Spacing="{DynamicResource Space.3}">
+                <TextBlock Classes="hint" IsVisible="{Binding !HasSelectedSong}"
+                           Text="{Binding [library-select-song-hint], Source={x:Static s:Localizer.Instance}}" />
+                <StackPanel IsVisible="{Binding HasSelectedSong}" Spacing="{DynamicResource Space.3}">
+                  <TextBlock Name="SelectedSongTitle" Classes="title-3" Text="{Binding SelectedSong.Title}" />
+                  <TextBlock Classes="hint" Text="{Binding SelectedSongAuthorText}"
+                             IsVisible="{Binding SelectedSongAuthorText, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+                  <TextBlock Classes="caption" Text="{Binding SelectedSongSlidesLabel}" />
+                  <ItemsControl Name="LibrarySongSlides" ItemsSource="{Binding SongPreviewSlides}">
+                    <ItemsControl.ItemsPanel>
+                      <ItemsPanelTemplate>
+                        <WrapPanel ItemSpacing="12" LineSpacing="12" />
+                      </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                      <DataTemplate x:DataType="vm:SlidePreviewCard">
+                        <Border Width="220" Background="{DynamicResource Brush.Surface2}"
+                                BorderBrush="{Binding ColorHex, Converter={x:Static views:UiConverters.HexBrush}}"
+                                BorderThickness="4,1,1,1" CornerRadius="{DynamicResource Radius.Button}"
+                                Padding="{DynamicResource Space.Text.Small}">
+                          <StackPanel Spacing="4">
+                            <DockPanel>
+                              <TextBlock DockPanel.Dock="Right" Classes="caption" Text="{Binding Number}" />
+                              <TextBlock Classes="label" Text="{Binding Header}" />
+                            </DockPanel>
+                            <TextBlock Text="{Binding Body}" TextWrapping="Wrap" />
+                            <TextBlock Classes="caption" Text="{Binding Footer}" IsVisible="{Binding HasFooter}" />
+                          </StackPanel>
+                        </Border>
+                      </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                  </ItemsControl>
+                </StackPanel>
+              </StackPanel>
+            </Border>
+          </Grid>
+
+          <!-- Bundles & backups -->
+          <Border Name="ExchangeCard" Classes="card" s:Help.Anchor="library.exchange">
+            <StackPanel Spacing="{DynamicResource Space.3}">
+              <WrapPanel ItemSpacing="{DynamicResource Space.2}" VerticalAlignment="Center">
+                <TextBlock Classes="title-3" VerticalAlignment="Center" Text="{Binding [library-exchange-heading], Source={x:Static s:Localizer.Instance}}" />
+                <views:InfoButton Name="LibraryExchangeInfoButton" Anchor="library.exchange" />
+              </WrapPanel>
+              <WrapPanel ItemSpacing="{DynamicResource Space.3}" LineSpacing="{DynamicResource Space.3}">
+                <TextBox Name="BundlePathBox" MinWidth="260" Text="{Binding BundlePath}"
+                         PlaceholderText="{Binding [library-bundle-path-watermark], Source={x:Static s:Localizer.Instance}}"
+                         AutomationProperties.Name="{Binding [library-bundle-path-label], Source={x:Static s:Localizer.Instance}}" />
+                <Button Name="ExportBundleButton" Command="{Binding ExportBundleCommand}">
+                  <TextBlock Text="{Binding [library-export-bundle], Source={x:Static s:Localizer.Instance}}" />
+                </Button>
+                <Button Name="ImportBundleButton" Command="{Binding ImportBundleCommand}">
+                  <TextBlock Text="{Binding [library-import-bundle], Source={x:Static s:Localizer.Instance}}" />
+                </Button>
+              </WrapPanel>
+              <WrapPanel ItemSpacing="{DynamicResource Space.3}" LineSpacing="{DynamicResource Space.3}">
+                <TextBox Name="BackupPathBox" MinWidth="260" Text="{Binding BackupPath}"
+                         PlaceholderText="{Binding [library-backup-path-watermark], Source={x:Static s:Localizer.Instance}}"
+                         AutomationProperties.Name="{Binding [library-backup-path-label], Source={x:Static s:Localizer.Instance}}" />
+                <Button Name="CreateBackupButton" Command="{Binding CreateBackupCommand}">
+                  <TextBlock Text="{Binding [library-create-backup], Source={x:Static s:Localizer.Instance}}" />
+                </Button>
+                <Button Name="RestoreBackupButton" Command="{Binding RestoreBackupCommand}">
+                  <TextBlock Text="{Binding [library-restore-backup], Source={x:Static s:Localizer.Instance}}" />
+                </Button>
+              </WrapPanel>
+            </StackPanel>
+          </Border>
+        </StackPanel>
+
+        <!-- MEDIA TAB -->
+        <StackPanel Name="MediaTabPanel" IsVisible="{Binding IsMediaTab}" Spacing="{DynamicResource Space.4}"
+                    s:Help.Anchor="library.media">
+          <WrapPanel ItemSpacing="{DynamicResource Space.3}" LineSpacing="{DynamicResource Space.3}" VerticalAlignment="Center">
+            <TextBox Name="MediaSearchBox" MinWidth="200" Text="{Binding MediaSearchQuery}"
+                     PlaceholderText="{Binding [library-search-watermark], Source={x:Static s:Localizer.Instance}}"
+                     AutomationProperties.Name="{Binding [library-search-label], Source={x:Static s:Localizer.Instance}}" />
+            <ComboBox Name="MediaKindFilterCombo" SelectedIndex="{Binding MediaKindFilterIndex}">
+              <ComboBoxItem Content="{Binding [media-filter-all], Source={x:Static s:Localizer.Instance}}" />
+              <ComboBoxItem Content="{Binding [media-filter-image], Source={x:Static s:Localizer.Instance}}" />
+              <ComboBoxItem Content="{Binding [media-filter-video], Source={x:Static s:Localizer.Instance}}" />
+              <ComboBoxItem Content="{Binding [media-filter-audio], Source={x:Static s:Localizer.Instance}}" />
+            </ComboBox>
+            <Button Name="MediaSearchButton" Command="{Binding RunMediaSearchCommand}">
+              <TextBlock Text="{Binding [library-search-button], Source={x:Static s:Localizer.Instance}}" />
+            </Button>
+            <views:InfoButton Name="LibraryMediaInfoButton" Anchor="library.media" />
+          </WrapPanel>
+
+          <WrapPanel ItemSpacing="{DynamicResource Space.3}" LineSpacing="{DynamicResource Space.3}" VerticalAlignment="Center">
+            <TextBox Name="ImportMediaPathBox" MinWidth="260" Text="{Binding ImportMediaPath}"
+                     PlaceholderText="{Binding [media-import-path-watermark], Source={x:Static s:Localizer.Instance}}"
+                     AutomationProperties.Name="{Binding [media-import-path-label], Source={x:Static s:Localizer.Instance}}" />
+            <Button Name="ImportMediaButton" Classes="primary" Click="OnImportMediaClick">
+              <TextBlock Text="{Binding [media-import-button], Source={x:Static s:Localizer.Instance}}" />
+            </Button>
+            <Button Name="DeleteMediaButton" Classes="quiet" Command="{Binding DeleteSelectedMediaCommand}" IsEnabled="{Binding HasSelectedMedia}">
+              <TextBlock Text="{Binding [media-delete-button], Source={x:Static s:Localizer.Instance}}" />
+            </Button>
+          </WrapPanel>
+
+          <views:EmptyState Name="MediaEmptyState"
+                            IsVisible="{Binding HasNoMedia}"
+                            Title="{Binding [media-empty], Source={x:Static s:Localizer.Instance}}"
+                            Description="{Binding [media-empty-hint], Source={x:Static s:Localizer.Instance}}"
+                            ActionText="{Binding [media-import-button], Source={x:Static s:Localizer.Instance}}"
+                            ActionClicked="OnEmptyImportMediaClick"
+                            HelpArticleId="media.add-pictures-and-videos"
+                            HelpAnchor="library.media" />
+
+          <ListBox Name="MediaList" ItemsSource="{Binding MediaItems}" SelectedItem="{Binding SelectedMedia}"
+                   IsVisible="{Binding !HasNoMedia}">
+            <ListBox.ItemsPanel>
+              <ItemsPanelTemplate>
+                <WrapPanel ItemSpacing="12" LineSpacing="12" />
+              </ItemsPanelTemplate>
+            </ListBox.ItemsPanel>
+            <ListBox.ItemTemplate>
+              <DataTemplate x:DataType="vm:MediaCardViewModel">
+                <Border Width="210" Classes="card" Padding="{DynamicResource Space.Text.Small}">
+                  <StackPanel Spacing="6">
+                    <Border Height="108" Background="{DynamicResource Brush.PreviewBg}" CornerRadius="{DynamicResource Radius.Input}" ClipToBounds="True">
+                      <Panel>
+                        <Image Name="MediaThumbImage" Source="{Binding Thumbnail}" Stretch="UniformToFill" IsVisible="{Binding HasThumbnail}" />
+                        <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" Classes="caption"
+                                   IsVisible="{Binding !HasThumbnail}"
+                                   Text="{Binding [media-thumbnail-unavailable], Source={x:Static s:Localizer.Instance}}" />
+                      </Panel>
+                    </Border>
+                    <TextBlock Classes="label" Text="{Binding Name}" TextWrapping="Wrap" />
+                    <TextBlock Classes="caption" Text="{Binding MetaLabel}" TextWrapping="Wrap" />
+                  </StackPanel>
+                </Border>
+              </DataTemplate>
+            </ListBox.ItemTemplate>
+          </ListBox>
+        </StackPanel>
+
+        <!-- BIBLES & SCRIPTURE TAB -->
+        <StackPanel Name="BiblesTabPanel" IsVisible="{Binding IsBiblesTab}" Spacing="{DynamicResource Space.4}"
+                    s:Help.Anchor="library.bibles">
+          <Border Classes="card">
+            <StackPanel Spacing="{DynamicResource Space.3}">
+              <WrapPanel ItemSpacing="{DynamicResource Space.3}" LineSpacing="{DynamicResource Space.3}" VerticalAlignment="Center">
+                <TextBlock Classes="label" VerticalAlignment="Center"
+                           Text="{Binding [bible-translation-label], Source={x:Static s:Localizer.Instance}}" />
+                <ComboBox Name="BiblesCombo" MinWidth="220" ItemsSource="{Binding Bibles}" SelectedItem="{Binding SelectedBible}">
+                  <ComboBox.ItemTemplate>
+                    <DataTemplate x:DataType="pb:BibleTranslation">
+                      <TextBlock Text="{Binding Name}" />
+                    </DataTemplate>
+                  </ComboBox.ItemTemplate>
+                </ComboBox>
+                <Button Name="DeleteBibleButton" Classes="quiet" Command="{Binding DeleteSelectedBibleCommand}" IsEnabled="{Binding CanDeleteSelectedBible}">
+                  <TextBlock Text="{Binding [bible-delete-button], Source={x:Static s:Localizer.Instance}}" />
+                </Button>
+                <views:InfoButton Name="LibraryBiblesInfoButton" Anchor="library.bibles" />
+              </WrapPanel>
+
+              <WrapPanel ItemSpacing="{DynamicResource Space.3}" LineSpacing="{DynamicResource Space.3}" VerticalAlignment="Center">
+                <TextBox Name="ScriptureReferenceBox" MinWidth="240" Text="{Binding ScriptureReferenceQuery}"
+                         PlaceholderText="{Binding [bible-reference-watermark], Source={x:Static s:Localizer.Instance}}"
+                         AutomationProperties.Name="{Binding [bible-reference-label], Source={x:Static s:Localizer.Instance}}" />
+                <Button Name="LookupPassageButton" Classes="primary" Command="{Binding LookupPassageCommand}">
+                  <TextBlock Text="{Binding [bible-lookup-button], Source={x:Static s:Localizer.Instance}}" />
+                </Button>
+              </WrapPanel>
+
+              <WrapPanel ItemSpacing="{DynamicResource Space.3}" LineSpacing="{DynamicResource Space.3}" VerticalAlignment="Center">
+                <TextBox Name="ScriptureSearchBox" MinWidth="240" Text="{Binding ScriptureSearchQuery}"
+                         PlaceholderText="{Binding [bible-search-watermark], Source={x:Static s:Localizer.Instance}}"
+                         AutomationProperties.Name="{Binding [bible-search-label], Source={x:Static s:Localizer.Instance}}" />
+                <Button Name="SearchScriptureButton" Command="{Binding SearchScriptureCommand}">
+                  <TextBlock Text="{Binding [bible-search-button], Source={x:Static s:Localizer.Instance}}" />
+                </Button>
+              </WrapPanel>
+            </StackPanel>
+          </Border>
+
+          <!-- Scripture slide split options -->
+          <Border Classes="card">
+            <StackPanel Spacing="{DynamicResource Space.3}">
+              <TextBlock Classes="label" Text="{Binding [bible-split-heading], Source={x:Static s:Localizer.Instance}}" />
+              <WrapPanel ItemSpacing="{DynamicResource Space.4}" LineSpacing="{DynamicResource Space.3}" VerticalAlignment="Center">
+                <StackPanel Spacing="2">
+                  <TextBlock Classes="caption" Text="{Binding [bible-max-lines-label], Source={x:Static s:Localizer.Instance}}" />
+                  <NumericUpDown Name="ScriptureMaxLinesInput" Minimum="1" Maximum="12" Value="{Binding ScriptureMaxLines}" MinWidth="110" />
+                </StackPanel>
+                <StackPanel Spacing="2">
+                  <TextBlock Classes="caption" Text="{Binding [bible-ref-placement-label], Source={x:Static s:Localizer.Instance}}" />
+                  <ComboBox Name="ScriptureRefPlacementCombo" SelectedIndex="{Binding ScriptureReferencePlacementIndex}">
+                    <ComboBoxItem Content="{Binding [bible-ref-none], Source={x:Static s:Localizer.Instance}}" />
+                    <ComboBoxItem Content="{Binding [bible-ref-header], Source={x:Static s:Localizer.Instance}}" />
+                    <ComboBoxItem Content="{Binding [bible-ref-footer], Source={x:Static s:Localizer.Instance}}" />
+                  </ComboBox>
+                </StackPanel>
+                <CheckBox Name="ScriptureVerseNumbersCheck" IsChecked="{Binding ScriptureShowVerseNumbers}"
+                          Content="{Binding [bible-verse-numbers-label], Source={x:Static s:Localizer.Instance}}" />
+                <CheckBox Name="ScriptureTitleSlideCheck" IsChecked="{Binding ScriptureTitleSlide}"
+                          Content="{Binding [bible-title-slide-label], Source={x:Static s:Localizer.Instance}}" />
+                <CheckBox Name="ScriptureBlankEndCheck" IsChecked="{Binding ScriptureBlankSlideAtEnd}"
+                          Content="{Binding [bible-blank-end-label], Source={x:Static s:Localizer.Instance}}" />
+              </WrapPanel>
+            </StackPanel>
+          </Border>
+
+          <views:EmptyState Name="BiblesEmptyState"
+                            IsVisible="{Binding HasNoVerses}"
+                            Title="{Binding [bible-empty], Source={x:Static s:Localizer.Instance}}"
+                            Description="{Binding [bible-empty-hint], Source={x:Static s:Localizer.Instance}}"
+                            ActionText="{Binding [bible-lookup-button], Source={x:Static s:Localizer.Instance}}"
+                            ActionCommand="{Binding LookupPassageCommand}"
+                            HelpArticleId="scripture.add-scripture-to-a-service"
+                            HelpAnchor="library.bibles" />
+
+          <!-- Verses & Generated Scripture Slides -->
+          <Grid Name="ScriptureSplitGrid" ColumnDefinitions="*,*" RowDefinitions="Auto,Auto" ColumnSpacing="16" RowSpacing="16"
+                IsVisible="{Binding !HasNoVerses}">
+            <Border Name="VersesPane" Grid.Column="0" Grid.Row="0" Classes="card">
+              <StackPanel Spacing="{DynamicResource Space.2}">
+                <TextBlock Classes="label" Text="{Binding [bible-verses-heading], Source={x:Static s:Localizer.Instance}}" />
+                <ItemsControl Name="ScriptureVersesList" ItemsSource="{Binding Verses}">
+                  <ItemsControl.ItemTemplate>
+                    <DataTemplate x:DataType="pb:ScriptureVerse">
+                      <StackPanel Spacing="2" Margin="0,4">
+                        <TextBlock Classes="caption">
+                          <TextBlock.Text>
+                            <MultiBinding StringFormat="{}{0} {1}:{2} ({3})">
+                              <Binding Path="BookName" />
+                              <Binding Path="Chapter" />
+                              <Binding Path="Verse" />
+                              <Binding Path="Translation" />
+                            </MultiBinding>
+                          </TextBlock.Text>
+                        </TextBlock>
+                        <TextBlock Text="{Binding Text}" TextWrapping="Wrap" />
+                      </StackPanel>
+                    </DataTemplate>
+                  </ItemsControl.ItemTemplate>
+                </ItemsControl>
+              </StackPanel>
+            </Border>
+
+            <Border Name="ScriptureSlidesPane" Grid.Column="1" Grid.Row="0" Classes="card">
+              <StackPanel Spacing="{DynamicResource Space.2}">
+                <TextBlock Classes="label" Text="{Binding [bible-slides-heading], Source={x:Static s:Localizer.Instance}}" />
+                <ItemsControl Name="ScriptureSlidesList" ItemsSource="{Binding ScripturePreviewSlides}">
+                  <ItemsControl.ItemTemplate>
+                    <DataTemplate x:DataType="vm:SlidePreviewCard">
+                      <Border Background="{DynamicResource Brush.Surface2}"
+                              BorderBrush="{DynamicResource Brush.Primary}" BorderThickness="4,1,1,1"
+                              CornerRadius="{DynamicResource Radius.Button}" Padding="{DynamicResource Space.Text.Small}" Margin="0,4">
+                        <StackPanel Spacing="4">
+                          <DockPanel>
+                            <TextBlock DockPanel.Dock="Right" Classes="caption" Text="{Binding Number}" />
+                            <TextBlock Classes="label" Text="{Binding Header}" />
+                          </DockPanel>
+                          <TextBlock Text="{Binding Body}" TextWrapping="Wrap" />
+                          <TextBlock Classes="caption" Text="{Binding Footer}" IsVisible="{Binding HasFooter}" />
+                        </StackPanel>
+                      </Border>
+                    </DataTemplate>
+                  </ItemsControl.ItemTemplate>
+                </ItemsControl>
+              </StackPanel>
+            </Border>
+          </Grid>
+
+          <!-- Bible import -->
+          <Border Classes="card">
+            <StackPanel Spacing="{DynamicResource Space.3}">
+              <WrapPanel ItemSpacing="{DynamicResource Space.3}" LineSpacing="{DynamicResource Space.3}" VerticalAlignment="Center">
+                <TextBox Name="ImportBiblePathBox" MinWidth="220" Text="{Binding ImportBiblePath}"
+                         PlaceholderText="{Binding [bible-import-path-watermark], Source={x:Static s:Localizer.Instance}}"
+                         AutomationProperties.Name="{Binding [bible-import-path-label], Source={x:Static s:Localizer.Instance}}" />
+                <TextBox Name="ImportBibleCodeBox" MinWidth="100" Text="{Binding ImportBibleCode}"
+                         PlaceholderText="{Binding [bible-import-code-label], Source={x:Static s:Localizer.Instance}}"
+                         AutomationProperties.Name="{Binding [bible-import-code-label], Source={x:Static s:Localizer.Instance}}" />
+                <TextBox Name="ImportBibleNameBox" MinWidth="180" Text="{Binding ImportBibleName}"
+                         PlaceholderText="{Binding [bible-import-name-label], Source={x:Static s:Localizer.Instance}}"
+                         AutomationProperties.Name="{Binding [bible-import-name-label], Source={x:Static s:Localizer.Instance}}" />
+                <ComboBox Name="ImportBibleFormatCombo" SelectedIndex="{Binding ImportBibleFormatIndex}">
+                  <ComboBoxItem Content="{Binding [bible-import-format-auto], Source={x:Static s:Localizer.Instance}}" />
+                  <ComboBoxItem Content="{Binding [bible-import-format-osis], Source={x:Static s:Localizer.Instance}}" />
+                  <ComboBoxItem Content="{Binding [bible-import-format-usfm], Source={x:Static s:Localizer.Instance}}" />
+                  <ComboBoxItem Content="{Binding [bible-import-format-zefania], Source={x:Static s:Localizer.Instance}}" />
+                </ComboBox>
+                <Button Name="ImportBibleButton" Click="OnImportBibleClick">
+                  <TextBlock Text="{Binding [bible-import-button], Source={x:Static s:Localizer.Instance}}" />
+                </Button>
+              </WrapPanel>
+            </StackPanel>
+          </Border>
+        </StackPanel>
+      </StackPanel>
+    </ScrollViewer>
+  </DockPanel>
+</UserControl>

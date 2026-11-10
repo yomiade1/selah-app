@@ -11,6 +11,8 @@ description = "Selah benchmarks: IPC round trip, decode and present timing"
 anyhow.workspace = true
 serde.workspace = true
 serde_json.workspace = true
+tempfile.workspace = true
+selah-core = { path = "../selah-core" }
 selah-ipc = { path = "../selah-ipc" }
 selah-proto = { path = "../selah-proto" }
 selah-media = { path = "../selah-media", features = ["render"] }

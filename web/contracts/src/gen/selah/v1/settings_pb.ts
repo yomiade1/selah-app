@@ -10,7 +10,7 @@ import type { Message } from "@bufbuild/protobuf";
  * Describes the file selah/v1/settings.proto.
  */
 export const file_selah_v1_settings: GenFile = /*@__PURE__*/
-  fileDesc("ChdzZWxhaC92MS9zZXR0aW5ncy5wcm90bxIIc2VsYWgudjEiegoSQXBwZWFyYW5jZVNldHRpbmdzEigKCmFwcGVhcmFuY2UYASABKA4yFC5zZWxhaC52MS5BcHBlYXJhbmNlEhoKEnRleHRfc2NhbGVfcGVyY2VudBgCIAEoDRIeChZ1c2VfY29tcHV0ZXJfdGV4dF9zaXplGAMgASgIInEKCFNldHRpbmdzEjAKCmFwcGVhcmFuY2UYASABKAsyHC5zZWxhaC52MS5BcHBlYXJhbmNlU2V0dGluZ3MSFwoPdXBkYXRlX2ZlZWRfdXJsGAIgASgJEhoKEmFsbG93X3VwZGF0ZV9jaGVjaxgDIAEoCCINCgtHZXRTZXR0aW5ncyJBCg1TZXRBcHBlYXJhbmNlEjAKCmFwcGVhcmFuY2UYASABKAsyHC5zZWxhaC52MS5BcHBlYXJhbmNlU2V0dGluZ3MiSAoRU2V0VXBkYXRlU2V0dGluZ3MSFwoPdXBkYXRlX2ZlZWRfdXJsGAEgASgJEhoKEmFsbG93X3VwZGF0ZV9jaGVjaxgCIAEoCCIQCg5DaGVja0ZvclVwZGF0ZSJiCgtVcGRhdGVDaGVjaxIRCglhdmFpbGFibGUYASABKAgSDwoHdmVyc2lvbhgCIAEoCRIWCg5ub3Rlc19tYXJrZG93bhgDIAEoCRIXCg9jdXJyZW50X3ZlcnNpb24YBCABKAkiIAoNSW5zdGFsbFVwZGF0ZRIPCgd2ZXJzaW9uGAEgASgJKm4KCkFwcGVhcmFuY2USGgoWQVBQRUFSQU5DRV9VTlNQRUNJRklFRBAAEhQKEEFQUEVBUkFOQ0VfTElHSFQQARIUChBBUFBFQVJBTkNFX0JPT1RIEAISGAoUQVBQRUFSQU5DRV9BVVRPTUFUSUMQA0IVqgISU2VsYWguQ29udHJhY3RzLlYxYgZwcm90bzM");
+  fileDesc("ChdzZWxhaC92MS9zZXR0aW5ncy5wcm90bxIIc2VsYWgudjEiegoSQXBwZWFyYW5jZVNldHRpbmdzEigKCmFwcGVhcmFuY2UYASABKA4yFC5zZWxhaC52MS5BcHBlYXJhbmNlEhoKEnRleHRfc2NhbGVfcGVyY2VudBgCIAEoDRIeChZ1c2VfY29tcHV0ZXJfdGV4dF9zaXplGAMgASgIInEKCFNldHRpbmdzEjAKCmFwcGVhcmFuY2UYASABKAsyHC5zZWxhaC52MS5BcHBlYXJhbmNlU2V0dGluZ3MSFwoPdXBkYXRlX2ZlZWRfdXJsGAIgASgJEhoKEmFsbG93X3VwZGF0ZV9jaGVjaxgDIAEoCCINCgtHZXRTZXR0aW5ncyJBCg1TZXRBcHBlYXJhbmNlEjAKCmFwcGVhcmFuY2UYASABKAsyHC5zZWxhaC52MS5BcHBlYXJhbmNlU2V0dGluZ3MiSAoRU2V0VXBkYXRlU2V0dGluZ3MSFwoPdXBkYXRlX2ZlZWRfdXJsGAEgASgJEhoKEmFsbG93X3VwZGF0ZV9jaGVjaxgCIAEoCCIQCg5DaGVja0ZvclVwZGF0ZSJiCgtVcGRhdGVDaGVjaxIRCglhdmFpbGFibGUYASABKAgSDwoHdmVyc2lvbhgCIAEoCRIWCg5ub3Rlc19tYXJrZG93bhgDIAEoCRIXCg9jdXJyZW50X3ZlcnNpb24YBCABKAkiIAoNSW5zdGFsbFVwZGF0ZRIPCgd2ZXJzaW9uGAEgASgJImYKDVBvbGljeVNldHRpbmcSCwoDa2V5GAEgASgJEhIKCnZhbHVlX2pzb24YAiABKAkSJAoFbGV2ZWwYAyABKA4yFS5zZWxhaC52MS5Qb2xpY3lMZXZlbBIOCgZsb2NrZWQYBCABKAgiaQoQU2V0UG9saWN5U2V0dGluZxILCgNrZXkYASABKAkSEgoKdmFsdWVfanNvbhgCIAEoCRIkCgVsZXZlbBgDIAEoDjIVLnNlbGFoLnYxLlBvbGljeUxldmVsEg4KBmxvY2tlZBgEIAEoCCJIChNSZW1vdmVQb2xpY3lTZXR0aW5nEgsKA2tleRgBIAEoCRIkCgVsZXZlbBgCIAEoDjIVLnNlbGFoLnYxLlBvbGljeUxldmVsIh8KEEdldFBvbGljeVNldHRpbmcSCwoDa2V5GAEgASgJIlAKFUdldFBvbGljeVNldHRpbmdSZXBseRINCgVmb3VuZBgBIAEoCBIoCgdzZXR0aW5nGAIgASgLMhcuc2VsYWgudjEuUG9saWN5U2V0dGluZypuCgpBcHBlYXJhbmNlEhoKFkFQUEVBUkFOQ0VfVU5TUEVDSUZJRUQQABIUChBBUFBFQVJBTkNFX0xJR0hUEAESFAoQQVBQRUFSQU5DRV9CT09USBACEhgKFEFQUEVBUkFOQ0VfQVVUT01BVElDEAMqewoLUG9saWN5TGV2ZWwSHAoYUE9MSUNZX0xFVkVMX1VOU1BFQ0lGSUVEEAASFQoRUE9MSUNZX0xFVkVMX1VTRVIQARIYChRQT0xJQ1lfTEVWRUxfTUFDSElORRACEh0KGVBPTElDWV9MRVZFTF9PUkdBTklTQVRJT04QA0IVqgISU2VsYWguQ29udHJhY3RzLlYxYgZwcm90bzM");
 
 /**
  * Scale values: 90, 100, 115, 130, 150, 175, 200. Core validates them.
@@ -195,6 +195,131 @@ export const InstallUpdateSchema: GenMessage<InstallUpdate> = /*@__PURE__*/
   messageDesc(file_selah_v1_settings, 7);
 
 /**
+ * @generated from message selah.v1.PolicySetting
+ */
+export type PolicySetting = Message<"selah.v1.PolicySetting"> & {
+  /**
+   * @generated from field: string key = 1;
+   */
+  key: string;
+
+  /**
+   * @generated from field: string value_json = 2;
+   */
+  valueJson: string;
+
+  /**
+   * @generated from field: selah.v1.PolicyLevel level = 3;
+   */
+  level: PolicyLevel;
+
+  /**
+   * @generated from field: bool locked = 4;
+   */
+  locked: boolean;
+};
+
+/**
+ * Describes the message selah.v1.PolicySetting.
+ * Use `create(PolicySettingSchema)` to create a new message.
+ */
+export const PolicySettingSchema: GenMessage<PolicySetting> = /*@__PURE__*/
+  messageDesc(file_selah_v1_settings, 8);
+
+/**
+ * @generated from message selah.v1.SetPolicySetting
+ */
+export type SetPolicySetting = Message<"selah.v1.SetPolicySetting"> & {
+  /**
+   * @generated from field: string key = 1;
+   */
+  key: string;
+
+  /**
+   * @generated from field: string value_json = 2;
+   */
+  valueJson: string;
+
+  /**
+   * @generated from field: selah.v1.PolicyLevel level = 3;
+   */
+  level: PolicyLevel;
+
+  /**
+   * @generated from field: bool locked = 4;
+   */
+  locked: boolean;
+};
+
+/**
+ * Describes the message selah.v1.SetPolicySetting.
+ * Use `create(SetPolicySettingSchema)` to create a new message.
+ */
+export const SetPolicySettingSchema: GenMessage<SetPolicySetting> = /*@__PURE__*/
+  messageDesc(file_selah_v1_settings, 9);
+
+/**
+ * @generated from message selah.v1.RemovePolicySetting
+ */
+export type RemovePolicySetting = Message<"selah.v1.RemovePolicySetting"> & {
+  /**
+   * @generated from field: string key = 1;
+   */
+  key: string;
+
+  /**
+   * @generated from field: selah.v1.PolicyLevel level = 2;
+   */
+  level: PolicyLevel;
+};
+
+/**
+ * Describes the message selah.v1.RemovePolicySetting.
+ * Use `create(RemovePolicySettingSchema)` to create a new message.
+ */
+export const RemovePolicySettingSchema: GenMessage<RemovePolicySetting> = /*@__PURE__*/
+  messageDesc(file_selah_v1_settings, 10);
+
+/**
+ * @generated from message selah.v1.GetPolicySetting
+ */
+export type GetPolicySetting = Message<"selah.v1.GetPolicySetting"> & {
+  /**
+   * @generated from field: string key = 1;
+   */
+  key: string;
+};
+
+/**
+ * Describes the message selah.v1.GetPolicySetting.
+ * Use `create(GetPolicySettingSchema)` to create a new message.
+ */
+export const GetPolicySettingSchema: GenMessage<GetPolicySetting> = /*@__PURE__*/
+  messageDesc(file_selah_v1_settings, 11);
+
+/**
+ * @generated from message selah.v1.GetPolicySettingReply
+ */
+export type GetPolicySettingReply = Message<"selah.v1.GetPolicySettingReply"> & {
+  /**
+   * @generated from field: bool found = 1;
+   */
+  found: boolean;
+
+  /**
+   * @generated from field: selah.v1.PolicySetting setting = 2;
+   */
+  setting?: PolicySetting;
+};
+
+/**
+ * Describes the message selah.v1.GetPolicySettingReply.
+ * Use `create(GetPolicySettingReplySchema)` to create a new message.
+ */
+export const GetPolicySettingReplySchema: GenMessage<GetPolicySettingReply> = /*@__PURE__*/
+  messageDesc(file_selah_v1_settings, 12);
+
+/**
  * @generated from enum selah.v1.Appearance
  */
 export enum Appearance {
@@ -224,4 +349,35 @@ export enum Appearance {
  */
 export const AppearanceSchema: GenEnum<Appearance> = /*@__PURE__*/
   enumDesc(file_selah_v1_settings, 0);
+
+/**
+ * @generated from enum selah.v1.PolicyLevel
+ */
+export enum PolicyLevel {
+  /**
+   * @generated from enum value: POLICY_LEVEL_UNSPECIFIED = 0;
+   */
+  UNSPECIFIED = 0,
+
+  /**
+   * @generated from enum value: POLICY_LEVEL_USER = 1;
+   */
+  USER = 1,
+
+  /**
+   * @generated from enum value: POLICY_LEVEL_MACHINE = 2;
+   */
+  MACHINE = 2,
+
+  /**
+   * @generated from enum value: POLICY_LEVEL_ORGANISATION = 3;
+   */
+  ORGANISATION = 3,
+}
+
+/**
+ * Describes the enum selah.v1.PolicyLevel.
+ */
+export const PolicyLevelSchema: GenEnum<PolicyLevel> = /*@__PURE__*/
+  enumDesc(file_selah_v1_settings, 1);
 

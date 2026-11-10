@@ -2135,12 +2135,14 @@ name = "selah-bench"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "selah-core",
  "selah-ipc",
  "selah-media",
  "selah-proto",
  "selah-render",
  "serde",
  "serde_json",
+ "tempfile",
  "tokio",
 ]
 
@@ -2149,9 +2151,13 @@ name = "selah-core"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "blake3",
  "crc32fast",
+ "fastrand",
  "flate2",
  "prost",
+ "quick-xml",
+ "rusqlite",
  "selah-kb",
  "selah-net",
  "selah-proto",
@@ -2164,6 +2170,7 @@ dependencies = [
  "tempfile",
  "thiserror 2.0.21",
  "tracing",
+ "uuid",
 ]
 
 [[package]]
@@ -2241,6 +2248,8 @@ version = "0.1.0"
 dependencies = [
  "ffmpeg-next",
  "selah-render",
+ "serde",
+ "serde_json",
  "tempfile",
  "thiserror 2.0.21",
  "tracing",
@@ -2916,6 +2925,17 @@ name = "utf8-zero"
 version = "0.8.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b8c0a043c9540bae7c578c88f91dda8bd82e59ae27c21baca69c8b191aaf5a6e"
+
+[[package]]
+name = "uuid"
+version = "1.29.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "bed99139f7dac9b5cfe5f17be4d66dc7079a34dee1d74bcc77217119240e267c"
+dependencies = [
+ "getrandom 0.4.3",
+ "js-sys",
+ "wasm-bindgen",
+]
 
 [[package]]
 name = "valuable"

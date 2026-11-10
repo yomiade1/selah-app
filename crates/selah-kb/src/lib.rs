@@ -101,6 +101,7 @@ pub fn load(root: &Path, context: &Context, options: &Options) -> Corpus {
     for article in &articles {
         findings.extend(lint::lint_article(article, context, &known, options));
     }
+    findings.extend(lint::lint_coverage(context, &articles, options));
     Corpus { articles, findings }
 }
 

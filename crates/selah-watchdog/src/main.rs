@@ -78,14 +78,20 @@ fn exe(dir: &Path, name: &str) -> PathBuf {
     dir.join(format!("{name}{}", std::env::consts::EXE_SUFFIX))
 }
 
-fn spawn(process: &mut Supervised, safe_mode: bool, headless: bool) {
+fn spawn(process: &mut Supervised, safe_mode: bool, headless: bool, exit_with_watchdog: bool) {
     let mut command = tokio::process::Command::new(&process.program);
     command
         .args(&process.args)
         .env("SELAH_SAFE_MODE", if safe_mode { "1" } else { "0" })
+        .env("SELAH_WATCHDOG_PID", std::process::id().to_string())
         .stdin(std::process::Stdio::null());
     if headless {
         command.env("SELAH_HEADLESS", "1");
+    }
+    if headless || exit_with_watchdog {
+        command
+            .stdout(std::process::Stdio::null())
+            .stderr(std::process::Stdio::null());
     }
     #[cfg(windows)]
     {
@@ -273,9 +279,15 @@ async fn main() -> anyhow::Result<()> {
     } else {
         tracing::info!("no UI: running core and engine only");
     }
+    let exit_with_watchdog = std::env::var("SELAH_EXIT_WITH_WATCHDOG").as_deref() == Ok("1");
+    let pid_home = std::env::var_os("SELAH_HOME")
+        .filter(|value| !value.is_empty())
+        .map(PathBuf::from);
+    let mut recorded_pids = Vec::new();
     for process in processes.iter_mut() {
-        spawn(process, safe_mode, options.headless);
+        spawn(process, safe_mode, options.headless, exit_with_watchdog);
     }
+    record_pids(pid_home.as_deref(), &processes, &mut recorded_pids);
     tracing::info!(runtime = %runtime_dir.display(), "watchdog is supervising");
 
     let mut crashes = CrashLog::default();
@@ -362,6 +374,7 @@ async fn main() -> anyhow::Result<()> {
                 process.not_before = None;
             }
         }
+        let mut spawned = false;
         for process in processes.iter_mut() {
             if process.child.is_none()
                 && !process.adopted
@@ -371,8 +384,12 @@ async fn main() -> anyhow::Result<()> {
                 if process.restarts > 0 || process.pid != 0 {
                     process.restarts += 1;
                 }
-                spawn(process, safe_mode, options.headless);
+                spawn(process, safe_mode, options.headless, exit_with_watchdog);
+                spawned = true;
             }
+        }
+        if spawned {
+            record_pids(pid_home.as_deref(), &processes, &mut recorded_pids);
         }
         let status = WatchdogStatus {
             processes: processes
@@ -400,6 +417,27 @@ async fn main() -> anyhow::Result<()> {
         }
     }
     Ok(())
+}
+
+fn record_pids(home: Option<&Path>, processes: &[Supervised], known_pids: &mut Vec<u32>) {
+    let Some(home) = home else {
+        return;
+    };
+    let mut changed = false;
+    for process in processes {
+        if process.pid != 0 && !known_pids.contains(&process.pid) {
+            known_pids.push(process.pid);
+            changed = true;
+        }
+    }
+    if !changed {
+        return;
+    }
+    let content: String = known_pids.iter().map(|pid| format!("{pid}\n")).collect();
+    let tmp = home.join(".pids.txt.tmp");
+    if std::fs::write(&tmp, content.as_bytes()).is_ok() {
+        let _ = std::fs::rename(&tmp, home.join("pids.txt"));
+    }
 }
 
 impl Supervised {

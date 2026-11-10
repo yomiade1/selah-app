@@ -1,0 +1,83 @@
+{
+  "title": "Praise God, from Whom All Blessings Flow",
+  "author": "Thomas Ken (1637-1711)",
+  "key": "G",
+  "public_domain": true,
+  "arrangement": [
+    "Verse 1"
+  ],
+  "sections": [
+    {
+      "label": "Verse 1",
+      "kind": "verse",
+      "color_hex": "#2378C3",
+      "hotkey": "1",
+      "lines": [
+        {
+          "text": "Praise God, from whom all blessings flow;",
+          "chords": [
+            {
+              "position": 0,
+              "text": "G"
+            },
+            {
+              "position": 26,
+              "text": "D"
+            }
+          ]
+        },
+        {
+          "text": "Praise Him, all creatures here below;",
+          "chords": [
+            {
+              "position": 0,
+              "text": "G"
+            },
+            {
+              "position": 26,
+              "text": "Em"
+            },
+            {
+              "position": 33,
+              "text": "D"
+            }
+          ]
+        },
+        {
+          "text": "Praise Him above, ye heavenly host;",
+          "chords": [
+            {
+              "position": 0,
+              "text": "G"
+            },
+            {
+              "position": 21,
+              "text": "C"
+            },
+            {
+              "position": 30,
+              "text": "D"
+            }
+          ]
+        },
+        {
+          "text": "Praise Father, Son, and Holy Ghost.",
+          "chords": [
+            {
+              "position": 0,
+              "text": "Em"
+            },
+            {
+              "position": 24,
+              "text": "D"
+            },
+            {
+              "position": 29,
+              "text": "G"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

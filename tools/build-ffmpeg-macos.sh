@@ -38,9 +38,9 @@ cd "$BUILD"
   --disable-avdevice --disable-avfilter --disable-swscale --disable-swresample \
   --enable-pthreads --enable-videotoolbox \
   --enable-protocol=file,pipe \
-  --enable-demuxer=mov,matroska \
-  --enable-decoder=h264,hevc,vp9,prores,aac,mp3float,opus,flac,pcm_s16le,pcm_s24le,pcm_f32le \
-  --enable-parser=h264,hevc,vp9,aac,opus,flac,mpegaudio \
+  --enable-demuxer=mov,matroska,mp3,wav,flac,ogg \
+  --enable-decoder=h264,hevc,vp9,prores,aac,mp3,mp3float,opus,flac,vorbis,pcm_s16le,pcm_s24le,pcm_s32le,pcm_f32le,pcm_u8 \
+  --enable-parser=h264,hevc,vp9,aac,opus,flac,mpegaudio,vorbis \
   --enable-hwaccel=h264_videotoolbox,hevc_videotoolbox,vp9_videotoolbox,prores_videotoolbox \
   --enable-bsf=h264_mp4toannexb,hevc_mp4toannexb,vp9_superframe_split
 make -j"$(sysctl -n hw.ncpu)"

@@ -1,0 +1,295 @@
+{
+  "title": "Rock of Ages, Cleft for Me",
+  "author": "Augustus M. Toplady (1740-1778)",
+  "key": "Bb",
+  "public_domain": true,
+  "arrangement": [
+    "Verse 1",
+    "Verse 2",
+    "Verse 3"
+  ],
+  "sections": [
+    {
+      "label": "Verse 1",
+      "kind": "verse",
+      "color_hex": "#2378C3",
+      "hotkey": "1",
+      "lines": [
+        {
+          "text": "Rock of Ages, cleft for me,",
+          "chords": [
+            {
+              "position": 0,
+              "text": "Bb"
+            },
+            {
+              "position": 14,
+              "text": "Eb"
+            },
+            {
+              "position": 24,
+              "text": "Bb"
+            }
+          ]
+        },
+        {
+          "text": "Let me hide myself in Thee;",
+          "chords": [
+            {
+              "position": 0,
+              "text": "F"
+            },
+            {
+              "position": 14,
+              "text": "Bb"
+            }
+          ]
+        },
+        {
+          "text": "Let the water and the blood,",
+          "chords": [
+            {
+              "position": 0,
+              "text": "F"
+            },
+            {
+              "position": 14,
+              "text": "Bb"
+            }
+          ]
+        },
+        {
+          "text": "From Thy wounded side which flowed,",
+          "chords": [
+            {
+              "position": 0,
+              "text": "F"
+            },
+            {
+              "position": 17,
+              "text": "Bb"
+            }
+          ]
+        },
+        {
+          "text": "Be of sin the double cure,",
+          "chords": [
+            {
+              "position": 0,
+              "text": "Bb"
+            },
+            {
+              "position": 14,
+              "text": "Eb"
+            },
+            {
+              "position": 21,
+              "text": "Bb"
+            }
+          ]
+        },
+        {
+          "text": "Save from wrath and make me pure.",
+          "chords": [
+            {
+              "position": 0,
+              "text": "F"
+            },
+            {
+              "position": 20,
+              "text": "Bb"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "label": "Verse 2",
+      "kind": "verse",
+      "color_hex": "#2378C3",
+      "hotkey": "2",
+      "lines": [
+        {
+          "text": "Not the labors of my hands",
+          "chords": [
+            {
+              "position": 0,
+              "text": "Bb"
+            },
+            {
+              "position": 15,
+              "text": "Eb"
+            },
+            {
+              "position": 21,
+              "text": "Bb"
+            }
+          ]
+        },
+        {
+          "text": "Can fulfill Thy law’s demands;",
+          "chords": [
+            {
+              "position": 0,
+              "text": "F"
+            },
+            {
+              "position": 16,
+              "text": "Bb"
+            }
+          ]
+        },
+        {
+          "text": "Could my zeal no respite know,",
+          "chords": [
+            {
+              "position": 0,
+              "text": "F"
+            },
+            {
+              "position": 17,
+              "text": "Bb"
+            }
+          ]
+        },
+        {
+          "text": "Could my tears forever flow,",
+          "chords": [
+            {
+              "position": 0,
+              "text": "F"
+            },
+            {
+              "position": 18,
+              "text": "Bb"
+            }
+          ]
+        },
+        {
+          "text": "All for sin could not atone;",
+          "chords": [
+            {
+              "position": 0,
+              "text": "Bb"
+            },
+            {
+              "position": 18,
+              "text": "Eb"
+            },
+            {
+              "position": 23,
+              "text": "Bb"
+            }
+          ]
+        },
+        {
+          "text": "Thou must save, and Thou alone.",
+          "chords": [
+            {
+              "position": 0,
+              "text": "F"
+            },
+            {
+              "position": 20,
+              "text": "Bb"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "label": "Verse 3",
+      "kind": "verse",
+      "color_hex": "#2378C3",
+      "hotkey": "3",
+      "lines": [
+        {
+          "text": "Nothing in my hand I bring,",
+          "chords": [
+            {
+              "position": 0,
+              "text": "Bb"
+            },
+            {
+              "position": 14,
+              "text": "Eb"
+            },
+            {
+              "position": 21,
+              "text": "Bb"
+            }
+          ]
+        },
+        {
+          "text": "Simply to the cross I cling;",
+          "chords": [
+            {
+              "position": 0,
+              "text": "F"
+            },
+            {
+              "position": 14,
+              "text": "Bb"
+            }
+          ]
+        },
+        {
+          "text": "Naked, come to Thee for dress;",
+          "chords": [
+            {
+              "position": 0,
+              "text": "F"
+            },
+            {
+              "position": 15,
+              "text": "Bb"
+            }
+          ]
+        },
+        {
+          "text": "Helpless, look to Thee for grace;",
+          "chords": [
+            {
+              "position": 0,
+              "text": "F"
+            },
+            {
+              "position": 18,
+              "text": "Bb"
+            }
+          ]
+        },
+        {
+          "text": "Foul, I to the fountain fly;",
+          "chords": [
+            {
+              "position": 0,
+              "text": "Bb"
+            },
+            {
+              "position": 15,
+              "text": "Eb"
+            },
+            {
+              "position": 24,
+              "text": "Bb"
+            }
+          ]
+        },
+        {
+          "text": "Wash me, Savior, or I die.",
+          "chords": [
+            {
+              "position": 0,
+              "text": "F"
+            },
+            {
+              "position": 17,
+              "text": "Bb"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
