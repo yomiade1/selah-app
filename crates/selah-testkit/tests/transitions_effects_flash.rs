@@ -213,7 +213,7 @@ async fn transitions_effects_flash_guard_and_emergency_cancel_end_to_end() {
     .await;
     assert_ne!(fx_status.frame_checksum, blue_status.frame_checksum);
 
-    // 4. Timed Wipe transition (420 ms) emits multiple distinct intermediate FrameShown checksums.
+    // 4. Timed Wipe transition (1500 ms so loaded CI runners always capture >= 3 distinct frames).
     stack
         .core()
         .request(
@@ -228,7 +228,7 @@ async fn transitions_effects_flash_guard_and_emergency_cancel_end_to_end() {
                             kind: TransitionKind::Wipe as i32,
                             direction: TransitionDirection::Left as i32,
                             easing: TransitionEasing::Linear as i32,
-                            duration_ms: 420,
+                            duration_ms: 1500,
                         }),
                     )),
                 })),

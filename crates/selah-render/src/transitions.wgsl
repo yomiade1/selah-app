@@ -125,11 +125,15 @@ fn fs_main(in: VertexOut) -> @location(0) vec4<f32> {
         return mix(from_c, to_c, w);
     }
 
-    // Zoom (7)
+    // Zoom (7): derive pixel-center UVs directly from @builtin(position) to avoid
+    // fullscreen-triangle barycentric drift along exact 0.0/1.0 boundary rows.
     if params.kind == 7u {
+        let dims = vec2<f32>(textureDimensions(to_tex));
+        let px_uv = in.position.xy / max(dims, vec2<f32>(1.0));
         let scale = 0.5 + 0.5 * p;
-        let zuv = (in.uv - vec2<f32>(0.5, 0.5)) / scale + vec2<f32>(0.5, 0.5);
-        let inside = zuv.x >= 0.0 && zuv.x <= 1.0 && zuv.y >= 0.0 && zuv.y <= 1.0;
+        let zuv = (px_uv - vec2<f32>(0.5, 0.5)) / scale + vec2<f32>(0.5, 0.5);
+        let eps = 1e-5;
+        let inside = zuv.x >= -eps && zuv.x <= 1.0 + eps && zuv.y >= -eps && zuv.y <= 1.0 + eps;
         let sampled_to = textureSample(to_tex, lin_sampler, clamp(zuv, vec2<f32>(0.0), vec2<f32>(1.0)));
         let fallback_to = select(vec4<f32>(0.0, 0.0, 0.0, 1.0), vec4<f32>(0.0), overlay);
         let zoom_to = select(fallback_to, sampled_to, inside);

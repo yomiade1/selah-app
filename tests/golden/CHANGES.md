@@ -68,3 +68,15 @@ platform-specific images in `tests/golden/<platform>/`.
 - Rendered on: Windows x64, WARP (`SELAH_GPU=software`). Style frames compare across platforms
   with `TOLERANCE_STYLE` (channel ≤ 10, ≤ 2% pixels for DirectWrite/FreeType/CoreText AA edges);
   transition and effect frames compare with `TOLERANCE_SHADER` (channel ≤ 3, ≤ 0.2% pixels).
+
+## 2026-11-10 — linux, macos (m3-style-min-size-shrink)
+
+- Reason: on Linux (FreeType) and macOS (CoreText), `m3-style-min-size-shrink` (six packed bold
+  outlined lines on a 640×360 canvas) produces identical layout, line breaks, and fitted minimum
+  font size (`min(w/h)` bounding box matching reference `(71, 101)-(566, 262)` within 1 px), but
+  anti-aliased glyph stem weight differs on 4.928% (Linux) and 3.645% (macOS) of pixels against
+  Windows DirectWrite (limit `TOLERANCE_STYLE` 2.000%). Keeping the strict 2% style tolerance and
+  committing reviewed platform-specific baselines rather than loosening tolerance.
+- Rendered on: PR #6's `linux` (`ubuntu-24.04`, lavapipe) and `macos` (`macos-15`, software) CI jobs
+  in run 42913050496, taken from their `verify-report-*` failure artifacts (`bless-golden.yml` does
+  not build decode-only macOS FFmpeg yet). Reviewed by eye and verified by bounding-box diff.

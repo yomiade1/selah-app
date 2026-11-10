@@ -253,10 +253,13 @@ pub fn blend_frames_cpu(
                     mix4(from_c, to_c, w_mix)
                 }
                 TransitionKind::Zoom => {
+                    const UV_EPS: f32 = 1e-5;
                     let scale = 0.5 + 0.5 * p;
                     let zu = (u - 0.5) / scale + 0.5;
                     let zv = (v - 0.5) / scale + 0.5;
-                    let zoom_to = if (0.0..=1.0).contains(&zu) && (0.0..=1.0).contains(&zv) {
+                    let zoom_to = if (-UV_EPS..=1.0 + UV_EPS).contains(&zu)
+                        && (-UV_EPS..=1.0 + UV_EPS).contains(&zv)
+                    {
                         bilinear_sample_premul(to, zu, zv)
                     } else if overlay_mode {
                         [0.0, 0.0, 0.0, 0.0]
@@ -787,5 +790,154 @@ mod tests {
                 "GPU/CPU mismatch for {kind:?}/{dir:?}@{p}: max_err={max_err}, bad_channels={bad}"
             );
         }
+
+        // Regression check: 320x180 Zoom at p=0.5 puts rows y=22 (zuv.y=0.0) and y=157 (zuv.y=1.0)
+        // on the exact inner edge; GPU and CPU must evaluate both rows consistently.
+        let (zw, zh) = (320_u32, 180_u32);
+        let z_from = split_bars(zw, zh, false);
+        let z_to = split_bars(zw, zh, true);
+        let z_from_tex = gpu.device().create_texture(&wgpu::TextureDescriptor {
+            label: Some("zoom-edge-from"),
+            size: wgpu::Extent3d {
+                width: zw,
+                height: zh,
+                depth_or_array_layers: 1,
+            },
+            mip_level_count: 1,
+            sample_count: 1,
+            dimension: wgpu::TextureDimension::D2,
+            format: TARGET_FORMAT,
+            usage: wgpu::TextureUsages::TEXTURE_BINDING | wgpu::TextureUsages::COPY_DST,
+            view_formats: &[],
+        });
+        let z_to_tex = gpu.device().create_texture(&wgpu::TextureDescriptor {
+            label: Some("zoom-edge-to"),
+            size: wgpu::Extent3d {
+                width: zw,
+                height: zh,
+                depth_or_array_layers: 1,
+            },
+            mip_level_count: 1,
+            sample_count: 1,
+            dimension: wgpu::TextureDimension::D2,
+            format: TARGET_FORMAT,
+            usage: wgpu::TextureUsages::TEXTURE_BINDING | wgpu::TextureUsages::COPY_DST,
+            view_formats: &[],
+        });
+        let z_dst_tex = gpu.device().create_texture(&wgpu::TextureDescriptor {
+            label: Some("zoom-edge-dst"),
+            size: wgpu::Extent3d {
+                width: zw,
+                height: zh,
+                depth_or_array_layers: 1,
+            },
+            mip_level_count: 1,
+            sample_count: 1,
+            dimension: wgpu::TextureDimension::D2,
+            format: TARGET_FORMAT,
+            usage: wgpu::TextureUsages::RENDER_ATTACHMENT | wgpu::TextureUsages::COPY_SRC,
+            view_formats: &[],
+        });
+        for (tex, f) in [(&z_from_tex, &z_from), (&z_to_tex, &z_to)] {
+            gpu.queue().write_texture(
+                wgpu::TexelCopyTextureInfo {
+                    texture: tex,
+                    mip_level: 0,
+                    origin: wgpu::Origin3d::ZERO,
+                    aspect: wgpu::TextureAspect::All,
+                },
+                &f.pixels,
+                wgpu::TexelCopyBufferLayout {
+                    offset: 0,
+                    bytes_per_row: Some(zw * 4),
+                    rows_per_image: Some(zh),
+                },
+                wgpu::Extent3d {
+                    width: zw,
+                    height: zh,
+                    depth_or_array_layers: 1,
+                },
+            );
+        }
+        let z_padded = (zw * 4).div_ceil(wgpu::COPY_BYTES_PER_ROW_ALIGNMENT)
+            * wgpu::COPY_BYTES_PER_ROW_ALIGNMENT;
+        let z_rb = gpu.device().create_buffer(&wgpu::BufferDescriptor {
+            label: Some("zoom-edge-rb"),
+            size: u64::from(z_padded) * u64::from(zh),
+            usage: wgpu::BufferUsages::COPY_DST | wgpu::BufferUsages::MAP_READ,
+            mapped_at_creation: false,
+        });
+        pipe.begin_frame();
+        let z_cpu = blend_frames_cpu(
+            &z_from,
+            &z_to,
+            TransitionKind::Zoom,
+            TransitionDirection::Left,
+            0.5,
+            false,
+        );
+        let mut z_enc = gpu
+            .device()
+            .create_command_encoder(&wgpu::CommandEncoderDescriptor {
+                label: Some("zoom-edge"),
+            });
+        pipe.draw(
+            gpu.device(),
+            gpu.queue(),
+            &mut z_enc,
+            &z_from_tex.create_view(&wgpu::TextureViewDescriptor::default()),
+            &z_to_tex.create_view(&wgpu::TextureViewDescriptor::default()),
+            &z_dst_tex.create_view(&wgpu::TextureViewDescriptor::default()),
+            TransitionKind::Zoom,
+            TransitionDirection::Left,
+            0.5,
+            false,
+            false,
+        );
+        z_enc.copy_texture_to_buffer(
+            wgpu::TexelCopyTextureInfo {
+                texture: &z_dst_tex,
+                mip_level: 0,
+                origin: wgpu::Origin3d::ZERO,
+                aspect: wgpu::TextureAspect::All,
+            },
+            wgpu::TexelCopyBufferInfo {
+                buffer: &z_rb,
+                layout: wgpu::TexelCopyBufferLayout {
+                    offset: 0,
+                    bytes_per_row: Some(z_padded),
+                    rows_per_image: Some(zh),
+                },
+            },
+            wgpu::Extent3d {
+                width: zw,
+                height: zh,
+                depth_or_array_layers: 1,
+            },
+        );
+        gpu.queue().submit([z_enc.finish()]);
+        let z_slice = z_rb.slice(..);
+        let (z_tx, z_rx) = std::sync::mpsc::channel();
+        z_slice.map_async(wgpu::MapMode::Read, move |r| {
+            let _ = z_tx.send(r);
+        });
+        let _ = gpu.device().poll(wgpu::PollType::wait_indefinitely());
+        z_rx.recv().unwrap().unwrap();
+        let z_mapped = z_slice.get_mapped_range().unwrap();
+        let mut z_bad = 0_usize;
+        for row in 0..zh as usize {
+            let src = &z_mapped[row * z_padded as usize..row * z_padded as usize + zw as usize * 4];
+            let c_row = &z_cpu.pixels[row * zw as usize * 4..(row + 1) * zw as usize * 4];
+            for (c, g) in c_row.chunks_exact(4).zip(src.chunks_exact(4)) {
+                for ch in 0..4 {
+                    if (i32::from(c[ch]) - i32::from(g[ch])).abs() > 4 {
+                        z_bad += 1;
+                    }
+                }
+            }
+        }
+        drop(z_mapped);
+        z_rb.unmap();
+        assert_eq!(z_bad, 0, "320x180 Zoom edge GPU/CPU mismatch: {z_bad}");
     }
 }
