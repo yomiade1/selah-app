@@ -23,16 +23,26 @@ public sealed class HelpTests : IDisposable
     private sealed class FakeHelp : IHelpSource
     {
         public List<string> Opened { get; } = [];
+        public List<(string ArticleId, bool Helpful)> Feedback { get; } = [];
 
         public Task<IReadOnlyList<Article>> SearchHelpAsync(string query, IEnumerable<string> anchors) =>
             Task.FromResult<IReadOnlyList<Article>>(query.Contains("song", StringComparison.Ordinal)
                 ? [new Article { Id = "live.show-a-song", Title = "Show a song on the screens", Summary = "Pick the song.", AstJson = Ast }]
                 : []);
 
+        public Task<IReadOnlyList<Article>> HelpForContextAsync(IEnumerable<string> anchors) =>
+            Task.FromResult<IReadOnlyList<Article>>([]);
+
         public Task<Article?> GetArticleAsync(string id)
         {
             Opened.Add(id);
             return Task.FromResult<Article?>(new Article { Id = id, Title = "Show a song on the screens", AstJson = Ast });
+        }
+
+        public Task RecordFeedbackAsync(string articleId, bool helpful)
+        {
+            Feedback.Add((articleId, helpful));
+            return Task.CompletedTask;
         }
     }
 

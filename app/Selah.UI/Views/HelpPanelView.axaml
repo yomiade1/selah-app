@@ -1,0 +1,121 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:Selah.UI.ViewModels"
+             xmlns:pb="using:Selah.Contracts.V1"
+             xmlns:s="using:Selah.UI.Services"
+             x:Class="Selah.UI.Views.HelpPanelView"
+             x:DataType="vm:HelpPanelViewModel"
+             IsVisible="{Binding IsOpen}"
+             Width="{DynamicResource Size.InspectorWidth}">
+  <Border Background="{DynamicResource Brush.Surface}"
+          BorderBrush="{DynamicResource Brush.Line}"
+          BorderThickness="{DynamicResource Line.Left}"
+          Padding="{DynamicResource Space.Text.Medium}">
+    <DockPanel>
+      <!-- Panel header and live-safe search bar -->
+      <StackPanel DockPanel.Dock="Top" Spacing="{DynamicResource Space.3}" Margin="0,0,0,10">
+        <DockPanel>
+          <Button Name="HelpPanelCloseButton" DockPanel.Dock="Right" Classes="quiet"
+                  Command="{Binding CloseCommand}">
+            <TextBlock Text="{Binding [help-panel-close], Source={x:Static s:Localizer.Instance}}" />
+          </Button>
+          <TextBlock Classes="title-3" VerticalAlignment="Center"
+                     Text="{Binding [help-title], Source={x:Static s:Localizer.Instance}}" />
+        </DockPanel>
+
+        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="{DynamicResource Space.2}">
+          <TextBox Name="HelpSearchBox" Grid.Column="0" Text="{Binding Query}"
+                   PlaceholderText="{Binding [help-panel-search-placeholder], Source={x:Static s:Localizer.Instance}}"
+                   AutomationProperties.Name="{Binding [help-search-label], Source={x:Static s:Localizer.Instance}}"
+                   KeyDown="OnSearchKeyDown" />
+          <Button Name="HelpSearchButton" Grid.Column="1" Classes="primary" Command="{Binding SearchCommand}">
+            <TextBlock Text="{Binding [help-search-button], Source={x:Static s:Localizer.Instance}}" />
+          </Button>
+        </Grid>
+
+        <TextBlock Name="HelpPanelStatusText" Classes="hint" TextWrapping="Wrap"
+                   Text="{Binding StatusMessage}"
+                   IsVisible="{Binding HasStatusMessage}" />
+      </StackPanel>
+
+      <!-- Topics list: Search results (when searching) + "For this screen" -->
+      <ScrollViewer IsVisible="{Binding IsShowingList}">
+        <StackPanel Spacing="{DynamicResource Space.4}">
+          <StackPanel IsVisible="{Binding IsShowingSearch}" Spacing="{DynamicResource Space.2}">
+            <TextBlock Classes="caption"
+                       Text="{Binding [help-panel-search-results], Source={x:Static s:Localizer.Instance}}" />
+            <ListBox Name="HelpSearchResultsList"
+                     ItemsSource="{Binding SearchResults}"
+                     SelectedItem="{Binding SelectedSearchArticle}"
+                     IsVisible="{Binding HasSearchResults}">
+              <ListBox.ItemTemplate>
+                <DataTemplate x:DataType="pb:Article">
+                  <StackPanel Spacing="2" Margin="0,4">
+                    <TextBlock Classes="label" Text="{Binding Title}" TextWrapping="Wrap" />
+                    <TextBlock Classes="caption" Text="{Binding Summary}" TextWrapping="Wrap" />
+                  </StackPanel>
+                </DataTemplate>
+              </ListBox.ItemTemplate>
+            </ListBox>
+          </StackPanel>
+
+          <StackPanel Spacing="{DynamicResource Space.2}">
+            <TextBlock Name="HelpForScreenHeading" Classes="label"
+                       Text="{Binding [help-panel-for-screen], Source={x:Static s:Localizer.Instance}}" />
+            <TextBlock Name="HelpForScreenEmptyText" Classes="hint" TextWrapping="Wrap"
+                       IsVisible="{Binding !HasContextArticles}"
+                       Text="{Binding [help-panel-for-screen-empty], Source={x:Static s:Localizer.Instance}}" />
+            <ListBox Name="HelpContextArticlesList"
+                     ItemsSource="{Binding ContextArticles}"
+                     SelectedItem="{Binding SelectedContextArticle}"
+                     IsVisible="{Binding HasContextArticles}">
+              <ListBox.ItemTemplate>
+                <DataTemplate x:DataType="pb:Article">
+                  <StackPanel Spacing="2" Margin="0,4">
+                    <TextBlock Classes="label" Text="{Binding Title}" TextWrapping="Wrap" />
+                    <TextBlock Classes="caption" Text="{Binding Summary}" TextWrapping="Wrap" />
+                  </StackPanel>
+                </DataTemplate>
+              </ListBox.ItemTemplate>
+            </ListBox>
+          </StackPanel>
+        </StackPanel>
+      </ScrollViewer>
+
+      <!-- Native rendered article + Did this help? feedback -->
+      <DockPanel IsVisible="{Binding IsShowingArticle}">
+        <Button Name="HelpBackToListButton" DockPanel.Dock="Top" Classes="quiet"
+                HorizontalAlignment="Left" Margin="0,0,0,8"
+                Command="{Binding BackToListCommand}">
+          <TextBlock Text="{Binding [help-panel-back], Source={x:Static s:Localizer.Instance}}" />
+        </Button>
+
+        <Border DockPanel.Dock="Bottom" Background="{DynamicResource Brush.Surface2}"
+                BorderBrush="{DynamicResource Brush.Line}" BorderThickness="{DynamicResource Line.Hairline}"
+                CornerRadius="{DynamicResource Radius.Button}" Padding="{DynamicResource Space.Text.Medium}"
+                Margin="0,10,0,0">
+          <StackPanel Spacing="{DynamicResource Space.2}">
+            <TextBlock Classes="label"
+                       Text="{Binding [help-feedback-question], Source={x:Static s:Localizer.Instance}}"
+                       IsVisible="{Binding ShowFeedbackButtons}" />
+            <WrapPanel ItemSpacing="{DynamicResource Space.2}" IsVisible="{Binding ShowFeedbackButtons}">
+              <Button Name="HelpFeedbackYesButton" Command="{Binding MarkHelpfulCommand}">
+                <TextBlock Text="{Binding [help-feedback-yes], Source={x:Static s:Localizer.Instance}}" />
+              </Button>
+              <Button Name="HelpFeedbackNoButton" Command="{Binding MarkNotHelpfulCommand}">
+                <TextBlock Text="{Binding [help-feedback-no], Source={x:Static s:Localizer.Instance}}" />
+              </Button>
+            </WrapPanel>
+            <TextBlock Name="HelpFeedbackThanksText" Classes="hint" TextWrapping="Wrap"
+                       Text="{Binding FeedbackMessage}"
+                       IsVisible="{Binding HasFeedbackMessage}" />
+          </StackPanel>
+        </Border>
+
+        <ScrollViewer Name="HelpArticleScroller">
+          <ContentControl Name="HelpArticleHost" />
+        </ScrollViewer>
+      </DockPanel>
+    </DockPanel>
+  </Border>
+</UserControl>

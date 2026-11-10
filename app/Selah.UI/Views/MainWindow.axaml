@@ -10,6 +10,7 @@
   <DockPanel>
     <!-- Safe mode (SAFE-07, DESIGN-SYSTEM §10): a warning alert that can't be dismissed. -->
     <Border Name="SafeModeBanner" DockPanel.Dock="Top" IsVisible="{Binding IsSafeMode}"
+            s:Help.Anchor="shell.safe-mode-banner"
             Background="{DynamicResource Brush.WarningBg}" BorderBrush="{DynamicResource Brush.Warning}"
             BorderThickness="{DynamicResource Line.AlertBar}" Padding="{DynamicResource Space.Text.Medium}">
       <WrapPanel ItemSpacing="{DynamicResource Space.4}" LineSpacing="{DynamicResource Space.3}">
@@ -31,6 +32,7 @@
         <TextBlock Classes="title-3" VerticalAlignment="Center" TextWrapping="NoWrap"
                    Text="{Binding [app-name], Source={x:Static s:Localizer.Instance}}" />
         <Border Name="StatusPill" Classes="pill" VerticalAlignment="Center"
+                s:Help.Anchor="shell.status"
                 Background="{DynamicResource Brush.Surface2}" BorderBrush="{DynamicResource Brush.Line2}"
                 BorderThickness="{DynamicResource Line.Hairline}">
           <TextBlock Name="StatusText" Classes="label" TextWrapping="NoWrap" views:Critical.IsCritical="True"
@@ -54,14 +56,17 @@
           <TextBlock Text="{Binding [mode-song-editor], Source={x:Static s:Localizer.Instance}}" />
         </Button>
         <Button Name="CommandPaletteButton" Classes="quiet" Command="{Binding OpenCommandPaletteCommand}"
+                s:Help.Anchor="shell.command-palette"
                 ToolTip.Tip="{Binding [command-search-hint], Source={x:Static s:Localizer.Instance}}">
           <TextBlock Text="{Binding [command-search], Source={x:Static s:Localizer.Instance}}" />
         </Button>
         <Button Name="ShowTestPatternButton" Classes="primary" Command="{Binding ShowTestPatternCommand}"
+                s:Help.Anchor="shell.show-test-pattern"
                 ToolTip.Tip="{Binding [command-show-test-pattern-hint], Source={x:Static s:Localizer.Instance}}">
           <TextBlock Text="{Binding [command-show-test-pattern], Source={x:Static s:Localizer.Instance}}" />
         </Button>
         <Button Name="ClearEverythingButton" Classes="emergency" Command="{Binding ClearEverythingCommand}"
+                s:Help.Anchor="shell.clear-everything"
                 ToolTip.Tip="{Binding [command-clear-everything-hint], Source={x:Static s:Localizer.Instance}}">
           <TextBlock views:Critical.IsCritical="True"
                      Text="{Binding [command-clear-everything], Source={x:Static s:Localizer.Instance}}" />
@@ -69,12 +74,17 @@
         <Button Name="SettingsButton" Classes="quiet" Click="OnOpenSettings">
           <TextBlock Text="{Binding [command-settings], Source={x:Static s:Localizer.Instance}}" />
         </Button>
-        <!-- Help menu (M1.13): articles, Report a problem, Diagnostics. -->
+        <!-- Help menu (M1.13, M2.8): For this screen (F1), What's this? (Shift+F1), articles, Report a problem, Diagnostics. -->
         <Button Name="HelpMenuButton" Classes="quiet"
+                s:Help.Anchor="help.report-a-problem"
                 ToolTip.Tip="{Binding [command-help-hint], Source={x:Static s:Localizer.Instance}}">
           <TextBlock Text="{Binding [command-help], Source={x:Static s:Localizer.Instance}}" />
           <Button.Flyout>
             <MenuFlyout>
+              <MenuItem Name="HelpForScreenItem" Click="OnHelpForScreen"
+                        Header="{Binding [help-for-this-screen-menu], Source={x:Static s:Localizer.Instance}}" />
+              <MenuItem Name="WhatsThisMenuItem" Click="OnToggleWhatsThis"
+                        Header="{Binding [help-whats-this-menu], Source={x:Static s:Localizer.Instance}}" />
               <MenuItem Name="HelpArticlesItem" Click="OnOpenHelp"
                         Header="{Binding [sidebar-help-articles], Source={x:Static s:Localizer.Instance}}" />
               <MenuItem Name="ReportProblemItem" Command="{Binding ReportProblemCommand}"
@@ -110,6 +120,7 @@
 
     <!-- Help ▸ Report a problem (M1.13): where the support file is, under the toolbar. -->
     <Border Name="ReportBar" DockPanel.Dock="Top" IsVisible="{Binding IsReportOpen}"
+            s:Help.Anchor="help.report-a-problem"
             Background="{DynamicResource Brush.Surface2}" BorderBrush="{DynamicResource Brush.Line}"
             BorderThickness="{DynamicResource Line.Bottom}" Padding="{DynamicResource Space.Text.Medium}">
       <WrapPanel ItemSpacing="{DynamicResource Space.4}" LineSpacing="{DynamicResource Space.3}">
@@ -129,6 +140,17 @@
         </Button>
       </WrapPanel>
     </Border>
+
+    <!-- What's this? (Shift+F1) non-blocking inspection bar & popover, never covering Toolbar or Preview. -->
+    <views:WhatsThisOverlay Name="WhatsThisControl" DockPanel.Dock="Top"
+                            IsActive="{Binding IsWhatsThisActive, Mode=TwoWay}"
+                            Closed="OnWhatsThisClosed" />
+
+    <!-- Plain-language shell error alert with "How to fix" link. -->
+    <views:ErrorAlert Name="MainErrorAlert" DockPanel.Dock="Top"
+                      Margin="12,6,12,0"
+                      Message="{Binding LastError}"
+                      FixArticleId="{Binding LastErrorFixArticleId}" />
 
     <!-- Sidebar: an Apple-style source list. -->
     <Border Name="Sidebar" DockPanel.Dock="Left" Width="{DynamicResource Size.SidebarWidth}"
@@ -165,21 +187,30 @@
       </ScrollViewer>
     </Border>
 
-    <!-- Inspector skeleton (Preview mode only; Editor/Library own their own workspace inspector). -->
+    <!-- Contextual Help panel (F1, KNOWLEDGE-BASE §5.2): docked below Toolbar so Preview & Clear stay uncovered. -->
+    <views:HelpPanelView Name="HelpPanelControl" DockPanel.Dock="Right"
+                         DataContext="{Binding HelpPanel}"
+                         s:Help.Anchor="shell.help-panel" />
+
+    <!-- Inspector skeleton (Preview mode only when Help panel isn't open; Editor/Library own their own workspace inspector). -->
     <Border Name="Inspector" DockPanel.Dock="Right" Width="{DynamicResource Size.InspectorWidth}"
             Background="{DynamicResource Brush.Surface}" BorderBrush="{DynamicResource Brush.Line}"
             BorderThickness="{DynamicResource Line.Left}" Padding="{DynamicResource Space.Text.Medium}">
       <StackPanel Spacing="{DynamicResource Space.3}">
         <TextBlock Classes="title-3" Text="{Binding [inspector-heading], Source={x:Static s:Localizer.Instance}}" />
-        <TextBlock Classes="hint" Text="{Binding [inspector-empty], Source={x:Static s:Localizer.Instance}}" />
+        <views:HintText Text="{Binding [inspector-empty], Source={x:Static s:Localizer.Instance}}" />
       </StackPanel>
     </Border>
 
     <!-- Main workspace below the toolbar: Preview, Library, Song Editor, plus Ctrl+K palette overlay. -->
     <Panel>
       <!-- Program preview: never covered while live (DESIGN-SYSTEM §1). -->
-      <Grid Name="PreviewWorkspace" IsVisible="{Binding IsPreviewMode}" RowDefinitions="Auto,*,Auto" Margin="{DynamicResource Space.Text.Medium}">
-        <TextBlock Classes="title-2" Text="{Binding [preview-on-screen], Source={x:Static s:Localizer.Instance}}" />
+      <Grid Name="PreviewWorkspace" IsVisible="{Binding IsPreviewMode}" RowDefinitions="Auto,*,Auto" Margin="{DynamicResource Space.Text.Medium}"
+            s:Help.Anchor="shell.preview">
+        <WrapPanel ItemSpacing="{DynamicResource Space.2}" VerticalAlignment="Center">
+          <TextBlock Classes="title-2" VerticalAlignment="Center" Text="{Binding [preview-on-screen], Source={x:Static s:Localizer.Instance}}" />
+          <views:InfoButton Name="PreviewInfoButton" Anchor="shell.preview" />
+        </WrapPanel>
         <Border Grid.Row="1" Classes="card" Margin="{DynamicResource Space.Text.Small}">
           <Viewbox Stretch="Uniform">
             <Grid Width="480" Height="270">
@@ -188,8 +219,8 @@
             </Grid>
           </Viewbox>
         </Border>
-        <TextBlock Grid.Row="2" Classes="hint" IsVisible="{Binding !IsLive}"
-                   Text="{Binding [preview-nothing], Source={x:Static s:Localizer.Instance}}" />
+        <views:HintText Grid.Row="2" IsVisible="{Binding !IsLive}"
+                        Text="{Binding [preview-nothing], Source={x:Static s:Localizer.Instance}}" />
       </Grid>
 
       <Panel Name="LibraryWorkspace" IsVisible="{Binding IsLibraryMode}">
@@ -201,7 +232,8 @@
       </Panel>
 
       <!-- Quick find (Ctrl/Cmd+K) never covers Toolbar / Clear everything. -->
-      <views:CommandPaletteView Name="CommandPaletteControl" DataContext="{Binding CommandPalette}" />
+      <views:CommandPaletteView Name="CommandPaletteControl" DataContext="{Binding CommandPalette}"
+                                s:Help.Anchor="shell.command-palette" />
     </Panel>
   </DockPanel>
 </Window>

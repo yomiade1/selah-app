@@ -6,13 +6,14 @@ using Avalonia.Media.Imaging;
 using Avalonia.Platform;
 using Avalonia.Platform.Storage;
 using Avalonia.Threading;
+using Avalonia.VisualTree;
 using Selah.Client;
 using Selah.UI.Services;
 using Selah.UI.ViewModels;
 
 namespace Selah.UI.Views;
 
-public sealed partial class MainWindow : Window
+public sealed partial class MainWindow : Window, IHelpHost
 {
     /// <summary>DESIGN-SYSTEM §4.1: below these effective widths the inspector, then the sidebar, hide.</summary>
     public const double InspectorBreakpoint = 1100;
@@ -22,11 +23,14 @@ public sealed partial class MainWindow : Window
     private PreviewRingReader? preview;
     private ulong lastPreviewFrame;
     private WriteableBitmap? previewBitmap;
+    private MainViewModel? subscribedModel;
 
     public MainWindow()
     {
         InitializeComponent();
         AddTextSizeShortcuts();
+        AddHandler(KeyDownEvent, OnTunnelKeyDown, RoutingStrategies.Tunnel);
+        AddHandler(PointerPressedEvent, OnTunnelPointerPressed, RoutingStrategies.Tunnel);
         TextScale.Instance.PropertyChanged += (_, _) => UpdateLayoutForWidth();
         previewTimer.Tick += (_, _) => RefreshPreview();
         Opened += (_, _) => previewTimer.Start();
@@ -38,6 +42,17 @@ public sealed partial class MainWindow : Window
     }
 
     private MainViewModel? Model => DataContext as MainViewModel;
+
+    public IHelpSource? HelpSource => Model?.HelpSource;
+
+    public Task OpenHelpForAnchorsAsync(IEnumerable<string> anchors) =>
+        Model is null ? Task.CompletedTask : Model.OpenHelpForAnchorsAsync(anchors);
+
+    public Task OpenHelpArticleAsync(string articleId) =>
+        Model is null ? Task.CompletedTask : Model.OpenHelpArticleAsync(articleId);
+
+    public Task ToggleHelpPanelAsync() =>
+        Model is null ? Task.CompletedTask : Model.HelpPanel.ToggleAsync(Help.CollectVisibleAnchors(this));
 
     /// <summary>Window width divided by the text scale (DESIGN-SYSTEM §4.1).</summary>
     public double EffectiveWidth => Bounds.Width / TextScale.Instance.Factor;
@@ -51,7 +66,7 @@ public sealed partial class MainWindow : Window
     public void UpdateLayoutForWidth()
     {
         var width = EffectiveWidth;
-        var showShellInspector = Model?.IsPreviewMode ?? true;
+        var showShellInspector = (Model?.IsPreviewMode ?? true) && !(Model?.IsHelpPanelOpen ?? false);
         Inspector.IsVisible = showShellInspector && width >= InspectorBreakpoint;
         Sidebar.IsVisible = width >= SidebarBreakpoint;
     }
@@ -83,7 +98,90 @@ public sealed partial class MainWindow : Window
                 Model.SongEditor.SaveSongCommand.Execute(null);
             }
         });
-        Bind(Key.F12, KeyModifiers.None, () => Model?.ClearEverythingCommand.Execute(null));
+    }
+
+    private void OnTunnelKeyDown(object? sender, KeyEventArgs e)
+    {
+        // §5.4: Clear everything (F12) bypasses text input / help panel focus at all times.
+        if (e.Key == Key.F12)
+        {
+            Model?.ClearEverythingCommand.Execute(null);
+            e.Handled = true;
+            return;
+        }
+        if (e.Key == Key.F1)
+        {
+            if ((e.KeyModifiers & KeyModifiers.Shift) != 0)
+            {
+                Model?.ToggleWhatsThisCommand.Execute(null);
+                e.Handled = true;
+            }
+            else if (e.KeyModifiers == KeyModifiers.None)
+            {
+                _ = ToggleHelpPanelAsync();
+                e.Handled = true;
+            }
+            return;
+        }
+        if (e.Key == Key.Escape && Model?.IsWhatsThisActive == true)
+        {
+            Model.DismissWhatsThisCommand.Execute(null);
+            e.Handled = true;
+        }
+    }
+
+    private void OnTunnelPointerPressed(object? sender, PointerPressedEventArgs e)
+    {
+        if (Model is not { IsWhatsThisActive: true })
+        {
+            return;
+        }
+        var target = e.Source as Visual;
+        if (IsDescendantOf(target, ClearEverythingButton) || IsDescendantOf(target, WhatsThisControl))
+        {
+            return;
+        }
+        e.Handled = true;
+        _ = WhatsThisControl.InspectVisualAsync(target);
+    }
+
+    private static bool IsDescendantOf(Visual? source, Visual container)
+    {
+        for (var current = source; current is not null; current = current.GetVisualParent())
+        {
+            if (ReferenceEquals(current, container))
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private void OnHelpForScreen(object? sender, RoutedEventArgs e) => _ = ToggleHelpPanelAsync();
+
+    private void OnToggleWhatsThis(object? sender, RoutedEventArgs e) => Model?.ToggleWhatsThisCommand.Execute(null);
+
+    private void OnWhatsThisClosed(object? sender, EventArgs e)
+    {
+        if (Model is not null)
+        {
+            Model.IsWhatsThisActive = false;
+        }
+    }
+
+    private void ScheduleHelpContextRefresh()
+    {
+        if (Model is not { IsHelpPanelOpen: true } model)
+        {
+            return;
+        }
+        Dispatcher.UIThread.Post(() =>
+        {
+            if (Model is { IsHelpPanelOpen: true })
+            {
+                _ = model.HelpPanel.RefreshContextAsync(Help.CollectVisibleAnchors(this));
+            }
+        });
     }
 
     private void OnOpenSettings(object? sender, RoutedEventArgs e)
@@ -98,10 +196,25 @@ public sealed partial class MainWindow : Window
 
     private HelpWindow? helpWindow;
 
-    private void OnOpenHelp(object? sender, RoutedEventArgs e) => ShowHelp(null);
+    private void OnOpenHelp(object? sender, RoutedEventArgs e) => ShowHelpWindow(null);
 
-    /// <summary>Open the help window (one at a time), optionally on an article.</summary>
+    /// <summary>Opens a requested article inside the docked contextual Help panel (M2.8).</summary>
     public void ShowHelp(string? articleId)
+    {
+        if (Model is null)
+        {
+            return;
+        }
+        if (articleId is not null)
+        {
+            _ = OpenHelpArticleAsync(articleId);
+            return;
+        }
+        _ = OpenHelpForAnchorsAsync(Help.CollectVisibleAnchors(this));
+    }
+
+    /// <summary>Open the standalone help window (one at a time), optionally on an article.</summary>
+    public void ShowHelpWindow(string? articleId)
     {
         if (Model is null)
         {
@@ -126,20 +239,61 @@ public sealed partial class MainWindow : Window
     protected override void OnDataContextChanged(EventArgs e)
     {
         base.OnDataContextChanged(e);
-        if (Model is { } model)
+        if (subscribedModel is not null)
         {
-            model.PropertyChanged += (_, args) =>
-            {
-                if (args.PropertyName is nameof(MainViewModel.ActiveMode) or nameof(MainViewModel.IsPreviewMode))
-                {
-                    UpdateLayoutForWidth();
-                }
-            };
-            model.ArticleRequested += (_, id) => ShowHelp(id);
-            model.OpenUrlRequested += (_, url) => _ = OpenUrlAsync(url);
-            model.ShowFileRequested += (_, path) => _ = ShowFileAsync(path);
+            subscribedModel.PropertyChanged -= OnModelPropertyChanged;
+            subscribedModel.Library.PropertyChanged -= OnLibraryPropertyChanged;
+            subscribedModel.SongEditor.PropertyChanged -= OnEditorPropertyChanged;
+            subscribedModel.ArticleRequested -= OnArticleRequested;
+            subscribedModel.OpenUrlRequested -= OnOpenUrlRequested;
+            subscribedModel.ShowFileRequested -= OnShowFileRequested;
+        }
+        subscribedModel = Model;
+        if (subscribedModel is { } model)
+        {
+            model.PropertyChanged += OnModelPropertyChanged;
+            model.Library.PropertyChanged += OnLibraryPropertyChanged;
+            model.SongEditor.PropertyChanged += OnEditorPropertyChanged;
+            model.ArticleRequested += OnArticleRequested;
+            model.OpenUrlRequested += OnOpenUrlRequested;
+            model.ShowFileRequested += OnShowFileRequested;
+        }
+        UpdateLayoutForWidth();
+    }
+
+    private void OnModelPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs args)
+    {
+        if (args.PropertyName is nameof(MainViewModel.ActiveMode)
+            or nameof(MainViewModel.IsPreviewMode)
+            or nameof(MainViewModel.IsHelpPanelOpen)
+            or nameof(MainViewModel.IsSafeMode))
+        {
+            UpdateLayoutForWidth();
+            ScheduleHelpContextRefresh();
         }
     }
+
+    private void OnLibraryPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs args)
+    {
+        if (args.PropertyName == nameof(LibraryViewModel.ActiveTab))
+        {
+            ScheduleHelpContextRefresh();
+        }
+    }
+
+    private void OnEditorPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs args)
+    {
+        if (args.PropertyName is nameof(SongEditorViewModel.CurrentStep) or nameof(SongEditorViewModel.InspectorTab))
+        {
+            ScheduleHelpContextRefresh();
+        }
+    }
+
+    private void OnArticleRequested(object? sender, string id) => ShowHelp(id);
+
+    private void OnOpenUrlRequested(object? sender, string url) => _ = OpenUrlAsync(url);
+
+    private void OnShowFileRequested(object? sender, string path) => _ = ShowFileAsync(path);
 
     private DiagnosticsWindow? diagnosticsWindow;
 

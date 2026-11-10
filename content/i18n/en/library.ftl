@@ -81,6 +81,7 @@ bible-blank-end-label = Blank slide at end
 bible-verses-heading = Matched verses
 bible-slides-heading = Scripture slide preview
 bible-empty = Choose a passage or search a word to build scripture slides.
+bible-empty-hint = Pick a translation above, then look up a passage or search words across the Bible.
 bible-bundled-tag = Bundled
 
 ## Song editor (USWDS 4-step workflow)

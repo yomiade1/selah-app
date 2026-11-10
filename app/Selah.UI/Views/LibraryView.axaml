@@ -39,16 +39,17 @@
         <Border Classes="alert-success" IsVisible="{Binding HasStatusMessage}">
           <TextBlock Name="LibraryStatusText" Text="{Binding StatusMessage}" />
         </Border>
-        <Border Classes="alert-warning" IsVisible="{Binding HasErrorMessage}">
-          <TextBlock Name="LibraryErrorText" Text="{Binding ErrorMessage}" />
-        </Border>
+        <views:ErrorAlert Name="LibraryErrorAlert"
+                          Message="{Binding ErrorMessage}"
+                          FixArticleId="{Binding ErrorFixArticleId}" />
       </StackPanel>
     </Border>
 
     <ScrollViewer>
       <StackPanel Spacing="{DynamicResource Space.5}" Margin="0,12,0,12">
         <!-- SONGS TAB -->
-        <StackPanel Name="SongsTabPanel" IsVisible="{Binding IsSongsTab}" Spacing="{DynamicResource Space.4}">
+        <StackPanel Name="SongsTabPanel" IsVisible="{Binding IsSongsTab}" Spacing="{DynamicResource Space.4}"
+                    s:Help.Anchor="library.songs">
           <WrapPanel ItemSpacing="{DynamicResource Space.3}" LineSpacing="{DynamicResource Space.3}" VerticalAlignment="Center">
             <TextBox Name="SongSearchBox" MinWidth="240" Text="{Binding SongSearchQuery}"
                      PlaceholderText="{Binding [library-search-watermark], Source={x:Static s:Localizer.Instance}}"
@@ -65,14 +66,17 @@
             <Button Name="DeleteSongButton" Classes="quiet" Command="{Binding DeleteSelectedSongCommand}" IsEnabled="{Binding HasSelectedSong}">
               <TextBlock Text="{Binding [library-delete-song], Source={x:Static s:Localizer.Instance}}" />
             </Button>
+            <views:InfoButton Name="LibrarySongsInfoButton" Anchor="library.songs" />
           </WrapPanel>
 
-          <Border Classes="card" IsVisible="{Binding HasNoSongs}">
-            <StackPanel Spacing="{DynamicResource Space.2}">
-              <TextBlock Classes="title-3" Text="{Binding [library-songs-empty], Source={x:Static s:Localizer.Instance}}" />
-              <TextBlock Classes="hint" Text="{Binding [library-songs-empty-hint], Source={x:Static s:Localizer.Instance}}" />
-            </StackPanel>
-          </Border>
+          <views:EmptyState Name="SongsEmptyState"
+                            IsVisible="{Binding HasNoSongs}"
+                            Title="{Binding [library-songs-empty], Source={x:Static s:Localizer.Instance}}"
+                            Description="{Binding [library-songs-empty-hint], Source={x:Static s:Localizer.Instance}}"
+                            ActionText="{Binding [library-new-song], Source={x:Static s:Localizer.Instance}}"
+                            ActionCommand="{Binding NewSongCommand}"
+                            HelpArticleId="songs.add-a-song-by-pasting"
+                            HelpAnchor="library.songs" />
 
           <Grid Name="SongsSplitGrid" ColumnDefinitions="300,*" RowDefinitions="Auto,Auto" ColumnSpacing="16" RowSpacing="16"
                 IsVisible="{Binding !HasNoSongs}">
@@ -133,9 +137,12 @@
           </Grid>
 
           <!-- Bundles & backups -->
-          <Border Classes="card">
+          <Border Name="ExchangeCard" Classes="card" s:Help.Anchor="library.exchange">
             <StackPanel Spacing="{DynamicResource Space.3}">
-              <TextBlock Classes="title-3" Text="{Binding [library-exchange-heading], Source={x:Static s:Localizer.Instance}}" />
+              <WrapPanel ItemSpacing="{DynamicResource Space.2}" VerticalAlignment="Center">
+                <TextBlock Classes="title-3" VerticalAlignment="Center" Text="{Binding [library-exchange-heading], Source={x:Static s:Localizer.Instance}}" />
+                <views:InfoButton Name="LibraryExchangeInfoButton" Anchor="library.exchange" />
+              </WrapPanel>
               <WrapPanel ItemSpacing="{DynamicResource Space.3}" LineSpacing="{DynamicResource Space.3}">
                 <TextBox Name="BundlePathBox" MinWidth="260" Text="{Binding BundlePath}"
                          PlaceholderText="{Binding [library-bundle-path-watermark], Source={x:Static s:Localizer.Instance}}"
@@ -163,7 +170,8 @@
         </StackPanel>
 
         <!-- MEDIA TAB -->
-        <StackPanel Name="MediaTabPanel" IsVisible="{Binding IsMediaTab}" Spacing="{DynamicResource Space.4}">
+        <StackPanel Name="MediaTabPanel" IsVisible="{Binding IsMediaTab}" Spacing="{DynamicResource Space.4}"
+                    s:Help.Anchor="library.media">
           <WrapPanel ItemSpacing="{DynamicResource Space.3}" LineSpacing="{DynamicResource Space.3}" VerticalAlignment="Center">
             <TextBox Name="MediaSearchBox" MinWidth="200" Text="{Binding MediaSearchQuery}"
                      PlaceholderText="{Binding [library-search-watermark], Source={x:Static s:Localizer.Instance}}"
@@ -177,6 +185,7 @@
             <Button Name="MediaSearchButton" Command="{Binding RunMediaSearchCommand}">
               <TextBlock Text="{Binding [library-search-button], Source={x:Static s:Localizer.Instance}}" />
             </Button>
+            <views:InfoButton Name="LibraryMediaInfoButton" Anchor="library.media" />
           </WrapPanel>
 
           <WrapPanel ItemSpacing="{DynamicResource Space.3}" LineSpacing="{DynamicResource Space.3}" VerticalAlignment="Center">
@@ -191,12 +200,14 @@
             </Button>
           </WrapPanel>
 
-          <Border Classes="card" IsVisible="{Binding HasNoMedia}">
-            <StackPanel Spacing="{DynamicResource Space.2}">
-              <TextBlock Classes="title-3" Text="{Binding [media-empty], Source={x:Static s:Localizer.Instance}}" />
-              <TextBlock Classes="hint" Text="{Binding [media-empty-hint], Source={x:Static s:Localizer.Instance}}" />
-            </StackPanel>
-          </Border>
+          <views:EmptyState Name="MediaEmptyState"
+                            IsVisible="{Binding HasNoMedia}"
+                            Title="{Binding [media-empty], Source={x:Static s:Localizer.Instance}}"
+                            Description="{Binding [media-empty-hint], Source={x:Static s:Localizer.Instance}}"
+                            ActionText="{Binding [media-import-button], Source={x:Static s:Localizer.Instance}}"
+                            ActionClicked="OnEmptyImportMediaClick"
+                            HelpArticleId="media.add-pictures-and-videos"
+                            HelpAnchor="library.media" />
 
           <ListBox Name="MediaList" ItemsSource="{Binding MediaItems}" SelectedItem="{Binding SelectedMedia}"
                    IsVisible="{Binding !HasNoMedia}">
@@ -227,7 +238,8 @@
         </StackPanel>
 
         <!-- BIBLES & SCRIPTURE TAB -->
-        <StackPanel Name="BiblesTabPanel" IsVisible="{Binding IsBiblesTab}" Spacing="{DynamicResource Space.4}">
+        <StackPanel Name="BiblesTabPanel" IsVisible="{Binding IsBiblesTab}" Spacing="{DynamicResource Space.4}"
+                    s:Help.Anchor="library.bibles">
           <Border Classes="card">
             <StackPanel Spacing="{DynamicResource Space.3}">
               <WrapPanel ItemSpacing="{DynamicResource Space.3}" LineSpacing="{DynamicResource Space.3}" VerticalAlignment="Center">
@@ -243,6 +255,7 @@
                 <Button Name="DeleteBibleButton" Classes="quiet" Command="{Binding DeleteSelectedBibleCommand}" IsEnabled="{Binding CanDeleteSelectedBible}">
                   <TextBlock Text="{Binding [bible-delete-button], Source={x:Static s:Localizer.Instance}}" />
                 </Button>
+                <views:InfoButton Name="LibraryBiblesInfoButton" Anchor="library.bibles" />
               </WrapPanel>
 
               <WrapPanel ItemSpacing="{DynamicResource Space.3}" LineSpacing="{DynamicResource Space.3}" VerticalAlignment="Center">
@@ -292,8 +305,18 @@
             </StackPanel>
           </Border>
 
+          <views:EmptyState Name="BiblesEmptyState"
+                            IsVisible="{Binding HasNoVerses}"
+                            Title="{Binding [bible-empty], Source={x:Static s:Localizer.Instance}}"
+                            Description="{Binding [bible-empty-hint], Source={x:Static s:Localizer.Instance}}"
+                            ActionText="{Binding [bible-lookup-button], Source={x:Static s:Localizer.Instance}}"
+                            ActionCommand="{Binding LookupPassageCommand}"
+                            HelpArticleId="scripture.add-scripture-to-a-service"
+                            HelpAnchor="library.bibles" />
+
           <!-- Verses & Generated Scripture Slides -->
-          <Grid Name="ScriptureSplitGrid" ColumnDefinitions="*,*" RowDefinitions="Auto,Auto" ColumnSpacing="16" RowSpacing="16">
+          <Grid Name="ScriptureSplitGrid" ColumnDefinitions="*,*" RowDefinitions="Auto,Auto" ColumnSpacing="16" RowSpacing="16"
+                IsVisible="{Binding !HasNoVerses}">
             <Border Name="VersesPane" Grid.Column="0" Grid.Row="0" Classes="card">
               <StackPanel Spacing="{DynamicResource Space.2}">
                 <TextBlock Classes="label" Text="{Binding [bible-verses-heading], Source={x:Static s:Localizer.Instance}}" />

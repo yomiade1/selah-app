@@ -34,7 +34,16 @@ public sealed partial class MainViewModel : ObservableObject
         Settings = new SettingsViewModel(
             connection is null ? null : connection.SetAppearanceAsync,
             new UpdatesViewModel(connection, () => ConfirmIfLiveAsync(LiveGuardKind.Update)));
+        HelpSource = resolvedHelp;
         Help = new HelpViewModel(resolvedHelp);
+        HelpPanel = new HelpPanelViewModel(resolvedHelp);
+        HelpPanel.PropertyChanged += (_, args) =>
+        {
+            if (args.PropertyName == nameof(HelpPanelViewModel.IsOpen))
+            {
+                OnPropertyChanged(nameof(IsHelpPanelOpen));
+            }
+        };
         Library = new LibraryViewModel(resolvedLibrary);
         SongEditor = new SongEditorViewModel(resolvedLibrary);
         CommandPalette = new CommandPaletteViewModel(resolvedLibrary, resolvedHelp);
@@ -77,13 +86,25 @@ public sealed partial class MainViewModel : ObservableObject
 
     public SettingsViewModel Settings { get; }
 
+    public IHelpSource? HelpSource { get; }
+
     public HelpViewModel Help { get; }
+
+    public HelpPanelViewModel HelpPanel { get; }
 
     public LibraryViewModel Library { get; }
 
     public SongEditorViewModel SongEditor { get; }
 
     public CommandPaletteViewModel CommandPalette { get; }
+
+    [ObservableProperty]
+    private bool isWhatsThisActive;
+
+    [ObservableProperty]
+    private string? lastErrorFixArticleId;
+
+    public bool IsHelpPanelOpen => HelpPanel.IsOpen;
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(IsPreviewMode))]
@@ -174,6 +195,14 @@ public sealed partial class MainViewModel : ObservableObject
     /// <summary>Set when the last command failed, for the status line.</summary>
     [ObservableProperty]
     private string? lastError;
+
+    partial void OnLastErrorChanged(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            LastErrorFixArticleId = null;
+        }
+    }
 
     public string StatusText => Localizer.Instance[StatusKey];
 
@@ -306,19 +335,29 @@ public sealed partial class MainViewModel : ObservableObject
             await connection.ShowTestPatternAsync();
             LastError = null;
         }
+        catch (CoreException error)
+        {
+            LastError = Localizer.Instance[error.MessageKey];
+            LastErrorFixArticleId = string.IsNullOrWhiteSpace(error.FixArticleId) ? null : error.FixArticleId;
+        }
         catch (Exception error) when (error is TimeoutException or IOException or InvalidOperationException)
         {
             LastError = Localizer.Instance["error-not-connected"];
+            LastErrorFixArticleId = null;
         }
     }
+
+    public event EventHandler? ClearEverythingTriggered;
 
     /// <summary>Always available, even when core isn't connected (SAFE-03).</summary>
     [RelayCommand]
     private async Task ClearEverythingAsync()
     {
+        ClearEverythingTriggered?.Invoke(this, EventArgs.Empty);
         if (connection is not null && !await connection.ClearEverythingAsync())
         {
             LastError = Localizer.Instance["error-not-connected"];
+            LastErrorFixArticleId = null;
         }
     }
 
@@ -418,11 +457,21 @@ public sealed partial class MainViewModel : ObservableObject
         }
     }
 
-    /// <summary>Raised when something asks for a help article (the article view opens it).</summary>
+    /// <summary>Raised when something asks for a help article (the help panel opens it).</summary>
     public event EventHandler<string>? ArticleRequested;
 
     [RelayCommand]
     private void OpenArticle(string id) => ArticleRequested?.Invoke(this, id);
+
+    public Task OpenHelpForAnchorsAsync(IEnumerable<string> anchors) => HelpPanel.OpenForAnchorsAsync(anchors);
+
+    public Task OpenHelpArticleAsync(string articleId) => HelpPanel.OpenArticleAsync(articleId);
+
+    [RelayCommand]
+    private void ToggleWhatsThis() => IsWhatsThisActive = !IsWhatsThisActive;
+
+    [RelayCommand]
+    private void DismissWhatsThis() => IsWhatsThisActive = false;
 
     [RelayCommand]
     private void OpenSettings() => IsSettingsOpen = true;

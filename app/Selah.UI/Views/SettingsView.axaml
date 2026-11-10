@@ -11,10 +11,13 @@
       <TextBlock Classes="title-1" Text="{Binding [settings-title], Source={x:Static s:Localizer.Instance}}" />
       <TextBlock Classes="title-3" Text="{Binding [settings-section-appearance], Source={x:Static s:Localizer.Instance}}" />
 
-      <Border Classes="card">
+      <Border Classes="card" s:Help.Anchor="settings.appearance">
         <StackPanel Spacing="{DynamicResource Space.3}">
-          <TextBlock Name="AppearanceLabel" Classes="label" Text="{Binding [appearance-label], Source={x:Static s:Localizer.Instance}}" />
-          <TextBlock Classes="hint" Text="{Binding [appearance-hint], Source={x:Static s:Localizer.Instance}}" />
+          <WrapPanel ItemSpacing="{DynamicResource Space.2}" VerticalAlignment="Center">
+            <TextBlock Name="AppearanceLabel" Classes="label" VerticalAlignment="Center" Text="{Binding [appearance-label], Source={x:Static s:Localizer.Instance}}" />
+            <views:InfoButton Anchor="settings.appearance" />
+          </WrapPanel>
+          <views:HintText Text="{Binding [appearance-hint], Source={x:Static s:Localizer.Instance}}" />
           <ListBox Name="AppearanceChoice" SelectedIndex="{Binding AppearanceIndex}" SelectionMode="AlwaysSelected,Single"
                    AutomationProperties.LabeledBy="{Binding #AppearanceLabel}">
             <ListBox.ItemsPanel>
@@ -35,22 +38,23 @@
         </StackPanel>
       </Border>
 
-      <Border Classes="card">
+      <Border Classes="card" s:Help.Anchor="settings.text-size">
         <StackPanel Spacing="{DynamicResource Space.4}">
-          <WrapPanel ItemSpacing="{DynamicResource Space.3}">
-            <TextBlock Name="TextSizeLabel" Classes="label" Text="{Binding [text-size-label], Source={x:Static s:Localizer.Instance}}" />
-            <TextBlock Name="TextSizeName" Classes="label" Foreground="{DynamicResource Brush.Primary}" Text="{Binding TextSizeName}" />
+          <WrapPanel ItemSpacing="{DynamicResource Space.3}" VerticalAlignment="Center">
+            <TextBlock Name="TextSizeLabel" Classes="label" VerticalAlignment="Center" Text="{Binding [text-size-label], Source={x:Static s:Localizer.Instance}}" />
+            <TextBlock Name="TextSizeName" Classes="label" VerticalAlignment="Center" Foreground="{DynamicResource Brush.Primary}" Text="{Binding TextSizeName}" />
             <TextBlock Name="TextSizeValue" Classes="hint" VerticalAlignment="Center" Text="{Binding TextSizeValue}" />
+            <views:InfoButton Anchor="settings.text-size" />
           </WrapPanel>
-          <TextBlock Classes="hint" Text="{Binding [text-size-hint], Source={x:Static s:Localizer.Instance}}" />
+          <views:HintText Text="{Binding [text-size-hint], Source={x:Static s:Localizer.Instance}}" />
           <Slider Name="TextSizeSlider" Minimum="0" Maximum="{Binding TextSizeMaximum}" TickFrequency="1"
                   IsSnapToTickEnabled="True" TickPlacement="BottomRight" IsEnabled="{Binding CanChooseTextSize}"
                   Value="{Binding TextSizeIndex}" AutomationProperties.LabeledBy="{Binding #TextSizeLabel}" />
           <ToggleSwitch Name="UseComputerTextSize" IsChecked="{Binding UseComputerTextSize}">
             <TextBlock Text="{Binding [text-size-use-computer], Source={x:Static s:Localizer.Instance}}" />
           </ToggleSwitch>
-          <TextBlock Classes="hint" Text="{Binding [text-size-use-computer-hint], Source={x:Static s:Localizer.Instance}}" />
-          <TextBlock Classes="hint" Text="{Binding [text-size-shortcuts], Source={x:Static s:Localizer.Instance}}" />
+          <views:HintText Text="{Binding [text-size-use-computer-hint], Source={x:Static s:Localizer.Instance}}" />
+          <views:HintText Text="{Binding [text-size-shortcuts], Source={x:Static s:Localizer.Instance}}" />
 
           <!-- The live preview: it uses the app's own type tokens, so it shows the chosen size. -->
           <TextBlock Classes="caption" Text="{Binding [text-size-preview-label], Source={x:Static s:Localizer.Instance}}" />
@@ -65,15 +69,18 @@
       </Border>
 
       <!-- Settings ▸ Updates (M1.11): off until the person turns it on; checks only when asked. -->
-      <TextBlock Classes="title-3" Text="{Binding [settings-section-updates], Source={x:Static s:Localizer.Instance}}" />
-      <Border Name="UpdatesCard" Classes="card">
+      <WrapPanel ItemSpacing="{DynamicResource Space.2}" VerticalAlignment="Center">
+        <TextBlock Classes="title-3" VerticalAlignment="Center" Text="{Binding [settings-section-updates], Source={x:Static s:Localizer.Instance}}" />
+        <views:InfoButton Anchor="settings.updates" />
+      </WrapPanel>
+      <Border Name="UpdatesCard" Classes="card" s:Help.Anchor="settings.updates">
         <StackPanel Spacing="{DynamicResource Space.3}">
           <ToggleSwitch Name="AllowUpdateCheck" IsChecked="{Binding Updates.AllowUpdateCheck}">
             <TextBlock Text="{Binding [updates-allow-label], Source={x:Static s:Localizer.Instance}}" />
           </ToggleSwitch>
-          <TextBlock Classes="hint" Text="{Binding [updates-allow-hint], Source={x:Static s:Localizer.Instance}}" />
+          <views:HintText Text="{Binding [updates-allow-hint], Source={x:Static s:Localizer.Instance}}" />
           <TextBlock Name="UpdateFeedLabel" Classes="label" Text="{Binding [updates-feed-label], Source={x:Static s:Localizer.Instance}}" />
-          <TextBlock Classes="hint" Text="{Binding [updates-feed-hint], Source={x:Static s:Localizer.Instance}}" />
+          <views:HintText Text="{Binding [updates-feed-hint], Source={x:Static s:Localizer.Instance}}" />
           <TextBox Name="UpdateFeedUrl" Text="{Binding Updates.FeedUrl}" AutomationProperties.LabeledBy="{Binding #UpdateFeedLabel}" />
           <WrapPanel ItemSpacing="{DynamicResource Space.3}" LineSpacing="{DynamicResource Space.3}">
             <Button Name="SaveUpdateFeed" Command="{Binding Updates.SaveAddressCommand}">

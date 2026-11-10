@@ -203,17 +203,53 @@ public sealed class CoreConnection : IAsyncDisposable, Selah.UI.ViewModels.IHelp
     /// <summary>Help search (KNOWLEDGE-BASE §6.4); anchors on screen lift their articles.</summary>
     public async Task<IReadOnlyList<Article>> SearchHelpAsync(string query, IEnumerable<string> anchors)
     {
-        var search = new SearchHelp { Query = query, Language = Localizer.Instance.Language == Localizer.PseudoLocale ? "en" : Localizer.Instance.Language };
+        var search = new SearchHelp { Query = query, Language = CurrentHelpLanguage() };
         search.Anchors.AddRange(anchors);
         var reply = await RequestAsync(new Envelope { Query = new Query { SearchHelp = search } }).ConfigureAwait(false);
         return reply.Reply?.HelpResults?.Articles.ToList() ?? [];
     }
 
+    /// <summary>Articles for the anchors visible on screen (KNOWLEDGE-BASE §5.2, §6.4).</summary>
+    public async Task<IReadOnlyList<Article>> HelpForContextAsync(IEnumerable<string> anchors)
+    {
+        var request = new HelpForContext { Language = CurrentHelpLanguage() };
+        request.Anchors.AddRange(anchors);
+        if (request.Anchors.Count == 0)
+        {
+            return [];
+        }
+        var reply = await RequestAsync(new Envelope { Query = new Query { HelpForContext = request } }).ConfigureAwait(false);
+        return reply.Reply?.HelpResults?.Articles.ToList() ?? [];
+    }
+
     public async Task<Article?> GetArticleAsync(string id)
     {
-        var reply = await RequestAsync(new Envelope { Query = new Query { GetArticle = new GetArticle { Id = id, Language = "en" } } }).ConfigureAwait(false);
+        var reply = await RequestAsync(new Envelope { Query = new Query { GetArticle = new GetArticle { Id = id, Language = CurrentHelpLanguage() } } }).ConfigureAwait(false);
         return reply.Reply?.Article;
     }
+
+    /// <summary>Persist "Did this help?" feedback locally in core's library database (KNOWLEDGE-BASE §6.4, M2.8).</summary>
+    public async Task RecordFeedbackAsync(string articleId, bool helpful)
+    {
+        if (string.IsNullOrWhiteSpace(articleId))
+        {
+            return;
+        }
+        await RequestAsync(new Envelope
+        {
+            Command = new Command
+            {
+                RecordFeedback = new RecordFeedback
+                {
+                    ArticleId = articleId,
+                    Helpful = helpful,
+                },
+            },
+        }).ConfigureAwait(false);
+    }
+
+    private static string CurrentHelpLanguage() =>
+        Localizer.Instance.Language == Localizer.PseudoLocale ? "en" : Localizer.Instance.Language;
 
     public async Task<IReadOnlyList<Song>> ListSongsAsync(uint limit = 200, uint offset = 0)
     {

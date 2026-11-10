@@ -11,7 +11,11 @@ public interface IHelpSource
 {
     Task<IReadOnlyList<Article>> SearchHelpAsync(string query, IEnumerable<string> anchors);
 
+    Task<IReadOnlyList<Article>> HelpForContextAsync(IEnumerable<string> anchors);
+
     Task<Article?> GetArticleAsync(string id);
+
+    Task RecordFeedbackAsync(string articleId, bool helpful);
 }
 
 /// <summary>The help window: search, results and the open article (KNOWLEDGE-BASE §5–6).</summary>

@@ -105,6 +105,7 @@ public sealed partial class LibraryViewModel : ObservableObject
             OnPropertyChanged(nameof(SelectedSongSlidesLabel));
             OnPropertyChanged(nameof(HasNoSongs));
             OnPropertyChanged(nameof(HasNoMedia));
+            OnPropertyChanged(nameof(HasNoVerses));
         };
         if (library is not null)
         {
@@ -141,6 +142,14 @@ public sealed partial class LibraryViewModel : ObservableObject
 
     [ObservableProperty]
     private string? errorFixArticleId;
+
+    partial void OnErrorMessageChanged(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            ErrorFixArticleId = null;
+        }
+    }
 
     public bool HasStatusMessage => !string.IsNullOrWhiteSpace(StatusMessage);
 
@@ -198,6 +207,8 @@ public sealed partial class LibraryViewModel : ObservableObject
     public ObservableCollection<ScriptureVerseHit> SearchHits { get; } = [];
 
     public ObservableCollection<SlidePreviewCard> ScripturePreviewSlides { get; } = [];
+
+    public bool HasNoVerses => Verses.Count == 0;
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(CanDeleteSelectedBible))]
@@ -583,6 +594,7 @@ public sealed partial class LibraryViewModel : ObservableObject
             {
                 Verses.Add(verse);
             }
+            OnPropertyChanged(nameof(HasNoVerses));
             SearchHits.Clear();
             await SplitScriptureSlidesAsync();
         });
@@ -614,6 +626,7 @@ public sealed partial class LibraryViewModel : ObservableObject
                     Text = hit.Text,
                 });
             }
+            OnPropertyChanged(nameof(HasNoVerses));
             ScriptureNormalizedReference = ScriptureSearchQuery.Trim();
             await SplitScriptureSlidesAsync();
         });

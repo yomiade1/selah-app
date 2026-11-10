@@ -52,9 +52,9 @@
         <Border Classes="alert-success" IsVisible="{Binding HasStatusMessage}">
           <TextBlock Name="EditorStatusText" Text="{Binding StatusMessage}" />
         </Border>
-        <Border Classes="alert-warning" IsVisible="{Binding HasErrorMessage}">
-          <TextBlock Name="EditorErrorText" Text="{Binding ErrorMessage}" />
-        </Border>
+        <views:ErrorAlert Name="EditorErrorAlert"
+                          Message="{Binding ErrorMessage}"
+                          FixArticleId="{Binding ErrorFixArticleId}" />
       </StackPanel>
     </Border>
 
@@ -77,9 +77,13 @@
         <Border Name="EditorLeftPane" Grid.Column="0" Grid.Row="0" Classes="card" VerticalAlignment="Top">
           <StackPanel Spacing="{DynamicResource Space.4}">
             <!-- Paste Step -->
-            <StackPanel Name="PasteStepPanel" IsVisible="{Binding IsStepPaste}" Spacing="{DynamicResource Space.3}">
-              <TextBlock Classes="title-3" Text="{Binding [editor-paste-heading], Source={x:Static s:Localizer.Instance}}" />
-              <TextBlock Classes="hint" Text="{Binding [editor-paste-hint], Source={x:Static s:Localizer.Instance}}" />
+            <StackPanel Name="PasteStepPanel" IsVisible="{Binding IsStepPaste}" Spacing="{DynamicResource Space.3}"
+                        s:Help.Anchor="editor.paste">
+              <WrapPanel ItemSpacing="{DynamicResource Space.2}" VerticalAlignment="Center">
+                <TextBlock Classes="title-3" VerticalAlignment="Center" Text="{Binding [editor-paste-heading], Source={x:Static s:Localizer.Instance}}" />
+                <views:InfoButton Name="EditorPasteInfoButton" Anchor="editor.paste" />
+              </WrapPanel>
+              <views:HintText Text="{Binding [editor-paste-hint], Source={x:Static s:Localizer.Instance}}" />
               <StackPanel Spacing="4">
                 <TextBlock Classes="label" Text="{Binding [editor-paste-format-label], Source={x:Static s:Localizer.Instance}}" />
                 <ComboBox Name="PasteFormatCombo" SelectedIndex="{Binding PasteFormatIndex}" HorizontalAlignment="Stretch">
@@ -103,7 +107,8 @@
             </StackPanel>
 
             <!-- Detection Alert + Section List -->
-            <StackPanel Name="SectionsStepPanel" IsVisible="{Binding !IsStepPaste}" Spacing="{DynamicResource Space.3}">
+            <StackPanel Name="SectionsStepPanel" IsVisible="{Binding !IsStepPaste}" Spacing="{DynamicResource Space.3}"
+                        s:Help.Anchor="editor.sections">
               <Border Name="DetectionAlert" Classes="alert-success" IsVisible="{Binding HasDetectionBanner}">
                 <StackPanel Spacing="2">
                   <TextBlock Name="DetectionAlertTitle" Classes="label" Text="{Binding DetectedBannerTitle}" />
@@ -114,7 +119,7 @@
               <Border Classes="card" Background="{DynamicResource Brush.Surface2}" IsVisible="{Binding IsStepReview}">
                 <StackPanel Spacing="4">
                   <TextBlock Classes="label" Text="{Binding [editor-review-heading], Source={x:Static s:Localizer.Instance}}" />
-                  <TextBlock Classes="hint" Text="{Binding [editor-review-hint], Source={x:Static s:Localizer.Instance}}" />
+                  <views:HintText Text="{Binding [editor-review-hint], Source={x:Static s:Localizer.Instance}}" />
                 </StackPanel>
               </Border>
 
@@ -122,6 +127,7 @@
                 <Button Name="AddSectionButton" Command="{Binding AddSectionCommand}">
                   <TextBlock Text="{Binding [editor-add-section], Source={x:Static s:Localizer.Instance}}" />
                 </Button>
+                <views:InfoButton Name="EditorSectionsInfoButton" Anchor="editor.sections" />
               </WrapPanel>
 
               <ItemsControl Name="SectionsItemsControl" ItemsSource="{Binding Sections}">
@@ -187,12 +193,16 @@
         </Border>
 
         <!-- CENTER PANE: Generated Slide Grid -->
-        <Border Name="EditorCenterPane" Grid.Column="1" Grid.Row="0" Classes="card" VerticalAlignment="Top">
+        <Border Name="EditorCenterPane" Grid.Column="1" Grid.Row="0" Classes="card" VerticalAlignment="Top"
+                s:Help.Anchor="editor.slides">
           <StackPanel Spacing="{DynamicResource Space.4}">
             <WrapPanel ItemSpacing="{DynamicResource Space.3}" LineSpacing="{DynamicResource Space.3}" VerticalAlignment="Center">
               <StackPanel Spacing="2">
                 <TextBlock Classes="caption" Text="{Binding [editor-generated-eyebrow], Source={x:Static s:Localizer.Instance}}" />
-                <TextBlock Name="SlidesSummaryText" Classes="title-2" Text="{Binding SlidesSummaryText}" />
+                <WrapPanel ItemSpacing="{DynamicResource Space.2}" VerticalAlignment="Center">
+                  <TextBlock Name="SlidesSummaryText" Classes="title-2" VerticalAlignment="Center" Text="{Binding SlidesSummaryText}" />
+                  <views:InfoButton Name="EditorSlidesInfoButton" Anchor="editor.slides" />
+                </WrapPanel>
               </StackPanel>
               <WrapPanel ItemSpacing="6" LineSpacing="6" VerticalAlignment="Center">
                 <TextBlock Classes="caption" VerticalAlignment="Center"
@@ -254,9 +264,10 @@
         </Border>
 
         <!-- RIGHT PANE: Inspector (Song / Layout / Arrange / Actions) -->
-        <Border Name="EditorRightPane" Grid.Column="2" Grid.Row="0" Classes="card" VerticalAlignment="Top">
+        <Border Name="EditorRightPane" Grid.Column="2" Grid.Row="0" Classes="card" VerticalAlignment="Top"
+                s:Help.Anchor="editor.inspector">
           <StackPanel Spacing="{DynamicResource Space.4}">
-            <WrapPanel ItemSpacing="6" LineSpacing="6">
+            <WrapPanel ItemSpacing="6" LineSpacing="6" VerticalAlignment="Center">
               <Button Name="InspectorSongTab" Classes.primary="{Binding IsInspectorSong}"
                       Command="{Binding SelectInspectorTabCommand}" CommandParameter="Song">
                 <TextBlock Text="{Binding [editor-tab-song], Source={x:Static s:Localizer.Instance}}" />
@@ -273,6 +284,7 @@
                       Command="{Binding SelectInspectorTabCommand}" CommandParameter="Actions">
                 <TextBlock Text="{Binding [editor-tab-actions], Source={x:Static s:Localizer.Instance}}" />
               </Button>
+              <views:InfoButton Name="EditorInspectorInfoButton" Anchor="editor.inspector" />
             </WrapPanel>
 
             <!-- Song metadata -->

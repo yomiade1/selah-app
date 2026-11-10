@@ -126,7 +126,9 @@ public sealed class DiagnosticsTests : IDisposable
         Dispatcher.UIThread.RunJobs();
         var help = window.GetVisualDescendants().OfType<Button>().Single(b => b.Name == "HelpMenuButton");
         var items = ((MenuFlyout)help.Flyout!).Items.OfType<MenuItem>().Select(i => i.Header).ToList();
-        Assert.Equal(["Help articles", "Report a problem", "Diagnostics"], items);
+        Assert.Equal(
+            ["Help for this screen (F1)", "What's this? (Shift+F1)", "Help articles", "Report a problem", "Diagnostics"],
+            items);
         window.Close();
     }
 

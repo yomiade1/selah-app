@@ -182,3 +182,133 @@ fn the_committed_ast_fixture_is_current() {
         "tests/fixtures/kb/show-a-song.ast.json is out of date"
     );
 }
+
+#[test]
+fn coverage_detects_unused_and_undeclared_ui_anchors() {
+    let mut ctx = context();
+    let corpus = selah_kb::load(&root(), &ctx, &Options::default());
+    assert_eq!(corpus.errors().count(), 0);
+
+    // Unused anchor in anchors.yaml triggers KB-COVER.
+    ctx.anchors.insert("unused.test-anchor".into());
+    ctx.anchor_lines.insert("unused.test-anchor".into(), 99);
+    // Undeclared anchor used in UI triggers KB-COVER.
+    ctx.ui_anchors.insert("undeclared.test-anchor".into());
+    ctx.ui_anchor_uses.push(selah_kb::content::UiAnchorUse {
+        anchor: "undeclared.test-anchor".into(),
+        path: "app/Selah.UI/Views/Fake.axaml".into(),
+        line: 12,
+    });
+    let findings = lint::lint_coverage(&ctx, &corpus.articles, &Options::default());
+    assert!(
+        findings.iter().any(|f| {
+            f.rule == "KB-COVER"
+                && f.severity == Severity::Error
+                && f.message.contains("unused.test-anchor")
+        }),
+        "{findings:#?}"
+    );
+    assert!(
+        findings.iter().any(|f| {
+            f.rule == "KB-COVER"
+                && f.severity == Severity::Error
+                && f.message.contains("undeclared.test-anchor")
+        }),
+        "{findings:#?}"
+    );
+}
+
+#[test]
+fn coverage_detects_uncovered_anchors_settings_errors_and_tours() {
+    let mut ctx = context();
+    let mut corpus = selah_kb::load(&root(), &ctx, &Options::default());
+    // Downgrade the article that covers `shell.help-panel` to `draft` -> Check 2 fails.
+    for article in &mut corpus.articles {
+        if article.front.id == "getting-started.get-help-in-selah" {
+            article.front.status = "draft".into();
+        }
+    }
+    ctx.setting_defs.push(selah_kb::content::SettingDef {
+        key: "uncovered.setting".into(),
+        hint: "missing-hint-key".into(),
+        line: 5,
+    });
+    ctx.error_defs.push(selah_kb::content::ErrorDef {
+        code: "SEL-TEST-9999".into(),
+        message: "missing-error-key".into(),
+        fix_article: "troubleshooting.missing-fix".into(),
+        line: 8,
+    });
+    ctx.tour_steps.push(selah_kb::content::TourStepUse {
+        anchor: "tour.missing-anchor".into(),
+        path: "content/help/tours/test.yaml".into(),
+        line: 4,
+    });
+
+    let findings = lint::lint_coverage(&ctx, &corpus.articles, &Options::default());
+    for expected in [
+        "shell.help-panel",
+        "uncovered.setting",
+        "missing-hint-key",
+        "SEL-TEST-9999",
+        "missing-error-key",
+        "tour.missing-anchor",
+    ] {
+        assert!(
+            findings.iter().any(|f| f.rule == "KB-COVER"
+                && f.severity == Severity::Error
+                && f.message.contains(expected)),
+            "expected KB-COVER containing {expected} in {findings:#?}"
+        );
+    }
+}
+
+#[test]
+fn context_load_scans_axaml_cs_and_tour_files() {
+    let dir = tempfile::tempdir().unwrap();
+    let root_path = dir.path();
+    std::fs::create_dir_all(root_path.join("content/help/tours")).unwrap();
+    std::fs::create_dir_all(root_path.join("content/errors")).unwrap();
+    std::fs::create_dir_all(root_path.join("content/i18n/en")).unwrap();
+    std::fs::create_dir_all(root_path.join("content/kb/en")).unwrap();
+    std::fs::create_dir_all(root_path.join("app/Selah.UI/Views")).unwrap();
+
+    std::fs::write(
+        root_path.join("content/terms.yaml"),
+        "banned_words:\n  - just\nproduct_terms:\n  slide:\n    - page\n",
+    )
+    .unwrap();
+    std::fs::write(
+        root_path.join("content/help/anchors.yaml"),
+        "anchors:\n  - id: sample.region\n    description: Sample\n",
+    )
+    .unwrap();
+    std::fs::write(
+        root_path.join("content/help/settings.yaml"),
+        "settings: []\n",
+    )
+    .unwrap();
+    std::fs::write(root_path.join("content/errors/errors.yaml"), "errors: []\n").unwrap();
+    std::fs::write(
+        root_path.join("content/kb/en/collections.yaml"),
+        "collections: []\n",
+    )
+    .unwrap();
+    std::fs::write(root_path.join("content/kb/planned.yaml"), "planned: []\n").unwrap();
+    std::fs::write(
+        root_path.join("content/help/tours/demo.yaml"),
+        "id: tour.demo\ntitle: Demo\nsteps:\n  - anchor: sample.region\n    text: Hello\n",
+    )
+    .unwrap();
+    std::fs::write(
+        root_path.join("app/Selah.UI/Views/Demo.axaml"),
+        "<StackPanel s:Help.Anchor=\"sample.region\" />\n",
+    )
+    .unwrap();
+
+    let ctx = Context::load(root_path).unwrap();
+    assert!(ctx.has_ui);
+    assert!(ctx.ui_anchors.contains("sample.region"));
+    assert_eq!(ctx.tour_steps.len(), 1);
+    assert_eq!(ctx.tour_steps[0].anchor, "sample.region");
+}

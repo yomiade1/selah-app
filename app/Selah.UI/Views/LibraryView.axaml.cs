@@ -63,6 +63,9 @@ public sealed partial class LibraryView : UserControl
         }
     }
 
+    private void OnEmptyImportMediaClick(object? sender, EventArgs e) =>
+        OnImportMediaClick(sender, new RoutedEventArgs());
+
     private async void OnImportMediaClick(object? sender, RoutedEventArgs e)
     {
         if (Model is null)

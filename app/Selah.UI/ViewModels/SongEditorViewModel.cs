@@ -439,6 +439,14 @@ public sealed partial class SongEditorViewModel : ObservableObject
     [ObservableProperty]
     private string? errorFixArticleId;
 
+    partial void OnErrorMessageChanged(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            ErrorFixArticleId = null;
+        }
+    }
+
     public bool HasStatusMessage => !string.IsNullOrWhiteSpace(StatusMessage);
 
     public bool HasErrorMessage => !string.IsNullOrWhiteSpace(ErrorMessage);
@@ -918,6 +926,7 @@ public sealed partial class SongEditorViewModel : ObservableObject
         catch (CoreException error)
         {
             ErrorMessage = Localizer.Instance[error.MessageKey];
+            ErrorFixArticleId = string.IsNullOrWhiteSpace(error.FixArticleId) ? null : error.FixArticleId;
         }
     }
 
@@ -952,6 +961,7 @@ public sealed partial class SongEditorViewModel : ObservableObject
         catch (CoreException error)
         {
             ErrorMessage = Localizer.Instance[error.MessageKey];
+            ErrorFixArticleId = string.IsNullOrWhiteSpace(error.FixArticleId) ? null : error.FixArticleId;
         }
     }
 

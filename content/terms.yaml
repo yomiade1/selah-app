@@ -84,6 +84,17 @@ readability_ignore:
   - USB
   - HDMI
   - Wi-Fi
+  - Bible
+  - Bibles
+  - KJV
+  - WEB
+  - OSIS
+  - USFM
+  - Zefania
+  - ChordPro
+  - CCLI
+  - BPM
+  - ZIP
 
 # R18: words that keep their capital in a sentence-case title or heading.
 proper_nouns:
@@ -100,6 +111,18 @@ proper_nouns:
   - Help
   - Settings
   - Screens
+  - Library
+  - Bible
+  - Bibles
+  - KJV
+  - WEB
+  - OSIS
+  - USFM
+  - Zefania
+  - ChordPro
+  - CCLI
+  - BPM
+  - ZIP
 
 # R10: explain the first time, or link to the glossary.
 explain:

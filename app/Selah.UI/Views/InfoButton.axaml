@@ -1,0 +1,18 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:s="using:Selah.UI.Services"
+             x:Class="Selah.UI.Views.InfoButton"
+             VerticalAlignment="Center">
+  <Button Name="TriggerButton" Classes="quiet" Padding="2" MinHeight="28" MinWidth="28"
+          Click="OnTriggerClick"
+          ToolTip.Tip="{Binding [help-info-button-label], Source={x:Static s:Localizer.Instance}}"
+          AutomationProperties.Name="{Binding [help-info-button-label], Source={x:Static s:Localizer.Instance}}">
+    <Border Width="22" Height="22" CornerRadius="11"
+            Background="{DynamicResource Brush.InfoBg}"
+            BorderBrush="{DynamicResource Brush.Info}" BorderThickness="1">
+      <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center"
+                 Classes="caption" FontWeight="Bold" Foreground="{DynamicResource Brush.Primary}"
+                 Text="{Binding [help-info-symbol], Source={x:Static s:Localizer.Instance}}" />
+    </Border>
+  </Button>
+</UserControl>

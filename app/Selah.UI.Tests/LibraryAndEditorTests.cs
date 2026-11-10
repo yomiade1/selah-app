@@ -388,8 +388,13 @@ public sealed partial class LibraryAndEditorTests : IDisposable
                     ? [new Article { Id = "live.show-a-song", Title = "Show a song on the screens", Summary = "Pick the song and move through slides.", AstJson = Ast }]
                     : []);
 
+        public Task<IReadOnlyList<Article>> HelpForContextAsync(IEnumerable<string> anchors) =>
+            Task.FromResult<IReadOnlyList<Article>>([]);
+
         public Task<Article?> GetArticleAsync(string id) =>
             Task.FromResult<Article?>(new Article { Id = id, Title = "Show a song on the screens", AstJson = Ast });
+
+        public Task RecordFeedbackAsync(string articleId, bool helpful) => Task.CompletedTask;
     }
 
     private sealed partial class FakeLibrary : ILibraryService

@@ -19,3 +19,25 @@ anchors:
     description: Help, Diagnostics.
   - id: settings.updates
     description: Settings, Updates.
+  - id: shell.command-palette
+    description: Quick find command palette (Ctrl/Cmd+K).
+  - id: shell.preview
+    description: The On screen preview pane in the main window.
+  - id: shell.help-panel
+    description: The contextual Help panel (F1).
+  - id: library.songs
+    description: Library, Songs browser and list.
+  - id: library.media
+    description: Library, Media bin for images, video, and audio.
+  - id: library.bibles
+    description: Library, Bibles and scripture lookup and splitting.
+  - id: library.exchange
+    description: Library, Export and import .selah bundles and backups.
+  - id: editor.paste
+    description: Song editor, Paste lyrics or ChordPro step.
+  - id: editor.sections
+    description: Song editor, Sections and chord editing step.
+  - id: editor.slides
+    description: Song editor, Generated slide preview grid.
+  - id: editor.inspector
+    description: Song editor, Song metadata, layout, arrangement, and transpose inspector.

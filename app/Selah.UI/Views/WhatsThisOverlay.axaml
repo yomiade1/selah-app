@@ -1,0 +1,38 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:s="using:Selah.UI.Services"
+             x:Class="Selah.UI.Views.WhatsThisOverlay">
+  <!-- Non-blocking What's this? bar & popover docked under Toolbar, never covering Preview or Clear everything. -->
+  <Border Name="WhatsThisBanner"
+          Background="{DynamicResource Brush.InfoBg}"
+          BorderBrush="{DynamicResource Brush.Info}"
+          BorderThickness="{DynamicResource Line.AlertBar}"
+          Padding="{DynamicResource Space.Text.Medium}">
+    <StackPanel Spacing="{DynamicResource Space.3}">
+      <WrapPanel ItemSpacing="{DynamicResource Space.3}" LineSpacing="{DynamicResource Space.2}" VerticalAlignment="Center">
+        <TextBlock Name="WhatsThisPromptText" Classes="label" VerticalAlignment="Center" TextWrapping="Wrap"
+                   Text="{Binding [whats-this-banner], Source={x:Static s:Localizer.Instance}}" />
+        <Button Name="WhatsThisCloseButton" Classes="quiet" Click="OnCloseClick">
+          <TextBlock Text="{Binding [whats-this-close], Source={x:Static s:Localizer.Instance}}" />
+        </Button>
+      </WrapPanel>
+
+      <Border Name="WhatsThisPopoverCard" IsVisible="False"
+              Background="{DynamicResource Brush.Surface}"
+              BorderBrush="{DynamicResource Brush.Line}"
+              BorderThickness="{DynamicResource Line.Hairline}"
+              CornerRadius="{DynamicResource Radius.Button}"
+              Padding="{DynamicResource Space.Text.Medium}">
+        <StackPanel Spacing="{DynamicResource Space.2}">
+          <TextBlock Name="WhatsThisPopoverTitle" Classes="label" TextWrapping="Wrap" />
+          <TextBlock Name="WhatsThisPopoverSummary" TextWrapping="Wrap" />
+          <WrapPanel ItemSpacing="{DynamicResource Space.3}">
+            <Button Name="WhatsThisSeeGuideButton" Classes="link" Click="OnSeeGuideClick" IsVisible="False">
+              <TextBlock Name="WhatsThisSeeGuideText" TextDecorations="Underline" />
+            </Button>
+          </WrapPanel>
+        </StackPanel>
+      </Border>
+    </StackPanel>
+  </Border>
+</UserControl>

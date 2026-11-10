@@ -721,6 +721,267 @@ pub fn lint_article(
     .run()
 }
 
+fn article_qualifies(article: &Article, options: &Options) -> bool {
+    if article.language != "en" {
+        return false;
+    }
+    if options.release {
+        article.front.status == "published"
+    } else {
+        article.front.status != "draft"
+    }
+}
+
+/// Coverage checks 1–5 (KNOWLEDGE-BASE §7.2). Check 6 (UI labels) is R8 in [`lint_article`].
+pub fn lint_coverage(context: &Context, articles: &[Article], options: &Options) -> Vec<Finding> {
+    let mut findings = Vec::new();
+    let active: Vec<&Article> = articles
+        .iter()
+        .filter(|a| article_qualifies(a, options))
+        .collect();
+    let active_ids: BTreeMap<&str, &Article> =
+        active.iter().map(|a| (a.front.id.as_str(), *a)).collect();
+
+    let planned_severity = |kind: &str, id: &str| -> Option<(Severity, String)> {
+        let planned = context.planned(kind, id)?;
+        let sev = if options.release || context.done.contains(&planned.milestone) {
+            Severity::Error
+        } else {
+            Severity::Warning
+        };
+        Some((sev, planned.milestone.clone()))
+    };
+
+    // 1. Every anchor in anchors.yaml is used in the UI, and every anchor used in the UI is declared.
+    if context.has_ui {
+        for anchor in &context.anchors {
+            if !context.ui_anchors.contains(anchor) {
+                let line = context.anchor_lines.get(anchor).copied().unwrap_or(1);
+                findings.push(Finding {
+                    rule: "KB-COVER",
+                    severity: Severity::Error,
+                    path: "content/help/anchors.yaml".to_owned(),
+                    line,
+                    message: format!(
+                        "anchor `{anchor}` is declared in anchors.yaml but not used in app/Selah.UI"
+                    ),
+                });
+            }
+        }
+        for usage in &context.ui_anchor_uses {
+            if !context.anchors.contains(&usage.anchor) {
+                if let Some((sev, milestone)) = planned_severity("anchor", &usage.anchor) {
+                    findings.push(Finding {
+                        rule: "KB-PLANNED",
+                        severity: sev,
+                        path: usage.path.clone(),
+                        line: usage.line,
+                        message: format!(
+                            "help anchor `{}` is planned for {milestone} and isn't active yet",
+                            usage.anchor
+                        ),
+                    });
+                } else {
+                    findings.push(Finding {
+                        rule: "KB-COVER",
+                        severity: Severity::Error,
+                        path: usage.path.clone(),
+                        line: usage.line,
+                        message: format!(
+                            "help anchor `{}` used in the UI isn't declared in content/help/anchors.yaml",
+                            usage.anchor
+                        ),
+                    });
+                }
+            }
+        }
+    }
+
+    // 2. Every anchor has at least one active article listing it in `context`.
+    let covered_anchors: BTreeSet<&str> = active
+        .iter()
+        .flat_map(|a| a.front.context.iter().map(String::as_str))
+        .collect();
+    for anchor in &context.anchors {
+        if !covered_anchors.contains(anchor.as_str()) {
+            let line = context.anchor_lines.get(anchor).copied().unwrap_or(1);
+            if let Some((sev, milestone)) = planned_severity("anchor", anchor) {
+                findings.push(Finding {
+                    rule: "KB-PLANNED",
+                    severity: sev,
+                    path: "content/help/anchors.yaml".to_owned(),
+                    line,
+                    message: format!("anchor `{anchor}` is planned for {milestone}"),
+                });
+            } else {
+                findings.push(Finding {
+                    rule: "KB-COVER",
+                    severity: Severity::Error,
+                    path: "content/help/anchors.yaml".to_owned(),
+                    line,
+                    message: format!(
+                        "anchor `{anchor}` has no active article listing it in `context`"
+                    ),
+                });
+            }
+        }
+    }
+
+    // 3. Every error code in errors.yaml has a valid UI string key and an active fix article.
+    let mut covered_errors: BTreeMap<&str, Vec<&Article>> = BTreeMap::new();
+    for article in &active {
+        for code in &article.front.error_codes {
+            covered_errors
+                .entry(code.as_str())
+                .or_default()
+                .push(*article);
+        }
+    }
+    for err in &context.error_defs {
+        if !err.message.is_empty() && !context.label_keys.contains(&err.message) {
+            findings.push(Finding {
+                rule: "KB-COVER",
+                severity: Severity::Error,
+                path: "content/errors/errors.yaml".to_owned(),
+                line: err.line,
+                message: format!(
+                    "error `{}` message key `{}` isn't in content/i18n/en/*.ftl",
+                    err.code, err.message
+                ),
+            });
+        }
+        if err.fix_article.is_empty() {
+            findings.push(Finding {
+                rule: "KB-COVER",
+                severity: Severity::Error,
+                path: "content/errors/errors.yaml".to_owned(),
+                line: err.line,
+                message: format!("error `{}` has no `fix_article`", err.code),
+            });
+            continue;
+        }
+        if !active_ids.contains_key(err.fix_article.as_str()) {
+            if let Some((sev, milestone)) = planned_severity("article", &err.fix_article)
+                .or_else(|| planned_severity("error", &err.code))
+            {
+                findings.push(Finding {
+                    rule: "KB-PLANNED",
+                    severity: sev,
+                    path: "content/errors/errors.yaml".to_owned(),
+                    line: err.line,
+                    message: format!(
+                        "error `{}` fix_article `{}` is planned for {milestone}",
+                        err.code, err.fix_article
+                    ),
+                });
+            } else {
+                findings.push(Finding {
+                    rule: "KB-COVER",
+                    severity: Severity::Error,
+                    path: "content/errors/errors.yaml".to_owned(),
+                    line: err.line,
+                    message: format!(
+                        "error `{}` references missing or inactive fix article `{}`",
+                        err.code, err.fix_article
+                    ),
+                });
+            }
+        } else if !covered_errors.contains_key(err.code.as_str()) {
+            findings.push(Finding {
+                rule: "KB-COVER",
+                severity: Severity::Error,
+                path: "content/errors/errors.yaml".to_owned(),
+                line: err.line,
+                message: format!(
+                    "error `{}` isn't listed in any active article's `error_codes`",
+                    err.code
+                ),
+            });
+        }
+    }
+
+    // 4. Every setting has a hint string and an active article listing it in `settings`.
+    let covered_settings: BTreeSet<&str> = active
+        .iter()
+        .flat_map(|a| a.front.settings.iter().map(String::as_str))
+        .collect();
+    for setting in &context.setting_defs {
+        let valid_hint = !setting.hint.is_empty()
+            && (setting.hint.ends_with("-hint") || setting.hint.ends_with(".hint"))
+            && context.label_keys.contains(&setting.hint);
+        if !valid_hint {
+            findings.push(Finding {
+                rule: "KB-COVER",
+                severity: Severity::Error,
+                path: "content/help/settings.yaml".to_owned(),
+                line: setting.line,
+                message: format!(
+                    "setting `{}` hint string `{}` isn't a `-hint` key in content/i18n/en/*.ftl",
+                    setting.key, setting.hint
+                ),
+            });
+        }
+        if !covered_settings.contains(setting.key.as_str()) {
+            if let Some((sev, milestone)) = planned_severity("setting", &setting.key) {
+                findings.push(Finding {
+                    rule: "KB-PLANNED",
+                    severity: sev,
+                    path: "content/help/settings.yaml".to_owned(),
+                    line: setting.line,
+                    message: format!("setting `{}` is planned for {milestone}", setting.key),
+                });
+            } else {
+                findings.push(Finding {
+                    rule: "KB-COVER",
+                    severity: Severity::Error,
+                    path: "content/help/settings.yaml".to_owned(),
+                    line: setting.line,
+                    message: format!(
+                        "setting `{}` has no active article listing it in `settings`",
+                        setting.key
+                    ),
+                });
+            }
+        }
+    }
+
+    // 5. Every tour step points to a real anchor.
+    for step in &context.tour_steps {
+        if step.anchor.is_empty() {
+            findings.push(Finding {
+                rule: "KB-COVER",
+                severity: Severity::Error,
+                path: step.path.clone(),
+                line: step.line,
+                message: "tour step has no `anchor`".to_owned(),
+            });
+        } else if !context.anchors.contains(&step.anchor) {
+            if let Some((sev, milestone)) = planned_severity("anchor", &step.anchor) {
+                findings.push(Finding {
+                    rule: "KB-PLANNED",
+                    severity: sev,
+                    path: step.path.clone(),
+                    line: step.line,
+                    message: format!(
+                        "tour step anchor `{}` is planned for {milestone}",
+                        step.anchor
+                    ),
+                });
+            } else {
+                findings.push(Finding {
+                    rule: "KB-COVER",
+                    severity: Severity::Error,
+                    path: step.path.clone(),
+                    line: step.line,
+                    message: format!("tour step references unknown anchor `{}`", step.anchor),
+                });
+            }
+        }
+    }
+
+    findings
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
