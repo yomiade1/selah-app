@@ -1,11 +1,11 @@
 //! Core request handling: authorise, validate, apply, then tell the engine and subscribers.
 use prost::Message;
 use selah_proto::v1::{
-    Actor, ActorOrigin, Command, CopyrightPlacement, Envelope, Event, GetPolicySettingReply,
-    LibraryChanged, MediaItemList, MediaKind, ParsePastedSongReply, PolicySetting,
-    PresentationList, RenderCommand, Reply, Scene, SearchScope, Song, SongList, SongPasteFormat,
-    Status, TagList, TemplateList, TestPattern, UndoStateChanged, command, envelope, event, query,
-    render_command, reply,
+    Actor, ActorOrigin, BibleFormat, Command, CopyrightPlacement, Envelope, Event,
+    GetPolicySettingReply, LibraryChanged, MediaItemList, MediaKind, ParsePastedSongReply,
+    ParseScriptureReferenceReply, PolicySetting, PresentationList, RenderCommand, Reply, Scene,
+    SearchScope, Song, SongList, SongPasteFormat, Status, TagList, TemplateList, TestPattern,
+    UndoStateChanged, command, envelope, event, query, render_command, reply,
 };
 
 use crate::library::{
@@ -209,6 +209,10 @@ impl CoreService {
 
     pub fn library_mut(&mut self) -> &mut Library {
         &mut self.library
+    }
+
+    pub fn ensure_bundled_bibles(&self) -> anyhow::Result<bool> {
+        crate::scripture::ensure_bundled_bibles(&self.library.paths().bibles)
     }
 
     /// The network gate, for slow work the host runs.
@@ -604,6 +608,53 @@ impl CoreService {
                     .remove_policy_setting_op(&cmd.key, cmd.level, &meta);
                 self.library_outcome(request, result)
             }
+            command::Action::ImportBible(cmd) => {
+                let format = match BibleFormat::try_from(cmd.format) {
+                    Ok(fmt) => fmt,
+                    Err(_) => {
+                        return Outcome {
+                            reply: Some(self.bus_error(
+                                request,
+                                &CommandBusError::Invalid("unknown Bible format".into()),
+                            )),
+                            ..Outcome::default()
+                        };
+                    }
+                };
+                let req = crate::scripture::BibleImportRequest {
+                    source_path: &cmd.source_path,
+                    raw_bytes: &cmd.raw_bytes,
+                    format,
+                    code: &cmd.code,
+                    name: &cmd.name,
+                    language: &cmd.language,
+                    replace_existing: cmd.replace_existing,
+                };
+                match crate::scripture::import_bible(&self.library, &req) {
+                    Ok(translation) => Outcome {
+                        reply: Some(
+                            self.reply(request, reply::Result::BibleTranslation(translation)),
+                        ),
+                        ..Outcome::default()
+                    },
+                    Err(error) => Outcome {
+                        reply: Some(self.bus_error(request, &error)),
+                        ..Outcome::default()
+                    },
+                }
+            }
+            command::Action::DeleteBible(cmd) => {
+                match crate::scripture::delete_bible(&self.library, &cmd.code) {
+                    Ok(_) => Outcome {
+                        reply: ack(self),
+                        ..Outcome::default()
+                    },
+                    Err(error) => Outcome {
+                        reply: Some(self.bus_error(request, &error)),
+                        ..Outcome::default()
+                    },
+                }
+            }
             command::Action::SetUpdateSettings(change) => {
                 let feed = change.update_feed_url.trim().to_owned();
                 let allow = change.allow_update_check;
@@ -978,6 +1029,49 @@ impl CoreService {
                     .and_then(|()| crate::songs::generate_slides(song, &options))
                 {
                     Ok(slides) => self.reply(request, reply::Result::GeneratedSongSlides(slides)),
+                    Err(error) => {
+                        self.bus_error(request, &CommandBusError::Invalid(error.to_string()))
+                    }
+                }
+            }
+            Some(query::Request::ListBibles(q)) => {
+                match crate::scripture::list_bibles(&self.library, q.include_books) {
+                    Ok(list) => self.reply(request, reply::Result::BibleList(list)),
+                    Err(error) => self.bus_error(request, &error),
+                }
+            }
+            Some(query::Request::ParseScriptureReference(q)) => {
+                let hint = (!q.language_hint.trim().is_empty()).then_some(q.language_hint.as_str());
+                match crate::scripture::parse_reference(&q.reference, hint) {
+                    Ok(parsed) => self.reply(
+                        request,
+                        reply::Result::ParsedScriptureReference(ParseScriptureReferenceReply {
+                            spans: parsed.spans,
+                            normalized: parsed.normalized,
+                        }),
+                    ),
+                    Err(error) => {
+                        self.bus_error(request, &CommandBusError::Invalid(error.to_string()))
+                    }
+                }
+            }
+            Some(query::Request::GetScripturePassages(q)) => {
+                match crate::scripture::get_passages(
+                    &self.library,
+                    &q.translation,
+                    &q.reference,
+                    &q.spans,
+                    &q.language_hint,
+                ) {
+                    Ok(passages) => self.reply(request, reply::Result::ScripturePassages(passages)),
+                    Err(error) => self.bus_error(request, &error),
+                }
+            }
+            Some(query::Request::SplitScriptureSlides(q)) => {
+                match crate::scripture::split_scripture_slides(q) {
+                    Ok(slides) => {
+                        self.reply(request, reply::Result::GeneratedScriptureSlides(slides))
+                    }
                     Err(error) => {
                         self.bus_error(request, &CommandBusError::Invalid(error.to_string()))
                     }
@@ -2192,5 +2286,173 @@ Was [Em]blind, but [D]now I [G]see.
         assert_eq!(slides.slides[0].part_index, 1);
         assert_eq!(slides.slides[0].part_count, 2);
         assert!(slides.slides[2].is_blank);
+    }
+
+    #[test]
+    fn scripture_commands_and_queries_round_trip_and_enforce_permissions() {
+        // sec: SEC-14, SEC-03
+        let dir = tempfile::tempdir().unwrap();
+        let mut core = CoreService::new(dir.path(), false);
+
+        let usfm_bytes = b"\\id GEN\n\\h Genesis\n\\c 1\n\\v 1 In the beginning God created the heaven and the earth.\n\\id JHN\n\\h John\n\\c 3\n\\v 16 For God so loved the world.".to_vec();
+
+        // Non-UI origins are refused before modifying library/bibles/.
+        for origin in [ActorOrigin::Api, ActorOrigin::Midi, ActorOrigin::Macro] {
+            let denied = core.handle(&request_with_id(
+                601,
+                origin,
+                command_with_group(
+                    command::Action::ImportBible(selah_proto::v1::ImportBible {
+                        raw_bytes: usfm_bytes.clone(),
+                        format: selah_proto::v1::BibleFormat::Usfm as i32,
+                        code: "DENIED".into(),
+                        name: "Denied Bible".into(),
+                        language: "en".into(),
+                        ..Default::default()
+                    }),
+                    None,
+                ),
+            ));
+            assert_eq!(error_code(&denied), DENIED_CODE);
+        }
+
+        // UI origin imports USFM, lists books, parses a reference, fetches passages, splits slides, and deletes.
+        let imported = core.handle(&request_with_id(
+            602,
+            ActorOrigin::Ui,
+            command_with_group(
+                command::Action::ImportBible(selah_proto::v1::ImportBible {
+                    raw_bytes: usfm_bytes,
+                    format: selah_proto::v1::BibleFormat::Usfm as i32,
+                    code: "SAMP".into(),
+                    name: "Sample USFM".into(),
+                    language: "en".into(),
+                    ..Default::default()
+                }),
+                None,
+            ),
+        ));
+        assert!(matches!(
+            imported.reply.and_then(|r| r.body),
+            Some(envelope::Body::Reply(Reply {
+                result: Some(reply::Result::BibleTranslation(t))
+            })) if t.code == "SAMP" && t.book_count == 2 && t.verse_count == 2
+        ));
+
+        let listed = core.handle(&request_with_id(
+            603,
+            ActorOrigin::Ui,
+            envelope::Body::Query(Query {
+                request: Some(query::Request::ListBibles(selah_proto::v1::ListBibles {
+                    include_books: true,
+                })),
+            }),
+        ));
+        assert!(matches!(
+            listed.reply.and_then(|r| r.body),
+            Some(envelope::Body::Reply(Reply {
+                result: Some(reply::Result::BibleList(list))
+            })) if list.bibles.len() == 1 && list.bibles[0].books.len() == 2
+        ));
+
+        let parsed = core.handle(&request_with_id(
+            604,
+            ActorOrigin::Ui,
+            envelope::Body::Query(Query {
+                request: Some(query::Request::ParseScriptureReference(
+                    selah_proto::v1::ParseScriptureReference {
+                        reference: "Jean 3, 16".into(),
+                        language_hint: "fr".into(),
+                    },
+                )),
+            }),
+        ));
+        assert!(matches!(
+            parsed.reply.and_then(|r| r.body),
+            Some(envelope::Body::Reply(Reply {
+                result: Some(reply::Result::ParsedScriptureReference(p))
+            })) if p.normalized == "John 3:16" && p.spans.len() == 1
+        ));
+
+        let passage = core.handle(&request_with_id(
+            605,
+            ActorOrigin::Ui,
+            envelope::Body::Query(Query {
+                request: Some(query::Request::GetScripturePassages(
+                    selah_proto::v1::GetScripturePassages {
+                        translation: "SAMP".into(),
+                        reference: "Jn 3:16".into(),
+                        spans: Vec::new(),
+                        language_hint: String::new(),
+                    },
+                )),
+            }),
+        ));
+        let passages_reply = match passage.reply.and_then(|r| r.body) {
+            Some(envelope::Body::Reply(Reply {
+                result: Some(reply::Result::ScripturePassages(p)),
+            })) => p,
+            other => panic!("unexpected passage reply: {other:?}"),
+        };
+        assert_eq!(passages_reply.verses.len(), 1);
+
+        let split = core.handle(&request_with_id(
+            606,
+            ActorOrigin::Ui,
+            envelope::Body::Query(Query {
+                request: Some(query::Request::SplitScriptureSlides(
+                    selah_proto::v1::SplitScriptureSlides {
+                        translation: "SAMP".into(),
+                        translation_name: "Sample USFM".into(),
+                        reference: passages_reply.normalized_reference,
+                        verses: passages_reply.verses,
+                        max_lines: 4,
+                        max_chars_per_line: 48,
+                        verses_per_slide: 1,
+                        one_verse_per_slide: true,
+                        show_verse_numbers: true,
+                        reference_placement: selah_proto::v1::ReferencePlacement::SlideFooter
+                            as i32,
+                        title_slide: true,
+                        blank_slide_at_end: true,
+                    },
+                )),
+            }),
+        ));
+        assert!(matches!(
+            split.reply.and_then(|r| r.body),
+            Some(envelope::Body::Reply(Reply {
+                result: Some(reply::Result::GeneratedScriptureSlides(s))
+            })) if s.slides.len() == 3 && s.slides[0].is_title && s.slides[2].is_blank
+        ));
+
+        let delete_denied = core.handle(&request_with_id(
+            607,
+            ActorOrigin::Api,
+            command_with_group(
+                command::Action::DeleteBible(selah_proto::v1::DeleteBible {
+                    code: "SAMP".into(),
+                }),
+                None,
+            ),
+        ));
+        assert_eq!(error_code(&delete_denied), DENIED_CODE);
+
+        let deleted = core.handle(&request_with_id(
+            608,
+            ActorOrigin::Ui,
+            command_with_group(
+                command::Action::DeleteBible(selah_proto::v1::DeleteBible {
+                    code: "SAMP".into(),
+                }),
+                None,
+            ),
+        ));
+        assert!(matches!(
+            deleted.reply.and_then(|r| r.body),
+            Some(envelope::Body::Reply(Reply {
+                result: Some(reply::Result::Acknowledged(true))
+            }))
+        ));
     }
 }

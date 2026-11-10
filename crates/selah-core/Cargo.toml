@@ -13,6 +13,7 @@ blake3.workspace = true
 crc32fast.workspace = true
 flate2.workspace = true
 prost.workspace = true
+quick-xml.workspace = true
 rusqlite = { version = "0.41", features = ["bundled"] }
 selah-kb = { path = "../selah-kb" }
 selah-net = { path = "../selah-net" }

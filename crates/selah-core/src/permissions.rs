@@ -39,9 +39,11 @@ pub enum CommandKind {
     DiscardEditorBuffer,
     SetPolicySetting,
     RemovePolicySetting,
+    ImportBible,
+    DeleteBible,
 }
 
-pub const ALL_COMMANDS: [CommandKind; 27] = [
+pub const ALL_COMMANDS: [CommandKind; 29] = [
     CommandKind::Render,
     CommandKind::SetAppearance,
     CommandKind::RecordFeedback,
@@ -69,6 +71,8 @@ pub const ALL_COMMANDS: [CommandKind; 27] = [
     CommandKind::DiscardEditorBuffer,
     CommandKind::SetPolicySetting,
     CommandKind::RemovePolicySetting,
+    CommandKind::ImportBible,
+    CommandKind::DeleteBible,
 ];
 
 pub fn kind_of(action: &command::Action) -> CommandKind {
@@ -100,6 +104,8 @@ pub fn kind_of(action: &command::Action) -> CommandKind {
         command::Action::DiscardEditorBuffer(_) => CommandKind::DiscardEditorBuffer,
         command::Action::SetPolicySetting(_) => CommandKind::SetPolicySetting,
         command::Action::RemovePolicySetting(_) => CommandKind::RemovePolicySetting,
+        command::Action::ImportBible(_) => CommandKind::ImportBible,
+        command::Action::DeleteBible(_) => CommandKind::DeleteBible,
     }
 }
 
@@ -131,7 +137,9 @@ pub fn changes_screens(kind: CommandKind) -> bool {
         | CommandKind::SaveEditorBuffer
         | CommandKind::DiscardEditorBuffer
         | CommandKind::SetPolicySetting
-        | CommandKind::RemovePolicySetting => false,
+        | CommandKind::RemovePolicySetting
+        | CommandKind::ImportBible
+        | CommandKind::DeleteBible => false,
     }
 }
 
@@ -262,7 +270,9 @@ mod tests {
                 | CommandKind::SaveEditorBuffer
                 | CommandKind::DiscardEditorBuffer
                 | CommandKind::SetPolicySetting
-                | CommandKind::RemovePolicySetting => {}
+                | CommandKind::RemovePolicySetting
+                | CommandKind::ImportBible
+                | CommandKind::DeleteBible => {}
             }
         }
         let unique: std::collections::HashSet<_> = ALL_COMMANDS.iter().collect();

@@ -11,14 +11,15 @@ use anyhow::Context;
 use selah_core::update::{self, Install};
 use selah_core::{CoreService, Work};
 use selah_ipc::{Client, Connection, Endpoint, FrameSender, Listener, Service};
-use selah_proto::v1::{Command, Envelope, Event, command, envelope};
-use tokio::sync::Mutex;
+use selah_proto::v1::{Command, Envelope, Event, command, envelope, query};
+use tokio::sync::{Mutex, watch};
 
 struct Shared {
     service: Mutex<CoreService>,
     subscribers: Mutex<Vec<FrameSender>>,
     engine: Client,
     next_event_id: AtomicU64,
+    bible_ready: watch::Receiver<bool>,
     /// The only way out to the network (SEC-13). Core sets its policy from the settings.
     net: Arc<selah_net::Net>,
     /// Velopack's Update.exe, when Selah was installed by Setup.
@@ -173,6 +174,13 @@ impl From<selah_proto::v1::Diagnostics> for DiagnosticsContext {
 }
 
 impl Shared {
+    async fn wait_for_bundled_bibles(&self) {
+        let mut rx = self.bible_ready.clone();
+        if !*rx.borrow() {
+            let _ = rx.wait_for(|&ready| ready).await;
+        }
+    }
+
     async fn broadcast(&self, events: Vec<Event>) {
         if events.is_empty() {
             return;
@@ -207,6 +215,25 @@ impl Shared {
     }
 }
 
+fn request_needs_bundled_bibles(request: &Envelope) -> bool {
+    match request.body.as_ref() {
+        Some(envelope::Body::Command(cmd)) => matches!(
+            cmd.action.as_ref(),
+            Some(command::Action::ImportBible(_) | command::Action::DeleteBible(_))
+        ),
+        Some(envelope::Body::Query(q)) => matches!(
+            q.request.as_ref(),
+            Some(
+                query::Request::ListBibles(_)
+                    | query::Request::GetScripturePassages(_)
+                    | query::Request::SearchScripture(_)
+                    | query::Request::SearchLibrary(_)
+            )
+        ),
+        _ => false,
+    }
+}
+
 async fn serve_connection(shared: Arc<Shared>, connection: Connection) {
     let Connection {
         mut reader, sender, ..
@@ -219,6 +246,9 @@ async fn serve_connection(shared: Arc<Shared>, connection: Connection) {
                 return;
             }
         };
+        if request_needs_bundled_bibles(&request) {
+            shared.wait_for_bundled_bibles().await;
+        }
         let outcome = shared.service.lock().await.handle(&request);
         if let Some(work) = outcome.work {
             tokio::spawn(run_work(
@@ -342,11 +372,25 @@ async fn main() -> anyhow::Result<()> {
         None => tracing::warn!("kb.db not found; help search answers nothing"),
     }
     let actor = service.actor().clone();
+    let bibles_dir = service.library().paths().bibles.clone();
+    let (bible_ready_tx, bible_ready_rx) = watch::channel(false);
+    tokio::task::spawn_blocking(move || {
+        match selah_core::scripture::ensure_bundled_bibles(&bibles_dir) {
+            Ok(seeded) => {
+                if seeded {
+                    tracing::info!("bundled KJV and WEB Bibles initialised");
+                }
+            }
+            Err(error) => tracing::warn!(%error, "bundled Bible setup failed"),
+        }
+        let _ = bible_ready_tx.send(true);
+    });
     let shared = Arc::new(Shared {
         service: Mutex::new(service),
         subscribers: Mutex::new(Vec::new()),
         engine: Client::start(endpoint.sibling(Service::Engine), actor.clone()),
         next_event_id: AtomicU64::new(1),
+        bible_ready: bible_ready_rx,
         net,
         installer: update::VelopackInstaller::for_this_installation()
             .map(|installer| Arc::new(installer) as Arc<dyn Install>),

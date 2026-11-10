@@ -1686,7 +1686,7 @@ impl Library {
         })
     }
 
-    fn list_validated_bible_files(&self) -> anyhow::Result<Vec<(String, PathBuf)>> {
+    pub(crate) fn list_validated_bible_files(&self) -> anyhow::Result<Vec<(String, PathBuf)>> {
         let bibles_root = self.paths.bibles.canonicalize()?;
         let mut out = Vec::new();
         for entry in std::fs::read_dir(&bibles_root)? {
@@ -1856,7 +1856,7 @@ fn score_song_candidate(
     }))
 }
 
-fn open_bible_db(path: &Path) -> anyhow::Result<Connection> {
+pub(crate) fn open_bible_db(path: &Path) -> anyhow::Result<Connection> {
     let db = Connection::open_with_flags(
         path,
         OpenFlags::SQLITE_OPEN_READ_ONLY | OpenFlags::SQLITE_OPEN_NO_MUTEX,
@@ -1874,13 +1874,24 @@ fn open_bible_db(path: &Path) -> anyhow::Result<Connection> {
     Ok(db)
 }
 
-/// Write a per-translation Bible SQLite database (`library/bibles/<code>.db`).
+/// Write a per-translation Bible SQLite database (`library/bibles/<code>.db`) atomically.
 /// Used by M2.3 search tests and M2.5 bundled/imported Bibles.
 pub fn write_bible_database(
     path: &Path,
     code: &str,
     name: &str,
     language: &str,
+    verses: &[BibleVerseRecord<'_>],
+) -> anyhow::Result<()> {
+    write_bible_database_with_meta(path, code, name, language, false, verses)
+}
+
+pub(crate) fn write_bible_database_with_meta(
+    path: &Path,
+    code: &str,
+    name: &str,
+    language: &str,
+    is_bundled: bool,
     verses: &[BibleVerseRecord<'_>],
 ) -> anyhow::Result<()> {
     ensure!(is_valid_translation_code(code), "invalid translation code");
@@ -1890,90 +1901,107 @@ pub fn write_bible_database(
         "Bible language must not be empty"
     );
 
-    if path.exists() {
-        std::fs::remove_file(path)?;
-    }
-    if let Some(parent) = path.parent() {
-        std::fs::create_dir_all(parent)?;
-    }
+    let parent = path
+        .parent()
+        .filter(|p| !p.as_os_str().is_empty())
+        .unwrap_or_else(|| Path::new("."));
+    std::fs::create_dir_all(parent)?;
 
-    let mut db = Connection::open(path)?;
-    db.execute_batch(
-        "PRAGMA journal_mode = OFF;
-         PRAGMA foreign_keys = ON;
-         PRAGMA trusted_schema = OFF;
-         PRAGMA user_version = 1;
-         CREATE TABLE bible_meta (
-             key TEXT PRIMARY KEY,
-             value TEXT NOT NULL
-         ) STRICT;
-         CREATE TABLE books (
-             book_num INTEGER PRIMARY KEY,
-             code TEXT NOT NULL UNIQUE,
-             name TEXT NOT NULL
-         ) STRICT;
-         CREATE TABLE verses (
-             id INTEGER PRIMARY KEY,
-             book_code TEXT NOT NULL,
-             book_name TEXT NOT NULL,
-             chapter INTEGER NOT NULL CHECK(chapter > 0),
-             verse INTEGER NOT NULL CHECK(verse > 0),
-             text TEXT NOT NULL,
-             UNIQUE(book_code, chapter, verse)
-         ) STRICT;
-         CREATE VIRTUAL TABLE verses_fts USING fts5(
-             text,
-             content='verses',
-             content_rowid='id',
-             tokenize = 'unicode61 remove_diacritics 2'
-         );
-         CREATE VIRTUAL TABLE verses_trigram USING fts5(
-             text,
-             content='verses',
-             content_rowid='id',
-             tokenize = 'trigram'
-         );",
-    )?;
+    let temp_path = tempfile::Builder::new()
+        .prefix(".bible-")
+        .suffix(".db.tmp")
+        .tempfile_in(parent)?
+        .into_temp_path();
 
-    let tx = db.transaction()?;
-    for (k, v) in [
-        ("schema_version", BIBLE_SCHEMA_VERSION),
-        ("code", code),
-        ("name", name),
-        ("language", language),
-    ] {
-        tx.execute(
-            "INSERT INTO bible_meta (key, value) VALUES (?1, ?2)",
-            params![k, v],
-        )?;
-    }
-
-    let mut seen_books = BTreeSet::new();
     {
-        let mut insert_book =
-            tx.prepare("INSERT OR IGNORE INTO books (book_num, code, name) VALUES (?1, ?2, ?3)")?;
-        let mut insert_verse = tx.prepare(
-            "INSERT INTO verses (book_code, book_name, chapter, verse, text) VALUES (?1, ?2, ?3, ?4, ?5)",
+        let mut db = Connection::open(&temp_path)?;
+        db.execute_batch(
+            "PRAGMA journal_mode = OFF;
+             PRAGMA foreign_keys = ON;
+             PRAGMA trusted_schema = OFF;
+             PRAGMA user_version = 1;
+             CREATE TABLE bible_meta (
+                 key TEXT PRIMARY KEY,
+                 value TEXT NOT NULL
+             ) STRICT;
+             CREATE TABLE books (
+                 book_num INTEGER PRIMARY KEY,
+                 code TEXT NOT NULL UNIQUE,
+                 name TEXT NOT NULL
+             ) STRICT;
+             CREATE TABLE verses (
+                 id INTEGER PRIMARY KEY,
+                 book_code TEXT NOT NULL,
+                 book_name TEXT NOT NULL,
+                 chapter INTEGER NOT NULL CHECK(chapter > 0),
+                 verse INTEGER NOT NULL CHECK(verse > 0),
+                 text TEXT NOT NULL,
+                 UNIQUE(book_code, chapter, verse)
+             ) STRICT;
+             CREATE VIRTUAL TABLE verses_fts USING fts5(
+                 text,
+                 content='verses',
+                 content_rowid='id',
+                 tokenize = 'unicode61 remove_diacritics 2'
+             );
+             CREATE VIRTUAL TABLE verses_trigram USING fts5(
+                 text,
+                 content='verses',
+                 content_rowid='id',
+                 tokenize = 'trigram'
+             );",
         )?;
-        for v in verses {
-            if seen_books.insert(v.book_num) {
-                insert_book.execute(params![v.book_num, v.book_code, v.book_name])?;
-            }
-            insert_verse.execute(params![
-                v.book_code,
-                v.book_name,
-                v.chapter,
-                v.verse,
-                v.text
-            ])?;
+
+        let tx = db.transaction()?;
+        for (k, v) in [
+            ("schema_version", BIBLE_SCHEMA_VERSION),
+            ("code", code),
+            ("name", name),
+            ("language", language),
+            ("is_bundled", if is_bundled { "1" } else { "0" }),
+        ] {
+            tx.execute(
+                "INSERT INTO bible_meta (key, value) VALUES (?1, ?2)",
+                params![k, v],
+            )?;
         }
+
+        let mut seen_books = BTreeSet::new();
+        {
+            let mut insert_book = tx.prepare(
+                "INSERT OR IGNORE INTO books (book_num, code, name) VALUES (?1, ?2, ?3)",
+            )?;
+            let mut insert_verse = tx.prepare(
+                "INSERT INTO verses (book_code, book_name, chapter, verse, text) VALUES (?1, ?2, ?3, ?4, ?5)",
+            )?;
+            for v in verses {
+                if seen_books.insert(v.book_num) {
+                    insert_book.execute(params![v.book_num, v.book_code, v.book_name])?;
+                }
+                insert_verse.execute(params![
+                    v.book_code,
+                    v.book_name,
+                    v.chapter,
+                    v.verse,
+                    v.text
+                ])?;
+            }
+        }
+        tx.execute_batch(
+            "INSERT INTO verses_fts(verses_fts) VALUES ('rebuild');
+             INSERT INTO verses_trigram(verses_trigram) VALUES ('rebuild');
+             INSERT INTO verses_fts(verses_fts) VALUES ('optimize');",
+        )?;
+        tx.commit()?;
     }
-    tx.execute_batch(
-        "INSERT INTO verses_fts(verses_fts) VALUES ('rebuild');
-         INSERT INTO verses_trigram(verses_trigram) VALUES ('rebuild');
-         INSERT INTO verses_fts(verses_fts) VALUES ('optimize');",
-    )?;
-    tx.commit()?;
+
+    let sync_file = std::fs::OpenOptions::new()
+        .read(true)
+        .write(true)
+        .open(&temp_path)?;
+    sync_file.sync_all()?;
+    drop(sync_file);
+    temp_path.persist(path).map_err(|e| e.error)?;
     Ok(())
 }
 

@@ -17,6 +17,9 @@ pub use schema::CURRENT_SCHEMA_VERSION;
 pub use search::{
     BibleVerseRecord, MAX_SEARCH_LIMIT, MAX_SEARCH_QUERY_BYTES, write_bible_database,
 };
+pub(crate) use search::{
+    fold_text, is_valid_translation_code, open_bible_db, write_bible_database_with_meta,
+};
 
 use std::path::{Path, PathBuf};
 

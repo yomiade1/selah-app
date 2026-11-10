@@ -8,9 +8,11 @@ import {
 } from "../dist/gen/selah/v1/envelope_pb.js";
 import {
     AccidentalSpelling,
+    BibleFormat,
     CopyrightPlacement,
     DocumentType,
     LibraryChangeKind,
+    ReferencePlacement,
     SearchScope,
     SectionKind,
     SongPasteFormat,
@@ -359,5 +361,156 @@ test("M2 song parse, transpose and split queries round-trip", () => {
     assert.deepEqual(
         fromBinary(EnvelopeSchema, toBinary(EnvelopeSchema, splitReply)),
         splitReply,
+    );
+});
+
+test("M2 scripture commands, queries and replies round-trip", () => {
+    const importCmd = create(EnvelopeSchema, {
+        id: 2001n,
+        body: {
+            case: "command",
+            value: {
+                action: {
+                    case: "importBible",
+                    value: {
+                        sourcePath: "C:/bibles/sample.usfm",
+                        format: BibleFormat.USFM,
+                        code: "SAMP",
+                        name: "Sample USFM",
+                        language: "en",
+                        replaceExisting: false,
+                    },
+                },
+            },
+        },
+    });
+    assert.deepEqual(
+        fromBinary(EnvelopeSchema, toBinary(EnvelopeSchema, importCmd)),
+        importCmd,
+    );
+
+    const deleteCmd = create(EnvelopeSchema, {
+        id: 2002n,
+        body: {
+            case: "command",
+            value: {
+                action: {
+                    case: "deleteBible",
+                    value: { code: "SAMP" },
+                },
+            },
+        },
+    });
+    assert.deepEqual(
+        fromBinary(EnvelopeSchema, toBinary(EnvelopeSchema, deleteCmd)),
+        deleteCmd,
+    );
+
+    const parseRefQuery = create(EnvelopeSchema, {
+        id: 2003n,
+        body: {
+            case: "query",
+            value: {
+                request: {
+                    case: "parseScriptureReference",
+                    value: {
+                        reference: "Jean 3, 16-18",
+                        languageHint: "fr",
+                    },
+                },
+            },
+        },
+    });
+    assert.deepEqual(
+        fromBinary(EnvelopeSchema, toBinary(EnvelopeSchema, parseRefQuery)),
+        parseRefQuery,
+    );
+
+    const passagesQuery = create(EnvelopeSchema, {
+        id: 2004n,
+        body: {
+            case: "query",
+            value: {
+                request: {
+                    case: "getScripturePassages",
+                    value: {
+                        translation: "KJV",
+                        reference: "John 3:16",
+                        languageHint: "en",
+                    },
+                },
+            },
+        },
+    });
+    assert.deepEqual(
+        fromBinary(EnvelopeSchema, toBinary(EnvelopeSchema, passagesQuery)),
+        passagesQuery,
+    );
+
+    const splitQuery = create(EnvelopeSchema, {
+        id: 2005n,
+        body: {
+            case: "query",
+            value: {
+                request: {
+                    case: "splitScriptureSlides",
+                    value: {
+                        translation: "KJV",
+                        translationName: "King James Version",
+                        reference: "John 3:16",
+                        maxLines: 4,
+                        maxCharsPerLine: 48,
+                        versesPerSlide: 1,
+                        oneVersePerSlide: true,
+                        showVerseNumbers: true,
+                        referencePlacement: ReferencePlacement.SLIDE_FOOTER,
+                        titleSlide: true,
+                        blankSlideAtEnd: false,
+                    },
+                },
+            },
+        },
+    });
+    assert.deepEqual(
+        fromBinary(EnvelopeSchema, toBinary(EnvelopeSchema, splitQuery)),
+        splitQuery,
+    );
+
+    const listReply = create(EnvelopeSchema, {
+        id: 2006n,
+        correlationId: 2005n,
+        body: {
+            case: "reply",
+            value: {
+                result: {
+                    case: "bibleList",
+                    value: {
+                        bibles: [
+                            {
+                                code: "KJV",
+                                name: "King James Version",
+                                language: "en",
+                                bookCount: 66,
+                                verseCount: 31102,
+                                isBundled: true,
+                                books: [
+                                    {
+                                        bookNum: 1,
+                                        code: "GEN",
+                                        name: "Genesis",
+                                        chapterCount: 50,
+                                        verseCounts: [31, 25],
+                                    },
+                                ],
+                            },
+                        ],
+                    },
+                },
+            },
+        },
+    });
+    assert.deepEqual(
+        fromBinary(EnvelopeSchema, toBinary(EnvelopeSchema, listReply)),
+        listReply,
     );
 });

@@ -12,7 +12,7 @@ import type { Message } from "@bufbuild/protobuf";
  * Describes the file selah/v1/library.proto.
  */
 export const file_selah_v1_library: GenFile = /*@__PURE__*/
-  fileDesc("ChZzZWxhaC92MS9saWJyYXJ5LnByb3RvEghzZWxhaC52MSInCgVDaG9yZBIQCghwb3NpdGlvbhgBIAEoDRIMCgR0ZXh0GAIgASgJIjoKCUx5cmljTGluZRIMCgR0ZXh0GAEgASgJEh8KBmNob3JkcxgCIAMoCzIPLnNlbGFoLnYxLkNob3JkIiEKEFRyYW5zbGF0aW9uTGluZXMSDQoFbGluZXMYASADKAkitwIKB1NlY3Rpb24SGAoCaWQYASABKAsyDC5zZWxhaC52MS5JZBINCgVsYWJlbBgCIAEoCRIjCgRraW5kGAMgASgOMhUuc2VsYWgudjEuU2VjdGlvbktpbmQSHgoFY29sb3IYBCABKAsyDy5zZWxhaC52MS5Db2xvchIOCgZob3RrZXkYBSABKAkSIgoFbGluZXMYBiADKAsyEy5zZWxhaC52MS5MeXJpY0xpbmUSOQoMdHJhbnNsYXRpb25zGAcgAygLMiMuc2VsYWgudjEuU2VjdGlvbi5UcmFuc2xhdGlvbnNFbnRyeRpPChFUcmFuc2xhdGlvbnNFbnRyeRILCgNrZXkYASABKAkSKQoFdmFsdWUYAiABKAsyGi5zZWxhaC52MS5UcmFuc2xhdGlvbkxpbmVzOgI4ASJYCgtBcnJhbmdlbWVudBIYCgJpZBgBIAEoCzIMLnNlbGFoLnYxLklkEgwKBG5hbWUYAiABKAkSIQoLc2VjdGlvbl9pZHMYAyADKAsyDC5zZWxhaC52MS5JZCL7AQoEU29uZxIYCgJpZBgBIAEoCzIMLnNlbGFoLnYxLklkEg0KBXRpdGxlGAIgASgJEg8KB2F1dGhvcnMYAyADKAkSEwoLY2NsaV9udW1iZXIYBCABKAkSEQoJY29weXJpZ2h0GAUgASgJEgsKA2tleRgGIAEoCRINCgV0ZW1wbxgHIAEoARIMCgR0YWdzGAggAygJEhUKDXB1YmxpY19kb21haW4YCSABKAgSIwoIc2VjdGlvbnMYCiADKAsyES5zZWxhaC52MS5TZWN0aW9uEisKDGFycmFuZ2VtZW50cxgLIAMoCzIVLnNlbGFoLnYxLkFycmFuZ2VtZW50InwKD1RlbXBsYXRlVmFyaWFudBIYCgJpZBgBIAEoCzIMLnNlbGFoLnYxLklkEigKCnJlc29sdXRpb24YAiABKAsyFC5zZWxhaC52MS5SZXNvbHV0aW9uEhEKCW1heF9saW5lcxgDIAEoDRISCgpzdHlsZV9qc29uGAQgASgJIl8KCFRlbXBsYXRlEhgKAmlkGAEgASgLMgwuc2VsYWgudjEuSWQSDAoEbmFtZRgCIAEoCRIrCgh2YXJpYW50cxgDIAMoCzIZLnNlbGFoLnYxLlRlbXBsYXRlVmFyaWFudCLqAQoJTWVkaWFJdGVtEhgKAmlkGAEgASgLMgwuc2VsYWgudjEuSWQSDAoEbmFtZRgCIAEoCRIhCgRraW5kGAMgASgOMhMuc2VsYWgudjEuTWVkaWFLaW5kEhQKDGNvbnRlbnRfaGFzaBgEIAEoCRIRCglleHRlbnNpb24YBSABKAkSEgoKc2l6ZV9ieXRlcxgGIAEoBBIoCgpyZXNvbHV0aW9uGAcgASgLMhQuc2VsYWgudjEuUmVzb2x1dGlvbhIdChVkdXJhdGlvbl9taWxsaXNlY29uZHMYCCABKAQSDAoEdGFncxgJIAMoCSJmCgVTbGlkZRIYCgJpZBgBIAEoCzIMLnNlbGFoLnYxLklkEgwKBHRleHQYAiABKAkSHgoIbWVkaWFfaWQYAyABKAsyDC5zZWxhaC52MS5JZBIVCg1lbGVtZW50c19qc29uGAQgASgJInoKDFByZXNlbnRhdGlvbhIYCgJpZBgBIAEoCzIMLnNlbGFoLnYxLklkEgwKBG5hbWUYAiABKAkSHwoGc2xpZGVzGAMgAygLMg8uc2VsYWgudjEuU2xpZGUSIQoLdGVtcGxhdGVfaWQYBCABKAsyDC5zZWxhaC52MS5JZCItCgNUYWcSGAoCaWQYASABKAsyDC5zZWxhaC52MS5JZBIMCgRuYW1lGAIgASgJIigKB09wU3RhdGUSDwoHcHJlc2VudBgBIAEoCBIMCgRkYXRhGAIgASgMIigKCFNhdmVTb25nEhwKBHNvbmcYASABKAsyDi5zZWxhaC52MS5Tb25nIiYKCkRlbGV0ZVNvbmcSGAoCaWQYASABKAsyDC5zZWxhaC52MS5JZCIjCgdHZXRTb25nEhgKAmlkGAEgASgLMgwuc2VsYWgudjEuSWQiKgoJTGlzdFNvbmdzEg0KBWxpbWl0GAEgASgNEg4KBm9mZnNldBgCIAEoDSIpCghTb25nTGlzdBIdCgVzb25ncxgBIAMoCzIOLnNlbGFoLnYxLlNvbmciNAoMU2F2ZVRlbXBsYXRlEiQKCHRlbXBsYXRlGAEgASgLMhIuc2VsYWgudjEuVGVtcGxhdGUiKgoORGVsZXRlVGVtcGxhdGUSGAoCaWQYASABKAsyDC5zZWxhaC52MS5JZCInCgtHZXRUZW1wbGF0ZRIYCgJpZBgBIAEoCzIMLnNlbGFoLnYxLklkIi4KDUxpc3RUZW1wbGF0ZXMSDQoFbGltaXQYASABKA0SDgoGb2Zmc2V0GAIgASgNIjUKDFRlbXBsYXRlTGlzdBIlCgl0ZW1wbGF0ZXMYASADKAsyEi5zZWxhaC52MS5UZW1wbGF0ZSI4Cg1TYXZlTWVkaWFJdGVtEicKCm1lZGlhX2l0ZW0YASABKAsyEy5zZWxhaC52MS5NZWRpYUl0ZW0iKwoPRGVsZXRlTWVkaWFJdGVtEhgKAmlkGAEgASgLMgwuc2VsYWgudjEuSWQiKAoMR2V0TWVkaWFJdGVtEhgKAmlkGAEgASgLMgwuc2VsYWgudjEuSWQiLwoOTGlzdE1lZGlhSXRlbXMSDQoFbGltaXQYASABKA0SDgoGb2Zmc2V0GAIgASgNIjkKDU1lZGlhSXRlbUxpc3QSKAoLbWVkaWFfaXRlbXMYASADKAsyEy5zZWxhaC52MS5NZWRpYUl0ZW0iQAoQU2F2ZVByZXNlbnRhdGlvbhIsCgxwcmVzZW50YXRpb24YASABKAsyFi5zZWxhaC52MS5QcmVzZW50YXRpb24iLgoSRGVsZXRlUHJlc2VudGF0aW9uEhgKAmlkGAEgASgLMgwuc2VsYWgudjEuSWQiKwoPR2V0UHJlc2VudGF0aW9uEhgKAmlkGAEgASgLMgwuc2VsYWgudjEuSWQiMgoRTGlzdFByZXNlbnRhdGlvbnMSDQoFbGltaXQYASABKA0SDgoGb2Zmc2V0GAIgASgNIkEKEFByZXNlbnRhdGlvbkxpc3QSLQoNcHJlc2VudGF0aW9ucxgBIAMoCzIWLnNlbGFoLnYxLlByZXNlbnRhdGlvbiIlCgdTYXZlVGFnEhoKA3RhZxgBIAEoCzINLnNlbGFoLnYxLlRhZyIlCglEZWxldGVUYWcSGAoCaWQYASABKAsyDC5zZWxhaC52MS5JZCIiCgZHZXRUYWcSGAoCaWQYASABKAsyDC5zZWxhaC52MS5JZCIpCghMaXN0VGFncxINCgVsaW1pdBgBIAEoDRIOCgZvZmZzZXQYAiABKA0iJgoHVGFnTGlzdBIbCgR0YWdzGAEgAygLMg0uc2VsYWgudjEuVGFnIiQKBFVuZG8SHAoGZG9jX2lkGAEgASgLMgwuc2VsYWgudjEuSWQiJAoEUmVkbxIcCgZkb2NfaWQYASABKAsyDC5zZWxhaC52MS5JZCIsCgxHZXRVbmRvU3RhdGUSHAoGZG9jX2lkGAEgASgLMgwuc2VsYWgudjEuSWQiVwoJVW5kb1N0YXRlEhAKCGNhbl91bmRvGAEgASgIEhAKCGNhbl9yZWRvGAIgASgIEhIKCnVuZG9fZGVwdGgYAyABKA0SEgoKcmVkb19kZXB0aBgEIAEoDSKQAQoMRWRpdG9yQnVmZmVyEhwKBmRvY19pZBgBIAEoCzIMLnNlbGFoLnYxLklkEigKCGRvY190eXBlGAIgASgOMhYuc2VsYWgudjEuRG9jdW1lbnRUeXBlEg8KB2NvbnRlbnQYAyABKAkSJwoKdXBkYXRlZF9hdBgEIAEoCzITLnNlbGFoLnYxLlRpbWVzdGFtcCJrChBTYXZlRWRpdG9yQnVmZmVyEhwKBmRvY19pZBgBIAEoCzIMLnNlbGFoLnYxLklkEigKCGRvY190eXBlGAIgASgOMhYuc2VsYWgudjEuRG9jdW1lbnRUeXBlEg8KB2NvbnRlbnQYAyABKAkiMwoTRGlzY2FyZEVkaXRvckJ1ZmZlchIcCgZkb2NfaWQYASABKAsyDC5zZWxhaC52MS5JZCIvCg9HZXRFZGl0b3JCdWZmZXISHAoGZG9jX2lkGAEgASgLMgwuc2VsYWgudjEuSWQiSgoRRWRpdG9yQnVmZmVyUmVwbHkSDQoFZm91bmQYASABKAgSJgoGYnVmZmVyGAIgASgLMhYuc2VsYWgudjEuRWRpdG9yQnVmZmVyIjIKEUxpc3RFZGl0b3JCdWZmZXJzEg0KBWxpbWl0GAEgASgNEg4KBm9mZnNldBgCIAEoDSI7ChBFZGl0b3JCdWZmZXJMaXN0EicKB2J1ZmZlcnMYASADKAsyFi5zZWxhaC52MS5FZGl0b3JCdWZmZXIiSQoHTGlzdE9wcxIRCglhZnRlcl9zZXEYASABKAQSDQoFbGltaXQYAiABKA0SHAoGZG9jX2lkGAMgASgLMgwuc2VsYWgudjEuSWQisQIKCE9wUmVjb3JkEgsKA3NlcRgBIAEoBBIbCgVvcF9pZBgCIAEoCzIMLnNlbGFoLnYxLklkEiYKCXRpbWVzdGFtcBgDIAEoCzITLnNlbGFoLnYxLlRpbWVzdGFtcBIPCgd1c2VyX2lkGAQgASgJEhEKCWRldmljZV9pZBgFIAEoCRIOCgZvcmlnaW4YBiABKAkSKAoIZG9jX3R5cGUYByABKA4yFi5zZWxhaC52MS5Eb2N1bWVudFR5cGUSHAoGZG9jX2lkGAggASgLMgwuc2VsYWgudjEuSWQSDwoHY29tbWFuZBgJIAEoDBIPCgdpbnZlcnNlGAogASgMEiAKCnVuZG9fZ3JvdXAYCyABKAsyDC5zZWxhaC52MS5JZBITCgtzeW5jX3N0YXR1cxgMIAEoBSIpCgZPcExpc3QSHwoDb3BzGAEgAygLMhIuc2VsYWgudjEuT3BSZWNvcmQizwEKDkxpYnJhcnlDaGFuZ2VkEigKCGRvY190eXBlGAEgASgOMhYuc2VsYWgudjEuRG9jdW1lbnRUeXBlEhwKBmRvY19pZBgCIAEoCzIMLnNlbGFoLnYxLklkEisKBmNoYW5nZRgDIAEoDjIbLnNlbGFoLnYxLkxpYnJhcnlDaGFuZ2VLaW5kEg4KBm9wX3NlcRgEIAEoBBIgCgp1bmRvX2dyb3VwGAUgASgLMgwuc2VsYWgudjEuSWQSFgoOZnJvbV91bmRvX3JlZG8YBiABKAgifAoQVW5kb1N0YXRlQ2hhbmdlZBIjCgZnbG9iYWwYASABKAsyEy5zZWxhaC52MS5VbmRvU3RhdGUSHAoGZG9jX2lkGAIgASgLMgwuc2VsYWgudjEuSWQSJQoIZG9jdW1lbnQYAyABKAsyEy5zZWxhaC52MS5VbmRvU3RhdGUiOwoLU2VhcmNoU29uZ3MSDQoFcXVlcnkYASABKAkSDQoFbGltaXQYAiABKA0SDgoGb2Zmc2V0GAMgASgNImUKDVNvbmdTZWFyY2hIaXQSHAoEc29uZxgBIAEoCzIOLnNlbGFoLnYxLlNvbmcSDQoFc2NvcmUYAiABKAESDwoHc25pcHBldBgDIAEoCRIWCg5tYXRjaGVkX2ZpZWxkcxgEIAMoCSJJChFTb25nU2VhcmNoUmVzdWx0cxIlCgRoaXRzGAEgAygLMhcuc2VsYWgudjEuU29uZ1NlYXJjaEhpdBINCgV0b3RhbBgCIAEoDSJeCgtTZWFyY2hNZWRpYRINCgVxdWVyeRgBIAEoCRIhCgRraW5kGAIgASgOMhMuc2VsYWgudjEuTWVkaWFLaW5kEg0KBWxpbWl0GAMgASgNEg4KBm9mZnNldBgEIAEoDSJxCg5NZWRpYVNlYXJjaEhpdBInCgptZWRpYV9pdGVtGAEgASgLMhMuc2VsYWgudjEuTWVkaWFJdGVtEg0KBXNjb3JlGAIgASgBEg8KB3NuaXBwZXQYAyABKAkSFgoObWF0Y2hlZF9maWVsZHMYBCADKAkiSwoSTWVkaWFTZWFyY2hSZXN1bHRzEiYKBGhpdHMYASADKAsyGC5zZWxhaC52MS5NZWRpYVNlYXJjaEhpdBINCgV0b3RhbBgCIAEoDSJUCg9TZWFyY2hTY3JpcHR1cmUSDQoFcXVlcnkYASABKAkSEwoLdHJhbnNsYXRpb24YAiABKAkSDQoFbGltaXQYAyABKA0SDgoGb2Zmc2V0GAQgASgNIoYBChFTY3JpcHR1cmVWZXJzZUhpdBITCgt0cmFuc2xhdGlvbhgBIAEoCRIMCgRib29rGAIgASgJEhEKCWJvb2tfbmFtZRgDIAEoCRIPCgdjaGFwdGVyGAQgASgNEg0KBXZlcnNlGAUgASgNEgwKBHRleHQYBiABKAkSDQoFc2NvcmUYByABKAEiUgoWU2NyaXB0dXJlU2VhcmNoUmVzdWx0cxIpCgRoaXRzGAEgAygLMhsuc2VsYWgudjEuU2NyaXB0dXJlVmVyc2VIaXQSDQoFdG90YWwYAiABKA0iaAoNU2VhcmNoTGlicmFyeRINCgVxdWVyeRgBIAEoCRIkCgVzY29wZRgCIAEoDjIVLnNlbGFoLnYxLlNlYXJjaFNjb3BlEhMKC3RyYW5zbGF0aW9uGAMgASgJEg0KBWxpbWl0GAQgASgNIpcBChRMaWJyYXJ5U2VhcmNoUmVzdWx0cxImCgVzb25ncxgBIAMoCzIXLnNlbGFoLnYxLlNvbmdTZWFyY2hIaXQSJwoFbWVkaWEYAiADKAsyGC5zZWxhaC52MS5NZWRpYVNlYXJjaEhpdBIuCglzY3JpcHR1cmUYAyADKAsyGy5zZWxhaC52MS5TY3JpcHR1cmVWZXJzZUhpdCJlCg9QYXJzZVBhc3RlZFNvbmcSEAoIcmF3X3RleHQYASABKAkSKQoGZm9ybWF0GAIgASgOMhkuc2VsYWgudjEuU29uZ1Bhc3RlRm9ybWF0EhUKDWRlZmF1bHRfdGl0bGUYAyABKAkiegoUUGFyc2VQYXN0ZWRTb25nUmVwbHkSHAoEc29uZxgBIAEoCzIOLnNlbGFoLnYxLlNvbmcSMgoPZGV0ZWN0ZWRfZm9ybWF0GAIgASgOMhkuc2VsYWgudjEuU29uZ1Bhc3RlRm9ybWF0EhAKCHdhcm5pbmdzGAMgAygJInsKDVRyYW5zcG9zZVNvbmcSHAoEc29uZxgBIAEoCzIOLnNlbGFoLnYxLlNvbmcSEQoJc2VtaXRvbmVzGAIgASgFEjkKE2FjY2lkZW50YWxfc3BlbGxpbmcYAyABKA4yHC5zZWxhaC52MS5BY2NpZGVudGFsU3BlbGxpbmci8gEKD1NwbGl0U29uZ1NsaWRlcxIcCgRzb25nGAEgASgLMg4uc2VsYWgudjEuU29uZxIkCg5hcnJhbmdlbWVudF9pZBgCIAEoCzIMLnNlbGFoLnYxLklkEhEKCW1heF9saW5lcxgDIAEoDRI5ChNjb3B5cmlnaHRfcGxhY2VtZW50GAQgASgOMhwuc2VsYWgudjEuQ29weXJpZ2h0UGxhY2VtZW50EhMKC3RpdGxlX3NsaWRlGAUgASgIEhoKEmJsYW5rX3NsaWRlX2F0X2VuZBgGIAEoCBIcChR0cmFuc2xhdGlvbl9sYW5ndWFnZRgHIAEoCSLbAgoOR2VuZXJhdGVkU2xpZGUSIAoKc2VjdGlvbl9pZBgBIAEoCzIMLnNlbGFoLnYxLklkEhUKDXNlY3Rpb25fbGFiZWwYAiABKAkSKwoMc2VjdGlvbl9raW5kGAMgASgOMhUuc2VsYWgudjEuU2VjdGlvbktpbmQSJgoNc2VjdGlvbl9jb2xvchgEIAEoCzIPLnNlbGFoLnYxLkNvbG9yEhYKDnNlY3Rpb25faG90a2V5GAUgASgJEhIKCnBhcnRfaW5kZXgYBiABKA0SEgoKcGFydF9jb3VudBgHIAEoDRIiCgVsaW5lcxgIIAMoCzITLnNlbGFoLnYxLkx5cmljTGluZRIZChF0cmFuc2xhdGlvbl9saW5lcxgJIAMoCRIYChBmb290ZXJfY29weXJpZ2h0GAogASgJEhAKCGlzX3RpdGxlGAsgASgIEhAKCGlzX2JsYW5rGAwgASgIIlcKE0dlbmVyYXRlZFNvbmdTbGlkZXMSKAoGc2xpZGVzGAEgAygLMhguc2VsYWgudjEuR2VuZXJhdGVkU2xpZGUSFgoOY29weXJpZ2h0X2xpbmUYAiABKAkq0wEKC1NlY3Rpb25LaW5kEhwKGFNFQ1RJT05fS0lORF9VTlNQRUNJRklFRBAAEhYKElNFQ1RJT05fS0lORF9WRVJTRRABEhcKE1NFQ1RJT05fS0lORF9DSE9SVVMQAhIXChNTRUNUSU9OX0tJTkRfQlJJREdFEAMSFAoQU0VDVElPTl9LSU5EX1RBRxAEEhYKElNFQ1RJT05fS0lORF9JTlRSTxAFEhYKElNFQ1RJT05fS0lORF9PVVRSTxAGEhYKElNFQ1RJT05fS0lORF9PVEhFUhAHKmkKCU1lZGlhS2luZBIaChZNRURJQV9LSU5EX1VOU1BFQ0lGSUVEEAASFAoQTUVESUFfS0lORF9JTUFHRRABEhQKEE1FRElBX0tJTkRfVklERU8QAhIUChBNRURJQV9LSU5EX0FVRElPEAMqhAIKDERvY3VtZW50VHlwZRIdChlET0NVTUVOVF9UWVBFX1VOU1BFQ0lGSUVEEAASFgoSRE9DVU1FTlRfVFlQRV9TT05HEAESGgoWRE9DVU1FTlRfVFlQRV9URU1QTEFURRACEhcKE0RPQ1VNRU5UX1RZUEVfTUVESUEQAxIeChpET0NVTUVOVF9UWVBFX1BSRVNFTlRBVElPThAEEhkKFURPQ1VNRU5UX1RZUEVfU0VSVklDRRAFEh4KGkRPQ1VNRU5UX1RZUEVfU0VSVklDRV9UWVBFEAYSFgoSRE9DVU1FTlRfVFlQRV9URUFNEAcSFQoRRE9DVU1FTlRfVFlQRV9UQUcQCCp4ChFMaWJyYXJ5Q2hhbmdlS2luZBIjCh9MSUJSQVJZX0NIQU5HRV9LSU5EX1VOU1BFQ0lGSUVEEAASHQoZTElCUkFSWV9DSEFOR0VfS0lORF9TQVZFRBABEh8KG0xJQlJBUllfQ0hBTkdFX0tJTkRfREVMRVRFRBACKo0BCgtTZWFyY2hTY29wZRIcChhTRUFSQ0hfU0NPUEVfVU5TUEVDSUZJRUQQABIUChBTRUFSQ0hfU0NPUEVfQUxMEAESFgoSU0VBUkNIX1NDT1BFX1NPTkdTEAISFgoSU0VBUkNIX1NDT1BFX01FRElBEAMSGgoWU0VBUkNIX1NDT1BFX1NDUklQVFVSRRAEKrsBCg9Tb25nUGFzdGVGb3JtYXQSIQodU09OR19QQVNURV9GT1JNQVRfVU5TUEVDSUZJRUQQABIbChdTT05HX1BBU1RFX0ZPUk1BVF9QTEFJThABEh0KGVNPTkdfUEFTVEVfRk9STUFUX01BUktFUlMQAhIoCiRTT05HX1BBU1RFX0ZPUk1BVF9DSE9SRFNfT1ZFUl9MWVJJQ1MQAxIfChtTT05HX1BBU1RFX0ZPUk1BVF9DSE9SRF9QUk8QBCrZAQoSQ29weXJpZ2h0UGxhY2VtZW50EiMKH0NPUFlSSUdIVF9QTEFDRU1FTlRfVU5TUEVDSUZJRUQQABIcChhDT1BZUklHSFRfUExBQ0VNRU5UX05PTkUQARIdChlDT1BZUklHSFRfUExBQ0VNRU5UX0ZJUlNUEAISHAoYQ09QWVJJR0hUX1BMQUNFTUVOVF9MQVNUEAMSJgoiQ09QWVJJR0hUX1BMQUNFTUVOVF9GSVJTVF9BTkRfTEFTVBAEEhsKF0NPUFlSSUdIVF9QTEFDRU1FTlRfQUxMEAUqeAoSQWNjaWRlbnRhbFNwZWxsaW5nEiMKH0FDQ0lERU5UQUxfU1BFTExJTkdfVU5TUEVDSUZJRUQQABIeChpBQ0NJREVOVEFMX1NQRUxMSU5HX1NIQVJQUxABEh0KGUFDQ0lERU5UQUxfU1BFTExJTkdfRkxBVFMQAkIVqgISU2VsYWguQ29udHJhY3RzLlYxYgZwcm90bzM", [file_selah_v1_common]);
+  fileDesc("ChZzZWxhaC92MS9saWJyYXJ5LnByb3RvEghzZWxhaC52MSInCgVDaG9yZBIQCghwb3NpdGlvbhgBIAEoDRIMCgR0ZXh0GAIgASgJIjoKCUx5cmljTGluZRIMCgR0ZXh0GAEgASgJEh8KBmNob3JkcxgCIAMoCzIPLnNlbGFoLnYxLkNob3JkIiEKEFRyYW5zbGF0aW9uTGluZXMSDQoFbGluZXMYASADKAkitwIKB1NlY3Rpb24SGAoCaWQYASABKAsyDC5zZWxhaC52MS5JZBINCgVsYWJlbBgCIAEoCRIjCgRraW5kGAMgASgOMhUuc2VsYWgudjEuU2VjdGlvbktpbmQSHgoFY29sb3IYBCABKAsyDy5zZWxhaC52MS5Db2xvchIOCgZob3RrZXkYBSABKAkSIgoFbGluZXMYBiADKAsyEy5zZWxhaC52MS5MeXJpY0xpbmUSOQoMdHJhbnNsYXRpb25zGAcgAygLMiMuc2VsYWgudjEuU2VjdGlvbi5UcmFuc2xhdGlvbnNFbnRyeRpPChFUcmFuc2xhdGlvbnNFbnRyeRILCgNrZXkYASABKAkSKQoFdmFsdWUYAiABKAsyGi5zZWxhaC52MS5UcmFuc2xhdGlvbkxpbmVzOgI4ASJYCgtBcnJhbmdlbWVudBIYCgJpZBgBIAEoCzIMLnNlbGFoLnYxLklkEgwKBG5hbWUYAiABKAkSIQoLc2VjdGlvbl9pZHMYAyADKAsyDC5zZWxhaC52MS5JZCL7AQoEU29uZxIYCgJpZBgBIAEoCzIMLnNlbGFoLnYxLklkEg0KBXRpdGxlGAIgASgJEg8KB2F1dGhvcnMYAyADKAkSEwoLY2NsaV9udW1iZXIYBCABKAkSEQoJY29weXJpZ2h0GAUgASgJEgsKA2tleRgGIAEoCRINCgV0ZW1wbxgHIAEoARIMCgR0YWdzGAggAygJEhUKDXB1YmxpY19kb21haW4YCSABKAgSIwoIc2VjdGlvbnMYCiADKAsyES5zZWxhaC52MS5TZWN0aW9uEisKDGFycmFuZ2VtZW50cxgLIAMoCzIVLnNlbGFoLnYxLkFycmFuZ2VtZW50InwKD1RlbXBsYXRlVmFyaWFudBIYCgJpZBgBIAEoCzIMLnNlbGFoLnYxLklkEigKCnJlc29sdXRpb24YAiABKAsyFC5zZWxhaC52MS5SZXNvbHV0aW9uEhEKCW1heF9saW5lcxgDIAEoDRISCgpzdHlsZV9qc29uGAQgASgJIl8KCFRlbXBsYXRlEhgKAmlkGAEgASgLMgwuc2VsYWgudjEuSWQSDAoEbmFtZRgCIAEoCRIrCgh2YXJpYW50cxgDIAMoCzIZLnNlbGFoLnYxLlRlbXBsYXRlVmFyaWFudCLqAQoJTWVkaWFJdGVtEhgKAmlkGAEgASgLMgwuc2VsYWgudjEuSWQSDAoEbmFtZRgCIAEoCRIhCgRraW5kGAMgASgOMhMuc2VsYWgudjEuTWVkaWFLaW5kEhQKDGNvbnRlbnRfaGFzaBgEIAEoCRIRCglleHRlbnNpb24YBSABKAkSEgoKc2l6ZV9ieXRlcxgGIAEoBBIoCgpyZXNvbHV0aW9uGAcgASgLMhQuc2VsYWgudjEuUmVzb2x1dGlvbhIdChVkdXJhdGlvbl9taWxsaXNlY29uZHMYCCABKAQSDAoEdGFncxgJIAMoCSJmCgVTbGlkZRIYCgJpZBgBIAEoCzIMLnNlbGFoLnYxLklkEgwKBHRleHQYAiABKAkSHgoIbWVkaWFfaWQYAyABKAsyDC5zZWxhaC52MS5JZBIVCg1lbGVtZW50c19qc29uGAQgASgJInoKDFByZXNlbnRhdGlvbhIYCgJpZBgBIAEoCzIMLnNlbGFoLnYxLklkEgwKBG5hbWUYAiABKAkSHwoGc2xpZGVzGAMgAygLMg8uc2VsYWgudjEuU2xpZGUSIQoLdGVtcGxhdGVfaWQYBCABKAsyDC5zZWxhaC52MS5JZCItCgNUYWcSGAoCaWQYASABKAsyDC5zZWxhaC52MS5JZBIMCgRuYW1lGAIgASgJIigKB09wU3RhdGUSDwoHcHJlc2VudBgBIAEoCBIMCgRkYXRhGAIgASgMIigKCFNhdmVTb25nEhwKBHNvbmcYASABKAsyDi5zZWxhaC52MS5Tb25nIiYKCkRlbGV0ZVNvbmcSGAoCaWQYASABKAsyDC5zZWxhaC52MS5JZCIjCgdHZXRTb25nEhgKAmlkGAEgASgLMgwuc2VsYWgudjEuSWQiKgoJTGlzdFNvbmdzEg0KBWxpbWl0GAEgASgNEg4KBm9mZnNldBgCIAEoDSIpCghTb25nTGlzdBIdCgVzb25ncxgBIAMoCzIOLnNlbGFoLnYxLlNvbmciNAoMU2F2ZVRlbXBsYXRlEiQKCHRlbXBsYXRlGAEgASgLMhIuc2VsYWgudjEuVGVtcGxhdGUiKgoORGVsZXRlVGVtcGxhdGUSGAoCaWQYASABKAsyDC5zZWxhaC52MS5JZCInCgtHZXRUZW1wbGF0ZRIYCgJpZBgBIAEoCzIMLnNlbGFoLnYxLklkIi4KDUxpc3RUZW1wbGF0ZXMSDQoFbGltaXQYASABKA0SDgoGb2Zmc2V0GAIgASgNIjUKDFRlbXBsYXRlTGlzdBIlCgl0ZW1wbGF0ZXMYASADKAsyEi5zZWxhaC52MS5UZW1wbGF0ZSI4Cg1TYXZlTWVkaWFJdGVtEicKCm1lZGlhX2l0ZW0YASABKAsyEy5zZWxhaC52MS5NZWRpYUl0ZW0iKwoPRGVsZXRlTWVkaWFJdGVtEhgKAmlkGAEgASgLMgwuc2VsYWgudjEuSWQiKAoMR2V0TWVkaWFJdGVtEhgKAmlkGAEgASgLMgwuc2VsYWgudjEuSWQiLwoOTGlzdE1lZGlhSXRlbXMSDQoFbGltaXQYASABKA0SDgoGb2Zmc2V0GAIgASgNIjkKDU1lZGlhSXRlbUxpc3QSKAoLbWVkaWFfaXRlbXMYASADKAsyEy5zZWxhaC52MS5NZWRpYUl0ZW0iQAoQU2F2ZVByZXNlbnRhdGlvbhIsCgxwcmVzZW50YXRpb24YASABKAsyFi5zZWxhaC52MS5QcmVzZW50YXRpb24iLgoSRGVsZXRlUHJlc2VudGF0aW9uEhgKAmlkGAEgASgLMgwuc2VsYWgudjEuSWQiKwoPR2V0UHJlc2VudGF0aW9uEhgKAmlkGAEgASgLMgwuc2VsYWgudjEuSWQiMgoRTGlzdFByZXNlbnRhdGlvbnMSDQoFbGltaXQYASABKA0SDgoGb2Zmc2V0GAIgASgNIkEKEFByZXNlbnRhdGlvbkxpc3QSLQoNcHJlc2VudGF0aW9ucxgBIAMoCzIWLnNlbGFoLnYxLlByZXNlbnRhdGlvbiIlCgdTYXZlVGFnEhoKA3RhZxgBIAEoCzINLnNlbGFoLnYxLlRhZyIlCglEZWxldGVUYWcSGAoCaWQYASABKAsyDC5zZWxhaC52MS5JZCIiCgZHZXRUYWcSGAoCaWQYASABKAsyDC5zZWxhaC52MS5JZCIpCghMaXN0VGFncxINCgVsaW1pdBgBIAEoDRIOCgZvZmZzZXQYAiABKA0iJgoHVGFnTGlzdBIbCgR0YWdzGAEgAygLMg0uc2VsYWgudjEuVGFnIiQKBFVuZG8SHAoGZG9jX2lkGAEgASgLMgwuc2VsYWgudjEuSWQiJAoEUmVkbxIcCgZkb2NfaWQYASABKAsyDC5zZWxhaC52MS5JZCIsCgxHZXRVbmRvU3RhdGUSHAoGZG9jX2lkGAEgASgLMgwuc2VsYWgudjEuSWQiVwoJVW5kb1N0YXRlEhAKCGNhbl91bmRvGAEgASgIEhAKCGNhbl9yZWRvGAIgASgIEhIKCnVuZG9fZGVwdGgYAyABKA0SEgoKcmVkb19kZXB0aBgEIAEoDSKQAQoMRWRpdG9yQnVmZmVyEhwKBmRvY19pZBgBIAEoCzIMLnNlbGFoLnYxLklkEigKCGRvY190eXBlGAIgASgOMhYuc2VsYWgudjEuRG9jdW1lbnRUeXBlEg8KB2NvbnRlbnQYAyABKAkSJwoKdXBkYXRlZF9hdBgEIAEoCzITLnNlbGFoLnYxLlRpbWVzdGFtcCJrChBTYXZlRWRpdG9yQnVmZmVyEhwKBmRvY19pZBgBIAEoCzIMLnNlbGFoLnYxLklkEigKCGRvY190eXBlGAIgASgOMhYuc2VsYWgudjEuRG9jdW1lbnRUeXBlEg8KB2NvbnRlbnQYAyABKAkiMwoTRGlzY2FyZEVkaXRvckJ1ZmZlchIcCgZkb2NfaWQYASABKAsyDC5zZWxhaC52MS5JZCIvCg9HZXRFZGl0b3JCdWZmZXISHAoGZG9jX2lkGAEgASgLMgwuc2VsYWgudjEuSWQiSgoRRWRpdG9yQnVmZmVyUmVwbHkSDQoFZm91bmQYASABKAgSJgoGYnVmZmVyGAIgASgLMhYuc2VsYWgudjEuRWRpdG9yQnVmZmVyIjIKEUxpc3RFZGl0b3JCdWZmZXJzEg0KBWxpbWl0GAEgASgNEg4KBm9mZnNldBgCIAEoDSI7ChBFZGl0b3JCdWZmZXJMaXN0EicKB2J1ZmZlcnMYASADKAsyFi5zZWxhaC52MS5FZGl0b3JCdWZmZXIiSQoHTGlzdE9wcxIRCglhZnRlcl9zZXEYASABKAQSDQoFbGltaXQYAiABKA0SHAoGZG9jX2lkGAMgASgLMgwuc2VsYWgudjEuSWQisQIKCE9wUmVjb3JkEgsKA3NlcRgBIAEoBBIbCgVvcF9pZBgCIAEoCzIMLnNlbGFoLnYxLklkEiYKCXRpbWVzdGFtcBgDIAEoCzITLnNlbGFoLnYxLlRpbWVzdGFtcBIPCgd1c2VyX2lkGAQgASgJEhEKCWRldmljZV9pZBgFIAEoCRIOCgZvcmlnaW4YBiABKAkSKAoIZG9jX3R5cGUYByABKA4yFi5zZWxhaC52MS5Eb2N1bWVudFR5cGUSHAoGZG9jX2lkGAggASgLMgwuc2VsYWgudjEuSWQSDwoHY29tbWFuZBgJIAEoDBIPCgdpbnZlcnNlGAogASgMEiAKCnVuZG9fZ3JvdXAYCyABKAsyDC5zZWxhaC52MS5JZBITCgtzeW5jX3N0YXR1cxgMIAEoBSIpCgZPcExpc3QSHwoDb3BzGAEgAygLMhIuc2VsYWgudjEuT3BSZWNvcmQizwEKDkxpYnJhcnlDaGFuZ2VkEigKCGRvY190eXBlGAEgASgOMhYuc2VsYWgudjEuRG9jdW1lbnRUeXBlEhwKBmRvY19pZBgCIAEoCzIMLnNlbGFoLnYxLklkEisKBmNoYW5nZRgDIAEoDjIbLnNlbGFoLnYxLkxpYnJhcnlDaGFuZ2VLaW5kEg4KBm9wX3NlcRgEIAEoBBIgCgp1bmRvX2dyb3VwGAUgASgLMgwuc2VsYWgudjEuSWQSFgoOZnJvbV91bmRvX3JlZG8YBiABKAgifAoQVW5kb1N0YXRlQ2hhbmdlZBIjCgZnbG9iYWwYASABKAsyEy5zZWxhaC52MS5VbmRvU3RhdGUSHAoGZG9jX2lkGAIgASgLMgwuc2VsYWgudjEuSWQSJQoIZG9jdW1lbnQYAyABKAsyEy5zZWxhaC52MS5VbmRvU3RhdGUiOwoLU2VhcmNoU29uZ3MSDQoFcXVlcnkYASABKAkSDQoFbGltaXQYAiABKA0SDgoGb2Zmc2V0GAMgASgNImUKDVNvbmdTZWFyY2hIaXQSHAoEc29uZxgBIAEoCzIOLnNlbGFoLnYxLlNvbmcSDQoFc2NvcmUYAiABKAESDwoHc25pcHBldBgDIAEoCRIWCg5tYXRjaGVkX2ZpZWxkcxgEIAMoCSJJChFTb25nU2VhcmNoUmVzdWx0cxIlCgRoaXRzGAEgAygLMhcuc2VsYWgudjEuU29uZ1NlYXJjaEhpdBINCgV0b3RhbBgCIAEoDSJeCgtTZWFyY2hNZWRpYRINCgVxdWVyeRgBIAEoCRIhCgRraW5kGAIgASgOMhMuc2VsYWgudjEuTWVkaWFLaW5kEg0KBWxpbWl0GAMgASgNEg4KBm9mZnNldBgEIAEoDSJxCg5NZWRpYVNlYXJjaEhpdBInCgptZWRpYV9pdGVtGAEgASgLMhMuc2VsYWgudjEuTWVkaWFJdGVtEg0KBXNjb3JlGAIgASgBEg8KB3NuaXBwZXQYAyABKAkSFgoObWF0Y2hlZF9maWVsZHMYBCADKAkiSwoSTWVkaWFTZWFyY2hSZXN1bHRzEiYKBGhpdHMYASADKAsyGC5zZWxhaC52MS5NZWRpYVNlYXJjaEhpdBINCgV0b3RhbBgCIAEoDSJUCg9TZWFyY2hTY3JpcHR1cmUSDQoFcXVlcnkYASABKAkSEwoLdHJhbnNsYXRpb24YAiABKAkSDQoFbGltaXQYAyABKA0SDgoGb2Zmc2V0GAQgASgNIoYBChFTY3JpcHR1cmVWZXJzZUhpdBITCgt0cmFuc2xhdGlvbhgBIAEoCRIMCgRib29rGAIgASgJEhEKCWJvb2tfbmFtZRgDIAEoCRIPCgdjaGFwdGVyGAQgASgNEg0KBXZlcnNlGAUgASgNEgwKBHRleHQYBiABKAkSDQoFc2NvcmUYByABKAEiUgoWU2NyaXB0dXJlU2VhcmNoUmVzdWx0cxIpCgRoaXRzGAEgAygLMhsuc2VsYWgudjEuU2NyaXB0dXJlVmVyc2VIaXQSDQoFdG90YWwYAiABKA0iaAoNU2VhcmNoTGlicmFyeRINCgVxdWVyeRgBIAEoCRIkCgVzY29wZRgCIAEoDjIVLnNlbGFoLnYxLlNlYXJjaFNjb3BlEhMKC3RyYW5zbGF0aW9uGAMgASgJEg0KBWxpbWl0GAQgASgNIpcBChRMaWJyYXJ5U2VhcmNoUmVzdWx0cxImCgVzb25ncxgBIAMoCzIXLnNlbGFoLnYxLlNvbmdTZWFyY2hIaXQSJwoFbWVkaWEYAiADKAsyGC5zZWxhaC52MS5NZWRpYVNlYXJjaEhpdBIuCglzY3JpcHR1cmUYAyADKAsyGy5zZWxhaC52MS5TY3JpcHR1cmVWZXJzZUhpdCJlCg9QYXJzZVBhc3RlZFNvbmcSEAoIcmF3X3RleHQYASABKAkSKQoGZm9ybWF0GAIgASgOMhkuc2VsYWgudjEuU29uZ1Bhc3RlRm9ybWF0EhUKDWRlZmF1bHRfdGl0bGUYAyABKAkiegoUUGFyc2VQYXN0ZWRTb25nUmVwbHkSHAoEc29uZxgBIAEoCzIOLnNlbGFoLnYxLlNvbmcSMgoPZGV0ZWN0ZWRfZm9ybWF0GAIgASgOMhkuc2VsYWgudjEuU29uZ1Bhc3RlRm9ybWF0EhAKCHdhcm5pbmdzGAMgAygJInsKDVRyYW5zcG9zZVNvbmcSHAoEc29uZxgBIAEoCzIOLnNlbGFoLnYxLlNvbmcSEQoJc2VtaXRvbmVzGAIgASgFEjkKE2FjY2lkZW50YWxfc3BlbGxpbmcYAyABKA4yHC5zZWxhaC52MS5BY2NpZGVudGFsU3BlbGxpbmci8gEKD1NwbGl0U29uZ1NsaWRlcxIcCgRzb25nGAEgASgLMg4uc2VsYWgudjEuU29uZxIkCg5hcnJhbmdlbWVudF9pZBgCIAEoCzIMLnNlbGFoLnYxLklkEhEKCW1heF9saW5lcxgDIAEoDRI5ChNjb3B5cmlnaHRfcGxhY2VtZW50GAQgASgOMhwuc2VsYWgudjEuQ29weXJpZ2h0UGxhY2VtZW50EhMKC3RpdGxlX3NsaWRlGAUgASgIEhoKEmJsYW5rX3NsaWRlX2F0X2VuZBgGIAEoCBIcChR0cmFuc2xhdGlvbl9sYW5ndWFnZRgHIAEoCSLbAgoOR2VuZXJhdGVkU2xpZGUSIAoKc2VjdGlvbl9pZBgBIAEoCzIMLnNlbGFoLnYxLklkEhUKDXNlY3Rpb25fbGFiZWwYAiABKAkSKwoMc2VjdGlvbl9raW5kGAMgASgOMhUuc2VsYWgudjEuU2VjdGlvbktpbmQSJgoNc2VjdGlvbl9jb2xvchgEIAEoCzIPLnNlbGFoLnYxLkNvbG9yEhYKDnNlY3Rpb25faG90a2V5GAUgASgJEhIKCnBhcnRfaW5kZXgYBiABKA0SEgoKcGFydF9jb3VudBgHIAEoDRIiCgVsaW5lcxgIIAMoCzITLnNlbGFoLnYxLkx5cmljTGluZRIZChF0cmFuc2xhdGlvbl9saW5lcxgJIAMoCRIYChBmb290ZXJfY29weXJpZ2h0GAogASgJEhAKCGlzX3RpdGxlGAsgASgIEhAKCGlzX2JsYW5rGAwgASgIIlcKE0dlbmVyYXRlZFNvbmdTbGlkZXMSKAoGc2xpZGVzGAEgAygLMhguc2VsYWgudjEuR2VuZXJhdGVkU2xpZGUSFgoOY29weXJpZ2h0X2xpbmUYAiABKAkiagoNQmlibGVCb29rSW5mbxIQCghib29rX251bRgBIAEoDRIMCgRjb2RlGAIgASgJEgwKBG5hbWUYAyABKAkSFQoNY2hhcHRlcl9jb3VudBgEIAEoDRIUCgx2ZXJzZV9jb3VudHMYBSADKA0ipQEKEEJpYmxlVHJhbnNsYXRpb24SDAoEY29kZRgBIAEoCRIMCgRuYW1lGAIgASgJEhAKCGxhbmd1YWdlGAMgASgJEhIKCmJvb2tfY291bnQYBCABKA0SEwoLdmVyc2VfY291bnQYBSABKA0SEgoKaXNfYnVuZGxlZBgGIAEoCBImCgVib29rcxgHIAMoCzIXLnNlbGFoLnYxLkJpYmxlQm9va0luZm8iIwoKTGlzdEJpYmxlcxIVCg1pbmNsdWRlX2Jvb2tzGAEgASgIIjcKCUJpYmxlTGlzdBIqCgZiaWJsZXMYASADKAsyGi5zZWxhaC52MS5CaWJsZVRyYW5zbGF0aW9uIq8BCg1TY3JpcHR1cmVTcGFuEhAKCGJvb2tfbnVtGAEgASgNEhEKCWJvb2tfY29kZRgCIAEoCRIRCglib29rX25hbWUYAyABKAkSFQoNc3RhcnRfY2hhcHRlchgEIAEoDRITCgtzdGFydF92ZXJzZRgFIAEoDRITCgtlbmRfY2hhcHRlchgGIAEoDRIRCgllbmRfdmVyc2UYByABKA0SEgoKbm9ybWFsaXplZBgIIAEoCSJDChdQYXJzZVNjcmlwdHVyZVJlZmVyZW5jZRIRCglyZWZlcmVuY2UYASABKAkSFQoNbGFuZ3VhZ2VfaGludBgCIAEoCSJaChxQYXJzZVNjcmlwdHVyZVJlZmVyZW5jZVJlcGx5EiYKBXNwYW5zGAEgAygLMhcuc2VsYWgudjEuU2NyaXB0dXJlU3BhbhISCgpub3JtYWxpemVkGAIgASgJIosBCg5TY3JpcHR1cmVWZXJzZRITCgt0cmFuc2xhdGlvbhgBIAEoCRIQCghib29rX251bRgCIAEoDRIRCglib29rX2NvZGUYAyABKAkSEQoJYm9va19uYW1lGAQgASgJEg8KB2NoYXB0ZXIYBSABKA0SDQoFdmVyc2UYBiABKA0SDAoEdGV4dBgHIAEoCSJ9ChRHZXRTY3JpcHR1cmVQYXNzYWdlcxITCgt0cmFuc2xhdGlvbhgBIAEoCRIRCglyZWZlcmVuY2UYAiABKAkSJgoFc3BhbnMYAyADKAsyFy5zZWxhaC52MS5TY3JpcHR1cmVTcGFuEhUKDWxhbmd1YWdlX2hpbnQYBCABKAkijAEKEVNjcmlwdHVyZVBhc3NhZ2VzEi8KC3RyYW5zbGF0aW9uGAEgASgLMhouc2VsYWgudjEuQmlibGVUcmFuc2xhdGlvbhIcChRub3JtYWxpemVkX3JlZmVyZW5jZRgCIAEoCRIoCgZ2ZXJzZXMYAyADKAsyGC5zZWxhaC52MS5TY3JpcHR1cmVWZXJzZSLwAgoUU3BsaXRTY3JpcHR1cmVTbGlkZXMSEwoLdHJhbnNsYXRpb24YASABKAkSGAoQdHJhbnNsYXRpb25fbmFtZRgCIAEoCRIRCglyZWZlcmVuY2UYAyABKAkSKAoGdmVyc2VzGAQgAygLMhguc2VsYWgudjEuU2NyaXB0dXJlVmVyc2USEQoJbWF4X2xpbmVzGAUgASgNEhoKEm1heF9jaGFyc19wZXJfbGluZRgGIAEoDRIYChB2ZXJzZXNfcGVyX3NsaWRlGAcgASgNEhsKE29uZV92ZXJzZV9wZXJfc2xpZGUYCCABKAgSGgoSc2hvd192ZXJzZV9udW1iZXJzGAkgASgIEjkKE3JlZmVyZW5jZV9wbGFjZW1lbnQYCiABKA4yHC5zZWxhaC52MS5SZWZlcmVuY2VQbGFjZW1lbnQSEwoLdGl0bGVfc2xpZGUYCyABKAgSGgoSYmxhbmtfc2xpZGVfYXRfZW5kGAwgASgIIrsBChdHZW5lcmF0ZWRTY3JpcHR1cmVTbGlkZRIRCglyZWZlcmVuY2UYASABKAkSEgoKcGFydF9pbmRleBgCIAEoDRISCgpwYXJ0X2NvdW50GAMgASgNEg0KBWxpbmVzGAQgAygJEhgKEGhlYWRlcl9yZWZlcmVuY2UYBSABKAkSGAoQZm9vdGVyX3JlZmVyZW5jZRgGIAEoCRIQCghpc190aXRsZRgHIAEoCBIQCghpc19ibGFuaxgIIAEoCCKVAQoYR2VuZXJhdGVkU2NyaXB0dXJlU2xpZGVzEhMKC3RyYW5zbGF0aW9uGAEgASgJEhgKEHRyYW5zbGF0aW9uX25hbWUYAiABKAkSFwoPcmVmZXJlbmNlX2xhYmVsGAMgASgJEjEKBnNsaWRlcxgEIAMoCzIhLnNlbGFoLnYxLkdlbmVyYXRlZFNjcmlwdHVyZVNsaWRlIqQBCgtJbXBvcnRCaWJsZRITCgtzb3VyY2VfcGF0aBgBIAEoCRIRCglyYXdfYnl0ZXMYAiABKAwSJQoGZm9ybWF0GAMgASgOMhUuc2VsYWgudjEuQmlibGVGb3JtYXQSDAoEY29kZRgEIAEoCRIMCgRuYW1lGAUgASgJEhAKCGxhbmd1YWdlGAYgASgJEhgKEHJlcGxhY2VfZXhpc3RpbmcYByABKAgiGwoLRGVsZXRlQmlibGUSDAoEY29kZRgBIAEoCSrTAQoLU2VjdGlvbktpbmQSHAoYU0VDVElPTl9LSU5EX1VOU1BFQ0lGSUVEEAASFgoSU0VDVElPTl9LSU5EX1ZFUlNFEAESFwoTU0VDVElPTl9LSU5EX0NIT1JVUxACEhcKE1NFQ1RJT05fS0lORF9CUklER0UQAxIUChBTRUNUSU9OX0tJTkRfVEFHEAQSFgoSU0VDVElPTl9LSU5EX0lOVFJPEAUSFgoSU0VDVElPTl9LSU5EX09VVFJPEAYSFgoSU0VDVElPTl9LSU5EX09USEVSEAcqaQoJTWVkaWFLaW5kEhoKFk1FRElBX0tJTkRfVU5TUEVDSUZJRUQQABIUChBNRURJQV9LSU5EX0lNQUdFEAESFAoQTUVESUFfS0lORF9WSURFTxACEhQKEE1FRElBX0tJTkRfQVVESU8QAyqEAgoMRG9jdW1lbnRUeXBlEh0KGURPQ1VNRU5UX1RZUEVfVU5TUEVDSUZJRUQQABIWChJET0NVTUVOVF9UWVBFX1NPTkcQARIaChZET0NVTUVOVF9UWVBFX1RFTVBMQVRFEAISFwoTRE9DVU1FTlRfVFlQRV9NRURJQRADEh4KGkRPQ1VNRU5UX1RZUEVfUFJFU0VOVEFUSU9OEAQSGQoVRE9DVU1FTlRfVFlQRV9TRVJWSUNFEAUSHgoaRE9DVU1FTlRfVFlQRV9TRVJWSUNFX1RZUEUQBhIWChJET0NVTUVOVF9UWVBFX1RFQU0QBxIVChFET0NVTUVOVF9UWVBFX1RBRxAIKngKEUxpYnJhcnlDaGFuZ2VLaW5kEiMKH0xJQlJBUllfQ0hBTkdFX0tJTkRfVU5TUEVDSUZJRUQQABIdChlMSUJSQVJZX0NIQU5HRV9LSU5EX1NBVkVEEAESHwobTElCUkFSWV9DSEFOR0VfS0lORF9ERUxFVEVEEAIqjQEKC1NlYXJjaFNjb3BlEhwKGFNFQVJDSF9TQ09QRV9VTlNQRUNJRklFRBAAEhQKEFNFQVJDSF9TQ09QRV9BTEwQARIWChJTRUFSQ0hfU0NPUEVfU09OR1MQAhIWChJTRUFSQ0hfU0NPUEVfTUVESUEQAxIaChZTRUFSQ0hfU0NPUEVfU0NSSVBUVVJFEAQquwEKD1NvbmdQYXN0ZUZvcm1hdBIhCh1TT05HX1BBU1RFX0ZPUk1BVF9VTlNQRUNJRklFRBAAEhsKF1NPTkdfUEFTVEVfRk9STUFUX1BMQUlOEAESHQoZU09OR19QQVNURV9GT1JNQVRfTUFSS0VSUxACEigKJFNPTkdfUEFTVEVfRk9STUFUX0NIT1JEU19PVkVSX0xZUklDUxADEh8KG1NPTkdfUEFTVEVfRk9STUFUX0NIT1JEX1BSTxAEKtkBChJDb3B5cmlnaHRQbGFjZW1lbnQSIwofQ09QWVJJR0hUX1BMQUNFTUVOVF9VTlNQRUNJRklFRBAAEhwKGENPUFlSSUdIVF9QTEFDRU1FTlRfTk9ORRABEh0KGUNPUFlSSUdIVF9QTEFDRU1FTlRfRklSU1QQAhIcChhDT1BZUklHSFRfUExBQ0VNRU5UX0xBU1QQAxImCiJDT1BZUklHSFRfUExBQ0VNRU5UX0ZJUlNUX0FORF9MQVNUEAQSGwoXQ09QWVJJR0hUX1BMQUNFTUVOVF9BTEwQBSp4ChJBY2NpZGVudGFsU3BlbGxpbmcSIwofQUNDSURFTlRBTF9TUEVMTElOR19VTlNQRUNJRklFRBAAEh4KGkFDQ0lERU5UQUxfU1BFTExJTkdfU0hBUlBTEAESHQoZQUNDSURFTlRBTF9TUEVMTElOR19GTEFUUxACKnMKC0JpYmxlRm9ybWF0EhwKGEJJQkxFX0ZPUk1BVF9VTlNQRUNJRklFRBAAEhUKEUJJQkxFX0ZPUk1BVF9PU0lTEAESFQoRQklCTEVfRk9STUFUX1VTRk0QAhIYChRCSUJMRV9GT1JNQVRfWkVGQU5JQRADKqMBChJSZWZlcmVuY2VQbGFjZW1lbnQSIwofUkVGRVJFTkNFX1BMQUNFTUVOVF9VTlNQRUNJRklFRBAAEhwKGFJFRkVSRU5DRV9QTEFDRU1FTlRfTk9ORRABEiQKIFJFRkVSRU5DRV9QTEFDRU1FTlRfU0xJREVfSEVBREVSEAISJAogUkVGRVJFTkNFX1BMQUNFTUVOVF9TTElERV9GT09URVIQA0IVqgISU2VsYWguQ29udHJhY3RzLlYxYgZwcm90bzM", [file_selah_v1_common]);
 
 /**
  * @generated from message selah.v1.Chord
@@ -1882,6 +1882,550 @@ export const GeneratedSongSlidesSchema: GenMessage<GeneratedSongSlides> = /*@__P
   messageDesc(file_selah_v1_library, 70);
 
 /**
+ * @generated from message selah.v1.BibleBookInfo
+ */
+export type BibleBookInfo = Message<"selah.v1.BibleBookInfo"> & {
+  /**
+   * @generated from field: uint32 book_num = 1;
+   */
+  bookNum: number;
+
+  /**
+   * @generated from field: string code = 2;
+   */
+  code: string;
+
+  /**
+   * @generated from field: string name = 3;
+   */
+  name: string;
+
+  /**
+   * @generated from field: uint32 chapter_count = 4;
+   */
+  chapterCount: number;
+
+  /**
+   * @generated from field: repeated uint32 verse_counts = 5;
+   */
+  verseCounts: number[];
+};
+
+/**
+ * Describes the message selah.v1.BibleBookInfo.
+ * Use `create(BibleBookInfoSchema)` to create a new message.
+ */
+export const BibleBookInfoSchema: GenMessage<BibleBookInfo> = /*@__PURE__*/
+  messageDesc(file_selah_v1_library, 71);
+
+/**
+ * @generated from message selah.v1.BibleTranslation
+ */
+export type BibleTranslation = Message<"selah.v1.BibleTranslation"> & {
+  /**
+   * @generated from field: string code = 1;
+   */
+  code: string;
+
+  /**
+   * @generated from field: string name = 2;
+   */
+  name: string;
+
+  /**
+   * @generated from field: string language = 3;
+   */
+  language: string;
+
+  /**
+   * @generated from field: uint32 book_count = 4;
+   */
+  bookCount: number;
+
+  /**
+   * @generated from field: uint32 verse_count = 5;
+   */
+  verseCount: number;
+
+  /**
+   * @generated from field: bool is_bundled = 6;
+   */
+  isBundled: boolean;
+
+  /**
+   * @generated from field: repeated selah.v1.BibleBookInfo books = 7;
+   */
+  books: BibleBookInfo[];
+};
+
+/**
+ * Describes the message selah.v1.BibleTranslation.
+ * Use `create(BibleTranslationSchema)` to create a new message.
+ */
+export const BibleTranslationSchema: GenMessage<BibleTranslation> = /*@__PURE__*/
+  messageDesc(file_selah_v1_library, 72);
+
+/**
+ * @generated from message selah.v1.ListBibles
+ */
+export type ListBibles = Message<"selah.v1.ListBibles"> & {
+  /**
+   * @generated from field: bool include_books = 1;
+   */
+  includeBooks: boolean;
+};
+
+/**
+ * Describes the message selah.v1.ListBibles.
+ * Use `create(ListBiblesSchema)` to create a new message.
+ */
+export const ListBiblesSchema: GenMessage<ListBibles> = /*@__PURE__*/
+  messageDesc(file_selah_v1_library, 73);
+
+/**
+ * @generated from message selah.v1.BibleList
+ */
+export type BibleList = Message<"selah.v1.BibleList"> & {
+  /**
+   * @generated from field: repeated selah.v1.BibleTranslation bibles = 1;
+   */
+  bibles: BibleTranslation[];
+};
+
+/**
+ * Describes the message selah.v1.BibleList.
+ * Use `create(BibleListSchema)` to create a new message.
+ */
+export const BibleListSchema: GenMessage<BibleList> = /*@__PURE__*/
+  messageDesc(file_selah_v1_library, 74);
+
+/**
+ * @generated from message selah.v1.ScriptureSpan
+ */
+export type ScriptureSpan = Message<"selah.v1.ScriptureSpan"> & {
+  /**
+   * @generated from field: uint32 book_num = 1;
+   */
+  bookNum: number;
+
+  /**
+   * @generated from field: string book_code = 2;
+   */
+  bookCode: string;
+
+  /**
+   * @generated from field: string book_name = 3;
+   */
+  bookName: string;
+
+  /**
+   * @generated from field: uint32 start_chapter = 4;
+   */
+  startChapter: number;
+
+  /**
+   * @generated from field: uint32 start_verse = 5;
+   */
+  startVerse: number;
+
+  /**
+   * @generated from field: uint32 end_chapter = 6;
+   */
+  endChapter: number;
+
+  /**
+   * @generated from field: uint32 end_verse = 7;
+   */
+  endVerse: number;
+
+  /**
+   * @generated from field: string normalized = 8;
+   */
+  normalized: string;
+};
+
+/**
+ * Describes the message selah.v1.ScriptureSpan.
+ * Use `create(ScriptureSpanSchema)` to create a new message.
+ */
+export const ScriptureSpanSchema: GenMessage<ScriptureSpan> = /*@__PURE__*/
+  messageDesc(file_selah_v1_library, 75);
+
+/**
+ * @generated from message selah.v1.ParseScriptureReference
+ */
+export type ParseScriptureReference = Message<"selah.v1.ParseScriptureReference"> & {
+  /**
+   * @generated from field: string reference = 1;
+   */
+  reference: string;
+
+  /**
+   * @generated from field: string language_hint = 2;
+   */
+  languageHint: string;
+};
+
+/**
+ * Describes the message selah.v1.ParseScriptureReference.
+ * Use `create(ParseScriptureReferenceSchema)` to create a new message.
+ */
+export const ParseScriptureReferenceSchema: GenMessage<ParseScriptureReference> = /*@__PURE__*/
+  messageDesc(file_selah_v1_library, 76);
+
+/**
+ * @generated from message selah.v1.ParseScriptureReferenceReply
+ */
+export type ParseScriptureReferenceReply = Message<"selah.v1.ParseScriptureReferenceReply"> & {
+  /**
+   * @generated from field: repeated selah.v1.ScriptureSpan spans = 1;
+   */
+  spans: ScriptureSpan[];
+
+  /**
+   * @generated from field: string normalized = 2;
+   */
+  normalized: string;
+};
+
+/**
+ * Describes the message selah.v1.ParseScriptureReferenceReply.
+ * Use `create(ParseScriptureReferenceReplySchema)` to create a new message.
+ */
+export const ParseScriptureReferenceReplySchema: GenMessage<ParseScriptureReferenceReply> = /*@__PURE__*/
+  messageDesc(file_selah_v1_library, 77);
+
+/**
+ * @generated from message selah.v1.ScriptureVerse
+ */
+export type ScriptureVerse = Message<"selah.v1.ScriptureVerse"> & {
+  /**
+   * @generated from field: string translation = 1;
+   */
+  translation: string;
+
+  /**
+   * @generated from field: uint32 book_num = 2;
+   */
+  bookNum: number;
+
+  /**
+   * @generated from field: string book_code = 3;
+   */
+  bookCode: string;
+
+  /**
+   * @generated from field: string book_name = 4;
+   */
+  bookName: string;
+
+  /**
+   * @generated from field: uint32 chapter = 5;
+   */
+  chapter: number;
+
+  /**
+   * @generated from field: uint32 verse = 6;
+   */
+  verse: number;
+
+  /**
+   * @generated from field: string text = 7;
+   */
+  text: string;
+};
+
+/**
+ * Describes the message selah.v1.ScriptureVerse.
+ * Use `create(ScriptureVerseSchema)` to create a new message.
+ */
+export const ScriptureVerseSchema: GenMessage<ScriptureVerse> = /*@__PURE__*/
+  messageDesc(file_selah_v1_library, 78);
+
+/**
+ * @generated from message selah.v1.GetScripturePassages
+ */
+export type GetScripturePassages = Message<"selah.v1.GetScripturePassages"> & {
+  /**
+   * @generated from field: string translation = 1;
+   */
+  translation: string;
+
+  /**
+   * Either parseable scripture reference text or explicit spans.
+   *
+   * @generated from field: string reference = 2;
+   */
+  reference: string;
+
+  /**
+   * @generated from field: repeated selah.v1.ScriptureSpan spans = 3;
+   */
+  spans: ScriptureSpan[];
+
+  /**
+   * @generated from field: string language_hint = 4;
+   */
+  languageHint: string;
+};
+
+/**
+ * Describes the message selah.v1.GetScripturePassages.
+ * Use `create(GetScripturePassagesSchema)` to create a new message.
+ */
+export const GetScripturePassagesSchema: GenMessage<GetScripturePassages> = /*@__PURE__*/
+  messageDesc(file_selah_v1_library, 79);
+
+/**
+ * @generated from message selah.v1.ScripturePassages
+ */
+export type ScripturePassages = Message<"selah.v1.ScripturePassages"> & {
+  /**
+   * @generated from field: selah.v1.BibleTranslation translation = 1;
+   */
+  translation?: BibleTranslation;
+
+  /**
+   * @generated from field: string normalized_reference = 2;
+   */
+  normalizedReference: string;
+
+  /**
+   * @generated from field: repeated selah.v1.ScriptureVerse verses = 3;
+   */
+  verses: ScriptureVerse[];
+};
+
+/**
+ * Describes the message selah.v1.ScripturePassages.
+ * Use `create(ScripturePassagesSchema)` to create a new message.
+ */
+export const ScripturePassagesSchema: GenMessage<ScripturePassages> = /*@__PURE__*/
+  messageDesc(file_selah_v1_library, 80);
+
+/**
+ * @generated from message selah.v1.SplitScriptureSlides
+ */
+export type SplitScriptureSlides = Message<"selah.v1.SplitScriptureSlides"> & {
+  /**
+   * @generated from field: string translation = 1;
+   */
+  translation: string;
+
+  /**
+   * @generated from field: string translation_name = 2;
+   */
+  translationName: string;
+
+  /**
+   * @generated from field: string reference = 3;
+   */
+  reference: string;
+
+  /**
+   * @generated from field: repeated selah.v1.ScriptureVerse verses = 4;
+   */
+  verses: ScriptureVerse[];
+
+  /**
+   * @generated from field: uint32 max_lines = 5;
+   */
+  maxLines: number;
+
+  /**
+   * @generated from field: uint32 max_chars_per_line = 6;
+   */
+  maxCharsPerLine: number;
+
+  /**
+   * @generated from field: uint32 verses_per_slide = 7;
+   */
+  versesPerSlide: number;
+
+  /**
+   * @generated from field: bool one_verse_per_slide = 8;
+   */
+  oneVersePerSlide: boolean;
+
+  /**
+   * @generated from field: bool show_verse_numbers = 9;
+   */
+  showVerseNumbers: boolean;
+
+  /**
+   * @generated from field: selah.v1.ReferencePlacement reference_placement = 10;
+   */
+  referencePlacement: ReferencePlacement;
+
+  /**
+   * @generated from field: bool title_slide = 11;
+   */
+  titleSlide: boolean;
+
+  /**
+   * @generated from field: bool blank_slide_at_end = 12;
+   */
+  blankSlideAtEnd: boolean;
+};
+
+/**
+ * Describes the message selah.v1.SplitScriptureSlides.
+ * Use `create(SplitScriptureSlidesSchema)` to create a new message.
+ */
+export const SplitScriptureSlidesSchema: GenMessage<SplitScriptureSlides> = /*@__PURE__*/
+  messageDesc(file_selah_v1_library, 81);
+
+/**
+ * @generated from message selah.v1.GeneratedScriptureSlide
+ */
+export type GeneratedScriptureSlide = Message<"selah.v1.GeneratedScriptureSlide"> & {
+  /**
+   * @generated from field: string reference = 1;
+   */
+  reference: string;
+
+  /**
+   * @generated from field: uint32 part_index = 2;
+   */
+  partIndex: number;
+
+  /**
+   * @generated from field: uint32 part_count = 3;
+   */
+  partCount: number;
+
+  /**
+   * @generated from field: repeated string lines = 4;
+   */
+  lines: string[];
+
+  /**
+   * @generated from field: string header_reference = 5;
+   */
+  headerReference: string;
+
+  /**
+   * @generated from field: string footer_reference = 6;
+   */
+  footerReference: string;
+
+  /**
+   * @generated from field: bool is_title = 7;
+   */
+  isTitle: boolean;
+
+  /**
+   * @generated from field: bool is_blank = 8;
+   */
+  isBlank: boolean;
+};
+
+/**
+ * Describes the message selah.v1.GeneratedScriptureSlide.
+ * Use `create(GeneratedScriptureSlideSchema)` to create a new message.
+ */
+export const GeneratedScriptureSlideSchema: GenMessage<GeneratedScriptureSlide> = /*@__PURE__*/
+  messageDesc(file_selah_v1_library, 82);
+
+/**
+ * @generated from message selah.v1.GeneratedScriptureSlides
+ */
+export type GeneratedScriptureSlides = Message<"selah.v1.GeneratedScriptureSlides"> & {
+  /**
+   * @generated from field: string translation = 1;
+   */
+  translation: string;
+
+  /**
+   * @generated from field: string translation_name = 2;
+   */
+  translationName: string;
+
+  /**
+   * @generated from field: string reference_label = 3;
+   */
+  referenceLabel: string;
+
+  /**
+   * @generated from field: repeated selah.v1.GeneratedScriptureSlide slides = 4;
+   */
+  slides: GeneratedScriptureSlide[];
+};
+
+/**
+ * Describes the message selah.v1.GeneratedScriptureSlides.
+ * Use `create(GeneratedScriptureSlidesSchema)` to create a new message.
+ */
+export const GeneratedScriptureSlidesSchema: GenMessage<GeneratedScriptureSlides> = /*@__PURE__*/
+  messageDesc(file_selah_v1_library, 83);
+
+/**
+ * @generated from message selah.v1.ImportBible
+ */
+export type ImportBible = Message<"selah.v1.ImportBible"> & {
+  /**
+   * Either a local file path or raw bytes (for drag/drop or tests).
+   *
+   * @generated from field: string source_path = 1;
+   */
+  sourcePath: string;
+
+  /**
+   * @generated from field: bytes raw_bytes = 2;
+   */
+  rawBytes: Uint8Array;
+
+  /**
+   * @generated from field: selah.v1.BibleFormat format = 3;
+   */
+  format: BibleFormat;
+
+  /**
+   * @generated from field: string code = 4;
+   */
+  code: string;
+
+  /**
+   * @generated from field: string name = 5;
+   */
+  name: string;
+
+  /**
+   * @generated from field: string language = 6;
+   */
+  language: string;
+
+  /**
+   * @generated from field: bool replace_existing = 7;
+   */
+  replaceExisting: boolean;
+};
+
+/**
+ * Describes the message selah.v1.ImportBible.
+ * Use `create(ImportBibleSchema)` to create a new message.
+ */
+export const ImportBibleSchema: GenMessage<ImportBible> = /*@__PURE__*/
+  messageDesc(file_selah_v1_library, 84);
+
+/**
+ * @generated from message selah.v1.DeleteBible
+ */
+export type DeleteBible = Message<"selah.v1.DeleteBible"> & {
+  /**
+   * @generated from field: string code = 1;
+   */
+  code: string;
+};
+
+/**
+ * Describes the message selah.v1.DeleteBible.
+ * Use `create(DeleteBibleSchema)` to create a new message.
+ */
+export const DeleteBibleSchema: GenMessage<DeleteBible> = /*@__PURE__*/
+  messageDesc(file_selah_v1_library, 85);
+
+/**
  * @generated from enum selah.v1.SectionKind
  */
 export enum SectionKind {
@@ -2183,4 +2727,66 @@ export enum AccidentalSpelling {
  */
 export const AccidentalSpellingSchema: GenEnum<AccidentalSpelling> = /*@__PURE__*/
   enumDesc(file_selah_v1_library, 7);
+
+/**
+ * @generated from enum selah.v1.BibleFormat
+ */
+export enum BibleFormat {
+  /**
+   * @generated from enum value: BIBLE_FORMAT_UNSPECIFIED = 0;
+   */
+  UNSPECIFIED = 0,
+
+  /**
+   * @generated from enum value: BIBLE_FORMAT_OSIS = 1;
+   */
+  OSIS = 1,
+
+  /**
+   * @generated from enum value: BIBLE_FORMAT_USFM = 2;
+   */
+  USFM = 2,
+
+  /**
+   * @generated from enum value: BIBLE_FORMAT_ZEFANIA = 3;
+   */
+  ZEFANIA = 3,
+}
+
+/**
+ * Describes the enum selah.v1.BibleFormat.
+ */
+export const BibleFormatSchema: GenEnum<BibleFormat> = /*@__PURE__*/
+  enumDesc(file_selah_v1_library, 8);
+
+/**
+ * @generated from enum selah.v1.ReferencePlacement
+ */
+export enum ReferencePlacement {
+  /**
+   * @generated from enum value: REFERENCE_PLACEMENT_UNSPECIFIED = 0;
+   */
+  UNSPECIFIED = 0,
+
+  /**
+   * @generated from enum value: REFERENCE_PLACEMENT_NONE = 1;
+   */
+  NONE = 1,
+
+  /**
+   * @generated from enum value: REFERENCE_PLACEMENT_SLIDE_HEADER = 2;
+   */
+  SLIDE_HEADER = 2,
+
+  /**
+   * @generated from enum value: REFERENCE_PLACEMENT_SLIDE_FOOTER = 3;
+   */
+  SLIDE_FOOTER = 3,
+}
+
+/**
+ * Describes the enum selah.v1.ReferencePlacement.
+ */
+export const ReferencePlacementSchema: GenEnum<ReferencePlacement> = /*@__PURE__*/
+  enumDesc(file_selah_v1_library, 9);
 

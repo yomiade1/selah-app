@@ -2156,6 +2156,7 @@ dependencies = [
  "fastrand",
  "flate2",
  "prost",
+ "quick-xml",
  "rusqlite",
  "selah-kb",
  "selah-net",

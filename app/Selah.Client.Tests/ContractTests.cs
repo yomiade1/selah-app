@@ -295,4 +295,128 @@ public sealed class ContractTests
         };
         Assert.Equal(splitReply, Envelope.Parser.ParseFrom(splitReply.ToByteArray()));
     }
+
+    [Fact]
+    public void M2ScriptureMessagesRoundTrip()
+    {
+        var importCmd = new Envelope
+        {
+            Id = 2001,
+            Command = new Command
+            {
+                ImportBible = new ImportBible
+                {
+                    SourcePath = "C:/bibles/sample.osis",
+                    Format = BibleFormat.Osis,
+                    Code = "SAMP",
+                    Name = "Sample OSIS",
+                    Language = "en",
+                    ReplaceExisting = true,
+                },
+            },
+        };
+        Assert.Equal(importCmd, Envelope.Parser.ParseFrom(importCmd.ToByteArray()));
+
+        var deleteCmd = new Envelope
+        {
+            Id = 2002,
+            Command = new Command { DeleteBible = new DeleteBible { Code = "SAMP" } },
+        };
+        Assert.Equal(deleteCmd, Envelope.Parser.ParseFrom(deleteCmd.ToByteArray()));
+
+        var parseRefQuery = new Envelope
+        {
+            Id = 2003,
+            Query = new Query
+            {
+                ParseScriptureReference = new ParseScriptureReference
+                {
+                    Reference = "Jean 3, 16-18",
+                    LanguageHint = "fr",
+                },
+            },
+        };
+        Assert.Equal(parseRefQuery, Envelope.Parser.ParseFrom(parseRefQuery.ToByteArray()));
+
+        var passagesQuery = new Envelope
+        {
+            Id = 2004,
+            Query = new Query
+            {
+                GetScripturePassages = new GetScripturePassages
+                {
+                    Translation = "KJV",
+                    Reference = "John 3:16",
+                    LanguageHint = "en",
+                },
+            },
+        };
+        Assert.Equal(passagesQuery, Envelope.Parser.ParseFrom(passagesQuery.ToByteArray()));
+
+        var listBiblesQuery = new Envelope
+        {
+            Id = 2005,
+            Query = new Query { ListBibles = new ListBibles { IncludeBooks = true } },
+        };
+        Assert.Equal(listBiblesQuery, Envelope.Parser.ParseFrom(listBiblesQuery.ToByteArray()));
+
+        var splitQuery = new Envelope
+        {
+            Id = 2006,
+            Query = new Query
+            {
+                SplitScriptureSlides = new SplitScriptureSlides
+                {
+                    Translation = "KJV",
+                    TranslationName = "King James Version",
+                    Reference = "John 3:16",
+                    MaxLines = 4,
+                    MaxCharsPerLine = 48,
+                    VersesPerSlide = 1,
+                    OneVersePerSlide = true,
+                    ShowVerseNumbers = true,
+                    ReferencePlacement = ReferencePlacement.SlideFooter,
+                    TitleSlide = true,
+                    BlankSlideAtEnd = false,
+                },
+            },
+        };
+        Assert.Equal(splitQuery, Envelope.Parser.ParseFrom(splitQuery.ToByteArray()));
+
+        var bibleReply = new Envelope
+        {
+            Id = 2007,
+            CorrelationId = 2005,
+            Reply = new Reply
+            {
+                BibleList = new BibleList
+                {
+                    Bibles =
+                    {
+                        new BibleTranslation
+                        {
+                            Code = "KJV",
+                            Name = "King James Version",
+                            Language = "en",
+                            BookCount = 66,
+                            VerseCount = 31102,
+                            IsBundled = true,
+                            Books =
+                            {
+                                new BibleBookInfo
+                                {
+                                    BookNum = 1,
+                                    Code = "GEN",
+                                    Name = "Genesis",
+                                    ChapterCount = 50,
+                                    VerseCounts = { 31, 25 },
+                                },
+                            },
+                        },
+                    },
+                },
+            },
+        };
+        Assert.Equal(bibleReply, Envelope.Parser.ParseFrom(bibleReply.ToByteArray()));
+    }
 }

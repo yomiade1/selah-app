@@ -29,5 +29,26 @@ test = false
 doc = false
 bench = false
 
+[[bin]]
+name = "bible_osis"
+path = "fuzz_targets/bible_osis.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "bible_usfm"
+path = "fuzz_targets/bible_usfm.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "bible_zefania"
+path = "fuzz_targets/bible_zefania.rs"
+test = false
+doc = false
+bench = false
+
 # Kept out of the main workspace so the stable gate never builds it.
 [workspace]

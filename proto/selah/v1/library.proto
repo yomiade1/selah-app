@@ -494,3 +494,136 @@ message GeneratedSongSlides {
   repeated GeneratedSlide slides = 1;
   string copyright_line = 2;
 }
+
+enum BibleFormat {
+  BIBLE_FORMAT_UNSPECIFIED = 0;
+  BIBLE_FORMAT_OSIS = 1;
+  BIBLE_FORMAT_USFM = 2;
+  BIBLE_FORMAT_ZEFANIA = 3;
+}
+
+enum ReferencePlacement {
+  REFERENCE_PLACEMENT_UNSPECIFIED = 0;
+  REFERENCE_PLACEMENT_NONE = 1;
+  REFERENCE_PLACEMENT_SLIDE_HEADER = 2;
+  REFERENCE_PLACEMENT_SLIDE_FOOTER = 3;
+}
+
+message BibleBookInfo {
+  uint32 book_num = 1;
+  string code = 2;
+  string name = 3;
+  uint32 chapter_count = 4;
+  repeated uint32 verse_counts = 5;
+}
+
+message BibleTranslation {
+  string code = 1;
+  string name = 2;
+  string language = 3;
+  uint32 book_count = 4;
+  uint32 verse_count = 5;
+  bool is_bundled = 6;
+  repeated BibleBookInfo books = 7;
+}
+
+message ListBibles {
+  bool include_books = 1;
+}
+
+message BibleList {
+  repeated BibleTranslation bibles = 1;
+}
+
+message ScriptureSpan {
+  uint32 book_num = 1;
+  string book_code = 2;
+  string book_name = 3;
+  uint32 start_chapter = 4;
+  uint32 start_verse = 5;
+  uint32 end_chapter = 6;
+  uint32 end_verse = 7;
+  string normalized = 8;
+}
+
+message ParseScriptureReference {
+  string reference = 1;
+  string language_hint = 2;
+}
+
+message ParseScriptureReferenceReply {
+  repeated ScriptureSpan spans = 1;
+  string normalized = 2;
+}
+
+message ScriptureVerse {
+  string translation = 1;
+  uint32 book_num = 2;
+  string book_code = 3;
+  string book_name = 4;
+  uint32 chapter = 5;
+  uint32 verse = 6;
+  string text = 7;
+}
+
+message GetScripturePassages {
+  string translation = 1;
+  // Either parseable scripture reference text or explicit spans.
+  string reference = 2;
+  repeated ScriptureSpan spans = 3;
+  string language_hint = 4;
+}
+
+message ScripturePassages {
+  BibleTranslation translation = 1;
+  string normalized_reference = 2;
+  repeated ScriptureVerse verses = 3;
+}
+
+message SplitScriptureSlides {
+  string translation = 1;
+  string translation_name = 2;
+  string reference = 3;
+  repeated ScriptureVerse verses = 4;
+  uint32 max_lines = 5;
+  uint32 max_chars_per_line = 6;
+  uint32 verses_per_slide = 7;
+  bool one_verse_per_slide = 8;
+  bool show_verse_numbers = 9;
+  ReferencePlacement reference_placement = 10;
+  bool title_slide = 11;
+  bool blank_slide_at_end = 12;
+}
+
+message GeneratedScriptureSlide {
+  string reference = 1;
+  uint32 part_index = 2;
+  uint32 part_count = 3;
+  repeated string lines = 4;
+  string header_reference = 5;
+  string footer_reference = 6;
+  bool is_title = 7;
+  bool is_blank = 8;
+}
+
+message GeneratedScriptureSlides {
+  string translation = 1;
+  string translation_name = 2;
+  string reference_label = 3;
+  repeated GeneratedScriptureSlide slides = 4;
+}
+
+message ImportBible {
+  // Either a local file path or raw bytes (for drag/drop or tests).
+  string source_path = 1;
+  bytes raw_bytes = 2;
+  BibleFormat format = 3;
+  string code = 4;
+  string name = 5;
+  string language = 6;
+  bool replace_existing = 7;
+}
+
+message DeleteBible {
+  string code = 1;
+}
