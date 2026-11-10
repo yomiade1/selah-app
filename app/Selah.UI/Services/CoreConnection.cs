@@ -1,15 +1,19 @@
 using System.Diagnostics;
+using Google.Protobuf;
 using Selah.Client;
 using Selah.Contracts.V1;
+using Selah.UI.ViewModels;
 
 namespace Selah.UI.Services;
 
-/// <summary>Core refused a request: its catalogue code and the string key of its plain message.</summary>
-public sealed class CoreException(string code, string messageKey) : InvalidOperationException(code)
+/// <summary>Core refused a request: its catalogue code, string key, and optional fix help article ID.</summary>
+public sealed class CoreException(string code, string messageKey, string fixArticleId = "") : InvalidOperationException(code)
 {
     public string Code { get; } = code;
 
     public string MessageKey { get; } = messageKey;
+
+    public string FixArticleId { get; } = fixArticleId;
 }
 
 /// <summary>A snapshot of what the UI knows about core and the screens.</summary>
@@ -25,7 +29,7 @@ public sealed record ConnectionSnapshot(bool Connected, bool EngineConnected, bo
 /// </list>
 /// Events arrive on thread-pool threads; view models marshal them to the UI thread.
 /// </summary>
-public sealed class CoreConnection : IAsyncDisposable, Selah.UI.ViewModels.IHelpSource, Selah.UI.ViewModels.IUpdateService, Selah.UI.ViewModels.IDiagnosticsService
+public sealed class CoreConnection : IAsyncDisposable, Selah.UI.ViewModels.IHelpSource, Selah.UI.ViewModels.IUpdateService, Selah.UI.ViewModels.IDiagnosticsService, Selah.UI.ViewModels.ILibraryService
 {
     public static readonly TimeSpan HeartbeatInterval = TimeSpan.FromMilliseconds(250);
     private static readonly TimeSpan RequestTimeout = TimeSpan.FromSeconds(2);
@@ -57,6 +61,12 @@ public sealed class CoreConnection : IAsyncDisposable, Selah.UI.ViewModels.IHelp
 
     /// <summary>Raised when core sends the settings (after each connection).</summary>
     public event EventHandler<Settings>? SettingsReceived;
+
+    /// <summary>Raised when a library document is saved, deleted, undone, or redone.</summary>
+    public event EventHandler<LibraryChanged>? LibraryChanged;
+
+    /// <summary>Raised when undo/redo availability changes in core.</summary>
+    public event EventHandler<UndoStateChanged>? UndoStateChanged;
 
     public ConnectionSnapshot Snapshot
     {
@@ -113,7 +123,7 @@ public sealed class CoreConnection : IAsyncDisposable, Selah.UI.ViewModels.IHelp
             new Envelope { Command = new Command { RestartNormally = new RestartNormally() } }, RequestTimeout).ConfigureAwait(false);
         if (reply.Error is { } error)
         {
-            throw new CoreException(error.Code, error.MessageKey);
+            throw new CoreException(error.Code, error.MessageKey, error.FixArticleId);
         }
     }
 
@@ -205,6 +215,384 @@ public sealed class CoreConnection : IAsyncDisposable, Selah.UI.ViewModels.IHelp
         return reply.Reply?.Article;
     }
 
+    public async Task<IReadOnlyList<Song>> ListSongsAsync(uint limit = 200, uint offset = 0)
+    {
+        var reply = await RequestAsync(new Envelope { Query = new Query { ListSongs = new ListSongs { Limit = limit, Offset = offset } } })
+            .ConfigureAwait(false);
+        return reply.Reply?.SongList?.Songs.ToList() ?? [];
+    }
+
+    public async Task<SongSearchResults> SearchSongsAsync(string query, uint limit = 50, uint offset = 0)
+    {
+        var reply = await RequestAsync(new Envelope { Query = new Query { SearchSongs = new SearchSongs { Query = query, Limit = limit, Offset = offset } } })
+            .ConfigureAwait(false);
+        return reply.Reply?.SongSearchResults ?? new SongSearchResults();
+    }
+
+    public async Task<Song?> GetSongAsync(Id id)
+    {
+        var reply = await RequestAsync(new Envelope { Query = new Query { GetSong = new GetSong { Id = id } } })
+            .ConfigureAwait(false);
+        return reply.Reply?.Song;
+    }
+
+    public async Task SaveSongAsync(Song song, Id? undoGroup = null)
+    {
+        if (song.Id is null || song.Id.Value.IsEmpty)
+        {
+            song.Id = LibraryIds.NewId();
+        }
+        foreach (var section in song.Sections)
+        {
+            if (section.Id is null || section.Id.Value.IsEmpty)
+            {
+                section.Id = LibraryIds.NewId();
+            }
+        }
+        foreach (var arrangement in song.Arrangements)
+        {
+            if (arrangement.Id is null || arrangement.Id.Value.IsEmpty)
+            {
+                arrangement.Id = LibraryIds.NewId();
+            }
+        }
+        var command = new Command { SaveSong = new SaveSong { Song = song } };
+        if (undoGroup is not null)
+        {
+            command.UndoGroup = undoGroup;
+        }
+        await RequestAsync(new Envelope { Command = command }).ConfigureAwait(false);
+    }
+
+    public async Task DeleteSongAsync(Id id, Id? undoGroup = null)
+    {
+        var command = new Command { DeleteSong = new DeleteSong { Id = id } };
+        if (undoGroup is not null)
+        {
+            command.UndoGroup = undoGroup;
+        }
+        await RequestAsync(new Envelope { Command = command }).ConfigureAwait(false);
+    }
+
+    public async Task<ParsePastedSongReply> ParsePastedSongAsync(
+        string rawText,
+        SongPasteFormat format = SongPasteFormat.Unspecified,
+        string defaultTitle = "")
+    {
+        var reply = await RequestAsync(new Envelope
+        {
+            Query = new Query
+            {
+                ParsePastedSong = new ParsePastedSong
+                {
+                    RawText = rawText,
+                    Format = format,
+                    DefaultTitle = defaultTitle,
+                },
+            },
+        }).ConfigureAwait(false);
+        return reply.Reply?.ParsedSong ?? new ParsePastedSongReply();
+    }
+
+    public async Task<Song> TransposeSongAsync(
+        Song song,
+        int semitones,
+        AccidentalSpelling spelling = AccidentalSpelling.Unspecified)
+    {
+        var reply = await RequestAsync(new Envelope
+        {
+            Query = new Query
+            {
+                TransposeSong = new TransposeSong
+                {
+                    Song = song,
+                    Semitones = semitones,
+                    AccidentalSpelling = spelling,
+                },
+            },
+        }).ConfigureAwait(false);
+        return reply.Reply?.Song ?? song;
+    }
+
+    public async Task<GeneratedSongSlides> SplitSongSlidesAsync(SplitSongSlides request)
+    {
+        var reply = await RequestAsync(new Envelope { Query = new Query { SplitSongSlides = request } })
+            .ConfigureAwait(false);
+        return reply.Reply?.GeneratedSongSlides ?? new GeneratedSongSlides();
+    }
+
+    public async Task SaveEditorBufferAsync(Id docId, DocumentType docType, string content)
+    {
+        await RequestAsync(new Envelope
+        {
+            Command = new Command
+            {
+                SaveEditorBuffer = new SaveEditorBuffer
+                {
+                    DocId = docId,
+                    DocType = docType,
+                    Content = content,
+                },
+            },
+        }).ConfigureAwait(false);
+    }
+
+    public async Task DiscardEditorBufferAsync(Id docId)
+    {
+        await RequestAsync(new Envelope
+        {
+            Command = new Command { DiscardEditorBuffer = new DiscardEditorBuffer { DocId = docId } },
+        }).ConfigureAwait(false);
+    }
+
+    public async Task<EditorBufferReply> GetEditorBufferAsync(Id docId)
+    {
+        var reply = await RequestAsync(new Envelope { Query = new Query { GetEditorBuffer = new GetEditorBuffer { DocId = docId } } })
+            .ConfigureAwait(false);
+        return reply.Reply?.EditorBuffer ?? new EditorBufferReply();
+    }
+
+    public async Task<UndoState> GetUndoStateAsync(Id? docId = null)
+    {
+        var query = new GetUndoState();
+        if (docId is not null)
+        {
+            query.DocId = docId;
+        }
+        var reply = await RequestAsync(new Envelope { Query = new Query { GetUndoState = query } })
+            .ConfigureAwait(false);
+        return reply.Reply?.UndoState ?? new UndoState();
+    }
+
+    public async Task UndoAsync(Id? docId = null)
+    {
+        var undo = new Undo();
+        if (docId is not null)
+        {
+            undo.DocId = docId;
+        }
+        await RequestAsync(new Envelope { Command = new Command { Undo = undo } }).ConfigureAwait(false);
+    }
+
+    public async Task RedoAsync(Id? docId = null)
+    {
+        var redo = new Redo();
+        if (docId is not null)
+        {
+            redo.DocId = docId;
+        }
+        await RequestAsync(new Envelope { Command = new Command { Redo = redo } }).ConfigureAwait(false);
+    }
+
+    public async Task<IReadOnlyList<BibleTranslation>> ListBiblesAsync(bool includeBooks = false)
+    {
+        var reply = await RequestAsync(new Envelope { Query = new Query { ListBibles = new ListBibles { IncludeBooks = includeBooks } } })
+            .ConfigureAwait(false);
+        return reply.Reply?.BibleList?.Bibles.ToList() ?? [];
+    }
+
+    public async Task<BibleTranslation> ImportBibleAsync(ImportBible request)
+    {
+        var reply = await RequestAsync(new Envelope { Command = new Command { ImportBible = request } }, TimeSpan.FromSeconds(30))
+            .ConfigureAwait(false);
+        return reply.Reply?.BibleTranslation ?? new BibleTranslation();
+    }
+
+    public async Task DeleteBibleAsync(string code)
+    {
+        await RequestAsync(new Envelope { Command = new Command { DeleteBible = new DeleteBible { Code = code } } })
+            .ConfigureAwait(false);
+    }
+
+    public async Task<ParseScriptureReferenceReply> ParseScriptureReferenceAsync(string reference, string languageHint = "")
+    {
+        var reply = await RequestAsync(new Envelope
+        {
+            Query = new Query
+            {
+                ParseScriptureReference = new ParseScriptureReference
+                {
+                    Reference = reference,
+                    LanguageHint = languageHint,
+                },
+            },
+        }).ConfigureAwait(false);
+        return reply.Reply?.ParsedScriptureReference ?? new ParseScriptureReferenceReply();
+    }
+
+    public async Task<ScripturePassages> GetScripturePassagesAsync(string translation, string reference, string languageHint = "")
+    {
+        var reply = await RequestAsync(new Envelope
+        {
+            Query = new Query
+            {
+                GetScripturePassages = new GetScripturePassages
+                {
+                    Translation = translation,
+                    Reference = reference,
+                    LanguageHint = languageHint,
+                },
+            },
+        }).ConfigureAwait(false);
+        return reply.Reply?.ScripturePassages ?? new ScripturePassages();
+    }
+
+    public async Task<ScriptureSearchResults> SearchScriptureAsync(string query, string translation = "", uint limit = 50, uint offset = 0)
+    {
+        var reply = await RequestAsync(new Envelope
+        {
+            Query = new Query
+            {
+                SearchScripture = new SearchScripture
+                {
+                    Query = query,
+                    Translation = translation,
+                    Limit = limit,
+                    Offset = offset,
+                },
+            },
+        }).ConfigureAwait(false);
+        return reply.Reply?.ScriptureSearchResults ?? new ScriptureSearchResults();
+    }
+
+    public async Task<GeneratedScriptureSlides> SplitScriptureSlidesAsync(SplitScriptureSlides request)
+    {
+        var reply = await RequestAsync(new Envelope { Query = new Query { SplitScriptureSlides = request } })
+            .ConfigureAwait(false);
+        return reply.Reply?.GeneratedScriptureSlides ?? new GeneratedScriptureSlides();
+    }
+
+    public async Task<IReadOnlyList<MediaItem>> ListMediaItemsAsync(uint limit = 200, uint offset = 0)
+    {
+        var reply = await RequestAsync(new Envelope { Query = new Query { ListMediaItems = new ListMediaItems { Limit = limit, Offset = offset } } })
+            .ConfigureAwait(false);
+        return reply.Reply?.MediaItemList?.MediaItems.ToList() ?? [];
+    }
+
+    public async Task<MediaSearchResults> SearchMediaAsync(string query, MediaKind kind = MediaKind.Unspecified, uint limit = 50, uint offset = 0)
+    {
+        var reply = await RequestAsync(new Envelope
+        {
+            Query = new Query
+            {
+                SearchMedia = new SearchMedia
+                {
+                    Query = query,
+                    Kind = kind,
+                    Limit = limit,
+                    Offset = offset,
+                },
+            },
+        }).ConfigureAwait(false);
+        return reply.Reply?.MediaSearchResults ?? new MediaSearchResults();
+    }
+
+    public async Task<MediaItem> ImportMediaAsync(string sourcePath, string name = "", IEnumerable<string>? tags = null)
+    {
+        var import = new ImportMedia { SourcePath = sourcePath, Name = name };
+        if (tags is not null)
+        {
+            import.Tags.AddRange(tags);
+        }
+        var reply = await RequestAsync(new Envelope { Command = new Command { ImportMedia = import } }, TimeSpan.FromSeconds(30))
+            .ConfigureAwait(false);
+        return reply.Reply?.MediaItem ?? new MediaItem();
+    }
+
+    public async Task DeleteMediaItemAsync(Id id)
+    {
+        await RequestAsync(new Envelope { Command = new Command { DeleteMediaItem = new DeleteMediaItem { Id = id } } })
+            .ConfigureAwait(false);
+    }
+
+    public async Task<MediaThumbnail> GetMediaThumbnailAsync(Id mediaId, uint maxWidth = 320, uint maxHeight = 180)
+    {
+        var reply = await RequestAsync(new Envelope
+        {
+            Query = new Query
+            {
+                GetMediaThumbnail = new GetMediaThumbnail
+                {
+                    MediaId = mediaId,
+                    MaxWidth = maxWidth,
+                    MaxHeight = maxHeight,
+                },
+            },
+        }, TimeSpan.FromSeconds(10)).ConfigureAwait(false);
+        return reply.Reply?.MediaThumbnail ?? new MediaThumbnail();
+    }
+
+    public async Task<ExportedSelahBundle> ExportSelahBundleAsync(ExportSelahBundle request)
+    {
+        var reply = await RequestAsync(new Envelope { Command = new Command { ExportSelahBundle = request } }, SlowRequestTimeout)
+            .ConfigureAwait(false);
+        return reply.Reply?.ExportedSelahBundle ?? new ExportedSelahBundle();
+    }
+
+    public async Task<ImportedSelahBundle> ImportSelahBundleAsync(ImportSelahBundle request)
+    {
+        var reply = await RequestAsync(new Envelope { Command = new Command { ImportSelahBundle = request } }, SlowRequestTimeout)
+            .ConfigureAwait(false);
+        return reply.Reply?.ImportedSelahBundle ?? new ImportedSelahBundle();
+    }
+
+    public async Task<LibraryBackupInfo> CreateLibraryBackupAsync(string outputPath = "")
+    {
+        var reply = await RequestAsync(new Envelope
+        {
+            Command = new Command { CreateLibraryBackup = new CreateLibraryBackup { OutputPath = outputPath } },
+        }, SlowRequestTimeout).ConfigureAwait(false);
+        return reply.Reply?.LibraryBackupInfo ?? new LibraryBackupInfo();
+    }
+
+    public async Task<RestoreLibraryBackupResult> RestoreLibraryBackupAsync(string backupPath)
+    {
+        var reply = await RequestAsync(new Envelope
+        {
+            Command = new Command { RestoreLibraryBackup = new RestoreLibraryBackup { BackupPath = backupPath } },
+        }, SlowRequestTimeout).ConfigureAwait(false);
+        return reply.Reply?.RestoreLibraryBackupResult ?? new RestoreLibraryBackupResult();
+    }
+
+    public async Task<IReadOnlyList<Tag>> ListTagsAsync(uint limit = 200, uint offset = 0)
+    {
+        var reply = await RequestAsync(new Envelope { Query = new Query { ListTags = new ListTags { Limit = limit, Offset = offset } } })
+            .ConfigureAwait(false);
+        return reply.Reply?.TagList?.Tags.ToList() ?? [];
+    }
+
+    public async Task SaveTagAsync(Tag tag)
+    {
+        if (tag.Id is null || tag.Id.Value.IsEmpty)
+        {
+            tag.Id = LibraryIds.NewId();
+        }
+        await RequestAsync(new Envelope { Command = new Command { SaveTag = new SaveTag { Tag = tag } } })
+            .ConfigureAwait(false);
+    }
+
+    public async Task<LibrarySearchResults> SearchLibraryAsync(
+        string query,
+        SearchScope scope = SearchScope.All,
+        string translation = "",
+        uint limit = 20)
+    {
+        var reply = await RequestAsync(new Envelope
+        {
+            Query = new Query
+            {
+                SearchLibrary = new SearchLibrary
+                {
+                    Query = query,
+                    Scope = scope,
+                    Translation = translation,
+                    Limit = limit,
+                },
+            },
+        }).ConfigureAwait(false);
+        return reply.Reply?.LibrarySearchResults ?? new LibrarySearchResults();
+    }
+
     private Task<Envelope> RequestAsync(Envelope message) => RequestAsync(message, RequestTimeout);
 
     private async Task<Envelope> RequestAsync(Envelope message, TimeSpan timeout)
@@ -212,7 +600,7 @@ public sealed class CoreConnection : IAsyncDisposable, Selah.UI.ViewModels.IHelp
         var reply = await core.RequestAsync(message, timeout).ConfigureAwait(false);
         if (reply.Error is { } error)
         {
-            throw new CoreException(error.Code, error.MessageKey);
+            throw new CoreException(error.Code, error.MessageKey, error.FixArticleId);
         }
         return reply;
     }
@@ -231,7 +619,7 @@ public sealed class CoreConnection : IAsyncDisposable, Selah.UI.ViewModels.IHelp
     {
         try
         {
-            await core.RequestAsync(new Envelope { Query = new Query { Subscribe = new Subscribe { EventNames = { "status" } } } }, RequestTimeout)
+            await core.RequestAsync(new Envelope { Query = new Query { Subscribe = new Subscribe { EventNames = { "status", "library", "undo" } } } }, RequestTimeout)
                 .ConfigureAwait(false);
             var reply = await core.RequestAsync(new Envelope { Query = new Query { GetStatus = new GetStatus() } }, RequestTimeout)
                 .ConfigureAwait(false);
@@ -258,6 +646,14 @@ public sealed class CoreConnection : IAsyncDisposable, Selah.UI.ViewModels.IHelp
         if (envelope.Event?.Status is { } current)
         {
             Update(current, connected: true, core.State.Generation);
+        }
+        if (envelope.Event?.LibraryChanged is { } libraryChanged)
+        {
+            LibraryChanged?.Invoke(this, libraryChanged);
+        }
+        if (envelope.Event?.UndoStateChanged is { } undoStateChanged)
+        {
+            UndoStateChanged?.Invoke(this, undoStateChanged);
         }
     }
 

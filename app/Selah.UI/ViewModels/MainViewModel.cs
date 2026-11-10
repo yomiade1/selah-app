@@ -13,20 +13,50 @@ public enum LiveGuardKind
     Update,
 }
 
-/// <summary>The main window: connection status, the test-pattern command and the panes (M1.8).</summary>
+/// <summary>The main window: connection status, the test-pattern command and the panes (M1.8, M2.7).</summary>
 public sealed partial class MainViewModel : ObservableObject
 {
     private readonly CoreConnection? connection;
     private readonly IDiagnosticsService? diagnostics;
+    private bool wasConnected;
+    private bool libraryLoadedOnce;
 
-    public MainViewModel(CoreConnection? connection, IDiagnosticsService? diagnostics = null)
+    public MainViewModel(
+        CoreConnection? connection,
+        IDiagnosticsService? diagnostics = null,
+        ILibraryService? library = null,
+        IHelpSource? helpSource = null)
     {
         this.connection = connection;
         this.diagnostics = diagnostics ?? connection;
+        var resolvedLibrary = library ?? connection;
+        var resolvedHelp = helpSource ?? connection;
         Settings = new SettingsViewModel(
             connection is null ? null : connection.SetAppearanceAsync,
             new UpdatesViewModel(connection, () => ConfirmIfLiveAsync(LiveGuardKind.Update)));
-        Help = new HelpViewModel(connection);
+        Help = new HelpViewModel(resolvedHelp);
+        Library = new LibraryViewModel(resolvedLibrary);
+        SongEditor = new SongEditorViewModel(resolvedLibrary);
+        CommandPalette = new CommandPaletteViewModel(resolvedLibrary, resolvedHelp);
+
+        Library.EditSongRequested += (_, song) => _ = EditSongInEditorAsync(song);
+        SongEditor.SongSaved += (_, song) => _ = OnSongSavedAsync(song);
+
+        RegisterPaletteCommands();
+        CommandPalette.SongChosen += (_, song) => _ = EditSongInEditorAsync(song);
+        CommandPalette.ScriptureChosen += (_, verse) =>
+        {
+            ActiveMode = WorkspaceMode.Library;
+            _ = Library.OpenVerseHitAsync(verse);
+        };
+        CommandPalette.MediaChosen += (_, media) =>
+        {
+            ActiveMode = WorkspaceMode.Library;
+            Library.ActiveTab = LibraryTab.Media;
+            _ = Library.SearchMediaAsync();
+        };
+        CommandPalette.HelpChosen += (_, article) => ArticleRequested?.Invoke(this, article.Id);
+
         Localizer.Instance.PropertyChanged += (_, _) =>
         {
             OnPropertyChanged(nameof(StatusText));
@@ -48,6 +78,24 @@ public sealed partial class MainViewModel : ObservableObject
     public SettingsViewModel Settings { get; }
 
     public HelpViewModel Help { get; }
+
+    public LibraryViewModel Library { get; }
+
+    public SongEditorViewModel SongEditor { get; }
+
+    public CommandPaletteViewModel CommandPalette { get; }
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsPreviewMode))]
+    [NotifyPropertyChangedFor(nameof(IsLibraryMode))]
+    [NotifyPropertyChangedFor(nameof(IsSongEditorMode))]
+    private WorkspaceMode activeMode = WorkspaceMode.Preview;
+
+    public bool IsPreviewMode => ActiveMode == WorkspaceMode.Preview;
+
+    public bool IsLibraryMode => ActiveMode == WorkspaceMode.Library;
+
+    public bool IsSongEditorMode => ActiveMode == WorkspaceMode.SongEditor;
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(StatusText))]
@@ -143,6 +191,107 @@ public sealed partial class MainViewModel : ObservableObject
         IsSafeMode = snapshot.SafeMode;
         IsLive = snapshot.Live;
         OnPropertyChanged(nameof(StatusKey));
+        if (snapshot.Connected && !wasConnected)
+        {
+            wasConnected = true;
+            _ = Library.LoadAsync();
+            libraryLoadedOnce = true;
+        }
+        else if (!snapshot.Connected)
+        {
+            wasConnected = false;
+        }
+    }
+
+    partial void OnActiveModeChanged(WorkspaceMode value)
+    {
+        if (value == WorkspaceMode.Library && !libraryLoadedOnce)
+        {
+            libraryLoadedOnce = true;
+            _ = Library.LoadAsync();
+        }
+    }
+
+    [RelayCommand]
+    public void SelectMode(string mode)
+    {
+        ActiveMode = mode switch
+        {
+            "Library" => WorkspaceMode.Library,
+            "SongEditor" => WorkspaceMode.SongEditor,
+            _ => WorkspaceMode.Preview,
+        };
+    }
+
+    [RelayCommand]
+    public void OpenLibraryTab(string tabName)
+    {
+        ActiveMode = WorkspaceMode.Library;
+        Library.SelectTab(tabName);
+    }
+
+    [RelayCommand]
+    public void OpenNewSong()
+    {
+        SongEditor.StartNewSong(startOnPaste: true);
+        ActiveMode = WorkspaceMode.SongEditor;
+    }
+
+    [RelayCommand]
+    public void OpenCommandPalette() => CommandPalette.Open();
+
+    private async Task EditSongInEditorAsync(Selah.Contracts.V1.Song? song)
+    {
+        if (song is null)
+        {
+            SongEditor.StartNewSong(startOnPaste: true);
+        }
+        else
+        {
+            await SongEditor.LoadSongAsync(song);
+        }
+        ActiveMode = WorkspaceMode.SongEditor;
+    }
+
+    private async Task OnSongSavedAsync(Selah.Contracts.V1.Song song)
+    {
+        await Library.LoadAsync();
+        Library.SelectedSong = Library.Songs.FirstOrDefault(s => LibraryIds.Same(s.Id, song.Id)) ?? Library.SelectedSong;
+    }
+
+    private void RegisterPaletteCommands()
+    {
+        CommandPalette.RegisterCommand("mode-preview", "preview-on-screen", () => SelectMode("Preview"));
+        CommandPalette.RegisterCommand("mode-library", "library-title", () => SelectMode("Library"));
+        CommandPalette.RegisterCommand("library-tab-songs", "library-title", () => OpenLibraryTab("Songs"));
+        CommandPalette.RegisterCommand("library-tab-media", "library-title", () => OpenLibraryTab("Media"));
+        CommandPalette.RegisterCommand("library-tab-bibles", "bible-translation-label", () => OpenLibraryTab("Bibles"));
+        CommandPalette.RegisterCommand("mode-song-editor", "editor-title", () => SelectMode("SongEditor"));
+        CommandPalette.RegisterCommand("library-new-song", "editor-paste-heading", OpenNewSong);
+        CommandPalette.RegisterCommand("command-show-test-pattern", "command-show-test-pattern-hint", () => ShowTestPatternCommand.Execute(null));
+        CommandPalette.RegisterCommand("command-clear-everything", "command-clear-everything-hint", () => ClearEverythingCommand.Execute(null));
+        CommandPalette.RegisterCommand("library-undo", "library-title", () =>
+        {
+            if (ActiveMode == WorkspaceMode.SongEditor)
+            {
+                SongEditor.UndoCommand.Execute(null);
+            }
+            else
+            {
+                Library.UndoCommand.Execute(null);
+            }
+        });
+        CommandPalette.RegisterCommand("library-redo", "library-title", () =>
+        {
+            if (ActiveMode == WorkspaceMode.SongEditor)
+            {
+                SongEditor.RedoCommand.Execute(null);
+            }
+            else
+            {
+                Library.RedoCommand.Execute(null);
+            }
+        });
     }
 
     [RelayCommand(CanExecute = nameof(IsConnected))]

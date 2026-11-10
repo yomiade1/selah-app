@@ -1,0 +1,429 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:Selah.UI.ViewModels"
+             xmlns:views="using:Selah.UI.Views"
+             xmlns:s="using:Selah.UI.Services"
+             x:Class="Selah.UI.Views.SongEditorView"
+             x:DataType="vm:SongEditorViewModel">
+  <DockPanel Margin="{DynamicResource Space.Text.Medium}">
+    <!-- Top bar: title, 4-step workflow indicator, Undo/Redo, Save -->
+    <Border DockPanel.Dock="Top" Padding="0,0,0,10" BorderBrush="{DynamicResource Brush.Line}" BorderThickness="{DynamicResource Line.Bottom}">
+      <StackPanel Spacing="{DynamicResource Space.3}">
+        <WrapPanel ItemSpacing="{DynamicResource Space.3}" LineSpacing="{DynamicResource Space.3}" VerticalAlignment="Center">
+          <TextBlock Classes="title-2" VerticalAlignment="Center"
+                     Text="{Binding [editor-title], Source={x:Static s:Localizer.Instance}}" />
+
+          <Button Name="StepPasteButton" Classes.primary="{Binding IsStepPaste}"
+                  Command="{Binding SelectStepCommand}" CommandParameter="Paste">
+            <TextBlock Text="{Binding [editor-step-paste], Source={x:Static s:Localizer.Instance}}" />
+          </Button>
+          <Button Name="StepSectionsButton" Classes.primary="{Binding IsStepSections}"
+                  Command="{Binding SelectStepCommand}" CommandParameter="Sections">
+            <TextBlock Text="{Binding [editor-step-sections], Source={x:Static s:Localizer.Instance}}" />
+          </Button>
+          <Button Name="StepArrangeButton" Classes.primary="{Binding IsStepArrange}"
+                  Command="{Binding SelectStepCommand}" CommandParameter="Arrange">
+            <TextBlock Text="{Binding [editor-step-arrange], Source={x:Static s:Localizer.Instance}}" />
+          </Button>
+          <Button Name="StepReviewButton" Classes.primary="{Binding IsStepReview}"
+                  Command="{Binding SelectStepCommand}" CommandParameter="Review">
+            <TextBlock Text="{Binding [editor-step-review], Source={x:Static s:Localizer.Instance}}" />
+          </Button>
+
+          <Button Name="EditorUndoButton" Classes="quiet" Command="{Binding UndoCommand}" IsEnabled="{Binding CanUndo}">
+            <TextBlock Text="{Binding [library-undo], Source={x:Static s:Localizer.Instance}}" />
+          </Button>
+          <Button Name="EditorRedoButton" Classes="quiet" Command="{Binding RedoCommand}" IsEnabled="{Binding CanRedo}">
+            <TextBlock Text="{Binding [library-redo], Source={x:Static s:Localizer.Instance}}" />
+          </Button>
+          <Button Name="SaveSongButton" Classes="primary" Command="{Binding SaveSongCommand}">
+            <TextBlock Text="{Binding [editor-save-song], Source={x:Static s:Localizer.Instance}}" />
+          </Button>
+        </WrapPanel>
+
+        <Border Classes="alert-warning" IsVisible="{Binding HasDraftRestored}">
+          <WrapPanel ItemSpacing="12" VerticalAlignment="Center">
+            <TextBlock Name="DraftRestoredText" Text="{Binding [editor-draft-restored], Source={x:Static s:Localizer.Instance}}" />
+            <Button Name="DiscardDraftBannerButton" Classes="quiet" Command="{Binding DiscardDraftCommand}">
+              <TextBlock Text="{Binding [editor-discard-draft], Source={x:Static s:Localizer.Instance}}" />
+            </Button>
+          </WrapPanel>
+        </Border>
+        <Border Classes="alert-success" IsVisible="{Binding HasStatusMessage}">
+          <TextBlock Name="EditorStatusText" Text="{Binding StatusMessage}" />
+        </Border>
+        <Border Classes="alert-warning" IsVisible="{Binding HasErrorMessage}">
+          <TextBlock Name="EditorErrorText" Text="{Binding ErrorMessage}" />
+        </Border>
+      </StackPanel>
+    </Border>
+
+    <!-- Bottom tip & continue bar -->
+    <Border DockPanel.Dock="Bottom" Padding="0,10,0,0" BorderBrush="{DynamicResource Brush.Line}" BorderThickness="0,1,0,0">
+      <WrapPanel ItemSpacing="{DynamicResource Space.3}" LineSpacing="{DynamicResource Space.3}" VerticalAlignment="Center">
+        <TextBlock Classes="hint" VerticalAlignment="Center"
+                   Text="{Binding [editor-shortcut-tip], Source={x:Static s:Localizer.Instance}}" />
+        <Button Name="ContinueStepButton" Command="{Binding ContinueStepCommand}" IsVisible="{Binding CanContinueStep}">
+          <TextBlock Text="{Binding ContinueButtonText}" />
+        </Button>
+      </WrapPanel>
+    </Border>
+
+    <!-- Main responsive 3-pane workspace (stacks cleanly below 960px effective width at 200% zoom) -->
+    <ScrollViewer>
+      <Grid Name="EditorMainGrid" ColumnDefinitions="340,*,310" RowDefinitions="Auto,Auto,Auto"
+            ColumnSpacing="14" RowSpacing="14" Margin="0,12,0,12">
+        <!-- LEFT PANE: Paste or Sections -->
+        <Border Name="EditorLeftPane" Grid.Column="0" Grid.Row="0" Classes="card" VerticalAlignment="Top">
+          <StackPanel Spacing="{DynamicResource Space.4}">
+            <!-- Paste Step -->
+            <StackPanel Name="PasteStepPanel" IsVisible="{Binding IsStepPaste}" Spacing="{DynamicResource Space.3}">
+              <TextBlock Classes="title-3" Text="{Binding [editor-paste-heading], Source={x:Static s:Localizer.Instance}}" />
+              <TextBlock Classes="hint" Text="{Binding [editor-paste-hint], Source={x:Static s:Localizer.Instance}}" />
+              <StackPanel Spacing="4">
+                <TextBlock Classes="label" Text="{Binding [editor-paste-format-label], Source={x:Static s:Localizer.Instance}}" />
+                <ComboBox Name="PasteFormatCombo" SelectedIndex="{Binding PasteFormatIndex}" HorizontalAlignment="Stretch">
+                  <ComboBoxItem Content="{Binding [editor-format-auto], Source={x:Static s:Localizer.Instance}}" />
+                  <ComboBoxItem Content="{Binding [editor-format-plain], Source={x:Static s:Localizer.Instance}}" />
+                  <ComboBoxItem Content="{Binding [editor-format-markers], Source={x:Static s:Localizer.Instance}}" />
+                  <ComboBoxItem Content="{Binding [editor-format-chords-over], Source={x:Static s:Localizer.Instance}}" />
+                  <ComboBoxItem Content="{Binding [editor-format-chordpro], Source={x:Static s:Localizer.Instance}}" />
+                </ComboBox>
+              </StackPanel>
+              <TextBox Name="PasteLyricsBox"
+                       AcceptsReturn="True"
+                       MinHeight="200"
+                       MaxHeight="340"
+                       TextWrapping="Wrap"
+                       Text="{Binding PasteRawText}"
+                       PlaceholderText="{Binding [editor-paste-watermark], Source={x:Static s:Localizer.Instance}}" />
+              <Button Name="DetectSectionsButton" Classes="primary" Command="{Binding DetectSectionsCommand}">
+                <TextBlock Text="{Binding [editor-detect-sections], Source={x:Static s:Localizer.Instance}}" />
+              </Button>
+            </StackPanel>
+
+            <!-- Detection Alert + Section List -->
+            <StackPanel Name="SectionsStepPanel" IsVisible="{Binding !IsStepPaste}" Spacing="{DynamicResource Space.3}">
+              <Border Name="DetectionAlert" Classes="alert-success" IsVisible="{Binding HasDetectionBanner}">
+                <StackPanel Spacing="2">
+                  <TextBlock Name="DetectionAlertTitle" Classes="label" Text="{Binding DetectedBannerTitle}" />
+                  <TextBlock Classes="caption" Text="{Binding [editor-detected-body], Source={x:Static s:Localizer.Instance}}" />
+                </StackPanel>
+              </Border>
+
+              <Border Classes="card" Background="{DynamicResource Brush.Surface2}" IsVisible="{Binding IsStepReview}">
+                <StackPanel Spacing="4">
+                  <TextBlock Classes="label" Text="{Binding [editor-review-heading], Source={x:Static s:Localizer.Instance}}" />
+                  <TextBlock Classes="hint" Text="{Binding [editor-review-hint], Source={x:Static s:Localizer.Instance}}" />
+                </StackPanel>
+              </Border>
+
+              <WrapPanel ItemSpacing="8" LineSpacing="8" VerticalAlignment="Center">
+                <Button Name="AddSectionButton" Command="{Binding AddSectionCommand}">
+                  <TextBlock Text="{Binding [editor-add-section], Source={x:Static s:Localizer.Instance}}" />
+                </Button>
+              </WrapPanel>
+
+              <ItemsControl Name="SectionsItemsControl" ItemsSource="{Binding Sections}">
+                <ItemsControl.ItemTemplate>
+                  <DataTemplate x:DataType="vm:SongSectionItemViewModel">
+                    <Border Background="{DynamicResource Brush.Surface2}"
+                            BorderBrush="{Binding ColorHex, Converter={x:Static views:UiConverters.HexBrush}}"
+                            BorderThickness="4,1,1,1"
+                            CornerRadius="{DynamicResource Radius.Button}"
+                            Padding="{DynamicResource Space.Text.Small}"
+                            Margin="0,0,0,10">
+                      <StackPanel Spacing="8">
+                        <WrapPanel ItemSpacing="6" LineSpacing="6" VerticalAlignment="Center">
+                          <Border CornerRadius="4" Padding="8,2"
+                                  Background="{Binding ColorHex, Converter={x:Static views:UiConverters.HexBrush}}">
+                            <TextBlock Classes="tag" Foreground="{DynamicResource Brush.OnPrimary}" Text="{Binding Label}" />
+                          </Border>
+                          <TextBlock Classes="caption" IsVisible="{Binding IsAutoDetected}"
+                                     Text="{Binding [editor-detected-auto], Source={x:Static s:Localizer.Instance}}" />
+                        </WrapPanel>
+
+                        <WrapPanel ItemSpacing="6" LineSpacing="6" VerticalAlignment="Center">
+                          <TextBox MinWidth="110" Text="{Binding Label}"
+                                   PlaceholderText="{Binding [editor-section-label-label], Source={x:Static s:Localizer.Instance}}" />
+                          <ComboBox SelectedIndex="{Binding KindIndex}" MinWidth="105">
+                            <ComboBoxItem Content="{Binding [editor-kind-verse], Source={x:Static s:Localizer.Instance}}" />
+                            <ComboBoxItem Content="{Binding [editor-kind-chorus], Source={x:Static s:Localizer.Instance}}" />
+                            <ComboBoxItem Content="{Binding [editor-kind-bridge], Source={x:Static s:Localizer.Instance}}" />
+                            <ComboBoxItem Content="{Binding [editor-kind-tag], Source={x:Static s:Localizer.Instance}}" />
+                            <ComboBoxItem Content="{Binding [editor-kind-intro], Source={x:Static s:Localizer.Instance}}" />
+                            <ComboBoxItem Content="{Binding [editor-kind-outro], Source={x:Static s:Localizer.Instance}}" />
+                            <ComboBoxItem Content="{Binding [editor-kind-other], Source={x:Static s:Localizer.Instance}}" />
+                          </ComboBox>
+                          <TextBox Width="52" Text="{Binding Hotkey}"
+                                   PlaceholderText="{Binding [editor-section-hotkey-label], Source={x:Static s:Localizer.Instance}}" />
+                        </WrapPanel>
+
+                        <TextBox AcceptsReturn="True" TextWrapping="Wrap" MinHeight="64"
+                                 Text="{Binding LyricsWithChords}"
+                                 PlaceholderText="{Binding [editor-section-lyrics-label], Source={x:Static s:Localizer.Instance}}" />
+
+                        <WrapPanel ItemSpacing="6" LineSpacing="6">
+                          <Button Classes="quiet" Click="OnMoveSectionUpClick">
+                            <TextBlock Text="{Binding [editor-move-up], Source={x:Static s:Localizer.Instance}}" />
+                          </Button>
+                          <Button Classes="quiet" Click="OnMoveSectionDownClick">
+                            <TextBlock Text="{Binding [editor-move-down], Source={x:Static s:Localizer.Instance}}" />
+                          </Button>
+                          <Button Classes="quiet" Click="OnAppendSectionClick">
+                            <TextBlock Text="{Binding [editor-tab-arrange], Source={x:Static s:Localizer.Instance}}" />
+                          </Button>
+                          <Button Classes="quiet" Click="OnRemoveSectionClick">
+                            <TextBlock Text="{Binding [editor-remove-section], Source={x:Static s:Localizer.Instance}}" />
+                          </Button>
+                        </WrapPanel>
+                      </StackPanel>
+                    </Border>
+                  </DataTemplate>
+                </ItemsControl.ItemTemplate>
+              </ItemsControl>
+            </StackPanel>
+          </StackPanel>
+        </Border>
+
+        <!-- CENTER PANE: Generated Slide Grid -->
+        <Border Name="EditorCenterPane" Grid.Column="1" Grid.Row="0" Classes="card" VerticalAlignment="Top">
+          <StackPanel Spacing="{DynamicResource Space.4}">
+            <WrapPanel ItemSpacing="{DynamicResource Space.3}" LineSpacing="{DynamicResource Space.3}" VerticalAlignment="Center">
+              <StackPanel Spacing="2">
+                <TextBlock Classes="caption" Text="{Binding [editor-generated-eyebrow], Source={x:Static s:Localizer.Instance}}" />
+                <TextBlock Name="SlidesSummaryText" Classes="title-2" Text="{Binding SlidesSummaryText}" />
+              </StackPanel>
+              <WrapPanel ItemSpacing="6" LineSpacing="6" VerticalAlignment="Center">
+                <TextBlock Classes="caption" VerticalAlignment="Center"
+                           Text="{Binding [editor-preview-on], Source={x:Static s:Localizer.Instance}}" />
+                <Button Classes.primary="{Binding IsPreviewMain}" Command="{Binding SelectPreviewTargetCommand}" CommandParameter="Main">
+                  <TextBlock Text="{Binding [editor-preview-main], Source={x:Static s:Localizer.Instance}}" />
+                </Button>
+                <Button Classes.primary="{Binding IsPreviewLed}" Command="{Binding SelectPreviewTargetCommand}" CommandParameter="Led">
+                  <TextBlock Text="{Binding [editor-preview-wide], Source={x:Static s:Localizer.Instance}}" />
+                </Button>
+                <Button Classes.primary="{Binding IsPreviewStage}" Command="{Binding SelectPreviewTargetCommand}" CommandParameter="Stage">
+                  <TextBlock Text="{Binding [editor-preview-stage], Source={x:Static s:Localizer.Instance}}" />
+                </Button>
+                <Button Classes.primary="{Binding IsPreviewStream}" Command="{Binding SelectPreviewTargetCommand}" CommandParameter="Stream">
+                  <TextBlock Text="{Binding [editor-preview-stream], Source={x:Static s:Localizer.Instance}}" />
+                </Button>
+              </WrapPanel>
+            </WrapPanel>
+
+            <CheckBox Name="ShowChordsCheckBox" IsChecked="{Binding ShowChords}"
+                      Content="{Binding [editor-show-chords], Source={x:Static s:Localizer.Instance}}" />
+
+            <ItemsControl Name="GeneratedSlidesGrid" ItemsSource="{Binding GeneratedSlides}">
+              <ItemsControl.ItemsPanel>
+                <ItemsPanelTemplate>
+                  <WrapPanel ItemSpacing="12" LineSpacing="12" />
+                </ItemsPanelTemplate>
+              </ItemsControl.ItemsPanel>
+              <ItemsControl.ItemTemplate>
+                <DataTemplate x:DataType="vm:SlidePreviewCard">
+                  <Border Width="220" Background="{DynamicResource Brush.Surface2}"
+                          BorderBrush="{Binding ColorHex, Converter={x:Static views:UiConverters.HexBrush}}"
+                          BorderThickness="4,1,1,1" CornerRadius="{DynamicResource Radius.Button}"
+                          Padding="{DynamicResource Space.Text.Small}">
+                    <StackPanel Spacing="6">
+                      <DockPanel>
+                        <TextBlock DockPanel.Dock="Right" Classes="caption" Text="{Binding Number}" />
+                        <TextBlock Classes="label" Text="{Binding Header}" />
+                      </DockPanel>
+                      <Border Background="{DynamicResource Brush.PreviewBg}" CornerRadius="{DynamicResource Radius.Input}"
+                              Padding="8" MinHeight="88">
+                        <StackPanel Spacing="4">
+                          <TextBlock Foreground="{DynamicResource Brush.Warning}" Classes="caption"
+                                     IsVisible="{Binding HasChords}" Text="{Binding ChordsLine}" />
+                          <TextBlock Foreground="#FFFFFF" Text="{Binding Body}" TextWrapping="Wrap" />
+                          <TextBlock Foreground="#D1D1D6" Classes="caption" IsVisible="{Binding HasFooter}" Text="{Binding Footer}" />
+                        </StackPanel>
+                      </Border>
+                      <Border Background="{DynamicResource Brush.SuccessBg}" CornerRadius="4" Padding="6,2" HorizontalAlignment="Left">
+                        <TextBlock Classes="caption" Foreground="{DynamicResource Brush.SuccessText}"
+                                   Text="{Binding [editor-fits-badge], Source={x:Static s:Localizer.Instance}}" />
+                      </Border>
+                    </StackPanel>
+                  </Border>
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+          </StackPanel>
+        </Border>
+
+        <!-- RIGHT PANE: Inspector (Song / Layout / Arrange / Actions) -->
+        <Border Name="EditorRightPane" Grid.Column="2" Grid.Row="0" Classes="card" VerticalAlignment="Top">
+          <StackPanel Spacing="{DynamicResource Space.4}">
+            <WrapPanel ItemSpacing="6" LineSpacing="6">
+              <Button Name="InspectorSongTab" Classes.primary="{Binding IsInspectorSong}"
+                      Command="{Binding SelectInspectorTabCommand}" CommandParameter="Song">
+                <TextBlock Text="{Binding [editor-tab-song], Source={x:Static s:Localizer.Instance}}" />
+              </Button>
+              <Button Name="InspectorLayoutTab" Classes.primary="{Binding IsInspectorLayout}"
+                      Command="{Binding SelectInspectorTabCommand}" CommandParameter="Layout">
+                <TextBlock Text="{Binding [editor-tab-layout], Source={x:Static s:Localizer.Instance}}" />
+              </Button>
+              <Button Name="InspectorArrangeTab" Classes.primary="{Binding IsInspectorArrange}"
+                      Command="{Binding SelectInspectorTabCommand}" CommandParameter="Arrange">
+                <TextBlock Text="{Binding [editor-tab-arrange], Source={x:Static s:Localizer.Instance}}" />
+              </Button>
+              <Button Name="InspectorActionsTab" Classes.primary="{Binding IsInspectorActions}"
+                      Command="{Binding SelectInspectorTabCommand}" CommandParameter="Actions">
+                <TextBlock Text="{Binding [editor-tab-actions], Source={x:Static s:Localizer.Instance}}" />
+              </Button>
+            </WrapPanel>
+
+            <!-- Song metadata -->
+            <StackPanel IsVisible="{Binding IsInspectorSong}" Spacing="{DynamicResource Space.3}">
+              <StackPanel Spacing="2">
+                <TextBlock Classes="label" Text="{Binding [editor-field-title], Source={x:Static s:Localizer.Instance}}" />
+                <TextBox Name="SongTitleBox" Text="{Binding Title}" />
+              </StackPanel>
+              <StackPanel Spacing="2">
+                <TextBlock Classes="label" Text="{Binding [editor-field-authors], Source={x:Static s:Localizer.Instance}}" />
+                <TextBox Name="SongAuthorsBox" Text="{Binding AuthorsText}" />
+              </StackPanel>
+              <WrapPanel ItemSpacing="8" LineSpacing="8">
+                <StackPanel Spacing="2" Width="110">
+                  <TextBlock Classes="label" Text="{Binding [editor-field-key], Source={x:Static s:Localizer.Instance}}" />
+                  <TextBox Name="SongKeyBox" Text="{Binding SongKey}" />
+                </StackPanel>
+                <StackPanel Spacing="2" Width="120">
+                  <TextBlock Classes="label" Text="{Binding [editor-field-tempo], Source={x:Static s:Localizer.Instance}}" />
+                  <TextBox Name="SongTempoBox" Text="{Binding TempoText}" />
+                </StackPanel>
+              </WrapPanel>
+              <StackPanel Spacing="2">
+                <TextBlock Classes="label" Text="{Binding [editor-field-ccli], Source={x:Static s:Localizer.Instance}}" />
+                <TextBox Name="SongCcliBox" Text="{Binding CcliNumber}" />
+              </StackPanel>
+              <StackPanel Spacing="2">
+                <TextBlock Classes="label" Text="{Binding [editor-field-copyright], Source={x:Static s:Localizer.Instance}}" />
+                <TextBox Name="SongCopyrightBox" Text="{Binding Copyright}" />
+              </StackPanel>
+              <StackPanel Spacing="2">
+                <TextBlock Classes="label" Text="{Binding [editor-field-tags], Source={x:Static s:Localizer.Instance}}" />
+                <TextBox Name="SongTagsBox" Text="{Binding TagsText}" />
+              </StackPanel>
+              <CheckBox Name="SongPublicDomainCheck" IsChecked="{Binding PublicDomain}"
+                        Content="{Binding [editor-field-public-domain], Source={x:Static s:Localizer.Instance}}" />
+              <StackPanel Spacing="2">
+                <TextBlock Classes="label" Text="{Binding [editor-field-copyright-line], Source={x:Static s:Localizer.Instance}}" />
+                <TextBlock Classes="hint" Text="{Binding [editor-field-copyright-line-hint], Source={x:Static s:Localizer.Instance}}" />
+                <ComboBox Name="CopyrightPlacementCombo" SelectedIndex="{Binding CopyrightPlacementIndex}" HorizontalAlignment="Stretch">
+                  <ComboBoxItem Content="{Binding [editor-copyright-none], Source={x:Static s:Localizer.Instance}}" />
+                  <ComboBoxItem Content="{Binding [editor-copyright-first], Source={x:Static s:Localizer.Instance}}" />
+                  <ComboBoxItem Content="{Binding [editor-copyright-last], Source={x:Static s:Localizer.Instance}}" />
+                  <ComboBoxItem Content="{Binding [editor-copyright-first-last], Source={x:Static s:Localizer.Instance}}" />
+                  <ComboBoxItem Content="{Binding [editor-copyright-all], Source={x:Static s:Localizer.Instance}}" />
+                </ComboBox>
+              </StackPanel>
+            </StackPanel>
+
+            <!-- Layout -->
+            <StackPanel IsVisible="{Binding IsInspectorLayout}" Spacing="{DynamicResource Space.3}">
+              <TextBlock Classes="label" Text="{Binding [editor-layout-heading], Source={x:Static s:Localizer.Instance}}" />
+              <StackPanel Spacing="2">
+                <TextBlock Classes="caption" Text="{Binding [editor-layout-lines], Source={x:Static s:Localizer.Instance}}" />
+                <NumericUpDown Name="SongMaxLinesInput" Minimum="1" Maximum="16" Value="{Binding MaxLinesPerSlide}" />
+              </StackPanel>
+              <CheckBox Name="SongTitleSlideCheck" IsChecked="{Binding TitleSlide}"
+                        Content="{Binding [editor-layout-title-slide], Source={x:Static s:Localizer.Instance}}" />
+              <CheckBox Name="SongBlankEndCheck" IsChecked="{Binding BlankSlideAtEnd}"
+                        Content="{Binding [editor-layout-blank-end], Source={x:Static s:Localizer.Instance}}" />
+              <StackPanel Spacing="2">
+                <TextBlock Classes="label" Text="{Binding [editor-layout-translation], Source={x:Static s:Localizer.Instance}}" />
+                <TextBlock Classes="hint" Text="{Binding [editor-layout-translation-hint], Source={x:Static s:Localizer.Instance}}" />
+                <TextBox Name="SongTranslationBox" Text="{Binding TranslationLanguage}" />
+              </StackPanel>
+            </StackPanel>
+
+            <!-- Arrange -->
+            <StackPanel IsVisible="{Binding IsInspectorArrange}" Spacing="{DynamicResource Space.3}">
+              <TextBlock Classes="label" Text="{Binding [editor-arrange-heading], Source={x:Static s:Localizer.Instance}}" />
+              <ComboBox Name="ArrangementsCombo" ItemsSource="{Binding Arrangements}" SelectedItem="{Binding SelectedArrangement}" HorizontalAlignment="Stretch">
+                <ComboBox.ItemTemplate>
+                  <DataTemplate x:DataType="vm:ArrangementItemViewModel">
+                    <TextBlock Text="{Binding Name}" />
+                  </DataTemplate>
+                </ComboBox.ItemTemplate>
+              </ComboBox>
+              <WrapPanel ItemSpacing="8" LineSpacing="8">
+                <Button Name="AddArrangementButton" Command="{Binding AddArrangementCommand}">
+                  <TextBlock Text="{Binding [editor-arrange-new], Source={x:Static s:Localizer.Instance}}" />
+                </Button>
+                <Button Name="DeleteArrangementButton" Classes="quiet" Command="{Binding DeleteSelectedArrangementCommand}">
+                  <TextBlock Text="{Binding [editor-arrange-delete], Source={x:Static s:Localizer.Instance}}" />
+                </Button>
+              </WrapPanel>
+              <StackPanel Spacing="2">
+                <TextBlock Classes="caption" Text="{Binding [editor-arrange-name-label], Source={x:Static s:Localizer.Instance}}" />
+                <TextBox Name="ArrangementNameBox" Text="{Binding SelectedArrangement.Name}" />
+              </StackPanel>
+              <TextBlock Classes="caption" Text="{Binding [editor-arrange-sequence], Source={x:Static s:Localizer.Instance}}" />
+              <Border Background="{DynamicResource Brush.Surface2}" BorderBrush="{DynamicResource Brush.Line2}"
+                      BorderThickness="1" CornerRadius="{DynamicResource Radius.Button}" Padding="8">
+                <ItemsControl Name="ArrangementTokensList" ItemsSource="{Binding SelectedArrangement.Tokens}">
+                  <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                      <WrapPanel ItemSpacing="6" LineSpacing="6" />
+                    </ItemsPanelTemplate>
+                  </ItemsControl.ItemsPanel>
+                  <ItemsControl.ItemTemplate>
+                    <DataTemplate x:DataType="vm:ArrangementTokenViewModel">
+                      <Button Classes="quiet" Padding="6,2" MinHeight="24"
+                              Background="{Binding ColorHex, Converter={x:Static views:UiConverters.HexBrush}}"
+                              Click="OnRemoveArrangementTokenClick">
+                        <TextBlock Classes="tag" Foreground="{DynamicResource Brush.OnPrimary}" Text="{Binding Label}" />
+                      </Button>
+                    </DataTemplate>
+                  </ItemsControl.ItemTemplate>
+                </ItemsControl>
+              </Border>
+              <Button Classes="quiet" Command="{Binding ClearArrangementTokensCommand}">
+                <TextBlock Text="{Binding [editor-arrange-clear], Source={x:Static s:Localizer.Instance}}" />
+              </Button>
+              <TextBlock Classes="hint" Text="{Binding [editor-arrange-add-hint], Source={x:Static s:Localizer.Instance}}" />
+              <ItemsControl ItemsSource="{Binding Sections}">
+                <ItemsControl.ItemsPanel>
+                  <ItemsPanelTemplate>
+                    <WrapPanel ItemSpacing="6" LineSpacing="6" />
+                  </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                  <DataTemplate x:DataType="vm:SongSectionItemViewModel">
+                    <Button Classes="quiet" Padding="6,2" MinHeight="28"
+                            BorderBrush="{Binding ColorHex, Converter={x:Static views:UiConverters.HexBrush}}"
+                            BorderThickness="1" Click="OnAppendSectionClick">
+                      <TextBlock Classes="caption" Text="{Binding Label}" />
+                    </Button>
+                  </DataTemplate>
+                </ItemsControl.ItemTemplate>
+              </ItemsControl>
+            </StackPanel>
+
+            <!-- Actions -->
+            <StackPanel IsVisible="{Binding IsInspectorActions}" Spacing="{DynamicResource Space.3}">
+              <TextBlock Classes="label" Text="{Binding [editor-transpose-heading], Source={x:Static s:Localizer.Instance}}" />
+              <WrapPanel ItemSpacing="8" LineSpacing="8">
+                <Button Name="TransposeDownButton" Command="{Binding TransposeDownCommand}">
+                  <TextBlock Text="{Binding [editor-transpose-down], Source={x:Static s:Localizer.Instance}}" />
+                </Button>
+                <Button Name="TransposeUpButton" Command="{Binding TransposeUpCommand}">
+                  <TextBlock Text="{Binding [editor-transpose-up], Source={x:Static s:Localizer.Instance}}" />
+                </Button>
+              </WrapPanel>
+              <CheckBox Name="PreferFlatsCheckBox" IsChecked="{Binding PreferFlats}"
+                        Content="{Binding [editor-accidental-flats], Source={x:Static s:Localizer.Instance}}" />
+              <Button Command="{Binding DiscardDraftCommand}" Classes="quiet">
+                <TextBlock Text="{Binding [editor-discard-draft], Source={x:Static s:Localizer.Instance}}" />
+              </Button>
+            </StackPanel>
+          </StackPanel>
+        </Border>
+      </Grid>
+    </ScrollViewer>
+  </DockPanel>
+</UserControl>

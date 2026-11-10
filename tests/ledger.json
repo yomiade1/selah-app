@@ -3,8 +3,8 @@
   "dotnet": 24,
   "web": 8,
   "golden": 4,
-  "ui": 70,
+  "ui": 88,
   "e2e": 6,
   "kb": 12,
-  "total": 330
+  "total": 348
 }

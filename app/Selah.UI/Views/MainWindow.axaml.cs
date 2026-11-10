@@ -51,11 +51,12 @@ public sealed partial class MainWindow : Window
     public void UpdateLayoutForWidth()
     {
         var width = EffectiveWidth;
-        Inspector.IsVisible = width >= InspectorBreakpoint;
+        var showShellInspector = Model?.IsPreviewMode ?? true;
+        Inspector.IsVisible = showShellInspector && width >= InspectorBreakpoint;
         Sidebar.IsVisible = width >= SidebarBreakpoint;
     }
 
-    /// <summary>Ctrl (Cmd on macOS) with + − 0 changes the text size; F12 clears everything.</summary>
+    /// <summary>Ctrl (Cmd on macOS) shortcuts: + − 0 text size, K command palette, S save song, F12 clear everything.</summary>
     private void AddTextSizeShortcuts()
     {
         var command = OperatingSystem.IsMacOS() ? KeyModifiers.Meta : KeyModifiers.Control;
@@ -74,6 +75,14 @@ public sealed partial class MainWindow : Window
         {
             Bind(key, command, () => Model?.TextSizeResetCommand.Execute(null));
         }
+        Bind(Key.K, command, () => Model?.OpenCommandPaletteCommand.Execute(null));
+        Bind(Key.S, command, () =>
+        {
+            if (Model?.IsSongEditorMode == true)
+            {
+                Model.SongEditor.SaveSongCommand.Execute(null);
+            }
+        });
         Bind(Key.F12, KeyModifiers.None, () => Model?.ClearEverythingCommand.Execute(null));
     }
 
@@ -119,6 +128,13 @@ public sealed partial class MainWindow : Window
         base.OnDataContextChanged(e);
         if (Model is { } model)
         {
+            model.PropertyChanged += (_, args) =>
+            {
+                if (args.PropertyName is nameof(MainViewModel.ActiveMode) or nameof(MainViewModel.IsPreviewMode))
+                {
+                    UpdateLayoutForWidth();
+                }
+            };
             model.ArticleRequested += (_, id) => ShowHelp(id);
             model.OpenUrlRequested += (_, url) => _ = OpenUrlAsync(url);
             model.ShowFileRequested += (_, path) => _ = ShowFileAsync(path);

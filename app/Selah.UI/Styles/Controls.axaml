@@ -105,4 +105,18 @@
     <Setter Property="CornerRadius" Value="{DynamicResource Radius.Pill}" />
     <Setter Property="Padding" Value="{DynamicResource Space.Text.Small}" />
   </Style>
+  <Style Selector="Border.alert-success">
+    <Setter Property="Background" Value="{DynamicResource Brush.SuccessBg}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource Brush.Success}" />
+    <Setter Property="BorderThickness" Value="4,0,0,0" />
+    <Setter Property="CornerRadius" Value="{DynamicResource Radius.Button}" />
+    <Setter Property="Padding" Value="{DynamicResource Space.Text.Medium}" />
+  </Style>
+  <Style Selector="Border.alert-warning">
+    <Setter Property="Background" Value="{DynamicResource Brush.WarningBg}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource Brush.Warning}" />
+    <Setter Property="BorderThickness" Value="4,0,0,0" />
+    <Setter Property="CornerRadius" Value="{DynamicResource Radius.Button}" />
+    <Setter Property="Padding" Value="{DynamicResource Space.Text.Medium}" />
+  </Style>
 </Styles>

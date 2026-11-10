@@ -36,6 +36,27 @@
           <TextBlock Name="StatusText" Classes="label" TextWrapping="NoWrap" views:Critical.IsCritical="True"
                      Text="{Binding StatusText}" />
         </Border>
+        <Border Name="LiveTag" Classes="pill" IsVisible="{Binding IsLive}" VerticalAlignment="Center"
+                Background="{DynamicResource Brush.Live}">
+          <TextBlock Classes="tag" Foreground="{DynamicResource Brush.OnPrimary}" views:Critical.IsCritical="True"
+                     Text="{Binding [preview-live], Source={x:Static s:Localizer.Instance}}" />
+        </Border>
+        <Button Name="ModePreviewButton" Classes.primary="{Binding IsPreviewMode}"
+                Command="{Binding SelectModeCommand}" CommandParameter="Preview">
+          <TextBlock Text="{Binding [mode-preview], Source={x:Static s:Localizer.Instance}}" />
+        </Button>
+        <Button Name="ModeLibraryButton" Classes.primary="{Binding IsLibraryMode}"
+                Command="{Binding SelectModeCommand}" CommandParameter="Library">
+          <TextBlock Text="{Binding [mode-library], Source={x:Static s:Localizer.Instance}}" />
+        </Button>
+        <Button Name="ModeSongEditorButton" Classes.primary="{Binding IsSongEditorMode}"
+                Command="{Binding SelectModeCommand}" CommandParameter="SongEditor">
+          <TextBlock Text="{Binding [mode-song-editor], Source={x:Static s:Localizer.Instance}}" />
+        </Button>
+        <Button Name="CommandPaletteButton" Classes="quiet" Command="{Binding OpenCommandPaletteCommand}"
+                ToolTip.Tip="{Binding [command-search-hint], Source={x:Static s:Localizer.Instance}}">
+          <TextBlock Text="{Binding [command-search], Source={x:Static s:Localizer.Instance}}" />
+        </Button>
         <Button Name="ShowTestPatternButton" Classes="primary" Command="{Binding ShowTestPatternCommand}"
                 ToolTip.Tip="{Binding [command-show-test-pattern-hint], Source={x:Static s:Localizer.Instance}}">
           <TextBlock Text="{Binding [command-show-test-pattern], Source={x:Static s:Localizer.Instance}}" />
@@ -109,17 +130,34 @@
       </WrapPanel>
     </Border>
 
-    <!-- Sidebar: an Apple-style source list (skeleton until M2). -->
+    <!-- Sidebar: an Apple-style source list. -->
     <Border Name="Sidebar" DockPanel.Dock="Left" Width="{DynamicResource Size.SidebarWidth}"
             Background="{DynamicResource Brush.Surface2}" BorderBrush="{DynamicResource Brush.Line}"
             BorderThickness="{DynamicResource Line.Right}" Padding="{DynamicResource Space.Text.Medium}">
       <ScrollViewer>
-        <StackPanel Spacing="{DynamicResource Space.3}">
+        <StackPanel Spacing="{DynamicResource Space.2}">
           <TextBlock Classes="caption" Text="{Binding [sidebar-heading-plan], Source={x:Static s:Localizer.Instance}}" />
-          <TextBlock Text="{Binding [sidebar-services], Source={x:Static s:Localizer.Instance}}" />
-          <TextBlock Text="{Binding [sidebar-library], Source={x:Static s:Localizer.Instance}}" />
-          <TextBlock Text="{Binding [sidebar-media], Source={x:Static s:Localizer.Instance}}" />
-          <TextBlock Classes="caption" Text="{Binding [sidebar-heading-help], Source={x:Static s:Localizer.Instance}}" />
+          <Button Name="SidebarPreviewButton" Classes="quiet" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left"
+                  Command="{Binding SelectModeCommand}" CommandParameter="Preview">
+            <TextBlock Text="{Binding [sidebar-services], Source={x:Static s:Localizer.Instance}}" />
+          </Button>
+          <Button Name="SidebarSongsButton" Classes="quiet" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left"
+                  Command="{Binding OpenLibraryTabCommand}" CommandParameter="Songs">
+            <TextBlock Text="{Binding [sidebar-songs], Source={x:Static s:Localizer.Instance}}" />
+          </Button>
+          <Button Name="SidebarMediaButton" Classes="quiet" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left"
+                  Command="{Binding OpenLibraryTabCommand}" CommandParameter="Media">
+            <TextBlock Text="{Binding [sidebar-media], Source={x:Static s:Localizer.Instance}}" />
+          </Button>
+          <Button Name="SidebarBiblesButton" Classes="quiet" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left"
+                  Command="{Binding OpenLibraryTabCommand}" CommandParameter="Bibles">
+            <TextBlock Text="{Binding [sidebar-bibles], Source={x:Static s:Localizer.Instance}}" />
+          </Button>
+          <Button Name="SidebarSongEditorButton" Classes="quiet" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left"
+                  Command="{Binding SelectModeCommand}" CommandParameter="SongEditor">
+            <TextBlock Text="{Binding [mode-song-editor], Source={x:Static s:Localizer.Instance}}" />
+          </Button>
+          <TextBlock Classes="caption" Margin="0,8,0,0" Text="{Binding [sidebar-heading-help], Source={x:Static s:Localizer.Instance}}" />
           <Button Name="HelpArticlesButton" Classes="quiet" Click="OnOpenHelp" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left">
             <TextBlock Text="{Binding [sidebar-help-articles], Source={x:Static s:Localizer.Instance}}" />
           </Button>
@@ -127,7 +165,7 @@
       </ScrollViewer>
     </Border>
 
-    <!-- Inspector skeleton. -->
+    <!-- Inspector skeleton (Preview mode only; Editor/Library own their own workspace inspector). -->
     <Border Name="Inspector" DockPanel.Dock="Right" Width="{DynamicResource Size.InspectorWidth}"
             Background="{DynamicResource Brush.Surface}" BorderBrush="{DynamicResource Brush.Line}"
             BorderThickness="{DynamicResource Line.Left}" Padding="{DynamicResource Space.Text.Medium}">
@@ -137,26 +175,33 @@
       </StackPanel>
     </Border>
 
-    <!-- Program preview: never covered while live (DESIGN-SYSTEM §1). -->
-    <Grid RowDefinitions="Auto,*,Auto" Margin="{DynamicResource Space.Text.Medium}">
-      <WrapPanel ItemSpacing="{DynamicResource Space.3}">
+    <!-- Main workspace below the toolbar: Preview, Library, Song Editor, plus Ctrl+K palette overlay. -->
+    <Panel>
+      <!-- Program preview: never covered while live (DESIGN-SYSTEM §1). -->
+      <Grid Name="PreviewWorkspace" IsVisible="{Binding IsPreviewMode}" RowDefinitions="Auto,*,Auto" Margin="{DynamicResource Space.Text.Medium}">
         <TextBlock Classes="title-2" Text="{Binding [preview-on-screen], Source={x:Static s:Localizer.Instance}}" />
-        <Border Name="LiveTag" Classes="pill" IsVisible="{Binding IsLive}" VerticalAlignment="Center"
-                Background="{DynamicResource Brush.Live}">
-          <TextBlock Classes="tag" Foreground="{DynamicResource Brush.OnPrimary}" views:Critical.IsCritical="True"
-                     Text="{Binding [preview-live], Source={x:Static s:Localizer.Instance}}" />
+        <Border Grid.Row="1" Classes="card" Margin="{DynamicResource Space.Text.Small}">
+          <Viewbox Stretch="Uniform">
+            <Grid Width="480" Height="270">
+              <Rectangle Fill="{DynamicResource Brush.PreviewBg}" />
+              <Image Name="PreviewImage" Stretch="Uniform" />
+            </Grid>
+          </Viewbox>
         </Border>
-      </WrapPanel>
-      <Border Grid.Row="1" Classes="card" Margin="{DynamicResource Space.Text.Small}">
-        <Viewbox Stretch="Uniform">
-          <Grid Width="480" Height="270">
-            <Rectangle Fill="{DynamicResource Brush.PreviewBg}" />
-            <Image Name="PreviewImage" Stretch="Uniform" />
-          </Grid>
-        </Viewbox>
-      </Border>
-      <TextBlock Grid.Row="2" Classes="hint" IsVisible="{Binding !IsLive}"
-                 Text="{Binding [preview-nothing], Source={x:Static s:Localizer.Instance}}" />
-    </Grid>
+        <TextBlock Grid.Row="2" Classes="hint" IsVisible="{Binding !IsLive}"
+                   Text="{Binding [preview-nothing], Source={x:Static s:Localizer.Instance}}" />
+      </Grid>
+
+      <Panel Name="LibraryWorkspace" IsVisible="{Binding IsLibraryMode}">
+        <views:LibraryView Name="LibraryViewControl" DataContext="{Binding Library}" />
+      </Panel>
+
+      <Panel Name="SongEditorWorkspace" IsVisible="{Binding IsSongEditorMode}">
+        <views:SongEditorView Name="SongEditorViewControl" DataContext="{Binding SongEditor}" />
+      </Panel>
+
+      <!-- Quick find (Ctrl/Cmd+K) never covers Toolbar / Clear everything. -->
+      <views:CommandPaletteView Name="CommandPaletteControl" DataContext="{Binding CommandPalette}" />
+    </Panel>
   </DockPanel>
 </Window>

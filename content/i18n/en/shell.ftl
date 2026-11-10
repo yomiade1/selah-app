@@ -17,12 +17,21 @@ command-settings = Settings
 command-help = Help
 command-report-problem = Report a problem
 command-diagnostics = Diagnostics
+command-search = Quick find
+command-search-hint = Search commands, songs, scripture, media, and help (Ctrl+K).
+
+## Workspace modes in the toolbar
+mode-preview = Preview
+mode-library = Library
+mode-song-editor = Song editor
 
 ## Sidebar
 sidebar-heading-plan = Plan
 sidebar-services = Services
 sidebar-library = Library
+sidebar-songs = Songs
 sidebar-media = Media
+sidebar-bibles = Bibles
 sidebar-heading-help = Help
 sidebar-help-articles = Help articles
 

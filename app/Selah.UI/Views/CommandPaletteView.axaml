@@ -1,0 +1,64 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:Selah.UI.ViewModels"
+             xmlns:s="using:Selah.UI.Services"
+             x:Class="Selah.UI.Views.CommandPaletteView"
+             x:DataType="vm:CommandPaletteViewModel"
+             IsVisible="{Binding IsOpen}">
+  <Border Name="PaletteBackdrop" Background="#40000000" PointerPressed="OnBackdropPressed">
+    <Border Name="PaletteDialog" Classes="card" MaxWidth="680" MaxHeight="520"
+            VerticalAlignment="Top" HorizontalAlignment="Stretch"
+            Margin="{DynamicResource Space.Text.Large}"
+            BoxShadow="0 16 40 0 #40000000">
+      <DockPanel>
+        <StackPanel DockPanel.Dock="Top" Spacing="{DynamicResource Space.3}">
+          <DockPanel>
+            <Button Name="PaletteCloseButton" DockPanel.Dock="Right" Classes="quiet"
+                    Command="{Binding CloseCommand}">
+              <TextBlock Text="{Binding [palette-close], Source={x:Static s:Localizer.Instance}}" />
+            </Button>
+            <TextBlock Name="PaletteTitle" Classes="title-3" VerticalAlignment="Center"
+                       Text="{Binding [palette-title], Source={x:Static s:Localizer.Instance}}" />
+          </DockPanel>
+          <TextBox Name="PaletteSearchBox"
+                   Text="{Binding Query}"
+                   PlaceholderText="{Binding [palette-search-watermark], Source={x:Static s:Localizer.Instance}}"
+                   AutomationProperties.Name="{Binding [palette-search-label], Source={x:Static s:Localizer.Instance}}"
+                   KeyDown="OnSearchKeyDown" />
+        </StackPanel>
+
+        <StackPanel DockPanel.Dock="Bottom" IsVisible="{Binding HasNoResults}" Margin="0,8,0,0">
+          <TextBlock Name="PaletteNoResults" Classes="hint" Text="{Binding EmptyPrompt}" />
+        </StackPanel>
+
+        <ListBox Name="PaletteResultsList"
+                 ItemsSource="{Binding Results}"
+                 SelectedItem="{Binding SelectedResult}"
+                 MaxHeight="340"
+                 Margin="0,8,0,0"
+                 DoubleTapped="OnListDoubleTapped"
+                 KeyDown="OnSearchKeyDown">
+          <ListBox.ItemTemplate>
+            <DataTemplate x:DataType="vm:PaletteItem">
+              <Button Classes="quiet" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch"
+                      Click="OnPaletteItemClick">
+                <DockPanel>
+                  <Border DockPanel.Dock="Right" Classes="pill" Background="{DynamicResource Brush.Surface2}"
+                          BorderBrush="{DynamicResource Brush.Line}" BorderThickness="{DynamicResource Line.Hairline}"
+                          VerticalAlignment="Center" Margin="8,0,0,0">
+                    <TextBlock Classes="tag" Text="{Binding CategoryLabel}" />
+                  </Border>
+                  <StackPanel Spacing="2">
+                    <TextBlock Classes="label" Text="{Binding Title}" TextWrapping="Wrap" />
+                    <TextBlock Classes="caption" Text="{Binding Subtitle}" TextWrapping="Wrap"
+                               IsVisible="{Binding Subtitle, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+                  </StackPanel>
+                </DockPanel>
+              </Button>
+            </DataTemplate>
+          </ListBox.ItemTemplate>
+        </ListBox>
+      </DockPanel>
+    </Border>
+  </Border>
+</UserControl>
