@@ -78,7 +78,12 @@ fn exe(dir: &Path, name: &str) -> PathBuf {
     dir.join(format!("{name}{}", std::env::consts::EXE_SUFFIX))
 }
 
-fn spawn(process: &mut Supervised, safe_mode: bool, headless: bool, exit_with_watchdog: bool) {
+fn spawn(
+    process: &mut Supervised,
+    safe_mode: bool,
+    headless: bool,
+    exit_with_watchdog: bool,
+) {
     let mut command = tokio::process::Command::new(&process.program);
     command
         .args(&process.args)
