@@ -754,3 +754,79 @@ test("M3 multi-output and 5-layer scene messages round-trip", () => {
         presentCmd,
     );
 });
+
+test("M3 metric fit request and fit reports round-trip", () => {
+    const splitQuery = create(EnvelopeSchema, {
+        id: 4101n,
+        body: {
+            case: "query",
+            value: {
+                request: {
+                    case: "splitSongSlides",
+                    value: {
+                        maxLines: 4,
+                        shrinkToFit: true,
+                        styleJson: '{"name":"Sanctuary"}',
+                        targetOutputs: [
+                            {
+                                outputIndex: 0,
+                                name: "Main",
+                                role: OutputRole.MAIN,
+                                resolution: { width: 1920, height: 1080 },
+                                maxLinesOverride: 4,
+                            },
+                            {
+                                outputIndex: 1,
+                                name: "LED",
+                                role: OutputRole.MAIN,
+                                resolution: { width: 3840, height: 1080 },
+                                maxLinesOverride: 2,
+                            },
+                        ],
+                    },
+                },
+            },
+        },
+    });
+    assert.deepEqual(
+        fromBinary(EnvelopeSchema, toBinary(EnvelopeSchema, splitQuery)),
+        splitQuery,
+    );
+
+    const fitReply = create(EnvelopeSchema, {
+        id: 4102n,
+        correlationId: 4101n,
+        body: {
+            case: "reply",
+            value: {
+                result: {
+                    case: "generatedSongSlides",
+                    value: {
+                        copyrightLine: "Grace",
+                        fitReports: [
+                            {
+                                outputIndex: 0,
+                                outputName: "Main",
+                                resolution: { width: 1920, height: 1080 },
+                                matchedVariant: "16:9",
+                                fits: true,
+                                appliedSize: 64,
+                                minSize: 32,
+                                originalSlideCount: 1,
+                                finalSlideCount: 2,
+                                extraSplits: 1,
+                                overflowsSafeArea: false,
+                                warningCodes: ["EXTRA_SPLIT"],
+                                summary: "Split cleanly",
+                            },
+                        ],
+                    },
+                },
+            },
+        },
+    });
+    assert.deepEqual(
+        fromBinary(EnvelopeSchema, toBinary(EnvelopeSchema, fitReply)),
+        fitReply,
+    );
+});

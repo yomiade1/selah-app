@@ -340,6 +340,24 @@ impl TextRenderer {
         Ok(frame)
     }
 
+    /// Effective usable paragraph layout width inside a slot box of width `max_width`.
+    pub fn slot_layout_width(max_width: f32, style: &SlotTextStyle) -> f32 {
+        let box_pad_left = style
+            .background_box
+            .as_ref()
+            .map_or(0.0, |b| b.padding_x + b.accent_bar_width);
+        let box_pad_right = style.background_box.as_ref().map_or(0.0, |b| b.padding_x);
+        let stroke_pad = style.outline.as_ref().map_or(0.0, |o| o.width);
+        let shadow_pad = style
+            .shadow
+            .as_ref()
+            .filter(|s| s.color[3] > 0)
+            .map_or(0.0, |s| s.offset_x.abs() + s.blur * 0.5);
+        // Reserve 2.0px for pixel-grid ceil/floor rounding so glyphs + strokes + shadow never exit slot_rect.
+        (max_width - box_pad_left - box_pad_right - stroke_pad * 2.0 - shadow_pad * 2.0 - 2.0)
+            .max(1.0)
+    }
+
     /// Measure a single styled slot paragraph cleanly within `max_width` pixels.
     pub fn measure_slot(
         &mut self,
@@ -348,16 +366,88 @@ impl TextRenderer {
         max_width: f32,
     ) -> SlotMeasurement {
         let families = self.slot_font_families(&style.font_family, style.weight);
-        let effective_w = (max_width
-            - style
-                .background_box
-                .as_ref()
-                .map_or(0.0, |b| b.padding_x * 2.0)
-            - style.outline.as_ref().map_or(0.0, |o| o.width * 2.0))
-        .max(1.0);
+        let effective_w = Self::slot_layout_width(max_width, style);
         let mut p = build_slot_paragraph(&self.fonts, &families, text, style, None);
         p.layout(effective_w);
         measure_laid_out_paragraph(&mut p, effective_w)
+    }
+
+    /// Measure a body slide's text lines with chord rows and optional translation using the exact
+    /// geometry of [`TextRenderer::paint_body_with_chords`].
+    pub fn measure_body_with_chords(
+        &mut self,
+        text: &str,
+        chords_by_line: &HashMap<usize, Vec<(usize, String)>>,
+        body_style: &SlotTextStyle,
+        chord_style: &SlotTextStyle,
+        translation: Option<(&str, &SlotTextStyle)>,
+        area_width: f32,
+    ) -> (f32, f32, usize, f32) {
+        let lines: Vec<&str> = text.lines().collect();
+        if lines.is_empty() {
+            return (0.0, 0.0, 0, 0.0);
+        }
+        let body_families = self.slot_font_families(&body_style.font_family, body_style.weight);
+        let chord_families = self.slot_font_families(&chord_style.font_family, chord_style.weight);
+        let stroke_pad = body_style.outline.as_ref().map_or(0.0, |o| o.width);
+        let shadow_pad = body_style
+            .shadow
+            .as_ref()
+            .filter(|s| s.color[3] > 0)
+            .map_or(0.0, |s| s.offset_x.abs() + s.blur * 0.5);
+        let layout_w = (area_width - stroke_pad * 2.0 - shadow_pad * 2.0 - 2.0).max(1.0);
+        let line_gap = (body_style.size * 0.2).max(2.0).round();
+        let unclipped_body = SlotTextStyle {
+            max_lines: None,
+            ..body_style.clone()
+        };
+
+        let mut total_h = 0.0f32;
+        let mut max_w = 0.0f32;
+        let mut min_intrinsic = 0.0f32;
+        let mut visual_lines = 0usize;
+        for (idx, line) in lines.iter().enumerate() {
+            let mut p =
+                build_slot_paragraph(&self.fonts, &body_families, line, &unclipped_body, None);
+            p.layout(layout_w);
+            let m = measure_laid_out_paragraph(&mut p, layout_w);
+            max_w = max_w.max(m.longest_line);
+            min_intrinsic = min_intrinsic.max(m.min_intrinsic_width);
+            visual_lines += m.line_count.max(1);
+            let line_chords = chords_by_line.get(&idx).map_or(&[][..], Vec::as_slice);
+            let chord_h = if line_chords.is_empty() {
+                0.0
+            } else {
+                let mut cp =
+                    build_slot_paragraph(&self.fonts, &chord_families, "G", chord_style, None);
+                cp.layout(layout_w);
+                cp.height().ceil()
+            };
+            total_h += chord_h + m.height;
+            if idx + 1 < lines.len() {
+                total_h += line_gap;
+            }
+        }
+        total_h += stroke_pad * 2.0;
+
+        if let Some((t_text, t_style)) = translation
+            && !t_text.trim().is_empty()
+        {
+            let trans_meas = self.measure_slot(
+                t_text,
+                &SlotTextStyle {
+                    max_lines: None,
+                    ..t_style.clone()
+                },
+                area_width,
+            );
+            total_h += trans_meas.total_height_with_decorations(t_style)
+                + (body_style.size * 0.3).max(4.0).round();
+            max_w = max_w.max(trans_meas.longest_line);
+            min_intrinsic = min_intrinsic.max(trans_meas.min_intrinsic_width);
+        }
+
+        (total_h, max_w, visual_lines, min_intrinsic)
     }
 
     /// Render a complete multi-slot [`SlideLayerSpec`] with full [`ResolvedTemplate`] styling
@@ -626,20 +716,22 @@ impl TextRenderer {
             return;
         }
         let families = self.slot_font_families(&style.font_family, style.weight);
-        let box_pad_x = style
+        let box_pad_left = style
             .background_box
             .as_ref()
             .map_or(0.0, |b| b.padding_x + b.accent_bar_width);
+        let box_pad_right = style.background_box.as_ref().map_or(0.0, |b| b.padding_x);
         let box_pad_y = style.background_box.as_ref().map_or(0.0, |b| b.padding_y);
         let stroke_pad = style.outline.as_ref().map_or(0.0, |o| o.width);
-        let inner_left = slot_rect.left
-            + style
-                .background_box
-                .as_ref()
-                .map_or(0.0, |b| b.padding_x + b.accent_bar_width)
-            + stroke_pad;
-        let right_pad = style.background_box.as_ref().map_or(0.0, |b| b.padding_x) + stroke_pad;
-        let layout_width = (slot_rect.width - box_pad_x - right_pad - stroke_pad).max(1.0);
+        let shadow_pad = style
+            .shadow
+            .as_ref()
+            .filter(|s| s.color[3] > 0)
+            .map_or(0.0, |s| s.offset_x.abs() + s.blur * 0.5);
+        let inner_left = slot_rect.left + box_pad_left + stroke_pad + shadow_pad;
+        let text_x = inner_left.ceil();
+        let right_limit = (slot_rect.right - box_pad_right - stroke_pad - shadow_pad).floor();
+        let layout_width = (right_limit - text_x).max(1.0);
 
         let mut fill_para = build_slot_paragraph(&self.fonts, &families, text, style, None);
         fill_para.layout(layout_width);
@@ -649,12 +741,11 @@ impl TextRenderer {
         let box_top = match style.align_v {
             TextAlignV::Top => slot_rect.top,
             TextAlignV::Middle => {
-                slot_rect.top + ((slot_rect.height - total_h) / 2.0).max(0.0).round()
+                slot_rect.top + ((slot_rect.height - total_h) / 2.0).max(0.0).floor()
             }
-            TextAlignV::Bottom => (slot_rect.bottom - total_h).max(slot_rect.top).round(),
+            TextAlignV::Bottom => (slot_rect.bottom - total_h).max(slot_rect.top).floor(),
         };
-        let text_x = inner_left.round();
-        let text_y = (box_top + box_pad_y + stroke_pad).round();
+        let text_y = (box_top + box_pad_y + stroke_pad).ceil();
 
         // 1. Optional rounded background card + left accent bar.
         if let Some(bg) = &style.background_box
@@ -742,9 +833,16 @@ impl TextRenderer {
             content_left: f32,
         }
 
-        let layout_w = area.width.max(1.0);
+        let stroke_pad = body_style.outline.as_ref().map_or(0.0, |o| o.width);
+        let shadow_pad = body_style
+            .shadow
+            .as_ref()
+            .filter(|s| s.color[3] > 0)
+            .map_or(0.0, |s| s.offset_x.abs() + s.blur * 0.5);
+        let content_left = (area.left + stroke_pad + shadow_pad).ceil();
+        let layout_w = ((area.right - stroke_pad - shadow_pad).floor() - content_left).max(1.0);
         let mut rows = Vec::with_capacity(lines.len());
-        let mut total_h = 0.0f32;
+        let mut total_h = stroke_pad * 2.0;
         let line_gap = (body_style.size * 0.2).max(2.0).round();
 
         for (idx, line) in lines.iter().enumerate() {
@@ -792,7 +890,7 @@ impl TextRenderer {
                     );
                     cp.layout(layout_w);
                     let cw = cp.max_intrinsic_width().max(chord_style.size * 0.5);
-                    let x = desired_x.min((area.width - cw).max(0.0));
+                    let x = desired_x.min((layout_w - cw).max(0.0));
                     cursor_right = x + cw + 8.0;
                     placed_chords.push((x, chord_text));
                 }
@@ -806,22 +904,25 @@ impl TextRenderer {
                 chords: placed_chords,
                 lyric_h: m.height,
                 chord_h,
-                content_left: area.left,
+                content_left,
             });
         }
 
         let trans_h = translation.map_or(0.0, |(t, ts)| {
             self.measure_slot(t, ts, area.width)
                 .total_height_with_decorations(ts)
-                + (body_style.size * 0.3).max(4.0)
+                + (body_style.size * 0.3).max(4.0).round()
         });
         let full_h = total_h + trans_h;
 
         let mut y = match body_style.align_v {
-            TextAlignV::Top => area.top,
-            TextAlignV::Middle => area.top + ((area.height - full_h) / 2.0).max(0.0).round(),
-            TextAlignV::Bottom => (area.bottom - full_h).max(area.top).round(),
-        };
+            TextAlignV::Top => area.top + stroke_pad,
+            TextAlignV::Middle => {
+                area.top + ((area.height - full_h) / 2.0).max(0.0).floor() + stroke_pad
+            }
+            TextAlignV::Bottom => (area.bottom - full_h).max(area.top).floor() + stroke_pad,
+        }
+        .ceil();
 
         for row in rows {
             if row.chord_h > 0.0 {

@@ -649,6 +649,25 @@ impl SlotTextStyle {
         hasher.update(&[s.align_h as u8, s.align_v as u8]);
         hasher.update(&s.max_lines.unwrap_or(0).to_le_bytes());
     }
+
+    pub fn to_full_patch(&self) -> SlotTextStylePatch {
+        SlotTextStylePatch {
+            font_family: Some(self.font_family.clone()),
+            size: Some(self.size),
+            min_size: Some(self.min_size),
+            weight: Some(self.weight),
+            color: Some(self.color),
+            outline: Some(self.outline.clone()),
+            shadow: Some(self.shadow.clone()),
+            background_box: Some(self.background_box.clone()),
+            line_height: Some(self.line_height),
+            letter_spacing: Some(self.letter_spacing),
+            align_h: Some(self.align_h),
+            align_v: Some(self.align_v),
+            max_lines: Some(self.max_lines),
+            visible: Some(self.visible),
+        }
+    }
 }
 
 /// Partial override patch for [`SlotTextStyle`] used inside aspect-ratio variants.
@@ -843,6 +862,17 @@ impl RoleSlots {
             footer: self.footer.scaled_for(reference_height, output_height),
             chords: self.chords.scaled_for(reference_height, output_height),
             translation: self.translation.scaled_for(reference_height, output_height),
+        }
+    }
+
+    pub fn to_full_patch(&self) -> RoleSlotsPatch {
+        RoleSlotsPatch {
+            body: Some(self.body.to_full_patch()),
+            reference: Some(self.reference.to_full_patch()),
+            title: Some(self.title.to_full_patch()),
+            footer: Some(self.footer.to_full_patch()),
+            chords: Some(self.chords.to_full_patch()),
+            translation: Some(self.translation.to_full_patch()),
         }
     }
 }
@@ -1059,6 +1089,128 @@ impl TemplateStyle {
         }
 
         Ok(style.validated())
+    }
+
+    /// Build a [`TemplateStyle`] from a stored protobuf [`selah_proto::v1::Template`] and its
+    /// [`selah_proto::v1::TemplateVariant`] list (M3.2 / M3.3).
+    pub fn from_proto_template(doc: &selah_proto::v1::Template) -> Result<Self> {
+        if doc.variants.len() > MAX_VARIANTS {
+            bail!(
+                "template '{}' exceeds maximum of {MAX_VARIANTS} variants",
+                doc.name
+            );
+        }
+        if doc.variants.is_empty() {
+            return Ok(Self {
+                name: doc.name.clone(),
+                ..Self::default()
+            }
+            .validated());
+        }
+
+        if doc.variants.len() == 1 {
+            let v = &doc.variants[0];
+            let mut parsed = Self::from_json(&v.style_json)?;
+            if !doc.name.trim().is_empty() && parsed.name.trim().is_empty() {
+                parsed.name = doc.name.clone();
+            }
+            if let Some(res) = v.resolution
+                && res.width > 0
+                && res.height > 0
+            {
+                let out_ar = res.width as f32 / res.height as f32;
+                let max_lines = (v.max_lines > 0).then_some(v.max_lines);
+                let matching = parsed
+                    .variants
+                    .iter_mut()
+                    .find(|ev| (out_ar / ev.aspect() - 1.0).abs() <= 0.15);
+                if let Some(ev) = matching {
+                    if max_lines.is_some() {
+                        ev.max_lines = max_lines;
+                    }
+                    if ev.reference_width == 0 {
+                        ev.reference_width = res.width;
+                    }
+                    if ev.reference_height == 0 {
+                        ev.reference_height = res.height;
+                    }
+                } else {
+                    parsed.variants.push(AspectVariantStyle {
+                        aspect_ratio: format_aspect_ratio(res.width, res.height),
+                        reference_width: res.width,
+                        reference_height: res.height,
+                        max_lines,
+                        safe_area: None,
+                        roles: None,
+                    });
+                }
+            }
+            return Ok(parsed.validated());
+        }
+
+        // Multiple proto variants: choose base variant closest to 16:9, and translate every variant
+        // into an AspectVariantStyle so per-output matching picks the exact intended layout.
+        let target_ar = 16.0f32 / 9.0;
+        let base_idx = doc
+            .variants
+            .iter()
+            .enumerate()
+            .min_by(|(_, a), (_, b)| {
+                let da = a.resolution.map_or(f32::MAX, |r| {
+                    if r.height > 0 {
+                        (r.width as f32 / r.height as f32 - target_ar).abs()
+                    } else {
+                        f32::MAX
+                    }
+                });
+                let db = b.resolution.map_or(f32::MAX, |r| {
+                    if r.height > 0 {
+                        (r.width as f32 / r.height as f32 - target_ar).abs()
+                    } else {
+                        f32::MAX
+                    }
+                });
+                da.total_cmp(&db)
+            })
+            .map_or(0, |(idx, _)| idx);
+
+        let base_proto = &doc.variants[base_idx];
+        let mut base = Self::from_json(&base_proto.style_json)?;
+        if !doc.name.trim().is_empty() && base.name.trim().is_empty() {
+            base.name = doc.name.clone();
+        }
+        if let Some(res) = base_proto.resolution
+            && res.height > 0
+            && base_proto.style_json.trim().is_empty()
+        {
+            base.reference_height = res.height;
+        }
+
+        let mut variants = Vec::with_capacity(doc.variants.len());
+        for v in &doc.variants {
+            let trimmed = v.style_json.trim();
+            let parsed_v = Self::from_json(trimmed)?;
+            let res = v.resolution.unwrap_or(selah_proto::v1::Resolution {
+                width: 1920,
+                height: 1080,
+            });
+            let rw = res.width.max(1);
+            let rh = res.height.max(1);
+            let max_lines = (v.max_lines > 0)
+                .then_some(v.max_lines)
+                .or(parsed_v.roles.body.max_lines);
+            let has_explicit_sa = parsed_v.safe_area != SafeArea::default();
+            variants.push(AspectVariantStyle {
+                aspect_ratio: format_aspect_ratio(rw, rh),
+                reference_width: rw,
+                reference_height: rh,
+                max_lines,
+                safe_area: has_explicit_sa.then_some(parsed_v.safe_area),
+                roles: (!trimmed.is_empty()).then(|| parsed_v.roles.to_full_patch()),
+            });
+        }
+        base.variants = variants;
+        Ok(base.validated())
     }
 
     fn from_shorthand_map(obj: &serde_json::Map<String, serde_json::Value>) -> Result<Self> {
@@ -1587,6 +1739,18 @@ struct ChordPosOnly {
     text: String,
 }
 
+fn format_aspect_ratio(width: u32, height: u32) -> String {
+    let mut a = width.max(1);
+    let mut b = height.max(1);
+    while b != 0 {
+        let r = a % b;
+        a = b;
+        b = r;
+    }
+    let g = a.max(1);
+    format!("{}:{}", width.max(1) / g, height.max(1) / g)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -1663,5 +1827,66 @@ mod tests {
         let rect = safe.resolved_rect(1920, 1080);
         assert!(rect.width >= 1.0 && rect.height >= 1.0);
         assert!(rect.right <= 1920.0 && rect.bottom <= 1080.0);
+    }
+
+    #[test]
+    fn converts_multi_variant_and_single_full_proto_templates() {
+        use selah_proto::v1::{Resolution, Template, TemplateVariant};
+
+        let multi = Template {
+            name: "Multi Output".into(),
+            variants: vec![
+                TemplateVariant {
+                    resolution: Some(Resolution {
+                        width: 1920,
+                        height: 1080,
+                    }),
+                    max_lines: 4,
+                    style_json: r#"{"font":"Manrope","size":72}"#.into(),
+                    ..Default::default()
+                },
+                TemplateVariant {
+                    resolution: Some(Resolution {
+                        width: 3840,
+                        height: 1080,
+                    }),
+                    max_lines: 2,
+                    style_json: String::new(),
+                    ..Default::default()
+                },
+            ],
+            ..Default::default()
+        };
+        let converted = TemplateStyle::from_proto_template(&multi).unwrap();
+        assert_eq!(converted.name, "Multi Output");
+        assert_eq!(converted.roles.body.font_family, "Manrope");
+        let r_led = converted.resolve_for_output(3840, 1080, None);
+        assert_eq!(r_led.matched_variant.as_deref(), Some("32:9"));
+        assert_eq!(r_led.max_lines, Some(2));
+        // Empty variant inherits base font cleanly.
+        assert_eq!(r_led.roles.body.font_family, "Manrope");
+
+        let single_full = Template {
+            name: "Full Sanctuary".into(),
+            variants: vec![TemplateVariant {
+                resolution: Some(Resolution {
+                    width: 1920,
+                    height: 1080,
+                }),
+                max_lines: 4,
+                style_json: TemplateStyle::preset_sanctuary().to_json().unwrap(),
+                ..Default::default()
+            }],
+            ..Default::default()
+        };
+        let from_full = TemplateStyle::from_proto_template(&single_full).unwrap();
+        assert_eq!(from_full.variants.len(), 4);
+        assert_eq!(
+            from_full
+                .resolve_for_output(1440, 1080, None)
+                .matched_variant
+                .as_deref(),
+            Some("4:3")
+        );
     }
 }

@@ -303,6 +303,10 @@ document!(
     Template,
     Template,
     |value: &Template| {
+        ensure!(
+            value.variants.len() <= selah_render::template::MAX_VARIANTS,
+            "too many template variants"
+        );
         unique_ids(value.variants.iter().map(|v| &v.id))?;
         for variant in &value.variants {
             ensure!((1..=100).contains(&variant.max_lines), "invalid line limit");
@@ -314,6 +318,7 @@ document!(
                 size.width > 0 && size.height > 0 && size.width <= 16384 && size.height <= 16384,
                 "invalid template resolution"
             );
+            selah_render::template::TemplateStyle::from_json(&variant.style_json)?;
         }
         Ok(())
     },

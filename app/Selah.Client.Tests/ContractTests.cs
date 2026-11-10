@@ -717,4 +717,153 @@ public sealed class ContractTests
         };
         Assert.Equal(statusReply, Envelope.Parser.ParseFrom(statusReply.ToByteArray()));
     }
+
+    [Fact]
+    public void M3MetricFitMessagesRoundTrip()
+    {
+        var tmplId = ByteString.CopyFrom(new byte[]
+        {
+            0x01, 0x92, 0x70, 0x00, 0x00, 0x00, 0x70, 0x00,
+            0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x11,
+        });
+
+        var splitSongQuery = new Envelope
+        {
+            Id = 4101,
+            Query = new Query
+            {
+                SplitSongSlides = new SplitSongSlides
+                {
+                    Song = new Song { Id = new Id { Value = tmplId }, Title = "Grace" },
+                    MaxLines = 4,
+                    ShrinkToFit = true,
+                    TemplateId = new Id { Value = tmplId },
+                    StyleJson = "{\"name\":\"Sanctuary\"}",
+                    TargetOutputs =
+                    {
+                        new FitTargetOutput
+                        {
+                            OutputIndex = 0,
+                            Name = "Main",
+                            Role = OutputRole.Main,
+                            Resolution = new Resolution { Width = 1920, Height = 1080 },
+                            MaxLinesOverride = 4,
+                        },
+                        new FitTargetOutput
+                        {
+                            OutputIndex = 1,
+                            Name = "LED",
+                            Role = OutputRole.Main,
+                            Resolution = new Resolution { Width = 3840, Height = 1080 },
+                            MaxLinesOverride = 2,
+                        },
+                    },
+                },
+            },
+        };
+        Assert.Equal(splitSongQuery, Envelope.Parser.ParseFrom(splitSongQuery.ToByteArray()));
+
+        var splitSongReply = new Envelope
+        {
+            Id = 4102,
+            CorrelationId = 4101,
+            Reply = new Reply
+            {
+                GeneratedSongSlides = new GeneratedSongSlides
+                {
+                    CopyrightLine = "Grace",
+                    Slides =
+                    {
+                        new GeneratedSlide
+                        {
+                            SectionLabel = "Verse 1",
+                            PartIndex = 1,
+                            PartCount = 1,
+                            AppliedSize = 64.0f,
+                            Lines = { new LyricLine { Text = "Amazing grace" } },
+                        },
+                    },
+                    FitReports =
+                    {
+                        new OutputFitReport
+                        {
+                            OutputIndex = 0,
+                            OutputName = "Main",
+                            Resolution = new Resolution { Width = 1920, Height = 1080 },
+                            MatchedVariant = "16:9",
+                            Fits = true,
+                            AppliedSize = 64.0f,
+                            MinSize = 32.0f,
+                            OriginalSlideCount = 1,
+                            FinalSlideCount = 1,
+                            ExtraSplits = 0,
+                            OverflowsSafeArea = false,
+                            Summary = "Fits",
+                        },
+                    },
+                    PerOutputSlides =
+                    {
+                        new OutputFittedSongSlides
+                        {
+                            OutputIndex = 0,
+                            Slides =
+                            {
+                                new GeneratedSlide { SectionLabel = "Verse 1", AppliedSize = 64.0f },
+                            },
+                        },
+                    },
+                },
+            },
+        };
+        Assert.Equal(splitSongReply, Envelope.Parser.ParseFrom(splitSongReply.ToByteArray()));
+
+        var splitScriptureReply = new Envelope
+        {
+            Id = 4103,
+            CorrelationId = 4101,
+            Reply = new Reply
+            {
+                GeneratedScriptureSlides = new GeneratedScriptureSlides
+                {
+                    Translation = "KJV",
+                    Slides =
+                    {
+                        new GeneratedScriptureSlide
+                        {
+                            Reference = "John 3:16 (KJV)",
+                            PartIndex = 1,
+                            PartCount = 1,
+                            AppliedSize = 56.0f,
+                            Lines = { "For God so loved the world" },
+                        },
+                    },
+                    FitReports =
+                    {
+                        new OutputFitReport
+                        {
+                            OutputIndex = 0,
+                            OutputName = "Main",
+                            Resolution = new Resolution { Width = 1920, Height = 1080 },
+                            Fits = true,
+                            AppliedSize = 56.0f,
+                            MinSize = 28.0f,
+                            OriginalSlideCount = 1,
+                            FinalSlideCount = 1,
+                            WarningCodes = { "SHRUNK_TO_FIT" },
+                            Summary = "Shrunk to fit",
+                        },
+                    },
+                    PerOutputSlides =
+                    {
+                        new OutputFittedScriptureSlides
+                        {
+                            OutputIndex = 0,
+                            Slides = { new GeneratedScriptureSlide { AppliedSize = 56.0f } },
+                        },
+                    },
+                },
+            },
+        };
+        Assert.Equal(splitScriptureReply, Envelope.Parser.ParseFrom(splitScriptureReply.ToByteArray()));
+    }
 }

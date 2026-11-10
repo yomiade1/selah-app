@@ -16,4 +16,5 @@ pub use sections::{
 };
 pub use split::{
     DEFAULT_MAX_LINES, MAX_SLIDE_LINES, SplitOptions, format_copyright_line, generate_slides,
+    generate_slides_with_fit,
 };

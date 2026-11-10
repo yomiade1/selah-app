@@ -10,7 +10,7 @@ Status values: `Not started` · `In progress` · `Blocked` (say on what) · `Don
 |---|---|---|---|---|---|
 | M1. Foundations and risk spikes | Done, H-checks pending | `claude/m1-finish` | 2026-11-07 | 2026-11-07 | All 13 WPs done (local Windows sessions, H-01). Open (H): M1-A7 benchmark report, M1-A12 install on your PC; M1-A1/A6 macOS from the `macos` job. |
 | M2. Library, songs, scripture and the help system | Done, H-checks pending | `codex/m2-library` | 2026-11-09 | 2026-11-09 | All 9 WPs done (local Windows session, H-01). Open (H): M2-A10 / H-06 (Bible rights beyond public-domain KJV & WEB) and H-18 (2i KB review; 37 articles in `review`). |
-| M3. Render engine, templates and the slide editor | In progress | `antigravity/m3-render-engine` | 2026-11-10 | — | M3.1 complete; next M3.2 (templates & text styling). |
+| M3. Render engine, templates and the slide editor | In progress | `antigravity/m3-render-engine` | 2026-11-10 | — | M3.1–M3.3 complete; next M3.4 (backgrounds & media playback). |
 | M4. Live operation, services and stage | Not started | — | — | — | |
 | M5. Screens, video and audio I/O | Not started | — | — | — | |
 | M6. Importers, migration and the alpha release | Not started | — | — | — | |
@@ -19,7 +19,7 @@ Status values: `Not started` · `In progress` · `Blocked` (say on what) · `Don
 | M9. Cloud, teams and enterprise | Not started | — | — | — | |
 | M10. Launch readiness and v1.0 | Not started | — | — | — | |
 
-**Next action:** continue Milestone 3 at M3.2 (Templates and text styling). Human checklists M1 and M2 remain open below.
+**Next action:** continue Milestone 3 at M3.4 (Backgrounds and media playback). Human checklists M1 and M2 remain open below.
 
 ## Resume notes
 
@@ -100,7 +100,7 @@ _When a session stops partway through a milestone, write here: the milestone, th
 
 - [x] **M3.1** Scene graph, layers and frame scheduler — evidence: commit `M3.1`; `proto/selah/v1/{render,envelope}.proto` (`OutputConfig`, `LayerSpec`, `OutputScene`, `PreloadHint`, `SetPreviewScene`, `PreloadItems`, `SetOutputConfigs`, `GetOutputConfigs`, `OutputFrameStatus`; `ContractTests` 25/25, `web/contracts` 9/9, `buf breaking --against .git#tag=m2` & `check-generated` pass); `selah-render::scene` canonical 5-layer normalization (`VideoInput`, `Media`, `Slide`, `Props`, `Messages`), `OverlayCache`, `prerasterise_hints`, `GpuCompositor`/`CpuCompositor` multi-output independent targets (`crates/selah-render/tests/layers.rs`: `canonical_five_layer_stack_renders_in_z_order_and_matches_cpu_gpu`, `multiple_outputs_render_at_independent_resolutions_simultaneously`, `prerasterise_hints_warm_caches_for_upcoming_slides`); `selah-engine::scheduler::FrameScheduler` vsync cadence & multi-output `Engine` + `selah-core` `SetPreviewScene`/`PreloadItems`/`SetOutputConfigs`/`GetOutputConfigs` (`service::tests`, `permissions::authorize` SEC-14 matrix, `selah-testkit/tests/multi_output.rs` `multi_output_layer_scenes_present_independently_and_clear_all_on_emergency`); full `tools/verify.ps1` green on Windows; ledger updated (`rust: 222`, `dotnet: 25`, `web: 9`, `total: 401`)
 - [x] **M3.2** Templates and text styling — evidence: commit `M3.2`; `crates/selah-render/src/template.rs` (`TemplateStyle`, `RoleSlots` `body`/`reference`/`title`/`footer`/`copyright` alias/`chords`/`translation`, `AspectVariantStyle` resolution, `SlotTextStyle` font/size/weight/color/outline/shadow/background_box/line_height/letter_spacing/H+V align/safe_area/min_size, SEC-03 bounds, M2 shorthand compat, built-in Sanctuary/Warm Serif/Lower Third/Stage Monitor presets); `crates/selah-render/src/text.rs` (`ALL_FONTS` all 7 bundled OFL variable fonts + `wght` `100..=900` stops + Skia HarfBuzz slot layout/outline/shadow/card box/chord placement + preserved M1 `golden_text` 4/4); `crates/selah-render/src/scene.rs` (`rasterise_slide_text` + `prerasterise_hints`); `tools/{package,test-installer}.ps1` all 7 font families; `crates/selah-render/tests/templates.rs` (4/4 tests + CPU/GPU parity); unit tests 3/3 in `template.rs` & 3/3 in `text.rs`; full `tools/verify.ps1` green (`rust: 230`, `total: 409`)
-- [ ] **M3.3** Metric fit: words that fit every screen — evidence: 
+- [x] **M3.3** Metric fit: words that fit every screen — evidence: commit `M3.3`; `proto/selah/v1/library.proto` + TS/Rust/C# generated contracts (`FitTargetOutput`, `OutputFitReport`, `OutputFittedSongSlides`, `OutputFittedScriptureSlides`; `ContractTests` 26/26, `web/contracts` 10/10, `buf breaking --against .git#tag=m2` & `check-generated` pass); `crates/selah-render/src/fit.rs` (Skia measurement shrink-to-`min_size` + clean word/line re-split, translation/chord/copyright safe-area guard, aligned stroke/shadow layout widths in `text.rs`, per-output `OutputFitReport`, 4/4 unit tests) & `selah-core` (`SplitSongSlides` / `SplitScriptureSlides` template resolution + per-output fit reports + backward-compatible fallback, `crates/selah-core/tests/metric_fit.rs` 2/2); full `tools/verify.ps1` gate green on Windows (`rust: 236`, `dotnet: 26`, `web: 10`, `total: 417`)
 - [ ] **M3.4** Backgrounds and media playback — evidence: 
 - [ ] **M3.5** Transitions and effects foundation — evidence: 
 - [ ] **M3.6** Thumbnails and preview frames — evidence: 
@@ -110,7 +110,7 @@ _When a session stops partway through a milestone, write here: the milestone, th
 **Acceptance criteria**
 
 - [ ] **M3-A1** (auto) Golden frames pass for every template style feature, transition step and effect. — evidence: 
-- [ ] **M3-A2** (auto) Fit property test: 5,000 random lyric sets × 3 outputs (16:9, 32:9 LED, 4:3). — evidence: 
+- [x] **M3-A2** (auto) Fit property test: 5,000 random lyric sets × 3 outputs (16:9, 32:9 LED, 4:3). — evidence: `crates/selah-core/tests/metric_fit.rs::m3_a2_property_five_thousand_random_lyric_sets_across_three_outputs` (5,000 pseudorandom multilingual/chorded/translated lyric sets across Sanctuary 16:9 `1920×1080`, LED 32:9 `3840×1080` max 2 lines, and Classic 4:3 `1440×1080` — 15,000 output splits asserting zero safe-area overflow, `applied_size >= min_size`, non-shrink-before-split honesty, accurate `OutputFitReport` counts/warnings, plus sampled full-slide pixel rasterisation boundary assertions inside `safe_rect`)
 - [ ] **M3-A3** (auto) Thumbnails match the downscaled real output (pixel difference under the threshold). — evidence: 
 - [ ] **M3-A4** (auto) A 1080p loop has no frame gap at the loop point, and A/V sync is within ±1 frame (flash/beep test clip). — evidence: 
 - [ ] **M3-A5** (auto) Slide editor UI flow: create a custom slide with text, an image and a shape, align them, undo and redo. — evidence: 

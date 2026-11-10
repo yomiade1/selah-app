@@ -2,6 +2,7 @@
 //! The compositor interface (ADR-005) and the frame type the engine presents.
 pub mod blit;
 pub mod cpu;
+pub mod fit;
 pub mod gpu;
 pub mod png;
 pub mod scene;

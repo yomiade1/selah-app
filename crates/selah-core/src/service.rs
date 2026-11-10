@@ -1213,9 +1213,27 @@ impl CoreService {
                     translation_language: (!q.translation_language.trim().is_empty())
                         .then(|| q.translation_language.clone()),
                 };
-                match validate_song_preview(song)
-                    .and_then(|()| crate::songs::generate_slides(song, &options))
-                {
+                let needs_fit = q.shrink_to_fit
+                    || !q.style_json.trim().is_empty()
+                    || q.template_id.is_some()
+                    || !q.target_outputs.is_empty();
+                let split_res = validate_song_preview(song).and_then(|()| {
+                    if !needs_fit {
+                        crate::songs::generate_slides(song, &options)
+                    } else {
+                        match self.resolve_fit_targets(
+                            &q.style_json,
+                            q.template_id.as_ref(),
+                            &q.target_outputs,
+                        ) {
+                            Ok(targets) => {
+                                crate::songs::generate_slides_with_fit(song, &options, &targets)
+                            }
+                            Err(err) => Err(anyhow::anyhow!("{err}")),
+                        }
+                    }
+                });
+                match split_res {
                     Ok(slides) => self.reply(request, reply::Result::GeneratedSongSlides(slides)),
                     Err(error) => {
                         self.bus_error(request, &CommandBusError::Invalid(error.to_string()))
@@ -1256,7 +1274,25 @@ impl CoreService {
                 }
             }
             Some(query::Request::SplitScriptureSlides(q)) => {
-                match crate::scripture::split_scripture_slides(q) {
+                let needs_fit = q.shrink_to_fit
+                    || !q.style_json.trim().is_empty()
+                    || q.template_id.is_some()
+                    || !q.target_outputs.is_empty();
+                let split_res = if !needs_fit {
+                    crate::scripture::split_scripture_slides(q)
+                } else {
+                    match self.resolve_fit_targets(
+                        &q.style_json,
+                        q.template_id.as_ref(),
+                        &q.target_outputs,
+                    ) {
+                        Ok(targets) => {
+                            crate::scripture::split_scripture_slides_with_fit(q, &targets)
+                        }
+                        Err(err) => Err(anyhow::anyhow!("{err}")),
+                    }
+                };
+                match split_res {
                     Ok(slides) => {
                         self.reply(request, reply::Result::GeneratedScriptureSlides(slides))
                     }
@@ -1320,6 +1356,131 @@ impl CoreService {
             Ok(items) => self.reply(request, wrap(items)),
             Err(error) => self.bus_error(request, &CommandBusError::Invalid(error.to_string())),
         }
+    }
+
+    fn load_template_style(
+        &self,
+        id: &selah_proto::v1::Id,
+    ) -> Result<selah_render::template::TemplateStyle, String> {
+        validate_id(id).map_err(|e| format!("invalid template_id: {e}"))?;
+        let doc = self
+            .library
+            .get::<selah_proto::v1::Template>(id)
+            .map_err(|e| format!("failed to load template: {e}"))?
+            .ok_or_else(|| "template not found".to_owned())?;
+        selah_render::template::TemplateStyle::from_proto_template(&doc)
+            .map_err(|e| format!("invalid template style: {e}"))
+    }
+
+    fn resolve_fit_targets(
+        &self,
+        style_json: &str,
+        template_id: Option<&selah_proto::v1::Id>,
+        target_outputs: &[selah_proto::v1::FitTargetOutput],
+    ) -> Result<Vec<selah_render::fit::FitTarget>, String> {
+        if target_outputs.len() > selah_render::template::MAX_VARIANTS {
+            return Err(format!(
+                "too many target outputs (max {})",
+                selah_render::template::MAX_VARIANTS
+            ));
+        }
+
+        let req_style = if !style_json.trim().is_empty() {
+            Some(
+                selah_render::template::TemplateStyle::from_json(style_json)
+                    .map_err(|e| format!("invalid style_json: {e}"))?,
+            )
+        } else if let Some(tid) = template_id {
+            Some(self.load_template_style(tid)?)
+        } else {
+            None
+        };
+
+        if !target_outputs.is_empty() {
+            let mut out = Vec::with_capacity(target_outputs.len());
+            for (idx, t) in target_outputs.iter().enumerate() {
+                if let Some(res) = t.resolution
+                    && !valid_resolution(res)
+                {
+                    return Err("invalid fit target resolution".to_owned());
+                }
+                let style = if !t.style_json.trim().is_empty() {
+                    selah_render::template::TemplateStyle::from_json(&t.style_json)
+                        .map_err(|e| format!("invalid target style_json: {e}"))?
+                } else if let Some(tid) = t.template_id.as_ref() {
+                    self.load_template_style(tid)?
+                } else if let Some(rs) = &req_style {
+                    rs.clone()
+                } else if let Some(cfg_tid) = self
+                    .live
+                    .output_configs()
+                    .iter()
+                    .find(|c| c.output_index == t.output_index)
+                    .and_then(|c| c.template_id.as_ref())
+                {
+                    self.load_template_style(cfg_tid)
+                        .unwrap_or_else(|_| selah_render::template::TemplateStyle::default())
+                } else {
+                    selah_render::template::TemplateStyle::default()
+                };
+                let res = t.resolution.unwrap_or(selah_proto::v1::Resolution {
+                    width: 1920,
+                    height: 1080,
+                });
+                out.push(selah_render::fit::FitTarget {
+                    output_index: t.output_index,
+                    output_name: if t.name.trim().is_empty() {
+                        format!("Output {}", idx + 1)
+                    } else {
+                        t.name.clone()
+                    },
+                    width: res.width,
+                    height: res.height,
+                    style,
+                    max_lines_override: (t.max_lines_override > 0).then_some(t.max_lines_override),
+                });
+            }
+            return Ok(out);
+        }
+
+        let mut out = Vec::new();
+        for cfg in self.live.output_configs().iter().filter(|c| c.enabled) {
+            let res = cfg.resolution.unwrap_or(selah_proto::v1::Resolution {
+                width: 1920,
+                height: 1080,
+            });
+            let style = if let Some(rs) = &req_style {
+                rs.clone()
+            } else if let Some(cfg_tid) = cfg.template_id.as_ref() {
+                self.load_template_style(cfg_tid)
+                    .unwrap_or_else(|_| selah_render::template::TemplateStyle::default())
+            } else {
+                selah_render::template::TemplateStyle::default()
+            };
+            out.push(selah_render::fit::FitTarget {
+                output_index: cfg.output_index,
+                output_name: if cfg.name.trim().is_empty() {
+                    format!("Output {}", cfg.output_index + 1)
+                } else {
+                    cfg.name.clone()
+                },
+                width: res.width.max(1),
+                height: res.height.max(1),
+                style,
+                max_lines_override: None,
+            });
+        }
+        if out.is_empty() {
+            out.push(selah_render::fit::FitTarget {
+                output_index: 0,
+                output_name: "Main Output".into(),
+                width: 1920,
+                height: 1080,
+                style: req_style.unwrap_or_default(),
+                max_lines_override: None,
+            });
+        }
+        Ok(out)
     }
 
     fn update_error(&self, request: &Envelope, error: &UpdateError) -> Outcome {
@@ -2521,6 +2682,7 @@ Was [Em]blind, but [D]now I [G]see.
                         title_slide: false,
                         blank_slide_at_end: true,
                         translation_language: String::new(),
+                        ..Default::default()
                     },
                 )),
             }),
@@ -2664,6 +2826,7 @@ Was [Em]blind, but [D]now I [G]see.
                             as i32,
                         title_slide: true,
                         blank_slide_at_end: true,
+                        ..Default::default()
                     },
                 )),
             }),

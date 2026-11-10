@@ -3,6 +3,7 @@ syntax = "proto3";
 package selah.v1;
 
 import "selah/v1/common.proto";
+import "selah/v1/render.proto";
 
 option csharp_namespace = "Selah.Contracts.V1";
 
@@ -465,6 +466,38 @@ message TransposeSong {
   AccidentalSpelling accidental_spelling = 3;
 }
 
+message FitTargetOutput {
+  uint32 output_index = 1;
+  string name = 2;
+  OutputRole role = 3;
+  Resolution resolution = 4;
+  Id template_id = 5;
+  string style_json = 6;
+  uint32 max_lines_override = 7;
+}
+
+message OutputFitReport {
+  uint32 output_index = 1;
+  string output_name = 2;
+  Resolution resolution = 3;
+  string matched_variant = 4;
+  bool fits = 5;
+  float applied_size = 6;
+  float min_size = 7;
+  uint32 original_slide_count = 8;
+  uint32 final_slide_count = 9;
+  uint32 extra_splits = 10;
+  bool overflows_safe_area = 11;
+  repeated string warning_codes = 12;
+  string summary = 13;
+  bool flash_warning = 14;
+}
+
+message OutputFittedSongSlides {
+  uint32 output_index = 1;
+  repeated GeneratedSlide slides = 2;
+}
+
 message SplitSongSlides {
   Song song = 1;
   Id arrangement_id = 2;
@@ -473,6 +506,10 @@ message SplitSongSlides {
   bool title_slide = 5;
   bool blank_slide_at_end = 6;
   string translation_language = 7;
+  string style_json = 8;
+  Id template_id = 9;
+  repeated FitTargetOutput target_outputs = 10;
+  bool shrink_to_fit = 11;
 }
 
 message GeneratedSlide {
@@ -488,11 +525,14 @@ message GeneratedSlide {
   string footer_copyright = 10;
   bool is_title = 11;
   bool is_blank = 12;
+  float applied_size = 13;
 }
 
 message GeneratedSongSlides {
   repeated GeneratedSlide slides = 1;
   string copyright_line = 2;
+  repeated OutputFitReport fit_reports = 3;
+  repeated OutputFittedSongSlides per_output_slides = 4;
 }
 
 enum BibleFormat {
@@ -580,6 +620,11 @@ message ScripturePassages {
   repeated ScriptureVerse verses = 3;
 }
 
+message OutputFittedScriptureSlides {
+  uint32 output_index = 1;
+  repeated GeneratedScriptureSlide slides = 2;
+}
+
 message SplitScriptureSlides {
   string translation = 1;
   string translation_name = 2;
@@ -593,6 +638,10 @@ message SplitScriptureSlides {
   ReferencePlacement reference_placement = 10;
   bool title_slide = 11;
   bool blank_slide_at_end = 12;
+  string style_json = 13;
+  Id template_id = 14;
+  repeated FitTargetOutput target_outputs = 15;
+  bool shrink_to_fit = 16;
 }
 
 message GeneratedScriptureSlide {
@@ -604,6 +653,7 @@ message GeneratedScriptureSlide {
   string footer_reference = 6;
   bool is_title = 7;
   bool is_blank = 8;
+  float applied_size = 9;
 }
 
 message GeneratedScriptureSlides {
@@ -611,6 +661,8 @@ message GeneratedScriptureSlides {
   string translation_name = 2;
   string reference_label = 3;
   repeated GeneratedScriptureSlide slides = 4;
+  repeated OutputFitReport fit_reports = 5;
+  repeated OutputFittedScriptureSlides per_output_slides = 6;
 }
 
 message ImportBible {
