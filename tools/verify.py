@@ -233,6 +233,8 @@ def stages(args):
     kb_flags = ["--release"] if args.release else []
     stage("9", "kb lint", [tool("cargo"), "run", "-q", "--locked", "-p", "selah-kb-lint", "--", *kb_flags], rust_env)
     stage("9", "kb build", [tool("cargo"), "run", "-q", "--locked", "-p", "selah-kb", "--bin", "selah-kb", "--", "build", *kb_flags], rust_env)
+    # Stage 10: saved DB fixtures must migrate and open cleanly without data loss (TESTING-AND-QUALITY §1, §3.4).
+    stage("10", "migrations", [tool("cargo"), "test", "--locked", "-p", "selah-core", "--test", "migrations"], rust_env)
     stage("13", "test ledger", [PY, "tools/test-ledger.py", "--check"])
     stage("14", "cargo deny", ["@cargo-deny", "check"])
     stage("14", "dotnet vulnerable packages", [PY, "tools/check-vulnerable.py", "dotnet"])

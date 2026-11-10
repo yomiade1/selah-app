@@ -1,32 +1,37 @@
 #![forbid(unsafe_code)]
 //! Create a synthetic historical schema fixture. Never overwrite an existing fixture.
-use selah_core::library::Library;
-use selah_proto::v1::{Arrangement, Id, LyricLine, Section, SectionKind, Song};
+use std::collections::HashMap;
+use std::path::PathBuf;
 
-fn id(last: u8) -> Id {
+use selah_core::library::{CommandMeta, Library, PolicyLevel};
+use selah_proto::v1::{
+    Actor, ActorOrigin, Arrangement, Chord, Color, Id, LyricLine, MediaItem, MediaKind,
+    Presentation, Resolution, Section, SectionKind, Service, ServiceItem, ServiceItemKind,
+    ServiceType, Slide, Song, Tag, Team, Template, TemplateVariant, TranslationLines,
+};
+use serde_json::json;
+
+fn id(group: u8, last: u8) -> Id {
     Id {
-        value: vec![1, 2, 3, 4, 5, 6, 0x70, 0, 0x80, 0, 0, 0, 0, 0, 0, last],
+        value: vec![1, 2, 3, 4, 5, group, 0x70, 0, 0x80, 0, 0, 0, 0, 0, 0, last],
     }
 }
 
-fn main() -> anyhow::Result<()> {
-    let output = std::path::PathBuf::from(
-        std::env::args_os()
-            .nth(1)
-            .ok_or_else(|| anyhow::anyhow!("usage: library_fixture <new-fixture.db>"))?,
-    );
-    anyhow::ensure!(
-        !output.exists(),
-        "historical fixtures cannot be overwritten"
-    );
-    let temporary = tempfile::tempdir()?;
-    let mut library = Library::open(temporary.path())?;
+fn fixture_actor() -> Actor {
+    Actor {
+        user_id: "fixture-owner".into(),
+        device_id: "fixture-device".into(),
+        origin: ActorOrigin::Ui as i32,
+    }
+}
+
+fn seed_v1(library: &mut Library) -> anyhow::Result<()> {
     let song = Song {
-        id: Some(id(1)),
+        id: Some(id(0, 1)),
         title: "Synthetic migration song".into(),
         public_domain: true,
         sections: vec![Section {
-            id: Some(id(2)),
+            id: Some(id(0, 2)),
             label: "Verse 1".into(),
             kind: SectionKind::Verse as i32,
             lines: vec![LyricLine {
@@ -36,13 +41,365 @@ fn main() -> anyhow::Result<()> {
             ..Default::default()
         }],
         arrangements: vec![Arrangement {
-            id: Some(id(3)),
+            id: Some(id(0, 3)),
             name: "Main".into(),
-            section_ids: vec![id(2), id(2)],
+            section_ids: vec![id(0, 2), id(0, 2)],
         }],
         ..Default::default()
     };
     library.save(&song)?;
+    Ok(())
+}
+
+fn seed_m2(library: &mut Library) -> anyhow::Result<()> {
+    let actor = fixture_actor();
+    let mut seq = 1u64;
+    let mut next_meta = |tag: u8| {
+        let envelope_id = seq;
+        seq += 1;
+        let mut command_hash = [0u8; 32];
+        command_hash[0] = tag;
+        command_hash[31] = (envelope_id & 0xFF) as u8;
+        CommandMeta {
+            actor: &actor,
+            envelope_id,
+            command_hash,
+            undo_group: None,
+        }
+    };
+
+    let tag_hymn = Tag {
+        id: Some(id(1, 1)),
+        name: "Hymn".into(),
+    };
+    let tag_bg = Tag {
+        id: Some(id(1, 2)),
+        name: "Background".into(),
+    };
+    library.save_document_op(&tag_hymn, &next_meta(1))?;
+    library.save_document_op(&tag_bg, &next_meta(2))?;
+
+    let song1_id = id(2, 1);
+    let song1_v1_id = id(2, 2);
+    let song1_ch_id = id(2, 3);
+    let song1_arr_id = id(2, 4);
+    let mut es_lines = HashMap::new();
+    es_lines.insert(
+        "es".to_owned(),
+        TranslationLines {
+            lines: vec!["Luz de prueba para este himno".to_owned()],
+        },
+    );
+    let mut song1 = Song {
+        id: Some(song1_id.clone()),
+        title: "Synthetic Grace Hymn".into(),
+        authors: vec!["Synthetic Composer".into()],
+        ccli_number: String::new(),
+        copyright: String::new(),
+        key: "G".into(),
+        tempo: 88.0,
+        tags: vec!["Hymn".into(), "Opening".into()],
+        public_domain: true,
+        sections: vec![
+            Section {
+                id: Some(song1_v1_id.clone()),
+                label: "Verse 1".into(),
+                kind: SectionKind::Verse as i32,
+                color: Some(Color {
+                    red: 0.25,
+                    green: 0.55,
+                    blue: 0.85,
+                    alpha: 1.0,
+                }),
+                hotkey: "1".into(),
+                lines: vec![LyricLine {
+                    text: "Morning light is synthetic fixture text".into(),
+                    chords: vec![
+                        Chord {
+                            position: 0,
+                            text: "G".into(),
+                        },
+                        Chord {
+                            position: 8,
+                            text: "C/G".into(),
+                        },
+                    ],
+                }],
+                translations: es_lines,
+            },
+            Section {
+                id: Some(song1_ch_id.clone()),
+                label: "Chorus".into(),
+                kind: SectionKind::Chorus as i32,
+                color: Some(Color {
+                    red: 0.85,
+                    green: 0.45,
+                    blue: 0.20,
+                    alpha: 1.0,
+                }),
+                hotkey: "c".into(),
+                lines: vec![LyricLine {
+                    text: "Sing praise on every screen".into(),
+                    chords: vec![Chord {
+                        position: 0,
+                        text: "D".into(),
+                    }],
+                }],
+                ..Default::default()
+            },
+        ],
+        arrangements: vec![Arrangement {
+            id: Some(song1_arr_id),
+            name: "Sunday Main".into(),
+            section_ids: vec![song1_v1_id.clone(), song1_ch_id.clone(), song1_v1_id],
+        }],
+    };
+    library.save_document_op(&song1, &next_meta(3))?;
+    song1.tempo = 92.0;
+    library.save_document_op(&song1, &next_meta(4))?;
+
+    let song2_v1_id = id(3, 2);
+    let song2 = Song {
+        id: Some(id(3, 1)),
+        title: "Ọlọ́run Praise Fixture".into(),
+        authors: vec!["Àmínà Synthetic".into()],
+        ccli_number: "9990001".into(),
+        copyright: "Synthetic Public Domain Fixture".into(),
+        key: "D".into(),
+        tempo: 76.0,
+        tags: vec!["Closing".into(), "Multilingual".into()],
+        public_domain: true,
+        sections: vec![Section {
+            id: Some(song2_v1_id.clone()),
+            label: "Verse 1".into(),
+            kind: SectionKind::Verse as i32,
+            hotkey: "1".into(),
+            lines: vec![
+                LyricLine {
+                    text: "Ọlọ́run ṣeun fún oore".into(),
+                    chords: vec![],
+                },
+                LyricLine {
+                    text: "찬양 테스트 한 줄".into(),
+                    chords: vec![],
+                },
+            ],
+            ..Default::default()
+        }],
+        arrangements: vec![Arrangement {
+            id: Some(id(3, 3)),
+            name: "Default".into(),
+            section_ids: vec![song2_v1_id],
+        }],
+    };
+    library.save_document_op(&song2, &next_meta(5))?;
+
+    // Save + update + undo on song3 so both undo and redo stacks are populated.
+    let song3_v1_id = id(4, 2);
+    let mut song3 = Song {
+        id: Some(id(4, 1)),
+        title: "Synthetic Morning Anthem".into(),
+        authors: vec!["Fixture Team".into()],
+        key: "C".into(),
+        tempo: 112.0,
+        tags: vec!["Hymn".into()],
+        public_domain: true,
+        sections: vec![Section {
+            id: Some(song3_v1_id.clone()),
+            label: "Chorus".into(),
+            kind: SectionKind::Chorus as i32,
+            lines: vec![LyricLine {
+                text: "Joyful fixture song words".into(),
+                chords: vec![],
+            }],
+            ..Default::default()
+        }],
+        arrangements: vec![Arrangement {
+            id: Some(id(4, 3)),
+            name: "Main".into(),
+            section_ids: vec![song3_v1_id],
+        }],
+        ..Default::default()
+    };
+    library.save_document_op(&song3, &next_meta(6))?;
+    song3.title = "Synthetic Morning Anthem (Edited)".into();
+    library.save_document_op(&song3, &next_meta(7))?;
+    library.undo_op(song3.id.as_ref(), &next_meta(8))?;
+
+    let template_id = id(5, 1);
+    let template = Template {
+        id: Some(template_id.clone()),
+        name: "Synthetic 16:9 & LED Template".into(),
+        variants: vec![
+            TemplateVariant {
+                id: Some(id(5, 2)),
+                resolution: Some(Resolution {
+                    width: 1920,
+                    height: 1080,
+                }),
+                max_lines: 4,
+                style_json: r#"{"font":"Manrope","align":"center"}"#.into(),
+            },
+            TemplateVariant {
+                id: Some(id(5, 3)),
+                resolution: Some(Resolution {
+                    width: 3840,
+                    height: 1080,
+                }),
+                max_lines: 2,
+                style_json: r#"{"font":"Manrope","align":"center"}"#.into(),
+            },
+        ],
+    };
+    library.save_document_op(&template, &next_meta(9))?;
+
+    // Valid tiny synthetic PNG bytes matching BLAKE3 hash checks during fixture generation.
+    let png_stub: &[u8] = b"\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00\x01\x00\x00\x00\x01\x08\x06\x00\x00\x00\x1f\x15c4\x00\x00\x00\rIDATx\x9cc```\xf8\x0f\x00\x01\x04\x01\x00\x18\xdd\x8d\xb1\x00\x00\x00\x00IEND\xaeB`\x82";
+    let blob = library
+        .media_store()?
+        .import_reader(png_stub, "png", 4096)?;
+    let media_id = id(6, 1);
+    let media = MediaItem {
+        id: Some(media_id.clone()),
+        name: "Synthetic Still Backdrop".into(),
+        kind: MediaKind::Image as i32,
+        content_hash: blob.content_hash,
+        extension: blob.extension,
+        size_bytes: blob.size_bytes,
+        resolution: Some(Resolution {
+            width: 1,
+            height: 1,
+        }),
+        duration_milliseconds: 0,
+        tags: vec!["Background".into(), "Motionless".into()],
+    };
+    library.save_document_op(&media, &next_meta(10))?;
+
+    let pres_id = id(7, 1);
+    let presentation = Presentation {
+        id: Some(pres_id.clone()),
+        name: "Synthetic Announcements".into(),
+        template_id: Some(template_id),
+        slides: vec![
+            Slide {
+                id: Some(id(7, 2)),
+                text: "Welcome to this synthetic fixture service".into(),
+                media_id: Some(media_id),
+                elements_json: "[]".into(),
+            },
+            Slide {
+                id: Some(id(7, 3)),
+                text: "Fixture notices slide".into(),
+                media_id: None,
+                elements_json: "[]".into(),
+            },
+        ],
+    };
+    library.save_document_op(&presentation, &next_meta(11))?;
+
+    let service_type_id = id(8, 1);
+    let service_type = ServiceType {
+        id: Some(service_type_id.clone()),
+        name: "Synthetic Sunday Service Type".into(),
+    };
+    library.save(&service_type)?;
+
+    let team_id = id(8, 2);
+    let team = Team {
+        id: Some(team_id.clone()),
+        name: "Synthetic Tech Team".into(),
+    };
+    library.save(&team)?;
+
+    let service = Service {
+        id: Some(id(8, 3)),
+        name: "Synthetic Sunday Morning".into(),
+        starts_at: None,
+        service_type_id: Some(service_type_id),
+        team_ids: vec![team_id],
+        items: vec![
+            ServiceItem {
+                id: Some(id(8, 4)),
+                kind: ServiceItemKind::Song as i32,
+                content_id: Some(song1_id.clone()),
+                arrangement_id: None,
+                title: "Synthetic Grace Hymn".into(),
+                notes: "Open with verse 1".into(),
+                ..Default::default()
+            },
+            ServiceItem {
+                id: Some(id(8, 5)),
+                kind: ServiceItemKind::Presentation as i32,
+                content_id: Some(pres_id),
+                arrangement_id: None,
+                title: "Synthetic Announcements".into(),
+                ..Default::default()
+            },
+            ServiceItem {
+                id: Some(id(8, 6)),
+                kind: ServiceItemKind::Scripture as i32,
+                title: "John 3:16".into(),
+                scripture_reference: "John 3:16".into(),
+                bible_translation: "KJV".into(),
+                ..Default::default()
+            },
+        ],
+    };
+    library.save(&service)?;
+
+    library.set_setting(
+        "appearance.theme",
+        &json!("light"),
+        PolicyLevel::User,
+        false,
+    )?;
+    library.set_setting(
+        "appearance.text-size",
+        &json!(115),
+        PolicyLevel::Machine,
+        false,
+    )?;
+    library.set_setting(
+        "updates.allow-check",
+        &json!(false),
+        PolicyLevel::Organisation,
+        true,
+    )?;
+
+    library.save_editor_buffer_op(
+        &song1_id,
+        selah_proto::v1::DocumentType::Song as i32,
+        "[G]Morning light unsaved draft line",
+        &next_meta(12),
+    )?;
+
+    library.record_feedback_op("songs.add-a-song-by-pasting", true, &next_meta(13))?;
+    library.record_feedback_op("getting-started.get-help-in-selah", false, &next_meta(14))?;
+    library.add_synonym("benevolence", "compassion")?;
+
+    Ok(())
+}
+
+fn main() -> anyhow::Result<()> {
+    let args: Vec<String> = std::env::args().skip(1).collect();
+    let (mode_m2, output_arg) = match args.as_slice() {
+        [path] => (false, path.as_str()),
+        [flag, path] if flag == "--m2" => (true, path.as_str()),
+        _ => anyhow::bail!("usage: library_fixture [--m2] <new-fixture.db>"),
+    };
+    let output = PathBuf::from(output_arg);
+    anyhow::ensure!(
+        !output.exists(),
+        "historical fixtures cannot be overwritten"
+    );
+    let temporary = tempfile::tempdir()?;
+    let mut library = Library::open(temporary.path())?;
+    if mode_m2 {
+        seed_m2(&mut library)?;
+    } else {
+        seed_v1(&mut library)?;
+    }
+    library.integrity_check()?;
     let source = library.paths().database.clone();
     // Closing the last WAL connection checkpoints the committed pages into library.db.
     drop(library);

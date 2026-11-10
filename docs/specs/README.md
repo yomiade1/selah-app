@@ -4,7 +4,7 @@ Detailed specifications are written **as each milestone builds the thing they de
 
 | Spec | Written in |
 |---|---|
-| `command-bus.md`: envelope, commands, queries, events, errors, IPC behaviour | M1 |
+| `command-bus.md`: envelope, commands, queries, events, errors, IPC behaviour | M1–M2 |
 | `spike-report.md`: measured results against budgets, go/no-go | M1 |
 | `foundations.md`: toolchains, contracts, IPC, processes, rendering, the gate | M1 |
 | `installer-and-updates.md`: Windows installer, installer check, updater | M1 |
