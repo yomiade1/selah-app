@@ -46,9 +46,13 @@ pub enum CommandKind {
     ImportSelahBundle,
     CreateLibraryBackup,
     RestoreLibraryBackup,
+    SetOutputConfigs,
+    PresentScene,
+    StagePreviewScene,
+    PreloadItems,
 }
 
-pub const ALL_COMMANDS: [CommandKind; 34] = [
+pub const ALL_COMMANDS: [CommandKind; 38] = [
     CommandKind::Render,
     CommandKind::SetAppearance,
     CommandKind::RecordFeedback,
@@ -83,6 +87,10 @@ pub const ALL_COMMANDS: [CommandKind; 34] = [
     CommandKind::ImportSelahBundle,
     CommandKind::CreateLibraryBackup,
     CommandKind::RestoreLibraryBackup,
+    CommandKind::SetOutputConfigs,
+    CommandKind::PresentScene,
+    CommandKind::StagePreviewScene,
+    CommandKind::PreloadItems,
 ];
 
 pub fn kind_of(action: &command::Action) -> CommandKind {
@@ -121,13 +129,21 @@ pub fn kind_of(action: &command::Action) -> CommandKind {
         command::Action::ImportSelahBundle(_) => CommandKind::ImportSelahBundle,
         command::Action::CreateLibraryBackup(_) => CommandKind::CreateLibraryBackup,
         command::Action::RestoreLibraryBackup(_) => CommandKind::RestoreLibraryBackup,
+        command::Action::SetOutputConfigs(_) => CommandKind::SetOutputConfigs,
+        command::Action::PresentScene(_) => CommandKind::PresentScene,
+        command::Action::StagePreviewScene(_) => CommandKind::StagePreviewScene,
+        command::Action::PreloadItems(_) => CommandKind::PreloadItems,
     }
 }
 
 /// Does this command change what the room sees (SAFE-01)?
 pub fn changes_screens(kind: CommandKind) -> bool {
     match kind {
-        CommandKind::Render | CommandKind::ShowTestPattern | CommandKind::ClearOutputs => true,
+        CommandKind::Render
+        | CommandKind::ShowTestPattern
+        | CommandKind::ClearOutputs
+        | CommandKind::SetOutputConfigs
+        | CommandKind::PresentScene => true,
         // An update restarts every process, but core refuses it while anything is live.
         CommandKind::SetAppearance
         | CommandKind::RecordFeedback
@@ -159,7 +175,9 @@ pub fn changes_screens(kind: CommandKind) -> bool {
         | CommandKind::ExportSelahBundle
         | CommandKind::ImportSelahBundle
         | CommandKind::CreateLibraryBackup
-        | CommandKind::RestoreLibraryBackup => false,
+        | CommandKind::RestoreLibraryBackup
+        | CommandKind::StagePreviewScene
+        | CommandKind::PreloadItems => false,
     }
 }
 
@@ -297,7 +315,11 @@ mod tests {
                 | CommandKind::ExportSelahBundle
                 | CommandKind::ImportSelahBundle
                 | CommandKind::CreateLibraryBackup
-                | CommandKind::RestoreLibraryBackup => {}
+                | CommandKind::RestoreLibraryBackup
+                | CommandKind::SetOutputConfigs
+                | CommandKind::PresentScene
+                | CommandKind::StagePreviewScene
+                | CommandKind::PreloadItems => {}
             }
         }
         let unique: std::collections::HashSet<_> = ALL_COMMANDS.iter().collect();

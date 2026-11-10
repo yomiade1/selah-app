@@ -103,6 +103,8 @@ pub struct TextRenderer {
     cache: HashMap<CacheKey, Arc<Frame>>,
     order: Vec<CacheKey>,
     capacity: usize,
+    hits: u64,
+    misses: u64,
 }
 
 impl TextRenderer {
@@ -142,7 +144,9 @@ impl TextRenderer {
             families,
             cache: HashMap::new(),
             order: Vec::new(),
-            capacity: 64,
+            capacity: 128,
+            hits: 0,
+            misses: 0,
         })
     }
 
@@ -153,6 +157,14 @@ impl TextRenderer {
 
     pub fn cached(&self) -> usize {
         self.cache.len()
+    }
+
+    pub fn cache_hits(&self) -> u64 {
+        self.hits
+    }
+
+    pub fn cache_misses(&self) -> u64 {
+        self.misses
     }
 
     /// Render `text` centred in a `width` × `height` transparent frame (premultiplied RGBA).
@@ -171,11 +183,114 @@ impl TextRenderer {
         );
         if let Some(hit) = self.cache.get(&key) {
             let hit = hit.clone();
+            self.hits += 1;
             self.order.retain(|k| *k != key);
             self.order.push(key);
             return Ok(hit);
         }
+        self.misses += 1;
         let frame = Arc::new(self.rasterise(text, style, width, height)?);
+        if self.cache.len() >= self.capacity && !self.order.is_empty() {
+            let oldest = self.order.remove(0);
+            self.cache.remove(&oldest);
+        }
+        self.cache.insert(key, frame.clone());
+        self.order.push(key);
+        Ok(frame)
+    }
+
+    /// Render a solid or pill-backed overlay box with bundled-font text in a deterministic premultiplied RGBA frame.
+    pub fn render_overlay_box(
+        &mut self,
+        text: &str,
+        box_rgba: [u8; 4],
+        text_rgba: [u8; 4],
+        bottom_bar: bool,
+        width: u32,
+        height: u32,
+    ) -> Result<Arc<Frame>> {
+        let mut style_hash = blake3::Hasher::new();
+        style_hash.update(if bottom_bar { b"bar" } else { b"badge" });
+        style_hash.update(&box_rgba);
+        style_hash.update(&text_rgba);
+        let key = (
+            *blake3::hash(text.as_bytes()).as_bytes(),
+            *style_hash.finalize().as_bytes(),
+            width,
+            height,
+        );
+        if let Some(hit) = self.cache.get(&key) {
+            let hit = hit.clone();
+            self.hits += 1;
+            self.order.retain(|k| *k != key);
+            self.order.push(key);
+            return Ok(hit);
+        }
+        self.misses += 1;
+        let font_size = (height as f32 * if bottom_bar { 0.042 } else { 0.032 }).clamp(10.0, 64.0);
+        let style = SlideTextStyle {
+            size: font_size,
+            color: text_rgba,
+            margin: 0.04,
+            line_height: 1.2,
+        };
+        let mut paragraph = self.paragraph(text, &style);
+        let max_text_w = if bottom_bar {
+            (width as f32 * 0.92).max(1.0)
+        } else {
+            (width as f32 * 0.45).max(1.0)
+        };
+        paragraph.layout(max_text_w);
+        let info = ImageInfo::new(
+            (width as i32, height as i32),
+            ColorType::RGBA8888,
+            AlphaType::Premul,
+            None,
+        );
+        let mut surface = surfaces::raster(&info, None, None).context("overlay surface")?;
+        let canvas = surface.canvas();
+        canvas.clear(Color::TRANSPARENT);
+        let mut paint = skia_safe::Paint::default();
+        paint.set_color(Color::from_argb(
+            box_rgba[3],
+            box_rgba[0],
+            box_rgba[1],
+            box_rgba[2],
+        ));
+        paint.set_anti_alias(false);
+        if bottom_bar {
+            let bar_h = (paragraph.height() + font_size * 0.8)
+                .clamp((height as f32 * 0.12).max(20.0), height as f32 * 0.35)
+                .round();
+            let top = (height as f32 - bar_h).max(0.0);
+            canvas.draw_rect(
+                skia_safe::Rect::from_xywh(0.0, top, width as f32, bar_h),
+                &paint,
+            );
+            let text_top = top + ((bar_h - paragraph.height()) / 2.0).max(0.0).round();
+            let left = (width as f32 - max_text_w) / 2.0;
+            paragraph.paint(canvas, (left, text_top));
+        } else {
+            let text_w = paragraph.max_intrinsic_width().min(max_text_w).max(24.0);
+            let pad_x = (font_size * 0.6).round();
+            let pad_y = (font_size * 0.35).round();
+            let box_w = (text_w + pad_x * 2.0).min(width as f32 * 0.6).round();
+            let box_h = (paragraph.height() + pad_y * 2.0)
+                .min(height as f32 * 0.3)
+                .round();
+            let margin_x = (width as f32 * 0.04).round();
+            let margin_y = (height as f32 * 0.04).round();
+            let left = (width as f32 - margin_x - box_w).max(0.0);
+            let top = margin_y;
+            canvas.draw_rect(skia_safe::Rect::from_xywh(left, top, box_w, box_h), &paint);
+            paragraph.layout((box_w - pad_x * 2.0).max(1.0));
+            paragraph.paint(canvas, (left + pad_x, top + pad_y));
+        }
+        let mut frame = Frame::new(width, height);
+        if !surface.read_pixels(&info, &mut frame.pixels, width as usize * 4, (0, 0)) {
+            bail!("couldn't read the overlay pixels");
+        }
+        let frame = Arc::new(frame);
         if self.cache.len() >= self.capacity && !self.order.is_empty() {
             let oldest = self.order.remove(0);
             self.cache.remove(&oldest);

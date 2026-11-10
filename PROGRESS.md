@@ -10,7 +10,7 @@ Status values: `Not started` · `In progress` · `Blocked` (say on what) · `Don
 |---|---|---|---|---|---|
 | M1. Foundations and risk spikes | Done, H-checks pending | `claude/m1-finish` | 2026-11-07 | 2026-11-07 | All 13 WPs done (local Windows sessions, H-01). Open (H): M1-A7 benchmark report, M1-A12 install on your PC; M1-A1/A6 macOS from the `macos` job. |
 | M2. Library, songs, scripture and the help system | Done, H-checks pending | `codex/m2-library` | 2026-11-09 | 2026-11-09 | All 9 WPs done (local Windows session, H-01). Open (H): M2-A10 / H-06 (Bible rights beyond public-domain KJV & WEB) and H-18 (2i KB review; 37 articles in `review`). |
-| M3. Render engine, templates and the slide editor | Not started | — | — | — | |
+| M3. Render engine, templates and the slide editor | In progress | `antigravity/m3-render-engine` | 2026-11-10 | — | M3.1 complete; next M3.2 (templates & text styling). |
 | M4. Live operation, services and stage | Not started | — | — | — | |
 | M5. Screens, video and audio I/O | Not started | — | — | — | |
 | M6. Importers, migration and the alpha release | Not started | — | — | — | |
@@ -19,7 +19,7 @@ Status values: `Not started` · `In progress` · `Blocked` (say on what) · `Don
 | M9. Cloud, teams and enterprise | Not started | — | — | — | |
 | M10. Launch readiness and v1.0 | Not started | — | — | — | |
 
-**Next action:** merge the Milestone 2 PR once CI is green, then start Milestone 3 at M3.1 (Scene graph, layers and frame scheduler). Human checklists M1 and M2 remain open below.
+**Next action:** continue Milestone 3 at M3.2 (Templates and text styling). Human checklists M1 and M2 remain open below.
 
 ## Resume notes
 
@@ -98,7 +98,7 @@ _When a session stops partway through a milestone, write here: the milestone, th
 
 **Work packages**
 
-- [ ] **M3.1** Scene graph, layers and frame scheduler — evidence: 
+- [x] **M3.1** Scene graph, layers and frame scheduler — evidence: commit `M3.1`; `proto/selah/v1/{render,envelope}.proto` (`OutputConfig`, `LayerSpec`, `OutputScene`, `PreloadHint`, `SetPreviewScene`, `PreloadItems`, `SetOutputConfigs`, `GetOutputConfigs`, `OutputFrameStatus`; `ContractTests` 25/25, `web/contracts` 9/9, `buf breaking --against .git#tag=m2` & `check-generated` pass); `selah-render::scene` canonical 5-layer normalization (`VideoInput`, `Media`, `Slide`, `Props`, `Messages`), `OverlayCache`, `prerasterise_hints`, `GpuCompositor`/`CpuCompositor` multi-output independent targets (`crates/selah-render/tests/layers.rs`: `canonical_five_layer_stack_renders_in_z_order_and_matches_cpu_gpu`, `multiple_outputs_render_at_independent_resolutions_simultaneously`, `prerasterise_hints_warm_caches_for_upcoming_slides`); `selah-engine::scheduler::FrameScheduler` vsync cadence & multi-output `Engine` + `selah-core` `SetPreviewScene`/`PreloadItems`/`SetOutputConfigs`/`GetOutputConfigs` (`service::tests`, `permissions::authorize` SEC-14 matrix, `selah-testkit/tests/multi_output.rs` `multi_output_layer_scenes_present_independently_and_clear_all_on_emergency`); full `tools/verify.ps1` green on Windows; ledger updated (`rust: 222`, `dotnet: 25`, `web: 9`, `total: 401`)
 - [ ] **M3.2** Templates and text styling — evidence: 
 - [ ] **M3.3** Metric fit: words that fit every screen — evidence: 
 - [ ] **M3.4** Backgrounds and media playback — evidence: 

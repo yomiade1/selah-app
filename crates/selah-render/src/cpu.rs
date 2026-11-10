@@ -58,6 +58,7 @@ pub fn pattern_pixel(pattern: TestPattern, x: u32, y: u32, width: u32, height: u
 pub struct CpuCompositor {
     text: Option<crate::text::TextRenderer>,
     video: Option<crate::video::Nv12Frame>,
+    overlays: crate::scene::OverlayCache,
 }
 
 impl CpuCompositor {
@@ -85,6 +86,21 @@ impl Compositor for CpuCompositor {
         "cpu"
     }
 
+    fn prerasterise_hints(
+        &mut self,
+        hints: &[selah_proto::v1::PreloadHint],
+    ) -> anyhow::Result<usize> {
+        crate::scene::prerasterise_hints(hints, &mut self.text, &mut self.overlays)
+    }
+
+    fn cache_stats(&self) -> (u64, u64) {
+        let (th, tm) = self
+            .text
+            .as_ref()
+            .map_or((0, 0), |t| (t.cache_hits(), t.cache_misses()));
+        (th + self.overlays.hits(), tm + self.overlays.misses())
+    }
+
     fn set_video(&mut self, frame: Option<crate::video::Nv12Frame>) -> anyhow::Result<()> {
         if let Some(frame) = frame.as_ref() {
             frame.validate()?;
@@ -94,33 +110,78 @@ impl Compositor for CpuCompositor {
     }
 
     fn render(&mut self, scene: &Scene, width: u32, height: u32) -> anyhow::Result<Frame> {
+        self.render_output(scene, 0, width, height)
+    }
+
+    fn render_output(
+        &mut self,
+        scene: &Scene,
+        output_index: u32,
+        width: u32,
+        height: u32,
+    ) -> anyhow::Result<Frame> {
+        let normalized = crate::scene::normalize_output_scene(scene, output_index, width, height);
         let mut frame = Frame::new(width, height);
-        let pattern = TestPattern::try_from(scene.test_pattern).unwrap_or(TestPattern::Unspecified);
-        if !scene.cleared
-            && let Some(video) = self.video.as_ref()
-        {
-            crate::video::draw_cpu(&mut frame, video);
+        if normalized.is_legacy {
+            let pattern = normalized.test_pattern;
+            if !normalized.cleared
+                && let Some(video) = self.video.as_ref()
+            {
+                crate::video::draw_cpu(&mut frame, video);
+                self.draw_text(scene, &mut frame)?;
+                return Ok(frame);
+            }
+            if normalized.cleared || pattern == TestPattern::Unspecified {
+                for pixel in frame.pixels.chunks_exact_mut(4) {
+                    pixel.copy_from_slice(&[0, 0, 0, 255]);
+                }
+                if !normalized.cleared {
+                    self.draw_text(scene, &mut frame)?;
+                }
+                return Ok(frame);
+            }
+            for y in 0..height {
+                for x in 0..width {
+                    let at = (y as usize * width as usize + x as usize) * 4;
+                    frame.pixels[at..at + 4]
+                        .copy_from_slice(&pattern_pixel(pattern, x, y, width, height));
+                }
+            }
             self.draw_text(scene, &mut frame)?;
             return Ok(frame);
         }
-        if scene.cleared || pattern == TestPattern::Unspecified {
-            // Cleared outputs are opaque black.
+
+        if normalized.cleared || normalized.test_pattern == TestPattern::Unspecified {
             for pixel in frame.pixels.chunks_exact_mut(4) {
                 pixel.copy_from_slice(&[0, 0, 0, 255]);
             }
-            if !scene.cleared {
-                self.draw_text(scene, &mut frame)?;
+        } else {
+            for y in 0..height {
+                for x in 0..width {
+                    let at = (y as usize * width as usize + x as usize) * 4;
+                    frame.pixels[at..at + 4].copy_from_slice(&pattern_pixel(
+                        normalized.test_pattern,
+                        x,
+                        y,
+                        width,
+                        height,
+                    ));
+                }
             }
-            return Ok(frame);
         }
-        for y in 0..height {
-            for x in 0..width {
-                let at = (y as usize * width as usize + x as usize) * 4;
-                frame.pixels[at..at + 4]
-                    .copy_from_slice(&pattern_pixel(pattern, x, y, width, height));
+        if !normalized.cleared {
+            for layer in &normalized.layers {
+                if let Some(overlay) = crate::scene::rasterise_layer_overlay(
+                    layer,
+                    width,
+                    height,
+                    &mut self.text,
+                    &mut self.overlays,
+                )? {
+                    crate::text::composite_over(&mut frame, &overlay);
+                }
             }
         }
-        self.draw_text(scene, &mut frame)?;
         Ok(frame)
     }
 }
@@ -136,6 +197,7 @@ mod tests {
             text: String::new(),
             cleared,
             resolution: None,
+            ..Default::default()
         }
     }
 

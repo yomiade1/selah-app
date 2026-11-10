@@ -3,10 +3,11 @@
 //!
 //! M1 draws the layer stack's first layer, a test pattern, into an offscreen `Rgba8Unorm`
 //! target. Text (M1.6) and video (M1.7) layers composite on top of it in later steps.
+use std::collections::{BTreeMap, HashMap};
 use std::time::Instant;
 
 use anyhow::{Context, Result, anyhow};
-use selah_proto::v1::{Scene, TestPattern};
+use selah_proto::v1::{PreloadHint, Scene};
 
 use crate::{Compositor, Frame};
 
@@ -41,6 +42,14 @@ struct Target {
     padded_row: u32,
 }
 
+struct OverlaySlot {
+    width: u32,
+    height: u32,
+    key: [u8; 32],
+    texture: wgpu::Texture,
+    view: wgpu::TextureView,
+}
+
 /// Timing of the last frame, for FrameShown and the benchmark.
 #[derive(Clone, Copy, Debug, Default)]
 pub struct FrameTiming {
@@ -60,14 +69,12 @@ pub struct GpuCompositor {
     pipeline: wgpu::RenderPipeline,
     params: wgpu::Buffer,
     bind_group: wgpu::BindGroup,
-    target: Option<Target>,
+    targets: BTreeMap<u32, Target>,
     name: String,
     pub timing: FrameTiming,
     text: Option<crate::text::TextRenderer>,
-    /// What the layer texture holds now (text, width, height), so unchanged text isn't
-    /// uploaded again every frame (video plays under still text).
-    layer_text: Option<(String, u32, u32)>,
-    layer: Option<(u32, u32, wgpu::Texture, wgpu::TextureView)>,
+    overlays: crate::scene::OverlayCache,
+    overlay_slots: HashMap<(u32, u8), OverlaySlot>,
     layer_blitter: crate::blit::Blitter,
     video: crate::video::VideoLayer,
     video_frame: Option<crate::video::Nv12Frame>,
@@ -185,12 +192,12 @@ impl GpuCompositor {
             pipeline,
             params,
             bind_group,
-            target: None,
+            targets: BTreeMap::new(),
             name,
             timing: FrameTiming::default(),
             text: None,
-            layer_text: None,
-            layer: None,
+            overlays: crate::scene::OverlayCache::default(),
+            overlay_slots: HashMap::new(),
             layer_blitter,
             video,
             video_frame: None,
@@ -217,19 +224,25 @@ impl GpuCompositor {
         &self.queue
     }
 
-    /// The composited output of the last render, for presenting to windows.
+    /// The composited output of the last render on output 0, for presenting to windows.
     pub fn output_view(&self) -> Option<&wgpu::TextureView> {
-        self.target.as_ref().map(|target| &target.view)
+        self.output_view_for(0)
     }
 
-    fn target(&mut self, width: u32, height: u32) -> &Target {
+    /// The composited output texture view for `output_index`.
+    pub fn output_view_for(&self, output_index: u32) -> Option<&wgpu::TextureView> {
+        self.targets.get(&output_index).map(|target| &target.view)
+    }
+
+    fn ensure_target(&mut self, output_index: u32, width: u32, height: u32) {
         let stale = self
-            .target
-            .as_ref()
+            .targets
+            .get(&output_index)
             .is_none_or(|t| t.width != width || t.height != height);
         if stale {
+            let label = format!("output-{output_index}");
             let texture = self.device.create_texture(&wgpu::TextureDescriptor {
-                label: Some("output-0"),
+                label: Some(&label),
                 size: wgpu::Extent3d {
                     width,
                     height,
@@ -247,53 +260,51 @@ impl GpuCompositor {
             let view = texture.create_view(&wgpu::TextureViewDescriptor::default());
             let padded_row = (width * 4).div_ceil(wgpu::COPY_BYTES_PER_ROW_ALIGNMENT)
                 * wgpu::COPY_BYTES_PER_ROW_ALIGNMENT;
+            let readback_label = format!("output-{output_index}-readback");
             let readback = self.device.create_buffer(&wgpu::BufferDescriptor {
-                label: Some("output-0-readback"),
+                label: Some(&readback_label),
                 size: u64::from(padded_row) * u64::from(height),
                 usage: wgpu::BufferUsages::COPY_DST | wgpu::BufferUsages::MAP_READ,
                 mapped_at_creation: false,
             });
-            self.target = Some(Target {
-                width,
-                height,
-                texture,
-                view,
-                readback,
-                padded_row,
-            });
+            self.targets.insert(
+                output_index,
+                Target {
+                    width,
+                    height,
+                    texture,
+                    view,
+                    readback,
+                    padded_row,
+                },
+            );
         }
-        self.target.as_ref().expect("target was just created")
     }
 
-    /// Upload the text layer for `scene` (from the paragraph cache) into the layer texture.
-    fn text_layer(&mut self, scene: &Scene, width: u32, height: u32) -> Result<bool> {
-        if scene.cleared || scene.text.is_empty() {
-            return Ok(false);
+    fn upload_overlay_slot(
+        &mut self,
+        output_index: u32,
+        slot_idx: u8,
+        key: [u8; 32],
+        frame: &Frame,
+    ) {
+        let (width, height) = (frame.width, frame.height);
+        let slot_key = (output_index, slot_idx);
+        let unchanged = self
+            .overlay_slots
+            .get(&slot_key)
+            .is_some_and(|s| s.key == key && s.width == width && s.height == height);
+        if unchanged {
+            return;
         }
-        if self
-            .layer_text
-            .as_ref()
-            .is_some_and(|(text, w, h)| *text == scene.text && *w == width && *h == height)
-        {
-            return Ok(true);
-        }
-        if self.text.is_none() {
-            self.text = Some(crate::text::TextRenderer::bundled()?);
-        }
-        let style = crate::text::SlideTextStyle::for_output(height);
-        let frame = self.text.as_mut().expect("text renderer exists").render(
-            &scene.text,
-            &style,
-            width,
-            height,
-        )?;
-        if self
-            .layer
-            .as_ref()
-            .is_none_or(|(w, h, _, _)| *w != width || *h != height)
-        {
+        let recreate = self
+            .overlay_slots
+            .get(&slot_key)
+            .is_none_or(|s| s.width != width || s.height != height);
+        if recreate {
+            let label = format!("layer-{output_index}-{slot_idx}");
             let texture = self.device.create_texture(&wgpu::TextureDescriptor {
-                label: Some("text-layer"),
+                label: Some(&label),
                 size: wgpu::Extent3d {
                     width,
                     height,
@@ -307,12 +318,21 @@ impl GpuCompositor {
                 view_formats: &[],
             });
             let view = texture.create_view(&wgpu::TextureViewDescriptor::default());
-            self.layer = Some((width, height, texture, view));
+            self.overlay_slots.insert(
+                slot_key,
+                OverlaySlot {
+                    width,
+                    height,
+                    key,
+                    texture,
+                    view,
+                },
+            );
         }
-        let (_, _, texture, _) = self.layer.as_ref().expect("layer exists");
+        let slot = self.overlay_slots.get_mut(&slot_key).expect("slot exists");
         self.queue.write_texture(
             wgpu::TexelCopyTextureInfo {
-                texture,
+                texture: &slot.texture,
                 mip_level: 0,
                 origin: wgpu::Origin3d::ZERO,
                 aspect: wgpu::TextureAspect::All,
@@ -329,7 +349,43 @@ impl GpuCompositor {
                 depth_or_array_layers: 1,
             },
         );
-        self.layer_text = Some((scene.text.clone(), width, height));
+        slot.key = key;
+    }
+
+    /// Upload the legacy text layer for `scene` (from the paragraph cache) into overlay slot 255.
+    fn upload_legacy_text_layer(
+        &mut self,
+        scene: &Scene,
+        output_index: u32,
+        width: u32,
+        height: u32,
+    ) -> Result<bool> {
+        if scene.cleared || scene.text.is_empty() {
+            return Ok(false);
+        }
+        let style = crate::text::SlideTextStyle::for_output(height);
+        let mut key_hash = blake3::Hasher::new();
+        key_hash.update(scene.text.as_bytes());
+        key_hash.update(&width.to_le_bytes());
+        key_hash.update(&height.to_le_bytes());
+        let key = *key_hash.finalize().as_bytes();
+        let unchanged = self
+            .overlay_slots
+            .get(&(output_index, 255))
+            .is_some_and(|s| s.key == key && s.width == width && s.height == height);
+        if unchanged {
+            return Ok(true);
+        }
+        if self.text.is_none() {
+            self.text = Some(crate::text::TextRenderer::bundled()?);
+        }
+        let frame = self.text.as_mut().expect("text renderer exists").render(
+            &scene.text,
+            &style,
+            width,
+            height,
+        )?;
+        self.upload_overlay_slot(output_index, 255, key, &frame);
         Ok(true)
     }
 
@@ -358,6 +414,18 @@ impl Compositor for GpuCompositor {
         self.timing.submitted
     }
 
+    fn prerasterise_hints(&mut self, hints: &[PreloadHint]) -> Result<usize> {
+        crate::scene::prerasterise_hints(hints, &mut self.text, &mut self.overlays)
+    }
+
+    fn cache_stats(&self) -> (u64, u64) {
+        let (th, tm) = self
+            .text
+            .as_ref()
+            .map_or((0, 0), |t| (t.cache_hits(), t.cache_misses()));
+        (th + self.overlays.hits(), tm + self.overlays.misses())
+    }
+
     fn set_video(&mut self, frame: Option<crate::video::Nv12Frame>) -> Result<()> {
         if let Some(frame) = frame.as_ref() {
             frame.validate()?;
@@ -367,30 +435,82 @@ impl Compositor for GpuCompositor {
     }
 
     fn render(&mut self, scene: &Scene, width: u32, height: u32) -> Result<Frame> {
-        self.composite(scene, width, height)?;
-        self.read_back(width, height)
+        self.render_output(scene, 0, width, height)
+    }
+
+    fn render_output(
+        &mut self,
+        scene: &Scene,
+        output_index: u32,
+        width: u32,
+        height: u32,
+    ) -> Result<Frame> {
+        self.composite_output(scene, output_index, width, height)?;
+        self.read_back_output(output_index, width, height)
     }
 }
 
 impl GpuCompositor {
-    /// Draw the layer stack into the output texture and wait for the GPU, without reading the
-    /// frame back (what windows present, and what the video benchmark times).
+    /// Draw the layer stack for output 0 into its output texture without reading the frame back.
     pub fn composite(&mut self, scene: &Scene, width: u32, height: u32) -> Result<()> {
-        let pattern = TestPattern::try_from(scene.test_pattern).unwrap_or(TestPattern::Unspecified);
-        let words = [pattern as u32, u32::from(scene.cleared), width, height];
+        self.composite_output(scene, 0, width, height)
+    }
+
+    /// Draw the normalized layer stack for `output_index` into its offscreen output texture.
+    pub fn composite_output(
+        &mut self,
+        scene: &Scene,
+        output_index: u32,
+        width: u32,
+        height: u32,
+    ) -> Result<()> {
+        let normalized = crate::scene::normalize_output_scene(scene, output_index, width, height);
+        let words = [
+            normalized.test_pattern as u32,
+            u32::from(normalized.cleared),
+            width,
+            height,
+        ];
         let bytes: Vec<u8> = words.iter().flat_map(|w| w.to_le_bytes()).collect();
         self.queue.write_buffer(&self.params, 0, &bytes);
-        let has_text = self.text_layer(scene, width, height)?;
-        let has_video = match self.video_frame.as_ref() {
-            Some(video) if !scene.cleared => {
-                self.video
-                    .upload(&self.device, &self.queue, video, width, height)?;
-                true
+
+        let mut active_slots: Vec<u8> = Vec::new();
+        let has_video = if normalized.is_legacy {
+            if self.upload_legacy_text_layer(scene, output_index, width, height)? {
+                active_slots.push(255);
             }
-            _ => false,
+            match self.video_frame.as_ref() {
+                Some(video) if !normalized.cleared => {
+                    self.video
+                        .upload(&self.device, &self.queue, video, width, height)?;
+                    true
+                }
+                _ => false,
+            }
+        } else {
+            if !normalized.cleared {
+                for (idx, layer) in normalized.layers.iter().enumerate() {
+                    let slot = u8::try_from(idx.min(254)).unwrap_or(254);
+                    if let Some(overlay) = crate::scene::rasterise_layer_overlay(
+                        layer,
+                        width,
+                        height,
+                        &mut self.text,
+                        &mut self.overlays,
+                    )? {
+                        self.upload_overlay_slot(output_index, slot, layer.cache_key, &overlay);
+                        active_slots.push(slot);
+                    }
+                }
+            }
+            false
         };
-        self.target(width, height);
-        let target = self.target.as_ref().expect("target exists");
+
+        self.ensure_target(output_index, width, height);
+        let target = self
+            .targets
+            .get(&output_index)
+            .expect("target exists for output");
 
         let mut encoder = self
             .device
@@ -418,10 +538,11 @@ impl GpuCompositor {
         if has_video {
             self.video.draw(&mut encoder, &target.view);
         }
-        if has_text {
-            let (_, _, _, layer) = self.layer.as_ref().expect("layer exists");
-            self.layer_blitter
-                .draw(&self.device, &mut encoder, layer, &target.view);
+        for slot_idx in active_slots {
+            if let Some(slot) = self.overlay_slots.get(&(output_index, slot_idx)) {
+                self.layer_blitter
+                    .draw(&self.device, &mut encoder, &slot.view, &target.view);
+            }
         }
         self.queue.submit([encoder.finish()]);
         self.timing.submitted = Some(Instant::now());
@@ -430,12 +551,12 @@ impl GpuCompositor {
         Ok(())
     }
 
-    /// Copy the output texture to memory, for the checksum and the preview ring.
-    fn read_back(&mut self, width: u32, height: u32) -> Result<Frame> {
+    /// Copy the output texture for `output_index` to CPU memory.
+    fn read_back_output(&mut self, output_index: u32, width: u32, height: u32) -> Result<Frame> {
         let target = self
-            .target
-            .as_ref()
-            .context("nothing has been composited")?;
+            .targets
+            .get(&output_index)
+            .context("nothing has been composited for this output")?;
         let mut copy = self
             .device
             .create_command_encoder(&wgpu::CommandEncoderDescriptor {

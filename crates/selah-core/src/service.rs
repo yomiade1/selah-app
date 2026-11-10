@@ -2,9 +2,10 @@
 use prost::Message;
 use selah_proto::v1::{
     Actor, ActorOrigin, BibleFormat, Command, CopyrightPlacement, Envelope, Event,
-    GetPolicySettingReply, LibraryChanged, MediaItemList, MediaKind, ParsePastedSongReply,
-    ParseScriptureReferenceReply, PolicySetting, PresentationList, RenderCommand, Reply, Scene,
-    SearchScope, Song, SongList, SongPasteFormat, Status, TagList, TemplateList, TestPattern,
+    GetPolicySettingReply, LibraryChanged, MediaItemList, MediaKind, OutputConfig,
+    OutputConfigList, OutputFrameStatus, ParsePastedSongReply, ParseScriptureReferenceReply,
+    PolicySetting, PresentationList, RenderCommand, Reply, Scene, SearchScope, SetOutputConfigs,
+    SetPreviewScene, Song, SongList, SongPasteFormat, Status, TagList, TemplateList, TestPattern,
     UndoStateChanged, command, envelope, event, query, render_command, reply,
 };
 
@@ -78,12 +79,48 @@ fn validate_song_preview(song: &Song) -> anyhow::Result<()> {
 /// Help results are capped (help.proto SearchHelp).
 const HELP_LIMIT: usize = 10;
 
+fn valid_resolution(res: selah_proto::v1::Resolution) -> bool {
+    (16..=7680).contains(&res.width) && (16..=4320).contains(&res.height)
+}
+
+fn validate_output_configs(outputs: &[OutputConfig]) -> bool {
+    if outputs.is_empty() || !outputs.iter().any(|o| o.enabled) {
+        return false;
+    }
+    let mut seen = std::collections::HashSet::with_capacity(outputs.len());
+    for out in outputs {
+        if !seen.insert(out.output_index) {
+            return false;
+        }
+        if let Some(res) = out.resolution
+            && !valid_resolution(res)
+        {
+            return false;
+        }
+    }
+    true
+}
+
+fn validate_scene_resolutions(scene: &Scene) -> bool {
+    if let Some(res) = scene.resolution
+        && !valid_resolution(res)
+    {
+        return false;
+    }
+    scene
+        .outputs
+        .iter()
+        .all(|out| out.resolution.is_none_or(valid_resolution))
+}
+
 /// What core knows about the engine.
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
 pub struct EngineView {
     pub connected: bool,
     pub scene_revision: u64,
     pub frame_checksum: Vec<u8>,
+    pub output_statuses: Vec<OutputFrameStatus>,
+    pub preview_scene_revision: u64,
 }
 
 /// Slow work the host runs away from the request path (network, disk). When it's done, the host
@@ -121,6 +158,7 @@ pub struct CoreService {
     live: LiveState,
     library: Library,
     pub engine: EngineView,
+    preview_scene: Option<Scene>,
     safe_mode: bool,
     actor: Actor,
     /// kb.db, when it was found (KNOWLEDGE-BASE §6.4). Help queries answer empty without it.
@@ -185,6 +223,7 @@ impl CoreService {
             live: LiveState::open(config_dir),
             library,
             engine: EngineView::default(),
+            preview_scene: None,
             safe_mode,
             help: None,
             available_update: None,
@@ -260,6 +299,11 @@ impl CoreService {
             frame_checksum: self.engine.frame_checksum.clone(),
             version: selah_runtime::VERSION.into(),
             live: is_live(self.live.scene()),
+            output_statuses: self.engine.output_statuses.clone(),
+            preview_scene_revision: self
+                .preview_scene
+                .as_ref()
+                .map_or(self.engine.preview_scene_revision, |s| s.revision),
             ..Status::default()
         }
     }
@@ -279,6 +323,27 @@ impl CoreService {
         RenderCommand {
             action: Some(render_command::Action::SetScene(self.live.scene().clone())),
         }
+    }
+
+    /// All commands that bring a (re)connected engine up to date (output configs, program, preview).
+    pub fn resync_commands(&self) -> Vec<RenderCommand> {
+        let mut out = Vec::new();
+        if self.live.has_explicit_output_configs() {
+            out.push(RenderCommand {
+                action: Some(render_command::Action::SetOutputConfigs(SetOutputConfigs {
+                    outputs: self.live.output_configs().to_vec(),
+                })),
+            });
+        }
+        out.push(self.resync_command());
+        if let Some(preview) = &self.preview_scene {
+            out.push(RenderCommand {
+                action: Some(render_command::Action::SetPreviewScene(SetPreviewScene {
+                    scene: Some(preview.clone()),
+                })),
+            });
+        }
+        out
     }
 
     fn reply(&self, request: &Envelope, result: reply::Result) -> Envelope {
@@ -445,6 +510,8 @@ impl CoreService {
                     scene.cleared = false;
                     scene.test_pattern = pattern as i32;
                     scene.text.clear();
+                    scene.outputs.clear();
+                    scene.preload_items.clear();
                 });
                 Outcome {
                     reply: ack(self),
@@ -454,11 +521,112 @@ impl CoreService {
                 }
             }
             command::Action::ClearOutputs(_) => {
-                self.live.change(|scene| scene.cleared = true);
+                self.live.change(|scene| {
+                    scene.cleared = true;
+                    scene.test_pattern = TestPattern::Unspecified as i32;
+                    scene.text.clear();
+                    scene.outputs.clear();
+                    scene.preload_items.clear();
+                });
                 Outcome {
                     reply: ack(self),
                     to_engine: Some(self.resync_command()),
                     broadcast: vec![self.status_event()],
+                    ..Outcome::default()
+                }
+            }
+            command::Action::SetOutputConfigs(cmd) => {
+                if !validate_output_configs(&cmd.outputs) {
+                    return Outcome {
+                        reply: Some(self.error(request, codes::INVALID, "error-invalid-request")),
+                        ..Outcome::default()
+                    };
+                }
+                self.live.set_output_configs(cmd.outputs.clone());
+                let enabled: Vec<u32> = cmd
+                    .outputs
+                    .iter()
+                    .filter(|o| o.enabled)
+                    .map(|o| o.output_index)
+                    .collect();
+                self.engine
+                    .output_statuses
+                    .retain(|s| enabled.contains(&s.output_index));
+                Outcome {
+                    reply: ack(self),
+                    to_engine: Some(RenderCommand {
+                        action: Some(render_command::Action::SetOutputConfigs(cmd.clone())),
+                    }),
+                    broadcast: vec![self.status_event()],
+                    ..Outcome::default()
+                }
+            }
+            command::Action::PresentScene(cmd) => {
+                let Some(mut scene) = cmd.scene.clone() else {
+                    return Outcome {
+                        reply: Some(self.error(request, codes::INVALID, "error-invalid-request")),
+                        ..Outcome::default()
+                    };
+                };
+                if !validate_scene_resolutions(&scene) {
+                    return Outcome {
+                        reply: Some(self.error(request, codes::INVALID, "error-invalid-request")),
+                        ..Outcome::default()
+                    };
+                }
+                scene.is_preview = false;
+                self.live.change(|live| {
+                    let prev = live.revision;
+                    *live = scene;
+                    live.revision = prev;
+                });
+                Outcome {
+                    reply: ack(self),
+                    to_engine: Some(self.resync_command()),
+                    broadcast: vec![self.status_event()],
+                    ..Outcome::default()
+                }
+            }
+            command::Action::StagePreviewScene(cmd) => {
+                let Some(mut scene) = cmd.scene.clone() else {
+                    return Outcome {
+                        reply: Some(self.error(request, codes::INVALID, "error-invalid-request")),
+                        ..Outcome::default()
+                    };
+                };
+                if !validate_scene_resolutions(&scene) {
+                    return Outcome {
+                        reply: Some(self.error(request, codes::INVALID, "error-invalid-request")),
+                        ..Outcome::default()
+                    };
+                }
+                let next_rev = self.preview_scene.as_ref().map_or(1, |s| s.revision + 1);
+                scene.is_preview = true;
+                scene.revision = next_rev;
+                self.preview_scene = Some(scene.clone());
+                Outcome {
+                    reply: ack(self),
+                    to_engine: Some(RenderCommand {
+                        action: Some(render_command::Action::SetPreviewScene(SetPreviewScene {
+                            scene: Some(scene),
+                        })),
+                    }),
+                    broadcast: vec![self.status_event()],
+                    ..Outcome::default()
+                }
+            }
+            command::Action::PreloadItems(cmd) => {
+                if cmd.items.is_empty() {
+                    return Outcome {
+                        reply: ack(self),
+                        ..Outcome::default()
+                    };
+                }
+                Outcome {
+                    reply: ack(self),
+                    to_engine: Some(RenderCommand {
+                        action: Some(render_command::Action::PreloadItems(cmd.clone())),
+                    }),
                     ..Outcome::default()
                 }
             }
@@ -1103,6 +1271,12 @@ impl CoreService {
                     Err(error) => self.bus_error(request, &error),
                 }
             }
+            Some(query::Request::GetOutputConfigs(_)) => self.reply(
+                request,
+                reply::Result::OutputConfigList(OutputConfigList {
+                    outputs: self.live.output_configs().to_vec(),
+                }),
+            ),
             Some(query::Request::GetWatchdogStatus(_)) | None => {
                 self.error(request, codes::UNSUPPORTED, "error-unsupported-request")
             }
@@ -1330,12 +1504,56 @@ impl CoreService {
     fn on_engine_event_inner(&mut self, event: &Event) -> Vec<Event> {
         match event.notification.as_ref() {
             Some(event::Notification::FrameShown(frame)) => {
-                let changed = self.engine.frame_checksum != frame.frame_checksum
-                    || self.engine.scene_revision != frame.scene_revision;
-                self.engine.scene_revision = frame.scene_revision;
-                self.engine.frame_checksum = frame.frame_checksum.clone();
+                if frame.is_preview {
+                    self.engine.preview_scene_revision = frame.scene_revision;
+                    return vec![event.clone()];
+                }
+                let output_live = if self.live.scene().outputs.is_empty() {
+                    is_live(self.live.scene())
+                } else {
+                    !self.live.scene().cleared
+                        && self
+                            .live
+                            .scene()
+                            .outputs
+                            .iter()
+                            .find(|o| o.output_index == frame.output_index)
+                            .is_some_and(selah_render::scene::output_scene_is_live)
+                };
+                let status_entry = OutputFrameStatus {
+                    output_index: frame.output_index,
+                    scene_revision: frame.scene_revision,
+                    frame_checksum: frame.frame_checksum.clone(),
+                    resolution: frame.resolution,
+                    live: output_live,
+                };
+                let prev_entry = self
+                    .engine
+                    .output_statuses
+                    .iter()
+                    .find(|s| s.output_index == frame.output_index)
+                    .cloned();
+                let entry_changed = prev_entry.as_ref() != Some(&status_entry);
+                if let Some(slot) = self
+                    .engine
+                    .output_statuses
+                    .iter_mut()
+                    .find(|s| s.output_index == frame.output_index)
+                {
+                    *slot = status_entry;
+                } else {
+                    self.engine.output_statuses.push(status_entry);
+                    self.engine.output_statuses.sort_by_key(|s| s.output_index);
+                }
+                let mut primary_changed = false;
+                if frame.output_index == 0 {
+                    primary_changed = self.engine.frame_checksum != frame.frame_checksum
+                        || self.engine.scene_revision != frame.scene_revision;
+                    self.engine.scene_revision = frame.scene_revision;
+                    self.engine.frame_checksum = frame.frame_checksum.clone();
+                }
                 let mut out = vec![event.clone()];
-                if changed {
+                if primary_changed || entry_changed {
                     out.push(self.status_event());
                 }
                 out
@@ -1352,12 +1570,17 @@ impl CoreService {
                 self.live.change(|scene| {
                     scene.cleared = true;
                     scene.test_pattern = TestPattern::Unspecified as i32;
+                    scene.outputs.clear();
+                    scene.preload_items.clear();
                     scene.text = if show_logo {
                         "logo".into()
                     } else {
                         String::new()
                     };
                 });
+                for status in &mut self.engine.output_statuses {
+                    status.live = false;
+                }
                 vec![event.clone(), self.status_event()]
             }
             _ => Vec::new(),
@@ -2501,6 +2724,342 @@ Was [Em]blind, but [D]now I [G]see.
                     command_with_group(action.clone(), None),
                 ));
                 assert_eq!(error_code(&denied), DENIED_CODE);
+            }
+        }
+    }
+
+    #[test]
+    fn multi_output_commands_queries_preview_resync_and_permissions() {
+        // sec: SEC-14; safe: SAFE-06
+        use selah_proto::v1::{
+            FrameShown, GetOutputConfigs, LayerKind, LayerSpec, OutputConfig, OutputRole,
+            OutputScene, PreloadHint, PreloadItems, PresentScene, Resolution, SlideLayerSpec,
+            StagePreviewScene, layer_spec,
+        };
+
+        let dir = tempfile::tempdir().unwrap();
+        let mut core = CoreService::new(dir.path(), false);
+
+        // Initial GetOutputConfigs returns default 1920x1080 single output.
+        let initial_cfg = core.handle(&request_with_id(
+            801,
+            ActorOrigin::Ui,
+            envelope::Body::Query(Query {
+                request: Some(query::Request::GetOutputConfigs(GetOutputConfigs {})),
+            }),
+        ));
+        assert!(matches!(
+            initial_cfg.reply.and_then(|r| r.body),
+            Some(envelope::Body::Reply(Reply {
+                result: Some(reply::Result::OutputConfigList(list))
+            })) if list.outputs.len() == 1
+                && list.outputs[0].resolution == Some(Resolution { width: 1920, height: 1080 })
+        ));
+
+        // Invalid SetOutputConfigs payloads are rejected without mutating state.
+        let bad_configs = [
+            Vec::new(),
+            vec![OutputConfig {
+                output_index: 0,
+                enabled: false,
+                ..Default::default()
+            }],
+            vec![
+                OutputConfig {
+                    output_index: 0,
+                    enabled: true,
+                    ..Default::default()
+                },
+                OutputConfig {
+                    output_index: 0,
+                    enabled: true,
+                    ..Default::default()
+                },
+            ],
+            vec![OutputConfig {
+                output_index: 0,
+                enabled: true,
+                resolution: Some(Resolution {
+                    width: 8,
+                    height: 1080,
+                }),
+                ..Default::default()
+            }],
+        ];
+        for (i, outputs) in bad_configs.into_iter().enumerate() {
+            let err = core.handle(&request_with_id(
+                810 + i as u64,
+                ActorOrigin::Ui,
+                command(command::Action::SetOutputConfigs(SetOutputConfigs {
+                    outputs,
+                })),
+            ));
+            assert_eq!(error_code(&err), codes::INVALID);
+            assert!(err.to_engine.is_none());
+        }
+
+        // Valid multi-output configuration persists and appears in resync_commands.
+        let valid_configs = vec![
+            OutputConfig {
+                output_index: 0,
+                name: "Main Hall".into(),
+                role: OutputRole::Main as i32,
+                resolution: Some(Resolution {
+                    width: 1920,
+                    height: 1080,
+                }),
+                enabled: true,
+                ..Default::default()
+            },
+            OutputConfig {
+                output_index: 1,
+                name: "Wide LED".into(),
+                role: OutputRole::Main as i32,
+                resolution: Some(Resolution {
+                    width: 3840,
+                    height: 1080,
+                }),
+                enabled: true,
+                ..Default::default()
+            },
+        ];
+        let set_cfg = core.handle(&request_with_id(
+            820,
+            ActorOrigin::Ui,
+            command(command::Action::SetOutputConfigs(SetOutputConfigs {
+                outputs: valid_configs.clone(),
+            })),
+        ));
+        assert!(matches!(
+            set_cfg.to_engine.and_then(|c| c.action),
+            Some(render_command::Action::SetOutputConfigs(c)) if c.outputs.len() == 2
+        ));
+
+        // Invalid resolution in StagePreviewScene / PresentScene is refused cleanly.
+        let bad_scene = Scene {
+            resolution: Some(Resolution {
+                width: 9000,
+                height: 1080,
+            }),
+            ..Default::default()
+        };
+        assert_eq!(
+            error_code(&core.handle(&request_with_id(
+                821,
+                ActorOrigin::Ui,
+                command(command::Action::StagePreviewScene(StagePreviewScene {
+                    scene: Some(bad_scene.clone()),
+                })),
+            ))),
+            codes::INVALID
+        );
+        assert_eq!(
+            error_code(&core.handle(&request_with_id(
+                822,
+                ActorOrigin::Ui,
+                command(command::Action::PresentScene(PresentScene {
+                    scene: Some(bad_scene),
+                })),
+            ))),
+            codes::INVALID
+        );
+
+        // Staged preview notifies engine via SetPreviewScene, bumps preview_scene_revision, never sets live.
+        let preview = core.handle(&request_with_id(
+            823,
+            ActorOrigin::Ui,
+            command(command::Action::StagePreviewScene(StagePreviewScene {
+                scene: Some(Scene {
+                    outputs: vec![OutputScene {
+                        output_index: 0,
+                        layers: vec![LayerSpec {
+                            kind: LayerKind::Slide as i32,
+                            enabled: true,
+                            content: Some(layer_spec::Content::Slide(SlideLayerSpec {
+                                text: "Preview".into(),
+                                ..Default::default()
+                            })),
+                            ..Default::default()
+                        }],
+                        ..Default::default()
+                    }],
+                    ..Default::default()
+                }),
+            })),
+        ));
+        assert!(matches!(
+            preview.to_engine.and_then(|c| c.action),
+            Some(render_command::Action::SetPreviewScene(p))
+                if p.scene.as_ref().is_some_and(|s| s.is_preview && s.revision == 1)
+        ));
+        assert!(!core.status().live);
+        assert_eq!(core.status().preview_scene_revision, 1);
+
+        // PreloadItems forwards non-empty hints without toggling live.
+        assert!(
+            core.handle(&request_with_id(
+                824,
+                ActorOrigin::Ui,
+                command(command::Action::PreloadItems(PreloadItems {
+                    items: Vec::new(),
+                })),
+            ))
+            .to_engine
+            .is_none()
+        );
+        let preload = core.handle(&request_with_id(
+            825,
+            ActorOrigin::Ui,
+            command(command::Action::PreloadItems(PreloadItems {
+                items: vec![PreloadHint {
+                    key: "k1".into(),
+                    output_index: 0,
+                    text: "Next".into(),
+                    ..Default::default()
+                }],
+            })),
+        ));
+        assert!(matches!(
+            preload.to_engine.and_then(|c| c.action),
+            Some(render_command::Action::PreloadItems(p)) if p.items.len() == 1
+        ));
+        assert!(!core.status().live);
+
+        // PresentScene updates live state and tracks per-output FrameShown status independently.
+        let live_scene = Scene {
+            outputs: vec![
+                OutputScene {
+                    output_index: 0,
+                    layers: vec![LayerSpec {
+                        kind: LayerKind::Slide as i32,
+                        enabled: true,
+                        content: Some(layer_spec::Content::Slide(SlideLayerSpec {
+                            text: "Hall".into(),
+                            ..Default::default()
+                        })),
+                        ..Default::default()
+                    }],
+                    ..Default::default()
+                },
+                OutputScene {
+                    output_index: 1,
+                    layers: vec![LayerSpec {
+                        kind: LayerKind::Slide as i32,
+                        enabled: true,
+                        content: Some(layer_spec::Content::Slide(SlideLayerSpec {
+                            text: "LED".into(),
+                            ..Default::default()
+                        })),
+                        ..Default::default()
+                    }],
+                    ..Default::default()
+                },
+            ],
+            ..Default::default()
+        };
+        let presented = core.handle(&request_with_id(
+            826,
+            ActorOrigin::Ui,
+            command(command::Action::PresentScene(PresentScene {
+                scene: Some(live_scene.clone()),
+            })),
+        ));
+        assert!(matches!(
+            presented.to_engine.and_then(|c| c.action),
+            Some(render_command::Action::SetScene(s)) if !s.is_preview && s.outputs.len() == 2
+        ));
+        assert!(core.status().live);
+
+        // Secondary output FrameShown updates output_statuses without clobbering primary checksum.
+        let rev = core.status().scene_revision;
+        core.on_engine_event(&Event {
+            notification: Some(event::Notification::FrameShown(FrameShown {
+                output_index: 1,
+                scene_revision: rev,
+                frame_checksum: vec![9, 9, 9],
+                resolution: Some(Resolution {
+                    width: 3840,
+                    height: 1080,
+                }),
+                ..Default::default()
+            })),
+        });
+        assert!(core.status().frame_checksum.is_empty());
+        core.on_engine_event(&Event {
+            notification: Some(event::Notification::FrameShown(FrameShown {
+                output_index: 0,
+                scene_revision: rev,
+                frame_checksum: vec![1, 2, 3],
+                resolution: Some(Resolution {
+                    width: 1920,
+                    height: 1080,
+                }),
+                ..Default::default()
+            })),
+        });
+        assert_eq!(core.status().frame_checksum, vec![1, 2, 3]);
+        assert_eq!(core.status().output_statuses.len(), 2);
+
+        // Preview FrameShown does not alter live output statuses.
+        core.on_engine_event(&Event {
+            notification: Some(event::Notification::FrameShown(FrameShown {
+                output_index: 0,
+                scene_revision: 5,
+                is_preview: true,
+                frame_checksum: vec![7, 7, 7],
+                ..Default::default()
+            })),
+        });
+        assert_eq!(core.status().frame_checksum, vec![1, 2, 3]);
+
+        // resync_commands returns SetOutputConfigs + SetScene + SetPreviewScene.
+        let resync = core.resync_commands();
+        assert_eq!(resync.len(), 3);
+        assert!(matches!(
+            resync[0].action,
+            Some(render_command::Action::SetOutputConfigs(_))
+        ));
+        assert!(matches!(
+            resync[1].action,
+            Some(render_command::Action::SetScene(_))
+        ));
+        assert!(matches!(
+            resync[2].action,
+            Some(render_command::Action::SetPreviewScene(_))
+        ));
+
+        // SEC-14: Non-UI origins are refused on all 4 M3.1 commands without changing state.
+        let actions = [
+            command::Action::SetOutputConfigs(SetOutputConfigs {
+                outputs: valid_configs,
+            }),
+            command::Action::PresentScene(PresentScene {
+                scene: Some(live_scene.clone()),
+            }),
+            command::Action::StagePreviewScene(StagePreviewScene {
+                scene: Some(live_scene),
+            }),
+            command::Action::PreloadItems(PreloadItems {
+                items: vec![PreloadHint {
+                    key: "denied".into(),
+                    ..Default::default()
+                }],
+            }),
+        ];
+        for action in actions {
+            for origin in [
+                ActorOrigin::Api,
+                ActorOrigin::Midi,
+                ActorOrigin::Sync,
+                ActorOrigin::Engine,
+            ] {
+                let refused = core.handle(&request_with_id(
+                    850,
+                    origin,
+                    command(action.clone()),
+                ));
+                assert_eq!(error_code(&refused), DENIED_CODE);
+                assert!(refused.to_engine.is_none());
             }
         }
     }

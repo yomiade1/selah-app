@@ -108,7 +108,7 @@ pub fn apply_output_message(
 impl OutputSurface {
     /// Blit the composited output to this window and present it. False if nothing was shown.
     pub fn present(&mut self, gpu: &GpuCompositor) -> bool {
-        let Some(source) = gpu.output_view() else {
+        let Some(source) = gpu.output_view_for(self.id) else {
             return false;
         };
         let texture = match self.surface.get_current_texture() {

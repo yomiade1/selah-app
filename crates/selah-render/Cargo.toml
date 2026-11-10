@@ -10,6 +10,7 @@ description = "Selah compositor: layer stack, test patterns, text and video laye
 [dependencies]
 anyhow.workspace = true
 blake3.workspace = true
+prost.workspace = true
 selah-proto = { path = "../selah-proto" }
 tracing.workspace = true
 wgpu.workspace = true

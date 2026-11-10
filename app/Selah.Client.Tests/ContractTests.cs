@@ -560,4 +560,161 @@ public sealed class ContractTests
         };
         Assert.Equal(restoreReply, Envelope.Parser.ParseFrom(restoreReply.ToByteArray()));
     }
+
+    [Fact]
+    public void M3MultiOutputAndLayerMessagesRoundTrip()
+    {
+        var cfgCmd = new Envelope
+        {
+            Id = 4001,
+            Command = new Command
+            {
+                SetOutputConfigs = new SetOutputConfigs
+                {
+                    Outputs =
+                    {
+                        new OutputConfig
+                        {
+                            OutputIndex = 0,
+                            Name = "Main Hall",
+                            Role = OutputRole.Main,
+                            Resolution = new Resolution { Width = 1920, Height = 1080 },
+                            Enabled = true,
+                            RefreshRateMhz = 60000,
+                        },
+                        new OutputConfig
+                        {
+                            OutputIndex = 1,
+                            Name = "LED Wall",
+                            Role = OutputRole.Main,
+                            Resolution = new Resolution { Width = 3840, Height = 1080 },
+                            Enabled = true,
+                            RefreshRateMhz = 60000,
+                        },
+                    },
+                },
+            },
+        };
+        Assert.Equal(cfgCmd, Envelope.Parser.ParseFrom(cfgCmd.ToByteArray()));
+
+        var presentCmd = new Envelope
+        {
+            Id = 4002,
+            Command = new Command
+            {
+                PresentScene = new PresentScene
+                {
+                    Scene = new Scene
+                    {
+                        Revision = 12,
+                        Outputs =
+                        {
+                            new OutputScene
+                            {
+                                OutputIndex = 0,
+                                Role = OutputRole.Main,
+                                Resolution = new Resolution { Width = 1920, Height = 1080 },
+                                Transition = new TransitionSpec
+                                {
+                                    Kind = TransitionKind.Fade,
+                                    DurationMs = 400,
+                                    Easing = TransitionEasing.EaseInOut,
+                                },
+                                Layers =
+                                {
+                                    new LayerSpec
+                                    {
+                                        Kind = LayerKind.Media,
+                                        Enabled = true,
+                                        Media = new MediaLayerSpec
+                                        {
+                                            Gradient = new GradientSpec
+                                            {
+                                                Kind = GradientKind.Linear,
+                                                AngleDegrees = 45,
+                                                Stops =
+                                                {
+                                                    new ColorStop
+                                                    {
+                                                        Color = new Color { Red = 0.1f, Green = 0.2f, Blue = 0.5f, Alpha = 1.0f },
+                                                        Position = 0.0f,
+                                                    },
+                                                    new ColorStop
+                                                    {
+                                                        Color = new Color { Red = 0.0f, Green = 0.0f, Blue = 0.1f, Alpha = 1.0f },
+                                                        Position = 1.0f,
+                                                    },
+                                                },
+                                            },
+                                            Fit = MediaFitMode.Fill,
+                                        },
+                                    },
+                                    new LayerSpec
+                                    {
+                                        Kind = LayerKind.Slide,
+                                        Enabled = true,
+                                        Slide = new SlideLayerSpec
+                                        {
+                                            Text = "Great is Thy faithfulness",
+                                            TitleText = "Hymn",
+                                        },
+                                    },
+                                    new LayerSpec
+                                    {
+                                        Kind = LayerKind.Props,
+                                        Enabled = true,
+                                        Props = new PropsLayerSpec { Label = "LIVE" },
+                                    },
+                                    new LayerSpec
+                                    {
+                                        Kind = LayerKind.Messages,
+                                        Enabled = true,
+                                        Messages = new MessagesLayerSpec { Text = "Nursery 4", Ticker = false },
+                                    },
+                                },
+                            },
+                        },
+                        PreloadItems =
+                        {
+                            new PreloadHint
+                            {
+                                Key = "slide-2",
+                                OutputIndex = 0,
+                                Resolution = new Resolution { Width = 1920, Height = 1080 },
+                                Text = "Morning by morning",
+                            },
+                        },
+                    },
+                },
+            },
+        };
+        Assert.Equal(presentCmd, Envelope.Parser.ParseFrom(presentCmd.ToByteArray()));
+
+        var statusReply = new Envelope
+        {
+            Id = 4003,
+            CorrelationId = 4002,
+            Reply = new Reply
+            {
+                Status = new Status
+                {
+                    Connected = true,
+                    Live = true,
+                    SceneRevision = 12,
+                    PreviewSceneRevision = 4,
+                    OutputStatuses =
+                    {
+                        new OutputFrameStatus
+                        {
+                            OutputIndex = 0,
+                            SceneRevision = 12,
+                            Resolution = new Resolution { Width = 1920, Height = 1080 },
+                            Live = true,
+                        },
+                    },
+                },
+            },
+        };
+        Assert.Equal(statusReply, Envelope.Parser.ParseFrom(statusReply.ToByteArray()));
+    }
 }

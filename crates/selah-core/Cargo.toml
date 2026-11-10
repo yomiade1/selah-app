@@ -18,6 +18,7 @@ rusqlite = { version = "0.41", features = ["bundled"] }
 selah-kb = { path = "../selah-kb" }
 selah-net = { path = "../selah-net" }
 selah-proto = { path = "../selah-proto" }
+selah-render = { path = "../selah-render" }
 selah-runtime = { path = "../selah-runtime" }
 semver.workspace = true
 serde.workspace = true

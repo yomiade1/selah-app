@@ -14,6 +14,7 @@ use selah_proto::v1::{ActorOrigin, command, envelope, query, render_command};
 
 mod engine;
 mod outputs;
+mod scheduler;
 mod windows;
 
 use engine::{Engine, Mode};

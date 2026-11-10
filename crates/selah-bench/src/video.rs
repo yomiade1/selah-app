@@ -122,6 +122,7 @@ pub fn run(options: &Options) -> Result<VideoReport> {
         text: "Amazing grace, how sweet the sound".into(),
         cleared: false,
         resolution: None,
+        ..Default::default()
     };
     // Warm up: shader compilation and the text layer aren't part of the steady state.
     gpu.set_video(None)?;

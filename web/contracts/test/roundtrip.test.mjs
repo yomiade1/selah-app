@@ -7,6 +7,14 @@ import {
     ActorOrigin,
 } from "../dist/gen/selah/v1/envelope_pb.js";
 import {
+    GradientKind,
+    LayerKind,
+    MediaFitMode,
+    OutputRole,
+    TransitionEasing,
+    TransitionKind,
+} from "../dist/gen/selah/v1/render_pb.js";
+import {
     AccidentalSpelling,
     BibleFormat,
     CopyrightPlacement,
@@ -636,5 +644,113 @@ test("M2 media and library exchange messages round-trip", () => {
     assert.deepEqual(
         fromBinary(EnvelopeSchema, toBinary(EnvelopeSchema, restoreCmd)),
         restoreCmd,
+    );
+});
+
+test("M3 multi-output and 5-layer scene messages round-trip", () => {
+    const setOutputsCmd = create(EnvelopeSchema, {
+        id: 4001n,
+        body: {
+            case: "command",
+            value: {
+                action: {
+                    case: "setOutputConfigs",
+                    value: {
+                        outputs: [
+                            {
+                                outputIndex: 0,
+                                name: "Main Hall",
+                                role: OutputRole.MAIN,
+                                resolution: { width: 1920, height: 1080 },
+                                enabled: true,
+                                refreshRateMhz: 60000,
+                            },
+                            {
+                                outputIndex: 1,
+                                name: "LED Wall",
+                                role: OutputRole.MAIN,
+                                resolution: { width: 3840, height: 1080 },
+                                enabled: true,
+                                refreshRateMhz: 60000,
+                            },
+                        ],
+                    },
+                },
+            },
+        },
+    });
+    assert.deepEqual(
+        fromBinary(EnvelopeSchema, toBinary(EnvelopeSchema, setOutputsCmd)),
+        setOutputsCmd,
+    );
+
+    const presentCmd = create(EnvelopeSchema, {
+        id: 4002n,
+        body: {
+            case: "command",
+            value: {
+                action: {
+                    case: "presentScene",
+                    value: {
+                        scene: {
+                            revision: 8n,
+                            outputs: [
+                                {
+                                    outputIndex: 0,
+                                    role: OutputRole.MAIN,
+                                    resolution: { width: 1920, height: 1080 },
+                                    transition: {
+                                        kind: TransitionKind.FADE,
+                                        durationMs: 350,
+                                        easing: TransitionEasing.EASE_IN_OUT,
+                                    },
+                                    layers: [
+                                        {
+                                            kind: LayerKind.MEDIA,
+                                            enabled: true,
+                                            content: {
+                                                case: "media",
+                                                value: {
+                                                    fit: MediaFitMode.FILL,
+                                                    gradient: {
+                                                        kind: GradientKind.LINEAR,
+                                                        angleDegrees: 90,
+                                                        stops: [
+                                                            {
+                                                                color: {
+                                                                    red: 0.125,
+                                                                    green: 0.25,
+                                                                    blue: 0.75,
+                                                                    alpha: 1,
+                                                                },
+                                                                position: 0,
+                                                            },
+                                                        ],
+                                                    },
+                                                },
+                                            },
+                                        },
+                                        {
+                                            kind: LayerKind.SLIDE,
+                                            enabled: true,
+                                            content: {
+                                                case: "slide",
+                                                value: {
+                                                    text: "How great Thou art",
+                                                },
+                                            },
+                                        },
+                                    ],
+                                },
+                            ],
+                        },
+                    },
+                },
+            },
+        },
+    });
+    assert.deepEqual(
+        fromBinary(EnvelopeSchema, toBinary(EnvelopeSchema, presentCmd)),
+        presentCmd,
     );
 });

@@ -96,6 +96,7 @@ async fn show_test_pattern_reaches_the_output_within_one_frame() {
                     width: 1920,
                     height: 1080,
                 }),
+                ..Default::default()
             },
             1920,
             1080,

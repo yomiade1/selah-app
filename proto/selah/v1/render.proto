@@ -13,12 +13,251 @@ enum TestPattern {
   TEST_PATTERN_GRADIENT = 3;
 }
 
+enum OutputRole {
+  OUTPUT_ROLE_UNSPECIFIED = 0;
+  OUTPUT_ROLE_MAIN = 1;
+  OUTPUT_ROLE_STAGE = 2;
+  OUTPUT_ROLE_STREAM = 3;
+  OUTPUT_ROLE_LOBBY = 4;
+}
+
+message OutputConfig {
+  uint32 output_index = 1;
+  string name = 2;
+  OutputRole role = 3;
+  Resolution resolution = 4;
+  bool enabled = 5;
+  int32 display_index = 6;
+  bool fullscreen = 7;
+  uint32 refresh_rate_mhz = 8;
+  Id template_id = 9;
+}
+
+message OutputConfigList {
+  repeated OutputConfig outputs = 1;
+}
+
+enum LayerKind {
+  LAYER_KIND_UNSPECIFIED = 0;
+  LAYER_KIND_VIDEO_INPUT = 1;
+  LAYER_KIND_MEDIA = 2;
+  LAYER_KIND_SLIDE = 3;
+  LAYER_KIND_PROPS = 4;
+  LAYER_KIND_MESSAGES = 5;
+}
+
+enum MediaFitMode {
+  MEDIA_FIT_MODE_UNSPECIFIED = 0;
+  MEDIA_FIT_MODE_FIT = 1;
+  MEDIA_FIT_MODE_FILL = 2;
+  MEDIA_FIT_MODE_STRETCH = 3;
+}
+
+enum GradientKind {
+  GRADIENT_KIND_UNSPECIFIED = 0;
+  GRADIENT_KIND_LINEAR = 1;
+  GRADIENT_KIND_RADIAL = 2;
+}
+
+message ColorStop {
+  Color color = 1;
+  float position = 2;
+}
+
+message GradientSpec {
+  GradientKind kind = 1;
+  float angle_degrees = 2;
+  repeated ColorStop stops = 3;
+}
+
+enum EffectKind {
+  EFFECT_KIND_UNSPECIFIED = 0;
+  EFFECT_KIND_BLUR = 1;
+  EFFECT_KIND_COLOUR_ADJUST = 2;
+  EFFECT_KIND_VIGNETTE = 3;
+  EFFECT_KIND_BACKGROUND_BLUR = 4;
+  EFFECT_KIND_COLOUR_KEY = 5;
+  EFFECT_KIND_MASK = 6;
+}
+
+message EffectSpec {
+  EffectKind kind = 1;
+  bool enabled = 2;
+  float intensity = 3;
+  // JSON parameters specific to the effect.
+  string params_json = 4;
+}
+
+enum TransitionKind {
+  TRANSITION_KIND_UNSPECIFIED = 0;
+  TRANSITION_KIND_CUT = 1;
+  TRANSITION_KIND_FADE = 2;
+  TRANSITION_KIND_DISSOLVE = 3;
+  TRANSITION_KIND_FADE_THROUGH_BLACK = 4;
+  TRANSITION_KIND_PUSH = 5;
+  TRANSITION_KIND_WIPE = 6;
+  TRANSITION_KIND_ZOOM = 7;
+  TRANSITION_KIND_SLIDE = 8;
+}
+
+enum TransitionDirection {
+  TRANSITION_DIRECTION_UNSPECIFIED = 0;
+  TRANSITION_DIRECTION_LEFT = 1;
+  TRANSITION_DIRECTION_RIGHT = 2;
+  TRANSITION_DIRECTION_UP = 3;
+  TRANSITION_DIRECTION_DOWN = 4;
+}
+
+enum TransitionEasing {
+  TRANSITION_EASING_UNSPECIFIED = 0;
+  TRANSITION_EASING_LINEAR = 1;
+  TRANSITION_EASING_EASE_IN = 2;
+  TRANSITION_EASING_EASE_OUT = 3;
+  TRANSITION_EASING_EASE_IN_OUT = 4;
+}
+
+message TransitionSpec {
+  TransitionKind kind = 1;
+  uint32 duration_ms = 2;
+  TransitionDirection direction = 3;
+  TransitionEasing easing = 4;
+}
+
+message VideoInputLayerSpec {
+  string source_id = 1;
+  Color fallback_color = 2;
+  MediaFitMode fit = 3;
+  bool use_opacity = 4;
+  float opacity = 5;
+  repeated EffectSpec effects = 6;
+}
+
+message MediaLayerSpec {
+  Color solid_color = 1;
+  GradientSpec gradient = 2;
+  string content_hash = 3;
+  string media_kind = 4;
+  string media_extension = 5;
+  MediaFitMode fit = 6;
+  float blur_radius = 7;
+  bool use_opacity = 8;
+  float opacity = 9;
+  bool loop_media = 10;
+  uint64 in_ms = 11;
+  uint64 out_ms = 12;
+  float speed = 13;
+  float volume = 14;
+  bool muted = 15;
+  bool paused = 16;
+  uint64 seek_ms = 17;
+  repeated EffectSpec effects = 18;
+}
+
+message SlideLayerSpec {
+  string text = 1;
+  string elements_json = 2;
+  string style_json = 3;
+  TestPattern test_pattern = 4;
+  bool use_opacity = 5;
+  float opacity = 6;
+  repeated EffectSpec effects = 7;
+  string title_text = 8;
+  string reference_text = 9;
+  string footer_text = 10;
+  string chords_json = 11;
+  string translation_text = 12;
+  int64 timer_target_unix_ms = 13;
+}
+
+message PropsLayerSpec {
+  string label = 1;
+  string elements_json = 2;
+  Color background_color = 3;
+  Color text_color = 4;
+  bool use_opacity = 5;
+  float opacity = 6;
+  repeated EffectSpec effects = 7;
+}
+
+message MessagesLayerSpec {
+  string text = 1;
+  Color background_color = 2;
+  Color text_color = 3;
+  bool ticker = 4;
+  bool use_opacity = 5;
+  float opacity = 6;
+  repeated EffectSpec effects = 7;
+}
+
+message LayerSpec {
+  LayerKind kind = 1;
+  bool enabled = 2;
+  bool use_opacity = 3;
+  float opacity = 4;
+  TransitionSpec transition = 5;
+  repeated EffectSpec effects = 6;
+  oneof content {
+    VideoInputLayerSpec video_input = 10;
+    MediaLayerSpec media = 11;
+    SlideLayerSpec slide = 12;
+    PropsLayerSpec props = 13;
+    MessagesLayerSpec messages = 14;
+  }
+}
+
+message OutputScene {
+  uint32 output_index = 1;
+  OutputRole role = 2;
+  Resolution resolution = 3;
+  bool cleared = 4;
+  bool show_logo = 5;
+  TestPattern test_pattern = 6;
+  repeated LayerSpec layers = 7;
+  TransitionSpec transition = 8;
+  repeated EffectSpec effects = 9;
+}
+
+message PreloadHint {
+  string key = 1;
+  uint32 output_index = 2;
+  Resolution resolution = 3;
+  string text = 4;
+  string style_json = 5;
+  string elements_json = 6;
+  string media_hash = 7;
+}
+
 message Scene {
   uint64 revision = 1;
   TestPattern test_pattern = 2;
   string text = 3;
   bool cleared = 4;
   Resolution resolution = 5;
+  repeated OutputScene outputs = 6;
+  bool is_preview = 7;
+  repeated PreloadHint preload_items = 8;
+}
+
+message SetPreviewScene {
+  Scene scene = 1;
+}
+
+message PreloadItems {
+  repeated PreloadHint items = 1;
+}
+
+message SetOutputConfigs {
+  repeated OutputConfig outputs = 1;
+}
+
+message GetOutputConfigs {}
+
+message OutputFrameStatus {
+  uint32 output_index = 1;
+  uint64 scene_revision = 2;
+  bytes frame_checksum = 3;
+  Resolution resolution = 4;
+  bool live = 5;
 }
 
 message RenderCommand {
@@ -26,6 +265,9 @@ message RenderCommand {
     Scene set_scene = 1;
     ClearEverything clear_everything = 2;
     ShowLogo show_logo = 3;
+    SetPreviewScene set_preview_scene = 4;
+    PreloadItems preload_items = 5;
+    SetOutputConfigs set_output_configs = 6;
   }
 }
 
@@ -52,6 +294,8 @@ message FrameShown {
   uint32 output_index = 5;
   // Frame period of the output's clock (for "within one frame" checks).
   uint64 frame_period_nanoseconds = 6;
+  Resolution resolution = 7;
+  bool is_preview = 8;
 }
 
 // Engine → core after the emergency lane cleared the screens or showed the logo (SAFE-03).
