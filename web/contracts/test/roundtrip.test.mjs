@@ -514,3 +514,127 @@ test("M2 scripture commands, queries and replies round-trip", () => {
         listReply,
     );
 });
+
+test("M2 media and library exchange messages round-trip", () => {
+    const docId = new Uint8Array([
+        0x01, 0x92, 0x70, 0x00, 0x00, 0x00, 0x70, 0x00, 0x80, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x09,
+    ]);
+
+    const importMediaCmd = create(EnvelopeSchema, {
+        id: 3001n,
+        body: {
+            case: "command",
+            value: {
+                action: {
+                    case: "importMedia",
+                    value: {
+                        sourcePath: "C:/media/backdrop.png",
+                        name: "Sunday Backdrop",
+                        tags: ["Background", "Blue"],
+                    },
+                },
+            },
+        },
+    });
+    assert.deepEqual(
+        fromBinary(EnvelopeSchema, toBinary(EnvelopeSchema, importMediaCmd)),
+        importMediaCmd,
+    );
+
+    const thumbQuery = create(EnvelopeSchema, {
+        id: 3002n,
+        body: {
+            case: "query",
+            value: {
+                request: {
+                    case: "getMediaThumbnail",
+                    value: {
+                        mediaId: { value: docId },
+                        maxWidth: 320,
+                        maxHeight: 180,
+                    },
+                },
+            },
+        },
+    });
+    assert.deepEqual(
+        fromBinary(EnvelopeSchema, toBinary(EnvelopeSchema, thumbQuery)),
+        thumbQuery,
+    );
+
+    const exportCmd = create(EnvelopeSchema, {
+        id: 3003n,
+        body: {
+            case: "command",
+            value: {
+                action: {
+                    case: "exportSelahBundle",
+                    value: {
+                        outputPath: "C:/export/sunday.selah",
+                        songIds: [{ value: docId }],
+                        includeMedia: true,
+                    },
+                },
+            },
+        },
+    });
+    assert.deepEqual(
+        fromBinary(EnvelopeSchema, toBinary(EnvelopeSchema, exportCmd)),
+        exportCmd,
+    );
+
+    const importBundleCmd = create(EnvelopeSchema, {
+        id: 3004n,
+        body: {
+            case: "command",
+            value: {
+                action: {
+                    case: "importSelahBundle",
+                    value: {
+                        sourcePath: "C:/export/sunday.selah",
+                        overwriteExisting: true,
+                    },
+                },
+            },
+        },
+    });
+    assert.deepEqual(
+        fromBinary(EnvelopeSchema, toBinary(EnvelopeSchema, importBundleCmd)),
+        importBundleCmd,
+    );
+
+    const backupCmd = create(EnvelopeSchema, {
+        id: 3005n,
+        body: {
+            case: "command",
+            value: {
+                action: {
+                    case: "createLibraryBackup",
+                    value: { outputPath: "C:/backups/lib.zip" },
+                },
+            },
+        },
+    });
+    assert.deepEqual(
+        fromBinary(EnvelopeSchema, toBinary(EnvelopeSchema, backupCmd)),
+        backupCmd,
+    );
+
+    const restoreCmd = create(EnvelopeSchema, {
+        id: 3006n,
+        body: {
+            case: "command",
+            value: {
+                action: {
+                    case: "restoreLibraryBackup",
+                    value: { backupPath: "C:/backups/lib.zip" },
+                },
+            },
+        },
+    });
+    assert.deepEqual(
+        fromBinary(EnvelopeSchema, toBinary(EnvelopeSchema, restoreCmd)),
+        restoreCmd,
+    );
+});

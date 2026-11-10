@@ -1,4 +1,4 @@
-# Command bus (M1, extended in M2.2)
+# Command bus (M1, extended in M2.2–M2.6)
 
 How Selah's processes talk: the envelope, the commands, queries and events, how errors come back, and how the IPC behaves. Contracts: `proto/selah/v1/` (ADR-003).
 Transport and security: [foundations.md](foundations.md) §IPC (SEC-02, SEC-03).
@@ -45,6 +45,10 @@ covers every origin × command.
 | `Undo`, `Redo` | no | `UndoState` / `SEL-LIB-0004` | Optional `doc_id` scopes undo/redo to one document; empty `doc_id` runs globally across undo groups. Emits compensating `LibraryChanged { from_undo_redo = true }` + `UndoStateChanged` |
 | `SaveEditorBuffer`, `DiscardEditorBuffer` | no | `acknowledged` / `SEL-LIB-0002` | Crash-safe autosave buffer (`editor_buffers`), not added to undo stack |
 | `SetPolicySetting`, `RemovePolicySetting` | no | `acknowledged` / `SEL-LIB-0003` | Policy settings (`User`, `Machine`, `Organisation`); refuses user overrides on locked keys |
+| `ImportBible`, `DeleteBible` | no | `BibleTranslation` / `acknowledged` | Bounded OSIS/USFM/Zefania Bible import or removal in `library/bibles/` (`M2.5`) |
+| `ImportMedia` | no | `MediaItem` / `SEL-LIB-0002` | Probes local file via `selah-media-worker`, verifies BLAKE3 blob, caches PNG thumbnail, saves undoable `MediaItem` (`M2.6`) |
+| `ExportSelahBundle`, `ImportSelahBundle` | no | `ExportedSelahBundle` / `ImportedSelahBundle` | Exports or imports canonical timestamp-free `.selah` bundles; bundle imports run in one transaction + `undo_group` (`M2.6`) |
+| `CreateLibraryBackup`, `RestoreLibraryBackup` | no | `LibraryBackupInfo` / `RestoreLibraryBackupResult` | Creates verified full library backups (DB, media, Bibles) or restores with staging validation and rollback (`M2.6`) |
 | `SetUpdateSettings { update_feed_url, allow_update_check }` | no | `acknowledged` / `SEL-SET-0001` | Sets the network policy (SEC-13) |
 | `CheckForUpdate {}` | no | `UpdateCheck` / `SEL-UPD-*` | Slow work |
 | `InstallUpdate { version }` | no | `acknowledged` / `SEL-UPD-*` | Refused while live; slow work |
@@ -68,6 +72,9 @@ covers every origin × command.
 | `ListOps` | `OpList` paginated strictly by `seq > after_seq` (optional `doc_id` filter) |
 | `GetPolicySetting` | `GetPolicySettingReply { found, setting }` (effective value, winning policy level, lock flag) |
 | `SearchSongs`, `SearchMedia`, `SearchScripture`, `SearchLibrary` | `SongSearchResults` / `MediaSearchResults` / `ScriptureSearchResults` / `LibrarySearchResults` (bounded `1..=200` per page, synonyms, trigram typo tolerance, `SEL-LIB-0001`/`0002` on invalid args or missing Bible translation) |
+| `ParsePastedSong`, `TransposeSong`, `SplitSongSlides` | `ParsePastedSongReply` / `Song` / `GeneratedSongSlides` (read-only song parsing across 4 formats, transposition, and slide splitting, `M2.4`) |
+| `ListBibles`, `ParseScriptureReference`, `GetScripturePassages`, `SplitScriptureSlides` | `BibleList` / `ParseScriptureReferenceReply` / `ScripturePassages` / `GeneratedScriptureSlides` (`M2.5`) |
+| `GetMediaThumbnail` | `MediaThumbnail { media_id, width, height, png_bytes }` (reads cached thumbnail or regenerates from verified blob via worker, `M2.6`) |
 | `GetWatchdogStatus` | `WatchdogStatus` (watchdog only; core answers `SEL-IPC-0001`) |
 
 ## Events

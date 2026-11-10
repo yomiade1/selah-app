@@ -176,4 +176,20 @@ impl MediaStore {
         self.open_verified(hash, extension, expected_size)?;
         Ok(())
     }
+
+    pub(super) fn verified_blob_path(
+        &self,
+        hash: &str,
+        extension: &str,
+        expected_size: u64,
+    ) -> anyhow::Result<PathBuf> {
+        let path = self.path(hash, extension)?;
+        let meta = std::fs::symlink_metadata(&path)?;
+        ensure!(
+            !meta.file_type().is_symlink() && meta.is_file(),
+            "media blob is a symlink or not a regular file"
+        );
+        self.verify(hash, extension, expected_size)?;
+        Ok(path)
+    }
 }

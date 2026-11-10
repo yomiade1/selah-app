@@ -50,5 +50,12 @@ test = false
 doc = false
 bench = false
 
+[[bin]]
+name = "selah_bundle"
+path = "fuzz_targets/selah_bundle.rs"
+test = false
+doc = false
+bench = false
+
 # Kept out of the main workspace so the stable gate never builds it.
 [workspace]

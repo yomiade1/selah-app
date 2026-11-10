@@ -41,9 +41,14 @@ pub enum CommandKind {
     RemovePolicySetting,
     ImportBible,
     DeleteBible,
+    ImportMedia,
+    ExportSelahBundle,
+    ImportSelahBundle,
+    CreateLibraryBackup,
+    RestoreLibraryBackup,
 }
 
-pub const ALL_COMMANDS: [CommandKind; 29] = [
+pub const ALL_COMMANDS: [CommandKind; 34] = [
     CommandKind::Render,
     CommandKind::SetAppearance,
     CommandKind::RecordFeedback,
@@ -73,6 +78,11 @@ pub const ALL_COMMANDS: [CommandKind; 29] = [
     CommandKind::RemovePolicySetting,
     CommandKind::ImportBible,
     CommandKind::DeleteBible,
+    CommandKind::ImportMedia,
+    CommandKind::ExportSelahBundle,
+    CommandKind::ImportSelahBundle,
+    CommandKind::CreateLibraryBackup,
+    CommandKind::RestoreLibraryBackup,
 ];
 
 pub fn kind_of(action: &command::Action) -> CommandKind {
@@ -106,6 +116,11 @@ pub fn kind_of(action: &command::Action) -> CommandKind {
         command::Action::RemovePolicySetting(_) => CommandKind::RemovePolicySetting,
         command::Action::ImportBible(_) => CommandKind::ImportBible,
         command::Action::DeleteBible(_) => CommandKind::DeleteBible,
+        command::Action::ImportMedia(_) => CommandKind::ImportMedia,
+        command::Action::ExportSelahBundle(_) => CommandKind::ExportSelahBundle,
+        command::Action::ImportSelahBundle(_) => CommandKind::ImportSelahBundle,
+        command::Action::CreateLibraryBackup(_) => CommandKind::CreateLibraryBackup,
+        command::Action::RestoreLibraryBackup(_) => CommandKind::RestoreLibraryBackup,
     }
 }
 
@@ -139,7 +154,12 @@ pub fn changes_screens(kind: CommandKind) -> bool {
         | CommandKind::SetPolicySetting
         | CommandKind::RemovePolicySetting
         | CommandKind::ImportBible
-        | CommandKind::DeleteBible => false,
+        | CommandKind::DeleteBible
+        | CommandKind::ImportMedia
+        | CommandKind::ExportSelahBundle
+        | CommandKind::ImportSelahBundle
+        | CommandKind::CreateLibraryBackup
+        | CommandKind::RestoreLibraryBackup => false,
     }
 }
 
@@ -272,7 +292,12 @@ mod tests {
                 | CommandKind::SetPolicySetting
                 | CommandKind::RemovePolicySetting
                 | CommandKind::ImportBible
-                | CommandKind::DeleteBible => {}
+                | CommandKind::DeleteBible
+                | CommandKind::ImportMedia
+                | CommandKind::ExportSelahBundle
+                | CommandKind::ImportSelahBundle
+                | CommandKind::CreateLibraryBackup
+                | CommandKind::RestoreLibraryBackup => {}
             }
         }
         let unique: std::collections::HashSet<_> = ALL_COMMANDS.iter().collect();

@@ -11,13 +11,19 @@ description = "Media decoding through FFmpeg with a protocol, demuxer and decode
 # Bindings to the pinned LGPL FFmpeg 7.1 shared build (FFMPEG_DIR, set by the gate and
 # tools/tool-env.ps1). Only avcodec, avformat and avutil: the macOS build is decode-only.
 ffmpeg-next = { version = "=9.0.0", default-features = false, features = ["codec", "format"] }
-selah-render = { path = "../selah-render", optional = true }
+selah-render = { path = "../selah-render" }
+serde.workspace = true
+serde_json.workspace = true
 thiserror.workspace = true
 tracing.workspace = true
 
+[[bin]]
+name = "selah-media-worker"
+path = "src/bin/selah_media_worker.rs"
+
 [features]
-# `VideoFrame::into_nv12` for the compositor's video layer.
-render = ["dep:selah-render"]
+# Kept for backwards compatibility with downstream manifests; `render` is always enabled.
+render = []
 
 [dev-dependencies]
 tempfile.workspace = true

@@ -2,6 +2,8 @@
 //!
 //! Repository writes are storage primitives; the command bus adds authorisation,
 //! operation logging and events before exposing mutations over IPC.
+mod archive;
+mod exchange;
 mod media;
 mod ops;
 mod policy;
@@ -9,6 +11,7 @@ mod repository;
 mod schema;
 mod search;
 
+pub use exchange::fuzz_selah_bundle;
 pub use media::{MediaBlob, MediaStore};
 pub use ops::{CommandBusError, CommandMeta, ExecutionOutcome, MutationEventInfo};
 pub use policy::{EffectiveSetting, PolicyLevel};
@@ -108,29 +111,7 @@ impl Library {
     /// Corrupt and newer databases fail closed; they are never replaced with an empty library.
     pub fn open(root: &Path) -> anyhow::Result<Self> {
         let paths = LibraryPaths::create(root)?;
-        // exists() follows symlinks and reports false for a dangling link. Inspect the
-        // directory entry instead so opening SQLite cannot create its outside target.
-        match std::fs::symlink_metadata(&paths.database) {
-            Ok(_) => ensure!(
-                paths.database.canonicalize()?.starts_with(&paths.root),
-                "database escaped library root"
-            ),
-            Err(error) if error.kind() == std::io::ErrorKind::NotFound => {}
-            Err(error) => return Err(error.into()),
-        }
-        let mut db = Connection::open_with_flags(
-            &paths.database,
-            OpenFlags::SQLITE_OPEN_READ_WRITE
-                | OpenFlags::SQLITE_OPEN_CREATE
-                | OpenFlags::SQLITE_OPEN_NO_MUTEX,
-        )?;
-        db.busy_timeout(std::time::Duration::from_secs(5))?;
-        check_integrity(&db)?;
-        // Refuse unsupported versions before changing journal mode or attempting migration.
-        schema::check_history(&db)?;
-        db.execute_batch("PRAGMA foreign_keys = ON; PRAGMA journal_mode = WAL; PRAGMA synchronous = FULL; PRAGMA trusted_schema = OFF;")?;
-        schema::migrate(&mut db)?;
-        search::ensure_search_ready(&mut db)?;
+        let db = open_library_connection(&paths)?;
         Ok(Self {
             db,
             paths,
@@ -175,7 +156,36 @@ impl Library {
     }
 }
 
-fn check_integrity(db: &Connection) -> anyhow::Result<()> {
+pub(super) fn open_library_connection(paths: &LibraryPaths) -> anyhow::Result<Connection> {
+    // exists() follows symlinks and reports false for a dangling link. Inspect the
+    // directory entry instead so opening SQLite cannot create its outside target.
+    match std::fs::symlink_metadata(&paths.database) {
+        Ok(_) => ensure!(
+            paths.database.canonicalize()?.starts_with(&paths.root),
+            "database escaped library root"
+        ),
+        Err(error) if error.kind() == std::io::ErrorKind::NotFound => {}
+        Err(error) => return Err(error.into()),
+    }
+    let mut db = Connection::open_with_flags(
+        &paths.database,
+        OpenFlags::SQLITE_OPEN_READ_WRITE
+            | OpenFlags::SQLITE_OPEN_CREATE
+            | OpenFlags::SQLITE_OPEN_NO_MUTEX,
+    )?;
+    db.busy_timeout(std::time::Duration::from_secs(5))?;
+    check_integrity(&db)?;
+    // Refuse unsupported versions before changing journal mode or attempting migration.
+    schema::check_history(&db)?;
+    db.execute_batch(
+        "PRAGMA foreign_keys = ON; PRAGMA journal_mode = WAL; PRAGMA synchronous = FULL; PRAGMA trusted_schema = OFF;",
+    )?;
+    schema::migrate(&mut db)?;
+    search::ensure_search_ready(&mut db)?;
+    Ok(db)
+}
+
+pub(super) fn check_integrity(db: &Connection) -> anyhow::Result<()> {
     let mut check = db.prepare("PRAGMA integrity_check")?;
     let results = check
         .query_map([], |row| row.get::<_, String>(0))?

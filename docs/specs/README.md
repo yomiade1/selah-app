@@ -13,6 +13,7 @@ Detailed specifications are written **as each milestone builds the thing they de
 | `search.md`: FTS5/trigram search, folding, Bible index reader | M2 |
 | `songs.md`: 4-format paste parser, chord transposition, sections, slide splitting | M2 |
 | `scripture.md`: KJV/WEB seeding, 6-language reference parser, OSIS/USFM/Zefania importers, slide splitting | M2 |
+| `media-and-exchange.md`: probe worker, thumbnails, `.selah` bundles, bounded ZIP, library backups | M2 |
 | `slide-generation.md`: sections, rules, metric fit, fit report | M2–M3 |
 | `render-pipeline.md`: scene, layers, cache, transitions, effects | M3 |
 | `live-state.md`: state machine, looks, timers, macros, undo in Live | M4 |

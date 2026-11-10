@@ -419,4 +419,145 @@ public sealed class ContractTests
         };
         Assert.Equal(bibleReply, Envelope.Parser.ParseFrom(bibleReply.ToByteArray()));
     }
+
+    [Fact]
+    public void M2MediaAndExchangeMessagesRoundTrip()
+    {
+        var idBytes = ByteString.CopyFrom(new byte[]
+        {
+            0x01, 0x92, 0x70, 0x00, 0x00, 0x00, 0x70, 0x00,
+            0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x09,
+        });
+
+        var importMedia = new Envelope
+        {
+            Id = 3001,
+            Command = new Command
+            {
+                ImportMedia = new ImportMedia
+                {
+                    SourcePath = "C:/media/backdrop.png",
+                    Name = "Sunday Backdrop",
+                    Tags = { "Background", "Blue" },
+                },
+            },
+        };
+        Assert.Equal(importMedia, Envelope.Parser.ParseFrom(importMedia.ToByteArray()));
+
+        var thumbQuery = new Envelope
+        {
+            Id = 3002,
+            Query = new Query
+            {
+                GetMediaThumbnail = new GetMediaThumbnail
+                {
+                    MediaId = new Id { Value = idBytes },
+                    MaxWidth = 320,
+                    MaxHeight = 180,
+                },
+            },
+        };
+        Assert.Equal(thumbQuery, Envelope.Parser.ParseFrom(thumbQuery.ToByteArray()));
+
+        var thumbReply = new Envelope
+        {
+            Id = 3003,
+            CorrelationId = 3002,
+            Reply = new Reply
+            {
+                MediaThumbnail = new MediaThumbnail
+                {
+                    MediaId = new Id { Value = idBytes },
+                    Width = 320,
+                    Height = 180,
+                    PngBytes = ByteString.CopyFrom(new byte[] { 0x89, 0x50, 0x4E, 0x47 }),
+                },
+            },
+        };
+        Assert.Equal(thumbReply, Envelope.Parser.ParseFrom(thumbReply.ToByteArray()));
+
+        var exportCmd = new Envelope
+        {
+            Id = 3004,
+            Command = new Command
+            {
+                ExportSelahBundle = new ExportSelahBundle
+                {
+                    OutputPath = "C:/export/sunday.selah",
+                    SongIds = { new Id { Value = idBytes } },
+                    IncludeMedia = true,
+                },
+            },
+        };
+        Assert.Equal(exportCmd, Envelope.Parser.ParseFrom(exportCmd.ToByteArray()));
+
+        var exportReply = new Envelope
+        {
+            Id = 3005,
+            CorrelationId = 3004,
+            Reply = new Reply
+            {
+                ExportedSelahBundle = new ExportedSelahBundle
+                {
+                    OutputPath = "C:/export/sunday.selah",
+                    CanonicalManifestJson = "{\"format\":\"selah-bundle\",\"schema_version\":1}",
+                    SongCount = 1,
+                    MediaCount = 2,
+                    TotalBytes = 4096,
+                },
+            },
+        };
+        Assert.Equal(exportReply, Envelope.Parser.ParseFrom(exportReply.ToByteArray()));
+
+        var importBundleCmd = new Envelope
+        {
+            Id = 3006,
+            Command = new Command
+            {
+                ImportSelahBundle = new ImportSelahBundle
+                {
+                    SourcePath = "C:/export/sunday.selah",
+                    OverwriteExisting = true,
+                },
+            },
+        };
+        Assert.Equal(importBundleCmd, Envelope.Parser.ParseFrom(importBundleCmd.ToByteArray()));
+
+        var backupCmd = new Envelope
+        {
+            Id = 3007,
+            Command = new Command
+            {
+                CreateLibraryBackup = new CreateLibraryBackup { OutputPath = "C:/backups/lib.zip" },
+            },
+        };
+        Assert.Equal(backupCmd, Envelope.Parser.ParseFrom(backupCmd.ToByteArray()));
+
+        var restoreCmd = new Envelope
+        {
+            Id = 3008,
+            Command = new Command
+            {
+                RestoreLibraryBackup = new RestoreLibraryBackup { BackupPath = "C:/backups/lib.zip" },
+            },
+        };
+        Assert.Equal(restoreCmd, Envelope.Parser.ParseFrom(restoreCmd.ToByteArray()));
+
+        var restoreReply = new Envelope
+        {
+            Id = 3009,
+            CorrelationId = 3008,
+            Reply = new Reply
+            {
+                RestoreLibraryBackupResult = new RestoreLibraryBackupResult
+                {
+                    SchemaVersion = 3,
+                    SongCount = 5,
+                    MediaCount = 2,
+                    BibleCount = 2,
+                },
+            },
+        };
+        Assert.Equal(restoreReply, Envelope.Parser.ParseFrom(restoreReply.ToByteArray()));
+    }
 }

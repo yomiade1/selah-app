@@ -34,7 +34,7 @@ if (-not $SkipBuild) {
     # The version every process reports (Status.version, logs, support bundles, the updater).
     $env:SELAH_BUILD_VERSION = $Version
     Invoke-Native 'cargo' @('build', '--release', '--locked',
-        '-p', 'selah-watchdog', '-p', 'selah-core-host', '-p', 'selah-engine', '-p', 'selah-bench', '-p', 'selah-kb')
+        '-p', 'selah-watchdog', '-p', 'selah-core-host', '-p', 'selah-engine', '-p', 'selah-bench', '-p', 'selah-media', '-p', 'selah-kb')
     Invoke-Native 'cargo' @('run', '--release', '--locked', '-q', '-p', 'selah-kb', '--bin', 'selah-kb', '--',
         'build', '--out', 'target/kb/kb.db')
     if (Test-Path "$stage-ui") { Remove-Item "$stage-ui" -Recurse -Force }
@@ -46,7 +46,7 @@ if (Test-Path $stage) { Remove-Item $stage -Recurse -Force }
 New-Item -ItemType Directory -Force $stage, $feed, $installer | Out-Null
 
 # Rust processes and the help index (core finds kb.db next to selah-core.exe).
-foreach ($name in 'selah', 'selah-watchdog', 'selah-core', 'selah-engine', 'selah-bench') {
+foreach ($name in 'selah', 'selah-watchdog', 'selah-core', 'selah-engine', 'selah-bench', 'selah-media-worker') {
     Copy-Item "target/release/$name.exe" $stage
 }
 Copy-Item 'target/kb/kb.db' $stage

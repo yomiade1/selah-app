@@ -655,6 +655,26 @@ impl CoreService {
                     },
                 }
             }
+            command::Action::ImportMedia(cmd) => {
+                let result = self.library.import_media_op(cmd, &meta);
+                self.library_outcome(request, result)
+            }
+            command::Action::ExportSelahBundle(cmd) => {
+                let result = self.library.export_selah_bundle_op(cmd, &meta);
+                self.library_outcome(request, result)
+            }
+            command::Action::ImportSelahBundle(cmd) => {
+                let result = self.library.import_selah_bundle_op(cmd, &meta);
+                self.library_outcome(request, result)
+            }
+            command::Action::CreateLibraryBackup(cmd) => {
+                let result = self.library.create_library_backup_op(cmd, &meta);
+                self.library_outcome(request, result)
+            }
+            command::Action::RestoreLibraryBackup(cmd) => {
+                let result = self.library.restore_library_backup_op(cmd, &meta);
+                self.library_outcome(request, result)
+            }
             command::Action::SetUpdateSettings(change) => {
                 let feed = change.update_feed_url.trim().to_owned();
                 let allow = change.allow_update_check;
@@ -1075,6 +1095,12 @@ impl CoreService {
                     Err(error) => {
                         self.bus_error(request, &CommandBusError::Invalid(error.to_string()))
                     }
+                }
+            }
+            Some(query::Request::GetMediaThumbnail(q)) => {
+                match self.library.get_media_thumbnail(q) {
+                    Ok(thumb) => self.reply(request, reply::Result::MediaThumbnail(thumb)),
+                    Err(error) => self.bus_error(request, &error),
                 }
             }
             Some(query::Request::GetWatchdogStatus(_)) | None => {
@@ -2454,5 +2480,28 @@ Was [Em]blind, but [D]now I [G]see.
                 result: Some(reply::Result::Acknowledged(true))
             }))
         ));
+    }
+
+    #[test]
+    fn exchange_commands_enforce_permissions_before_touching_files() {
+        // sec: SEC-14
+        let dir = tempfile::tempdir().unwrap();
+        let mut core = CoreService::new(dir.path(), false);
+        for action in [
+            command::Action::ImportMedia(selah_proto::v1::ImportMedia::default()),
+            command::Action::ExportSelahBundle(selah_proto::v1::ExportSelahBundle::default()),
+            command::Action::ImportSelahBundle(selah_proto::v1::ImportSelahBundle::default()),
+            command::Action::CreateLibraryBackup(selah_proto::v1::CreateLibraryBackup::default()),
+            command::Action::RestoreLibraryBackup(selah_proto::v1::RestoreLibraryBackup::default()),
+        ] {
+            for origin in [ActorOrigin::Api, ActorOrigin::Midi, ActorOrigin::Sync] {
+                let denied = core.handle(&request_with_id(
+                    701,
+                    origin,
+                    command_with_group(action.clone(), None),
+                ));
+                assert_eq!(error_code(&denied), DENIED_CODE);
+            }
+        }
     }
 }

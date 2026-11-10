@@ -120,7 +120,7 @@ fn origin_name(origin: i32) -> &'static str {
     }
 }
 
-fn encode_op_state(present: bool, data: &[u8]) -> Vec<u8> {
+pub(super) fn encode_op_state(present: bool, data: &[u8]) -> Vec<u8> {
     OpState {
         present,
         data: if present { data.to_vec() } else { Vec::new() },
@@ -128,14 +128,14 @@ fn encode_op_state(present: bool, data: &[u8]) -> Vec<u8> {
     .encode_to_vec()
 }
 
-fn check_idempotency_in_tx(
-    tx: &Transaction<'_>,
+pub(super) fn check_idempotency_readonly(
+    db: &rusqlite::Connection,
     meta: &CommandMeta<'_>,
 ) -> Result<Option<envelope::Body>, CommandBusError> {
     if meta.envelope_id == 0 {
         return Ok(None);
     }
-    let row: Option<(Vec<u8>, Vec<u8>)> = tx
+    let row: Option<(Vec<u8>, Vec<u8>)> = db
         .query_row(
             "SELECT command_hash, reply FROM command_idempotency WHERE actor_origin=?1 AND user_id=?2 AND device_id=?3 AND envelope_id=?4",
             params![
@@ -161,7 +161,14 @@ fn check_idempotency_in_tx(
     Ok(Some(body))
 }
 
-fn record_idempotency_in_tx(
+pub(super) fn check_idempotency_in_tx(
+    tx: &Transaction<'_>,
+    meta: &CommandMeta<'_>,
+) -> Result<Option<envelope::Body>, CommandBusError> {
+    check_idempotency_readonly(tx, meta)
+}
+
+pub(super) fn record_idempotency_in_tx(
     tx: &Transaction<'_>,
     meta: &CommandMeta<'_>,
     reply: &reply::Result,
@@ -201,7 +208,7 @@ fn record_idempotency_in_tx(
     Ok(())
 }
 
-fn resolve_undo_group(undo_group: Option<&Id>) -> Result<Vec<u8>, CommandBusError> {
+pub(super) fn resolve_undo_group(undo_group: Option<&Id>) -> Result<Vec<u8>, CommandBusError> {
     match undo_group {
         Some(id) => {
             validate_id(id).map_err(|e| CommandBusError::Invalid(e.to_string()))?;
@@ -251,17 +258,17 @@ fn undo_state_in_tx(
     })
 }
 
-struct NewOp<'a> {
-    ts: i64,
-    actor: &'a Actor,
-    kind: DocumentKind,
-    doc_id: &'a [u8],
-    command: &'a [u8],
-    inverse: &'a [u8],
-    undo_group: &'a [u8],
+pub(super) struct NewOp<'a> {
+    pub ts: i64,
+    pub actor: &'a Actor,
+    pub kind: DocumentKind,
+    pub doc_id: &'a [u8],
+    pub command: &'a [u8],
+    pub inverse: &'a [u8],
+    pub undo_group: &'a [u8],
 }
 
-fn insert_op_in_tx(tx: &Transaction<'_>, op: NewOp<'_>) -> Result<u64, CommandBusError> {
+pub(super) fn insert_op_in_tx(tx: &Transaction<'_>, op: NewOp<'_>) -> Result<u64, CommandBusError> {
     let op_id = new_id().value;
     tx.execute(
         "INSERT INTO ops (op_id, ts, actor, origin, doc_type, doc_id, command, inverse, undo_group, sync_status) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, 0)",
@@ -280,7 +287,7 @@ fn insert_op_in_tx(tx: &Transaction<'_>, op: NewOp<'_>) -> Result<u64, CommandBu
     Ok(tx.last_insert_rowid() as u64)
 }
 
-fn apply_doc_bus_error(err: anyhow::Error) -> CommandBusError {
+pub(super) fn apply_doc_bus_error(err: anyhow::Error) -> CommandBusError {
     if let Some(sql_err) = err.downcast_ref::<rusqlite::Error>() {
         return match sql_err {
             rusqlite::Error::SqliteFailure(failure, message)
@@ -303,6 +310,15 @@ impl Library {
         &mut self,
         document: &T,
         meta: &CommandMeta<'_>,
+    ) -> Result<ExecutionOutcome, CommandBusError> {
+        self.save_document_with_reply_op(document, meta, reply::Result::Acknowledged(true))
+    }
+
+    pub(super) fn save_document_with_reply_op<T: Document>(
+        &mut self,
+        document: &T,
+        meta: &CommandMeta<'_>,
+        reply: reply::Result,
     ) -> Result<ExecutionOutcome, CommandBusError> {
         let tx = self
             .db
@@ -373,7 +389,6 @@ impl Library {
             ],
         )?;
 
-        let reply = reply::Result::Acknowledged(true);
         record_idempotency_in_tx(&tx, meta, &reply, ts, &mut self.idempotency_writes)?;
         tx.commit()?;
 

@@ -1917,6 +1917,9 @@ pub(crate) fn write_bible_database_with_meta(
         let mut db = Connection::open(&temp_path)?;
         db.execute_batch(
             "PRAGMA journal_mode = OFF;
+             PRAGMA synchronous = OFF;
+             PRAGMA temp_store = MEMORY;
+             PRAGMA cache_size = -16000;
              PRAGMA foreign_keys = ON;
              PRAGMA trusted_schema = OFF;
              PRAGMA user_version = 1;

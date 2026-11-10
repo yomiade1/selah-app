@@ -77,6 +77,11 @@ message Command {
     RemovePolicySetting remove_policy_setting = 27;
     ImportBible import_bible = 28;
     DeleteBible delete_bible = 29;
+    ImportMedia import_media = 30;
+    ExportSelahBundle export_selah_bundle = 31;
+    ImportSelahBundle import_selah_bundle = 32;
+    CreateLibraryBackup create_library_backup = 33;
+    RestoreLibraryBackup restore_library_backup = 34;
   }
   // Optional client-supplied UUIDv7 grouping multiple mutations into one undo/redo step.
   Id undo_group = 100;
@@ -130,6 +135,7 @@ message Query {
     ParseScriptureReference parse_scripture_reference = 32;
     GetScripturePassages get_scripture_passages = 33;
     SplitScriptureSlides split_scripture_slides = 34;
+    GetMediaThumbnail get_media_thumbnail = 35;
   }
 }
 
@@ -225,6 +231,11 @@ message Reply {
     ParseScriptureReferenceReply parsed_scripture_reference = 34;
     ScripturePassages scripture_passages = 35;
     GeneratedScriptureSlides generated_scripture_slides = 36;
+    MediaThumbnail media_thumbnail = 37;
+    ExportedSelahBundle exported_selah_bundle = 38;
+    ImportedSelahBundle imported_selah_bundle = 39;
+    LibraryBackupInfo library_backup_info = 40;
+    RestoreLibraryBackupResult restore_library_backup_result = 41;
   }
 }
 

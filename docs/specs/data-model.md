@@ -33,6 +33,7 @@ root/
   bibles/
   packs/
   backups/
+  thumbnails/   (created lazily on demand for PNG thumbnail cache)
 ```
 
 The host will choose the platform's default library folder when commands are

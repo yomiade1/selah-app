@@ -283,12 +283,19 @@ public sealed class CoreConnection : IAsyncDisposable, Selah.UI.ViewModels.IHelp
         // Tests only (SELAH_EXIT_WITH_WATCHDOG=1): leave when the watchdog goes, like the Rust
         // processes, so no test leaves a UI behind.
         var exitWithWatchdog = Environment.GetEnvironmentVariable("SELAH_EXIT_WITH_WATCHDOG") == "1";
+        int? watchdogPid = int.TryParse(Environment.GetEnvironmentVariable("SELAH_WATCHDOG_PID"), out var parsedPid) && parsedPid > 0
+            ? parsedPid
+            : null;
         var wasConnected = false;
         using var timer = new PeriodicTimer(HeartbeatInterval);
         while (await timer.WaitForNextTickAsync(cancellationToken).ConfigureAwait(false))
         {
+            if (exitWithWatchdog && watchdogPid is int parentPid && !IsProcessAlive(parentPid))
+            {
+                Environment.Exit(0);
+            }
             var connected = watchdog.State.Connected;
-            if (exitWithWatchdog && wasConnected && !connected)
+            if (exitWithWatchdog && ((wasConnected && !connected) || (!wasConnected && clock.Elapsed > TimeSpan.FromSeconds(10))))
             {
                 Environment.Exit(0);
             }
@@ -307,6 +314,19 @@ public sealed class CoreConnection : IAsyncDisposable, Selah.UI.ViewModels.IHelp
             {
                 // The watchdog went away; the client reconnects.
             }
+        }
+    }
+
+    private static bool IsProcessAlive(int pid)
+    {
+        try
+        {
+            using var process = Process.GetProcessById(pid);
+            return !process.HasExited;
+        }
+        catch (Exception error) when (error is ArgumentException or InvalidOperationException)
+        {
+            return false;
         }
     }
 

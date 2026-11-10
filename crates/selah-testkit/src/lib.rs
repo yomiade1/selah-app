@@ -315,11 +315,29 @@ impl Stack {
     fn kill_all(&mut self) {
         let _ = self.watchdog.kill();
         let _ = self.watchdog.wait();
-        let pids = self
+        let mut pids = self
             .known_pids
             .lock()
             .unwrap_or_else(|p| p.into_inner())
             .clone();
+        if let Ok(text) = std::fs::read_to_string(self.home.join("pids.txt")) {
+            for line in text.lines() {
+                if let Ok(pid) = line.trim().parse::<u32>()
+                    && pid != 0
+                    && !pids.contains(&pid)
+                {
+                    pids.push(pid);
+                }
+            }
+        }
+        if let Ok(text) = std::fs::read_to_string(self.home.join("ui.txt"))
+            && let Some(first) = text.split_whitespace().next()
+            && let Ok(pid) = first.parse::<u32>()
+            && pid != 0
+            && !pids.contains(&pid)
+        {
+            pids.push(pid);
+        }
         for pid in pids {
             kill_pid(pid);
         }

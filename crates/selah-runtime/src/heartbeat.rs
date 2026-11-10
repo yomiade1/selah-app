@@ -21,7 +21,9 @@ pub fn spawn(actor: Actor) -> tokio::task::JoinHandle<()> {
             ticker.tick().await;
             if exit_with_watchdog {
                 let connected = client.is_connected();
-                if was_connected && !connected {
+                if (was_connected && !connected)
+                    || (!was_connected && started.elapsed() > Duration::from_secs(10))
+                {
                     tracing::info!("watchdog has gone; exiting (SELAH_EXIT_WITH_WATCHDOG)");
                     std::process::exit(0);
                 }

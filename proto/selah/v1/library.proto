@@ -627,3 +627,87 @@ message ImportBible {
 message DeleteBible {
   string code = 1;
 }
+
+message ImportMedia {
+  // Local file path to import; regular files only (SEC-04: no URLs, symlinks, or protocol prefixes).
+  string source_path = 1;
+  // Optional display name override; defaults to the file stem.
+  string name = 2;
+  repeated string tags = 3;
+}
+
+message GetMediaThumbnail {
+  Id media_id = 1;
+  uint32 max_width = 2;
+  uint32 max_height = 3;
+}
+
+message MediaThumbnail {
+  Id media_id = 1;
+  uint32 width = 2;
+  uint32 height = 3;
+  bytes png_bytes = 4;
+}
+
+message ExportSelahBundle {
+  string output_path = 1;
+  repeated Id song_ids = 2;
+  repeated Id template_ids = 3;
+  repeated Id media_ids = 4;
+  repeated Id presentation_ids = 5;
+  repeated Id tag_ids = 6;
+  bool include_media = 7;
+}
+
+message ExportedSelahBundle {
+  string output_path = 1;
+  string canonical_manifest_json = 2;
+  uint32 song_count = 3;
+  uint32 template_count = 4;
+  uint32 media_count = 5;
+  uint32 presentation_count = 6;
+  uint32 tag_count = 7;
+  uint64 total_bytes = 8;
+}
+
+message ImportSelahBundle {
+  string source_path = 1;
+  bytes raw_bytes = 2;
+  bool overwrite_existing = 3;
+}
+
+message ImportedSelahBundle {
+  uint32 song_count = 1;
+  uint32 template_count = 2;
+  uint32 media_count = 3;
+  uint32 presentation_count = 4;
+  uint32 tag_count = 5;
+}
+
+message CreateLibraryBackup {
+  // Optional output path; empty writes to library/backups/selah-backup-<timestamp>.zip.
+  string output_path = 1;
+}
+
+message LibraryBackupInfo {
+  string backup_path = 1;
+  uint32 schema_version = 2;
+  uint64 size_bytes = 3;
+  uint32 media_blob_count = 4;
+  uint32 bible_count = 5;
+}
+
+message RestoreLibraryBackup {
+  string backup_path = 1;
+}
+
+message RestoreLibraryBackupResult {
+  uint32 schema_version = 1;
+  uint32 song_count = 2;
+  uint32 template_count = 3;
+  uint32 media_count = 4;
+  uint32 presentation_count = 5;
+  uint32 tag_count = 6;
+  uint32 media_blob_count = 7;
+  uint32 bible_count = 8;
+}

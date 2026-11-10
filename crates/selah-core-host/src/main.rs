@@ -12,7 +12,7 @@ use selah_core::update::{self, Install};
 use selah_core::{CoreService, Work};
 use selah_ipc::{Client, Connection, Endpoint, FrameSender, Listener, Service};
 use selah_proto::v1::{Command, Envelope, Event, command, envelope, query};
-use tokio::sync::{Mutex, watch};
+use tokio::sync::{Mutex, Notify, watch};
 
 struct Shared {
     service: Mutex<CoreService>,
@@ -20,6 +20,7 @@ struct Shared {
     engine: Client,
     next_event_id: AtomicU64,
     bible_ready: watch::Receiver<bool>,
+    bible_wake: Arc<Notify>,
     /// The only way out to the network (SEC-13). Core sets its policy from the settings.
     net: Arc<selah_net::Net>,
     /// Velopack's Update.exe, when Selah was installed by Setup.
@@ -177,6 +178,7 @@ impl Shared {
     async fn wait_for_bundled_bibles(&self) {
         let mut rx = self.bible_ready.clone();
         if !*rx.borrow() {
+            self.bible_wake.notify_one();
             let _ = rx.wait_for(|&ready| ready).await;
         }
     }
@@ -219,7 +221,12 @@ fn request_needs_bundled_bibles(request: &Envelope) -> bool {
     match request.body.as_ref() {
         Some(envelope::Body::Command(cmd)) => matches!(
             cmd.action.as_ref(),
-            Some(command::Action::ImportBible(_) | command::Action::DeleteBible(_))
+            Some(
+                command::Action::ImportBible(_)
+                    | command::Action::DeleteBible(_)
+                    | command::Action::CreateLibraryBackup(_)
+                    | command::Action::RestoreLibraryBackup(_)
+            )
         ),
         Some(envelope::Body::Query(q)) => matches!(
             q.request.as_ref(),
@@ -374,14 +381,25 @@ async fn main() -> anyhow::Result<()> {
     let actor = service.actor().clone();
     let bibles_dir = service.library().paths().bibles.clone();
     let (bible_ready_tx, bible_ready_rx) = watch::channel(false);
-    tokio::task::spawn_blocking(move || {
-        match selah_core::scripture::ensure_bundled_bibles(&bibles_dir) {
-            Ok(seeded) => {
+    let bible_wake = Arc::new(Notify::new());
+    let bible_wake_bg = bible_wake.clone();
+    tokio::spawn(async move {
+        tokio::select! {
+            _ = bible_wake_bg.notified() => {}
+            _ = tokio::time::sleep(Duration::from_secs(5)) => {}
+        }
+        match tokio::task::spawn_blocking(move || {
+            selah_core::scripture::ensure_bundled_bibles(&bibles_dir)
+        })
+        .await
+        {
+            Ok(Ok(seeded)) => {
                 if seeded {
                     tracing::info!("bundled KJV and WEB Bibles initialised");
                 }
             }
-            Err(error) => tracing::warn!(%error, "bundled Bible setup failed"),
+            Ok(Err(error)) => tracing::warn!(%error, "bundled Bible setup failed"),
+            Err(error) => tracing::warn!(%error, "bundled Bible setup task failed"),
         }
         let _ = bible_ready_tx.send(true);
     });
@@ -391,6 +409,7 @@ async fn main() -> anyhow::Result<()> {
         engine: Client::start(endpoint.sibling(Service::Engine), actor.clone()),
         next_event_id: AtomicU64::new(1),
         bible_ready: bible_ready_rx,
+        bible_wake,
         net,
         installer: update::VelopackInstaller::for_this_installation()
             .map(|installer| Arc::new(installer) as Arc<dyn Install>),
