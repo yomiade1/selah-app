@@ -106,7 +106,24 @@
                   <TextBlock Name="SelectedSongTitle" Classes="title-3" Text="{Binding SelectedSong.Title}" />
                   <TextBlock Classes="hint" Text="{Binding SelectedSongAuthorText}"
                              IsVisible="{Binding SelectedSongAuthorText, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
-                  <TextBlock Classes="caption" Text="{Binding SelectedSongSlidesLabel}" />
+                  <WrapPanel ItemSpacing="10" LineSpacing="6" VerticalAlignment="Center">
+                    <TextBlock Classes="caption" VerticalAlignment="Center" Text="{Binding SelectedSongSlidesLabel}" />
+                    <TextBlock Classes="caption" VerticalAlignment="Center"
+                               Text="{Binding [editor-template-label], Source={x:Static s:Localizer.Instance}}" />
+                    <ComboBox Name="LibrarySongTemplateCombo" MinWidth="160"
+                              ItemsSource="{Binding AvailableTemplates}" SelectedItem="{Binding SelectedSongTemplate}">
+                      <ComboBox.ItemTemplate>
+                        <DataTemplate x:DataType="pb:Template">
+                          <TextBlock Text="{Binding Name}" />
+                        </DataTemplate>
+                      </ComboBox.ItemTemplate>
+                    </ComboBox>
+                    <Border Name="LibrarySongFitBadge" Background="{DynamicResource Brush.SuccessBg}"
+                            IsVisible="{Binding HasSongFitBadge}" CornerRadius="4" Padding="6,2">
+                      <TextBlock Classes="caption" Foreground="{DynamicResource Brush.SuccessText}"
+                                 Text="{Binding SongFitSummaryText}" />
+                    </Border>
+                  </WrapPanel>
                   <ItemsControl Name="LibrarySongSlides" ItemsSource="{Binding SongPreviewSlides}">
                     <ItemsControl.ItemsPanel>
                       <ItemsPanelTemplate>
@@ -308,6 +325,17 @@
                           Content="{Binding [bible-title-slide-label], Source={x:Static s:Localizer.Instance}}" />
                 <CheckBox Name="ScriptureBlankEndCheck" IsChecked="{Binding ScriptureBlankSlideAtEnd}"
                           Content="{Binding [bible-blank-end-label], Source={x:Static s:Localizer.Instance}}" />
+                <StackPanel Spacing="2">
+                  <TextBlock Classes="caption" Text="{Binding [bible-template-label], Source={x:Static s:Localizer.Instance}}" />
+                  <ComboBox Name="LibraryScriptureTemplateCombo" MinWidth="160"
+                            ItemsSource="{Binding AvailableTemplates}" SelectedItem="{Binding SelectedScriptureTemplate}">
+                    <ComboBox.ItemTemplate>
+                      <DataTemplate x:DataType="pb:Template">
+                        <TextBlock Text="{Binding Name}" />
+                      </DataTemplate>
+                    </ComboBox.ItemTemplate>
+                  </ComboBox>
+                </StackPanel>
               </WrapPanel>
             </StackPanel>
           </Border>
@@ -351,7 +379,14 @@
 
             <Border Name="ScriptureSlidesPane" Grid.Column="1" Grid.Row="0" Classes="card">
               <StackPanel Spacing="{DynamicResource Space.2}">
-                <TextBlock Classes="label" Text="{Binding [bible-slides-heading], Source={x:Static s:Localizer.Instance}}" />
+                <WrapPanel ItemSpacing="8" VerticalAlignment="Center">
+                  <TextBlock Classes="label" VerticalAlignment="Center" Text="{Binding [bible-slides-heading], Source={x:Static s:Localizer.Instance}}" />
+                  <Border Name="LibraryScriptureFitBadge" Background="{DynamicResource Brush.SuccessBg}"
+                          IsVisible="{Binding HasScriptureFitBadge}" CornerRadius="4" Padding="6,2">
+                    <TextBlock Classes="caption" Foreground="{DynamicResource Brush.SuccessText}"
+                               Text="{Binding ScriptureFitSummaryText}" />
+                  </Border>
+                </WrapPanel>
                 <ItemsControl Name="ScriptureSlidesList" ItemsSource="{Binding ScripturePreviewSlides}">
                   <ItemsControl.ItemTemplate>
                     <DataTemplate x:DataType="vm:SlidePreviewCard">

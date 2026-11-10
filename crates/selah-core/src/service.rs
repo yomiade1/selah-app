@@ -583,6 +583,13 @@ impl CoreService {
                         ..Outcome::default()
                     };
                 }
+                if let Err(err) = selah_render::scene::validate_scene_elements(&scene) {
+                    tracing::warn!(%err, "refused PresentScene with invalid slide elements");
+                    return Outcome {
+                        reply: Some(self.error(request, codes::INVALID, "error-invalid-request")),
+                        ..Outcome::default()
+                    };
+                }
                 scene.is_preview = false;
                 self.live.change(|live| {
                     let prev = live.revision;
@@ -611,6 +618,13 @@ impl CoreService {
                 }
                 if let Err(err) = selah_render::effects::validate_scene_shader_chains(&scene) {
                     tracing::warn!(%err, "refused StagePreviewScene with invalid or custom shader chain");
+                    return Outcome {
+                        reply: Some(self.error(request, codes::INVALID, "error-invalid-request")),
+                        ..Outcome::default()
+                    };
+                }
+                if let Err(err) = selah_render::scene::validate_scene_elements(&scene) {
+                    tracing::warn!(%err, "refused StagePreviewScene with invalid slide elements");
                     return Outcome {
                         reply: Some(self.error(request, codes::INVALID, "error-invalid-request")),
                         ..Outcome::default()
@@ -1240,10 +1254,12 @@ impl CoreService {
                     translation_language: (!q.translation_language.trim().is_empty())
                         .then(|| q.translation_language.clone()),
                 };
+                let policy_template_id = self.default_policy_template_id("templates.default.song");
                 let needs_fit = q.shrink_to_fit
                     || !q.style_json.trim().is_empty()
                     || q.template_id.is_some()
-                    || !q.target_outputs.is_empty();
+                    || !q.target_outputs.is_empty()
+                    || policy_template_id.is_some();
                 let split_res = validate_song_preview(song).and_then(|()| {
                     if !needs_fit {
                         crate::songs::generate_slides(song, &options)
@@ -1252,6 +1268,7 @@ impl CoreService {
                             &q.style_json,
                             q.template_id.as_ref(),
                             &q.target_outputs,
+                            policy_template_id.as_ref(),
                         ) {
                             Ok(targets) => {
                                 crate::songs::generate_slides_with_fit(song, &options, &targets)
@@ -1315,10 +1332,13 @@ impl CoreService {
                         };
                     }
                 };
+                let policy_template_id =
+                    self.default_policy_template_id("templates.default.scripture");
                 let needs_fit = q.shrink_to_fit
                     || !q.style_json.trim().is_empty()
                     || q.template_id.is_some()
-                    || !q.target_outputs.is_empty();
+                    || !q.target_outputs.is_empty()
+                    || policy_template_id.is_some();
                 let split_res = if !needs_fit {
                     crate::scripture::split_scripture_slides(q)
                 } else {
@@ -1326,6 +1346,7 @@ impl CoreService {
                         &q.style_json,
                         q.template_id.as_ref(),
                         &q.target_outputs,
+                        policy_template_id.as_ref(),
                     ) {
                         Ok(targets) => {
                             crate::scripture::split_scripture_slides_with_fit(q, &targets)
@@ -1461,6 +1482,31 @@ impl CoreService {
         }
     }
 
+    fn default_policy_template_id(&self, key: &str) -> Option<selah_proto::v1::Id> {
+        let effective = self.library.setting(key).ok().flatten()?;
+        let hex = match effective.value {
+            serde_json::Value::String(s) => s,
+            serde_json::Value::Object(map) => map
+                .get("template_id")
+                .or_else(|| map.get("id"))
+                .and_then(|v| v.as_str())
+                .map(str::to_owned)?,
+            _ => return None,
+        };
+        let trimmed = hex.trim();
+        if trimmed.len() != 32 || !trimmed.bytes().all(|b| b.is_ascii_hexdigit()) {
+            return None;
+        }
+        let mut bytes = Vec::with_capacity(16);
+        for chunk in trimmed.as_bytes().chunks_exact(2) {
+            let s = std::str::from_utf8(chunk).ok()?;
+            bytes.push(u8::from_str_radix(s, 16).ok()?);
+        }
+        let id = selah_proto::v1::Id { value: bytes };
+        validate_id(&id).ok()?;
+        Some(id)
+    }
+
     fn load_template_style(
         &self,
         id: &selah_proto::v1::Id,
@@ -1480,6 +1526,7 @@ impl CoreService {
         style_json: &str,
         template_id: Option<&selah_proto::v1::Id>,
         target_outputs: &[selah_proto::v1::FitTargetOutput],
+        policy_template_id: Option<&selah_proto::v1::Id>,
     ) -> Result<Vec<selah_render::fit::FitTarget>, String> {
         if target_outputs.len() > selah_render::template::MAX_VARIANTS {
             return Err(format!(
@@ -1498,6 +1545,8 @@ impl CoreService {
         } else {
             None
         };
+
+        let policy_style = policy_template_id.and_then(|tid| self.load_template_style(tid).ok());
 
         if !target_outputs.is_empty() {
             let mut out = Vec::with_capacity(target_outputs.len());
@@ -1522,9 +1571,11 @@ impl CoreService {
                     .and_then(|c| c.template_id.as_ref())
                 {
                     self.load_template_style(cfg_tid)
-                        .unwrap_or_else(|_| selah_render::template::TemplateStyle::default())
+                        .ok()
+                        .or_else(|| policy_style.clone())
+                        .unwrap_or_default()
                 } else {
-                    selah_render::template::TemplateStyle::default()
+                    policy_style.clone().unwrap_or_default()
                 };
                 let res = t.resolution.unwrap_or(selah_proto::v1::Resolution {
                     width: 1920,
@@ -1556,9 +1607,11 @@ impl CoreService {
                 rs.clone()
             } else if let Some(cfg_tid) = cfg.template_id.as_ref() {
                 self.load_template_style(cfg_tid)
-                    .unwrap_or_else(|_| selah_render::template::TemplateStyle::default())
+                    .ok()
+                    .or_else(|| policy_style.clone())
+                    .unwrap_or_default()
             } else {
-                selah_render::template::TemplateStyle::default()
+                policy_style.clone().unwrap_or_default()
             };
             out.push(selah_render::fit::FitTarget {
                 output_index: cfg.output_index,
@@ -1579,7 +1632,7 @@ impl CoreService {
                 output_name: "Main Output".into(),
                 width: 1920,
                 height: 1080,
-                style: req_style.unwrap_or_default(),
+                style: req_style.or(policy_style).unwrap_or_default(),
                 max_lines_override: None,
             });
         }

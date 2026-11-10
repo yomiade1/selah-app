@@ -1,0 +1,365 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:Selah.UI.ViewModels"
+             xmlns:pb="using:Selah.Contracts.V1"
+             xmlns:views="using:Selah.UI.Views"
+             xmlns:s="using:Selah.UI.Services"
+             x:Class="Selah.UI.Views.SlideEditorView"
+             x:DataType="vm:SlideEditorViewModel">
+  <DockPanel Margin="{DynamicResource Space.Text.Medium}">
+    <!-- Top bar: deck switcher, template, undo/redo, save/delete -->
+    <Border DockPanel.Dock="Top" Padding="0,0,0,10" BorderBrush="{DynamicResource Brush.Line}" BorderThickness="{DynamicResource Line.Bottom}">
+      <StackPanel Spacing="{DynamicResource Space.3}">
+        <WrapPanel ItemSpacing="{DynamicResource Space.3}" LineSpacing="{DynamicResource Space.3}" VerticalAlignment="Center"
+                   s:Help.Anchor="slides.editor">
+          <TextBlock Classes="title-2" VerticalAlignment="Center"
+                     Text="{Binding [slides-title], Source={x:Static s:Localizer.Instance}}" />
+          <TextBox Name="PresentationNameBox" MinWidth="170" Text="{Binding PresentationName}"
+                   PlaceholderText="{Binding [slides-presentation-watermark], Source={x:Static s:Localizer.Instance}}"
+                   AutomationProperties.Name="{Binding [slides-presentation-name-label], Source={x:Static s:Localizer.Instance}}" />
+          <ComboBox Name="PresentationsCombo" MinWidth="150" ItemsSource="{Binding Presentations}" SelectedItem="{Binding SelectedPresentation}">
+            <ComboBox.ItemTemplate>
+              <DataTemplate x:DataType="pb:Presentation">
+                <TextBlock Text="{Binding Name}" />
+              </DataTemplate>
+            </ComboBox.ItemTemplate>
+          </ComboBox>
+          <ComboBox Name="SlideTemplateCombo" MinWidth="150" ItemsSource="{Binding AvailableTemplates}" SelectedItem="{Binding SelectedTemplate}">
+            <ComboBox.ItemTemplate>
+              <DataTemplate x:DataType="pb:Template">
+                <TextBlock Text="{Binding Name}" />
+              </DataTemplate>
+            </ComboBox.ItemTemplate>
+          </ComboBox>
+          <Button Name="NewPresentationButton" Command="{Binding NewPresentationCommand}">
+            <TextBlock Text="{Binding [slides-new-deck], Source={x:Static s:Localizer.Instance}}" />
+          </Button>
+          <Button Name="SlidesUndoButton" Classes="quiet" Command="{Binding UndoCommand}" IsEnabled="{Binding CanUndo}">
+            <TextBlock Text="{Binding [library-undo], Source={x:Static s:Localizer.Instance}}" />
+          </Button>
+          <Button Name="SlidesRedoButton" Classes="quiet" Command="{Binding RedoCommand}" IsEnabled="{Binding CanRedo}">
+            <TextBlock Text="{Binding [library-redo], Source={x:Static s:Localizer.Instance}}" />
+          </Button>
+          <Button Name="SavePresentationButton" Classes="primary" Command="{Binding SavePresentationCommand}">
+            <TextBlock Text="{Binding [slides-save-deck], Source={x:Static s:Localizer.Instance}}" />
+          </Button>
+          <Button Name="DeletePresentationButton" Classes="quiet" Command="{Binding DeletePresentationCommand}">
+            <TextBlock Text="{Binding [slides-delete-deck], Source={x:Static s:Localizer.Instance}}" />
+          </Button>
+          <views:InfoButton Name="SlidesEditorInfoButton" Anchor="slides.editor" />
+        </WrapPanel>
+
+        <Border Classes="alert-success" IsVisible="{Binding HasStatusMessage}">
+          <TextBlock Name="SlidesStatusText" Text="{Binding StatusMessage}" />
+        </Border>
+        <views:ErrorAlert Name="SlidesErrorAlert"
+                          Message="{Binding ErrorMessage}"
+                          FixArticleId="{Binding ErrorFixArticleId}" />
+      </StackPanel>
+    </Border>
+
+    <!-- Main responsive 3-pane workspace (stacks cleanly below 960px effective width) -->
+    <ScrollViewer>
+      <Grid Name="SlideMainGrid" ColumnDefinitions="310,*,320" RowDefinitions="Auto,Auto,Auto"
+            ColumnSpacing="14" RowSpacing="14" Margin="0,12,0,12">
+        <!-- LEFT PANE: Slide deck + Element list + Add / Group / Align -->
+        <StackPanel Name="SlideLeftPane" Grid.Column="0" Grid.Row="0" Spacing="{DynamicResource Space.4}" VerticalAlignment="Top">
+          <Border Classes="card">
+            <StackPanel Spacing="{DynamicResource Space.3}">
+              <TextBlock Classes="title-3" Text="{Binding [slides-deck-heading], Source={x:Static s:Localizer.Instance}}" />
+              <WrapPanel ItemSpacing="6" LineSpacing="6">
+                <Button Name="AddSlideButton" Classes="quiet" Padding="8,4" MinHeight="28" Command="{Binding AddSlideCommand}">
+                  <TextBlock Classes="caption" Text="{Binding [slides-add-slide], Source={x:Static s:Localizer.Instance}}" />
+                </Button>
+                <Button Name="DuplicateSlideButton" Classes="quiet" Padding="8,4" MinHeight="28" Command="{Binding DuplicateSelectedSlideCommand}">
+                  <TextBlock Classes="caption" Text="{Binding [templates-duplicate], Source={x:Static s:Localizer.Instance}}" />
+                </Button>
+                <Button Name="MoveSlideUpButton" Classes="quiet" Padding="8,4" MinHeight="28" Command="{Binding MoveSlideUpCommand}">
+                  <TextBlock Classes="caption" Text="{Binding [editor-move-up], Source={x:Static s:Localizer.Instance}}" />
+                </Button>
+                <Button Name="MoveSlideDownButton" Classes="quiet" Padding="8,4" MinHeight="28" Command="{Binding MoveSlideDownCommand}">
+                  <TextBlock Classes="caption" Text="{Binding [editor-move-down], Source={x:Static s:Localizer.Instance}}" />
+                </Button>
+                <Button Name="RemoveSlideButton" Classes="quiet" Padding="8,4" MinHeight="28" Command="{Binding RemoveSelectedSlideCommand}">
+                  <TextBlock Classes="caption" Text="{Binding [editor-remove-section], Source={x:Static s:Localizer.Instance}}" />
+                </Button>
+              </WrapPanel>
+              <ListBox Name="SlidesList" ItemsSource="{Binding Slides}" SelectedItem="{Binding SelectedSlide}" MaxHeight="140">
+                <ListBox.ItemTemplate>
+                  <DataTemplate x:DataType="vm:SlideDeckEntryViewModel">
+                    <TextBlock Text="{Binding SummaryLabel}" />
+                  </DataTemplate>
+                </ListBox.ItemTemplate>
+              </ListBox>
+            </StackPanel>
+          </Border>
+
+          <Border Classes="card">
+            <StackPanel Spacing="{DynamicResource Space.3}">
+              <TextBlock Classes="title-3" Text="{Binding [slides-elements-heading], Source={x:Static s:Localizer.Instance}}" />
+              <WrapPanel ItemSpacing="6" LineSpacing="6">
+                <Button Name="AddTextElementButton" Padding="8,4" MinHeight="28" Command="{Binding AddTextElementCommand}">
+                  <TextBlock Classes="caption" Text="{Binding [slides-add-text], Source={x:Static s:Localizer.Instance}}" />
+                </Button>
+                <Button Name="AddClockElementButton" Padding="8,4" MinHeight="28" Command="{Binding AddClockElementCommand}">
+                  <TextBlock Classes="caption" Text="{Binding [slides-add-clock], Source={x:Static s:Localizer.Instance}}" />
+                </Button>
+                <Button Name="AddTimerElementButton" Padding="8,4" MinHeight="28" Command="{Binding AddTimerElementCommand}">
+                  <TextBlock Classes="caption" Text="{Binding [slides-add-timer], Source={x:Static s:Localizer.Instance}}" />
+                </Button>
+                <Button Name="AddShapeElementButton" Padding="8,4" MinHeight="28" Command="{Binding AddShapeElementCommand}" CommandParameter="rounded_rect">
+                  <TextBlock Classes="caption" Text="{Binding [slides-add-shape], Source={x:Static s:Localizer.Instance}}" />
+                </Button>
+                <Button Name="AddImageElementButton" Padding="8,4" MinHeight="28" Command="{Binding AddImageElementCommand}">
+                  <TextBlock Classes="caption" Text="{Binding [slides-add-image], Source={x:Static s:Localizer.Instance}}" />
+                </Button>
+                <Button Name="AddVideoElementButton" Padding="8,4" MinHeight="28" Command="{Binding AddVideoElementCommand}">
+                  <TextBlock Classes="caption" Text="{Binding [slides-add-video], Source={x:Static s:Localizer.Instance}}" />
+                </Button>
+              </WrapPanel>
+
+              <ComboBox Name="ElementMediaCombo" ItemsSource="{Binding AvailableMedia}" SelectedItem="{Binding SelectedElementMedia}" HorizontalAlignment="Stretch">
+                <ComboBox.ItemTemplate>
+                  <DataTemplate x:DataType="pb:MediaItem">
+                    <TextBlock Text="{Binding Name}" />
+                  </DataTemplate>
+                </ComboBox.ItemTemplate>
+              </ComboBox>
+
+              <WrapPanel ItemSpacing="6" LineSpacing="6">
+                <Button Name="SelectAllElementsButton" Classes="quiet" Padding="8,4" MinHeight="28" Command="{Binding SelectAllElementsCommand}">
+                  <TextBlock Classes="caption" Text="{Binding [slides-select-all], Source={x:Static s:Localizer.Instance}}" />
+                </Button>
+                <Button Name="GroupElementsButton" Classes="quiet" Padding="8,4" MinHeight="28" Command="{Binding GroupSelectedCommand}">
+                  <TextBlock Classes="caption" Text="{Binding [slides-group], Source={x:Static s:Localizer.Instance}}" />
+                </Button>
+                <Button Name="UngroupElementsButton" Classes="quiet" Padding="8,4" MinHeight="28" Command="{Binding UngroupSelectedCommand}">
+                  <TextBlock Classes="caption" Text="{Binding [slides-ungroup], Source={x:Static s:Localizer.Instance}}" />
+                </Button>
+                <Button Name="BringForwardButton" Classes="quiet" Padding="8,4" MinHeight="28" Command="{Binding BringForwardCommand}">
+                  <TextBlock Classes="caption" Text="{Binding [slides-bring-forward], Source={x:Static s:Localizer.Instance}}" />
+                </Button>
+                <Button Name="SendBackwardButton" Classes="quiet" Padding="8,4" MinHeight="28" Command="{Binding SendBackwardCommand}">
+                  <TextBlock Classes="caption" Text="{Binding [slides-send-backward], Source={x:Static s:Localizer.Instance}}" />
+                </Button>
+                <Button Name="RemoveElementButton" Classes="quiet" Padding="8,4" MinHeight="28" Command="{Binding RemoveSelectedElementCommand}">
+                  <TextBlock Classes="caption" Text="{Binding [editor-remove-section], Source={x:Static s:Localizer.Instance}}" />
+                </Button>
+              </WrapPanel>
+
+              <WrapPanel ItemSpacing="6" LineSpacing="6">
+                <Button Name="AlignLeftButton" Classes="quiet" Padding="8,4" MinHeight="28" Command="{Binding AlignLeftCommand}">
+                  <TextBlock Classes="caption" Text="{Binding [slides-align-left], Source={x:Static s:Localizer.Instance}}" />
+                </Button>
+                <Button Name="AlignCenterButton" Classes="quiet" Padding="8,4" MinHeight="28" Command="{Binding AlignCenterCommand}">
+                  <TextBlock Classes="caption" Text="{Binding [slides-align-center], Source={x:Static s:Localizer.Instance}}" />
+                </Button>
+                <Button Name="AlignRightButton" Classes="quiet" Padding="8,4" MinHeight="28" Command="{Binding AlignRightCommand}">
+                  <TextBlock Classes="caption" Text="{Binding [slides-align-right], Source={x:Static s:Localizer.Instance}}" />
+                </Button>
+                <Button Name="AlignTopButton" Classes="quiet" Padding="8,4" MinHeight="28" Command="{Binding AlignTopCommand}">
+                  <TextBlock Classes="caption" Text="{Binding [slides-align-top], Source={x:Static s:Localizer.Instance}}" />
+                </Button>
+                <Button Name="AlignMiddleButton" Classes="quiet" Padding="8,4" MinHeight="28" Command="{Binding AlignMiddleCommand}">
+                  <TextBlock Classes="caption" Text="{Binding [slides-align-middle], Source={x:Static s:Localizer.Instance}}" />
+                </Button>
+                <Button Name="AlignBottomButton" Classes="quiet" Padding="8,4" MinHeight="28" Command="{Binding AlignBottomCommand}">
+                  <TextBlock Classes="caption" Text="{Binding [slides-align-bottom], Source={x:Static s:Localizer.Instance}}" />
+                </Button>
+              </WrapPanel>
+
+              <ListBox Name="ElementsList" ItemsSource="{Binding Elements}" SelectedItem="{Binding SelectedElement}" MaxHeight="200">
+                <ListBox.ItemTemplate>
+                  <DataTemplate x:DataType="vm:SlideElementItemViewModel">
+                    <WrapPanel ItemSpacing="6" VerticalAlignment="Center">
+                      <CheckBox IsChecked="{Binding IsSelected}" />
+                      <TextBlock VerticalAlignment="Center" Text="{Binding Name}" />
+                      <TextBlock VerticalAlignment="Center" Classes="caption" Text="{Binding Kind}" />
+                      <TextBlock VerticalAlignment="Center" Classes="caption" IsVisible="{Binding Locked}"
+                                 Text="{Binding [slides-locked-badge], Source={x:Static s:Localizer.Instance}}" />
+                    </WrapPanel>
+                  </DataTemplate>
+                </ListBox.ItemTemplate>
+              </ListBox>
+            </StackPanel>
+          </Border>
+        </StackPanel>
+
+        <!-- CENTER PANE: Live Canvas Preview + SAFE-04 Flash Warning Guard + Stage -->
+        <Border Name="SlideCenterPane" Grid.Column="1" Grid.Row="0" Classes="card" VerticalAlignment="Top">
+          <StackPanel Spacing="{DynamicResource Space.4}">
+            <TextBlock Classes="caption" Text="{Binding [slides-canvas-eyebrow], Source={x:Static s:Localizer.Instance}}" />
+
+            <Border Background="{DynamicResource Brush.PreviewBg}" CornerRadius="{DynamicResource Radius.Input}"
+                    Height="270" ClipToBounds="True">
+              <Panel>
+                <Image Name="SlideCanvasPreviewImage" Source="{Binding PreviewBitmap}" Stretch="Uniform"
+                       IsVisible="{Binding HasPreviewBitmap}" />
+                <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" Classes="caption"
+                           IsVisible="{Binding !HasPreviewBitmap}"
+                           Text="{Binding [media-thumbnail-unavailable], Source={x:Static s:Localizer.Instance}}" />
+              </Panel>
+            </Border>
+
+            <!-- SAFE-04 WCAG 2.3.1 Flash Warning Guard -->
+            <Border Name="FlashGuardBanner" Classes="alert-warning" IsVisible="{Binding HasFlashWarning}">
+              <StackPanel Spacing="6">
+                <TextBlock Classes="label" Text="{Binding [slides-flash-guard-heading], Source={x:Static s:Localizer.Instance}}" />
+                <TextBlock Name="FlashGuardReasonText" Text="{Binding FlashWarningReason}" TextWrapping="Wrap" />
+                <CheckBox Name="AcknowledgeFlashWarningCheckBox" IsChecked="{Binding FlashWarningAcknowledged}"
+                          Content="{Binding [slides-flash-acknowledge], Source={x:Static s:Localizer.Instance}}" />
+              </StackPanel>
+            </Border>
+
+            <WrapPanel ItemSpacing="12" LineSpacing="8" VerticalAlignment="Center">
+              <Button Name="StageCustomSlideButton" Classes="primary" Command="{Binding StageSlideCommand}"
+                      IsEnabled="{Binding CanStageSlide}">
+                <TextBlock Text="{Binding [editor-stage-slide], Source={x:Static s:Localizer.Instance}}" />
+              </Button>
+              <TextBlock Name="StageBlockedHintText" Classes="hint" VerticalAlignment="Center"
+                         IsVisible="{Binding IsStageBlockedByFlashGuard}"
+                         Text="{Binding [slides-flash-stage-blocked], Source={x:Static s:Localizer.Instance}}" />
+            </WrapPanel>
+          </StackPanel>
+        </Border>
+
+        <!-- RIGHT PANE: Element Inspector + Slide Background + Transition + Closed 6 Effects -->
+        <StackPanel Name="SlideRightPane" Grid.Column="2" Grid.Row="0" Spacing="{DynamicResource Space.4}" VerticalAlignment="Top"
+                    s:Help.Anchor="slides.inspector">
+          <Border Classes="card" IsVisible="{Binding HasSelectedElement}">
+            <StackPanel Spacing="{DynamicResource Space.3}">
+              <WrapPanel ItemSpacing="{DynamicResource Space.2}" VerticalAlignment="Center">
+                <TextBlock Classes="title-3" VerticalAlignment="Center"
+                           Text="{Binding [slides-element-inspector-heading], Source={x:Static s:Localizer.Instance}}" />
+                <views:InfoButton Name="SlidesInspectorInfoButton" Anchor="slides.inspector" />
+              </WrapPanel>
+
+              <TextBox Name="ElementNameBox" Text="{Binding SelectedElement.Name}" />
+              <WrapPanel ItemSpacing="10" LineSpacing="6">
+                <CheckBox Name="ElementVisibleCheck" IsChecked="{Binding SelectedElement.Visible}"
+                          Content="{Binding [templates-role-visible], Source={x:Static s:Localizer.Instance}}" />
+                <CheckBox Name="ElementLockedCheck" IsChecked="{Binding SelectedElement.Locked}"
+                          Content="{Binding [slides-locked-label], Source={x:Static s:Localizer.Instance}}" />
+              </WrapPanel>
+
+              <WrapPanel ItemSpacing="8" LineSpacing="8">
+                <StackPanel Spacing="2" Width="95">
+                  <TextBlock Classes="caption" Text="{Binding [slides-x-label], Source={x:Static s:Localizer.Instance}}" />
+                  <NumericUpDown Name="ElementXInput" Minimum="-0.5" Maximum="1.0" Increment="0.02" FormatString="0.00" Value="{Binding SelectedElement.X}" />
+                </StackPanel>
+                <StackPanel Spacing="2" Width="95">
+                  <TextBlock Classes="caption" Text="{Binding [slides-y-label], Source={x:Static s:Localizer.Instance}}" />
+                  <NumericUpDown Name="ElementYInput" Minimum="-0.5" Maximum="1.0" Increment="0.02" FormatString="0.00" Value="{Binding SelectedElement.Y}" />
+                </StackPanel>
+                <StackPanel Spacing="2" Width="95">
+                  <TextBlock Classes="caption" Text="{Binding [slides-width-label], Source={x:Static s:Localizer.Instance}}" />
+                  <NumericUpDown Name="ElementWidthInput" Minimum="0.02" Maximum="1.5" Increment="0.02" FormatString="0.00" Value="{Binding SelectedElement.Width}" />
+                </StackPanel>
+                <StackPanel Spacing="2" Width="95">
+                  <TextBlock Classes="caption" Text="{Binding [slides-height-label], Source={x:Static s:Localizer.Instance}}" />
+                  <NumericUpDown Name="ElementHeightInput" Minimum="0.02" Maximum="1.5" Increment="0.02" FormatString="0.00" Value="{Binding SelectedElement.Height}" />
+                </StackPanel>
+                <StackPanel Spacing="2" Width="95">
+                  <TextBlock Classes="caption" Text="{Binding [slides-opacity-label], Source={x:Static s:Localizer.Instance}}" />
+                  <NumericUpDown Name="ElementOpacityInput" Minimum="0" Maximum="1" Increment="0.05" FormatString="0.00" Value="{Binding SelectedElement.Opacity}" />
+                </StackPanel>
+                <StackPanel Spacing="2" Width="95">
+                  <TextBlock Classes="caption" Text="{Binding [slides-layer-order-label], Source={x:Static s:Localizer.Instance}}" />
+                  <NumericUpDown Name="ElementZIndexInput" Minimum="-1000" Maximum="1000" Value="{Binding SelectedElement.ZIndex}" />
+                </StackPanel>
+              </WrapPanel>
+
+              <!-- Text properties -->
+              <StackPanel Spacing="6" IsVisible="{Binding SelectedElement.IsTextKind}">
+                <TextBlock Classes="caption" Text="{Binding [slides-text-label], Source={x:Static s:Localizer.Instance}}" />
+                <TextBox Name="ElementTextBox" AcceptsReturn="True" MinHeight="60" TextWrapping="Wrap" Text="{Binding SelectedElement.Text}" />
+                <WrapPanel ItemSpacing="8" LineSpacing="8">
+                  <ComboBox Name="ElementFontCombo" MinWidth="140" ItemsSource="{Binding FontFamilies}" SelectedItem="{Binding SelectedElement.FontFamily}" />
+                  <NumericUpDown Name="ElementFontSizeInput" Width="105" Minimum="8" Maximum="300" Increment="2" Value="{Binding SelectedElement.FontSize}" />
+                  <TextBox Name="ElementColorBox" Width="105" Text="{Binding SelectedElement.ColorHex}" />
+                </WrapPanel>
+              </StackPanel>
+
+              <!-- Dynamic clock properties -->
+              <StackPanel Spacing="4" IsVisible="{Binding SelectedElement.IsClockToken}">
+                <CheckBox IsChecked="{Binding SelectedElement.ClockShowSeconds}"
+                          Content="{Binding [slides-clock-seconds], Source={x:Static s:Localizer.Instance}}" />
+                <CheckBox IsChecked="{Binding SelectedElement.Clock24h}"
+                          Content="{Binding [slides-clock-24h], Source={x:Static s:Localizer.Instance}}" />
+              </StackPanel>
+
+              <!-- Dynamic timer properties -->
+              <StackPanel Spacing="4" IsVisible="{Binding SelectedElement.IsTimerToken}">
+                <TextBlock Classes="caption" Text="{Binding [slides-timer-seconds], Source={x:Static s:Localizer.Instance}}" />
+                <NumericUpDown Minimum="1" Maximum="36000" Increment="30" Value="{Binding SelectedElement.TimerDurationSecs}" />
+                <CheckBox IsChecked="{Binding SelectedElement.TimerCountUp}"
+                          Content="{Binding [slides-timer-count-up], Source={x:Static s:Localizer.Instance}}" />
+              </StackPanel>
+
+              <!-- Shape properties -->
+              <StackPanel Spacing="6" IsVisible="{Binding SelectedElement.IsShapeKind}">
+                <ComboBox ItemsSource="{Binding ShapeKinds}" SelectedItem="{Binding SelectedElement.ShapeKind}" />
+                <WrapPanel ItemSpacing="8" LineSpacing="8">
+                  <TextBox Width="110" Text="{Binding SelectedElement.FillColorHex}" />
+                  <NumericUpDown Width="105" Minimum="0" Maximum="128" Value="{Binding SelectedElement.CornerRadius}" />
+                </WrapPanel>
+              </StackPanel>
+            </StackPanel>
+          </Border>
+
+          <!-- Background & Transition & Closed Effects -->
+          <Border Classes="card">
+            <StackPanel Spacing="{DynamicResource Space.3}">
+              <TextBlock Classes="title-3" Text="{Binding [slides-background-heading], Source={x:Static s:Localizer.Instance}}" />
+              <WrapPanel ItemSpacing="8" LineSpacing="8">
+                <ComboBox Name="BackgroundModeCombo" MinWidth="120" ItemsSource="{Binding BackgroundModes}" SelectedItem="{Binding BackgroundMode}" />
+                <TextBox Name="BackgroundColorBox" Width="115" Text="{Binding BackgroundColorHex}" />
+                <ComboBox Name="BackgroundFitCombo" MinWidth="110" ItemsSource="{Binding FitOptions}" SelectedItem="{Binding BackgroundFit}" />
+              </WrapPanel>
+              <ComboBox Name="BackgroundMediaCombo" ItemsSource="{Binding AvailableMedia}" SelectedItem="{Binding SelectedBackgroundMedia}" HorizontalAlignment="Stretch">
+                <ComboBox.ItemTemplate>
+                  <DataTemplate x:DataType="pb:MediaItem">
+                    <TextBlock Text="{Binding Name}" />
+                  </DataTemplate>
+                </ComboBox.ItemTemplate>
+              </ComboBox>
+
+              <TextBlock Classes="title-3" Margin="0,6,0,0" Text="{Binding [slides-transition-heading], Source={x:Static s:Localizer.Instance}}" />
+              <WrapPanel ItemSpacing="8" LineSpacing="8">
+                <ComboBox Name="TransitionKindCombo" MinWidth="140" ItemsSource="{Binding TransitionKinds}" SelectedItem="{Binding TransitionKind}" />
+                <ComboBox Name="TransitionDirectionCombo" MinWidth="105" ItemsSource="{Binding TransitionDirections}" SelectedItem="{Binding TransitionDirection}" />
+                <ComboBox Name="TransitionEasingCombo" MinWidth="120" ItemsSource="{Binding TransitionEasings}" SelectedItem="{Binding TransitionEasing}" />
+                <NumericUpDown Name="TransitionDurationInput" Width="110" Minimum="0" Maximum="5000" Increment="50" Value="{Binding TransitionDurationMs}" />
+              </WrapPanel>
+              <StackPanel Spacing="2">
+                <TextBlock Classes="caption" Text="{Binding [slides-repeat-cadence-label], Source={x:Static s:Localizer.Instance}}" />
+                <NumericUpDown Name="TransitionCadenceInput" Minimum="0" Maximum="10000" Increment="50" Value="{Binding RepeatCadenceMs}" />
+              </StackPanel>
+
+              <TextBlock Classes="title-3" Margin="0,6,0,0" Text="{Binding [slides-effects-heading], Source={x:Static s:Localizer.Instance}}" />
+              <WrapPanel ItemSpacing="8" LineSpacing="8" VerticalAlignment="Center">
+                <ComboBox Name="AddEffectKindCombo" MinWidth="150" ItemsSource="{Binding EffectKinds}" SelectedItem="{Binding NewEffectKind}" />
+                <Button Name="AddEffectButton" Command="{Binding AddEffectCommand}">
+                  <TextBlock Text="{Binding [slides-add-effect], Source={x:Static s:Localizer.Instance}}" />
+                </Button>
+              </WrapPanel>
+              <ItemsControl Name="EffectsItemsControl" ItemsSource="{Binding Effects}">
+                <ItemsControl.ItemTemplate>
+                  <DataTemplate x:DataType="vm:SlideEffectItemViewModel">
+                    <WrapPanel ItemSpacing="8" LineSpacing="6" Margin="0,4" VerticalAlignment="Center">
+                      <CheckBox IsChecked="{Binding Enabled}" Content="{Binding Kind}" />
+                      <NumericUpDown Width="95" Minimum="0" Maximum="1" Increment="0.1" FormatString="0.0" Value="{Binding Intensity}" />
+                      <Button Classes="quiet" Padding="6,2" MinHeight="24" Click="OnRemoveEffectClick">
+                        <TextBlock Classes="caption" Text="{Binding [editor-remove-section], Source={x:Static s:Localizer.Instance}}" />
+                      </Button>
+                    </WrapPanel>
+                  </DataTemplate>
+                </ItemsControl.ItemTemplate>
+              </ItemsControl>
+            </StackPanel>
+          </Border>
+        </StackPanel>
+      </Grid>
+    </ScrollViewer>
+  </DockPanel>
+</UserControl>

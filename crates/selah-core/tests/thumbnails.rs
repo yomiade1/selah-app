@@ -647,3 +647,124 @@ fn scene_thumbnail_rejects_malformed_and_unsafe_inputs() {
         selah_core::library::CommandBusError::Invalid(String::new()).code()
     );
 }
+
+#[test]
+fn scene_thumbnail_renders_elements_clock_shapes_and_propagates_video_element_flash_warning() {
+    let dir = tempfile::tempdir().unwrap();
+    let mut core = CoreService::new(dir.path(), false);
+
+    let flash_clip = repo_root().join("tests/fixtures/media/committed/wcag-flash-360p60.mp4");
+    let reply::Result::MediaItem(flash_item) = unwrap_reply(core.handle(&ui_cmd(
+        1,
+        command::Action::ImportMedia(ImportMedia {
+            source_path: flash_clip.to_string_lossy().into_owned(),
+            name: "Element Flash Clip".into(),
+            tags: vec![],
+        }),
+    ))) else {
+        panic!("expected MediaItem");
+    };
+    assert!(flash_item.flash_warning);
+
+    let doc = selah_render::slide_elements::SlideElementsDocument {
+        elements: vec![
+            selah_render::slide_elements::SlideElement {
+                id: "card".into(),
+                name: "Banner".into(),
+                kind: selah_render::slide_elements::SlideElementKind::Shape,
+                x: 0.08,
+                y: 0.12,
+                width: 0.84,
+                height: 0.26,
+                z_index: 1,
+                shape_kind: selah_render::slide_elements::ShapeKind::RoundedRect,
+                fill_color: [25, 95, 175, 255],
+                ..Default::default()
+            },
+            selah_render::slide_elements::SlideElement {
+                id: "clock".into(),
+                name: "Clock".into(),
+                kind: selah_render::slide_elements::SlideElementKind::Text,
+                x: 0.10,
+                y: 0.14,
+                width: 0.80,
+                height: 0.22,
+                z_index: 2,
+                text: "Start {clock}".into(),
+                font_size: 46.0,
+                weight: 700,
+                color: [255, 255, 255, 255],
+                ..Default::default()
+            },
+            selah_render::slide_elements::SlideElement {
+                id: "vid".into(),
+                name: "Strobe Video".into(),
+                kind: selah_render::slide_elements::SlideElementKind::Video,
+                x: 0.15,
+                y: 0.45,
+                width: 0.70,
+                height: 0.45,
+                z_index: 3,
+                content_hash: flash_item.content_hash.clone(),
+                media_extension: flash_item.extension.clone(),
+                fit: "fill".into(),
+                ..Default::default()
+            },
+        ],
+        ..Default::default()
+    };
+
+    let scene = Scene {
+        revision: 3,
+        outputs: vec![OutputScene {
+            output_index: 0,
+            resolution: Some(Resolution {
+                width: 640,
+                height: 360,
+            }),
+            layers: vec![LayerSpec {
+                kind: LayerKind::Slide as i32,
+                enabled: true,
+                content: Some(layer_spec::Content::Slide(SlideLayerSpec {
+                    elements_json: doc.to_json().unwrap(),
+                    ..Default::default()
+                })),
+                ..Default::default()
+            }],
+            ..Default::default()
+        }],
+        ..Default::default()
+    };
+
+    let reply::Result::SceneThumbnail(t1) = unwrap_reply(core.handle(&ui_query(
+        2,
+        query::Request::RenderSceneThumbnail(RenderSceneThumbnail {
+            scene: Some(scene.clone()),
+            output_index: 0,
+            max_width: 320,
+            max_height: 180,
+        }),
+    ))) else {
+        panic!("expected SceneThumbnail");
+    };
+    let reply::Result::SceneThumbnail(t2) = unwrap_reply(core.handle(&ui_query(
+        3,
+        query::Request::RenderSceneThumbnail(RenderSceneThumbnail {
+            scene: Some(scene),
+            output_index: 0,
+            max_width: 320,
+            max_height: 180,
+        }),
+    ))) else {
+        panic!("expected SceneThumbnail");
+    };
+
+    assert!(
+        t1.flash_warning,
+        "video element flash_warning must propagate through SceneThumbnail (SAFE-04)"
+    );
+    assert_eq!(
+        t1.png_bytes, t2.png_bytes,
+        "thumbnail clock rendering must be deterministic across identical calls"
+    );
+}

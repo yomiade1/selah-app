@@ -381,9 +381,176 @@ public sealed partial class LibraryAndEditorTests : IDisposable
         Dispatcher.UIThread.RunJobs();
         Assert.Empty(LayoutTests.ClippedCriticalLabels(window));
 
+        model.SelectModeCommand.Execute("SlideEditor");
+        Dispatcher.UIThread.RunJobs();
+        Assert.Empty(LayoutTests.ClippedCriticalLabels(window));
+
+        model.SelectModeCommand.Execute("Templates");
+        Dispatcher.UIThread.RunJobs();
+        Assert.Empty(LayoutTests.ClippedCriticalLabels(window));
+
         model.OpenCommandPaletteCommand.Execute(null);
         Dispatcher.UIThread.RunJobs();
         Assert.Empty(LayoutTests.ClippedCriticalLabels(window));
+
+        window.Close();
+    }
+
+    [AvaloniaTheory]
+    [MemberData(nameof(ModesMatrix))]
+    public void Slide_editor_create_align_undo_and_redo_flow(int scale, string appearance, string language)
+    {
+        Configure(scale, appearance, language);
+        var library = new FakeLibrary();
+        var model = new MainViewModel(null, null, library, new FakeHelp());
+        var window = OpenWindow(model);
+
+        model.SelectModeCommand.Execute("SlideEditor");
+        model.SlideEditor.LoadAsync().GetAwaiter().GetResult();
+        Dispatcher.UIThread.RunJobs();
+
+        model.SlideEditor.PresentationName = "Sunday Announcements";
+        model.SlideEditor.AddTextElementCommand.Execute(null);
+        model.SlideEditor.AddImageElementCommand.Execute(null);
+        model.SlideEditor.AddShapeElementCommand.Execute("rounded_rect");
+        Dispatcher.UIThread.RunJobs();
+
+        Assert.Equal(3, model.SlideEditor.Elements.Count);
+        var textEl = model.SlideEditor.Elements[0];
+        var imageEl = model.SlideEditor.Elements[1];
+        var shapeEl = model.SlideEditor.Elements[2];
+
+        textEl.X = 0.05;
+        textEl.Width = 0.20;
+        imageEl.X = 0.70;
+        imageEl.Width = 0.20;
+        shapeEl.X = 0.42;
+        shapeEl.Width = 0.12;
+        shapeEl.Locked = true;
+        var lockedOriginalX = shapeEl.X;
+        var imageOriginalX = imageEl.X;
+
+        model.SlideEditor.SelectAllElementsCommand.Execute(null);
+        model.SlideEditor.AlignCenterCommand.Execute(null);
+        Dispatcher.UIThread.RunJobs();
+
+        var expectedTextCenterX = textEl.X + textEl.Width / 2.0;
+        var expectedImageCenterX = imageEl.X + imageEl.Width / 2.0;
+        Assert.Equal(expectedTextCenterX, expectedImageCenterX, precision: 3);
+        Assert.NotEqual(imageOriginalX, imageEl.X, precision: 3);
+        Assert.Equal(lockedOriginalX, shapeEl.X, precision: 3);
+        Assert.True(model.SlideEditor.CanUndo);
+
+        model.SlideEditor.UndoCommand.ExecuteAsync(null).GetAwaiter().GetResult();
+        Dispatcher.UIThread.RunJobs();
+        Assert.Equal(imageOriginalX, model.SlideEditor.Elements[1].X, precision: 3);
+        Assert.True(model.SlideEditor.CanRedo);
+
+        model.SlideEditor.RedoCommand.ExecuteAsync(null).GetAwaiter().GetResult();
+        Dispatcher.UIThread.RunJobs();
+        Assert.NotEqual(imageOriginalX, model.SlideEditor.Elements[1].X, precision: 3);
+
+        model.SlideEditor.SavePresentationCommand.ExecuteAsync(null).GetAwaiter().GetResult();
+        Dispatcher.UIThread.RunJobs();
+
+        var saved = Assert.Single(library.Presentations);
+        Assert.Equal("Sunday Announcements", saved.Name);
+        Assert.Single(saved.Slides);
+        Assert.True(model.SlideEditor.HasPreviewBitmap);
+        Assert.Empty(ActiveCriticalLabelProblems(window, model));
+
+        Snapshot(window, $"slide-editor-{scale}-{appearance}-{language}");
+        window.Close();
+    }
+
+    [AvaloniaTheory]
+    [MemberData(nameof(ModesMatrix))]
+    public void Template_editor_looks_assignment_and_song_fit_flow(int scale, string appearance, string language)
+    {
+        Configure(scale, appearance, language);
+        var library = new FakeLibrary();
+        var model = new MainViewModel(null, null, library, new FakeHelp());
+        var window = OpenWindow(model);
+
+        model.SelectModeCommand.Execute("Templates");
+        model.TemplateEditor.LoadAsync().GetAwaiter().GetResult();
+        Dispatcher.UIThread.RunJobs();
+
+        var initialCount = library.Templates.Count;
+        model.TemplateEditor.NewTemplateCommand.Execute(null);
+        model.TemplateEditor.ApplyLookCommand.Execute("warm-serif");
+        model.TemplateEditor.TemplateName = "Sunday Warm Serif";
+        model.TemplateEditor.RoleSize = 68;
+        model.TemplateEditor.HasBackgroundBox = true;
+        model.TemplateEditor.SaveTemplateCommand.ExecuteAsync(null).GetAwaiter().GetResult();
+        Dispatcher.UIThread.RunJobs();
+
+        Assert.Equal(initialCount + 1, library.Templates.Count);
+        Assert.Contains(library.Templates, t => t.Name == "Sunday Warm Serif");
+        Assert.True(model.TemplateEditor.HasPreviewBitmap);
+
+        model.TemplateEditor.SetAsDefaultSongTemplateCommand.ExecuteAsync(null).GetAwaiter().GetResult();
+        model.TemplateEditor.AssignToSelectedOutputCommand.ExecuteAsync(null).GetAwaiter().GetResult();
+        Dispatcher.UIThread.RunJobs();
+
+        Assert.Equal("Sunday Warm Serif", model.TemplateEditor.DefaultSongTemplateName);
+        Assert.True(LibraryIds.Same(library.Outputs[0].TemplateId, model.TemplateEditor.TemplateId));
+
+        model.SelectModeCommand.Execute("SongEditor");
+        model.SongEditor.LoadTemplatesAsync().GetAwaiter().GetResult();
+        model.SongEditor.LoadSongAsync(library.Songs.Single()).GetAwaiter().GetResult();
+        Dispatcher.UIThread.RunJobs();
+
+        Assert.Equal("Sunday Warm Serif", model.SongEditor.SelectedTemplate?.Name);
+        Assert.True(model.SongEditor.HasFitBadge);
+        Assert.Contains("68", model.SongEditor.FitSummaryText, StringComparison.Ordinal);
+        Assert.All(model.SongEditor.GeneratedSlides, card => Assert.True(card.HasThumbnail));
+        Assert.Empty(ActiveCriticalLabelProblems(window, model));
+
+        Snapshot(window, $"template-editor-{scale}-{appearance}-{language}");
+        window.Close();
+    }
+
+    [AvaloniaTheory]
+    [MemberData(nameof(ModesMatrix))]
+    public void Slide_editor_flash_warning_guard_blocks_unconfirmed_stage(int scale, string appearance, string language)
+    {
+        Configure(scale, appearance, language);
+        var library = new FakeLibrary();
+        var model = new MainViewModel(null, null, library, new FakeHelp());
+        var window = OpenWindow(model);
+
+        model.SelectModeCommand.Execute("SlideEditor");
+        model.SlideEditor.LoadAsync().GetAwaiter().GetResult();
+        model.SlideEditor.AddTextElementCommand.Execute(null);
+        model.SlideEditor.TransitionKind = "fade_through_black";
+        model.SlideEditor.TransitionDurationMs = 120;
+        model.SlideEditor.RepeatCadenceMs = 150;
+        model.SlideEditor.RefreshPreviewAndRiskAsync().GetAwaiter().GetResult();
+        Dispatcher.UIThread.RunJobs();
+
+        Assert.True(model.SlideEditor.HasFlashWarning);
+        Assert.True(model.SlideEditor.IsStageBlockedByFlashGuard);
+        Assert.False(model.SlideEditor.CanStageSlide);
+
+        var stageBtn = ControlByName<Button>(window, "StageCustomSlideButton");
+        var flashBanner = ControlByName<Border>(window, "FlashGuardBanner");
+        var ackCheck = ControlByName<CheckBox>(window, "AcknowledgeFlashWarningCheckBox");
+        Assert.False(stageBtn.IsEnabled);
+        Assert.True(flashBanner.IsEffectivelyVisible);
+
+        ackCheck.IsChecked = true;
+        Dispatcher.UIThread.RunJobs();
+
+        Assert.True(model.SlideEditor.CanStageSlide);
+        Assert.True(stageBtn.IsEnabled);
+
+        model.SlideEditor.StageSlideCommand.ExecuteAsync(null).GetAwaiter().GetResult();
+        Dispatcher.UIThread.RunJobs();
+
+        Assert.Single(library.StagedScenes);
+        Assert.True(model.HasStagedPreview);
+        Assert.Empty(ActiveCriticalLabelProblems(window, model));
 
         window.Close();
     }
@@ -477,6 +644,14 @@ public sealed partial class LibraryAndEditorTests : IDisposable
     {
         public List<Song> Songs { get; } = [];
         public List<MediaItem> Media { get; } = [];
+        public List<Template> Templates { get; } = [];
+        public List<Presentation> Presentations { get; } = [];
+        public List<OutputConfig> Outputs { get; } =
+        [
+            new OutputConfig { OutputIndex = 0, Name = "Main 16:9", Role = OutputRole.Main, Resolution = new Resolution { Width = 1920, Height = 1080 } },
+            new OutputConfig { OutputIndex = 1, Name = "LED 32:9", Role = OutputRole.Main, Resolution = new Resolution { Width = 3840, Height = 1080 } },
+        ];
+        public Dictionary<string, PolicySetting> Policies { get; } = new(StringComparer.Ordinal);
         public List<Scene> StagedScenes { get; } = [];
         public Dictionary<string, byte[]> Thumbnails { get; } = new();
         public List<BibleTranslation> Bibles { get; } =
@@ -493,6 +668,11 @@ public sealed partial class LibraryAndEditorTests : IDisposable
 
         public FakeLibrary()
         {
+            Templates.Add(TemplateStyleModel.StarterSanctuary().ToProto(LibraryIds.NewId()));
+            Templates.Add(TemplateStyleModel.StarterWarmSerif().ToProto(LibraryIds.NewId()));
+            Templates.Add(TemplateStyleModel.StarterLowerThird().ToProto(LibraryIds.NewId()));
+            Templates.Add(TemplateStyleModel.StarterStageMonitor().ToProto(LibraryIds.NewId()));
+
             var secId1 = LibraryIds.NewId();
             var secId2 = LibraryIds.NewId();
             var arrId = LibraryIds.NewId();
@@ -628,7 +808,57 @@ public sealed partial class LibraryAndEditorTests : IDisposable
                     outSlides.Slides.Add(slide);
                 }
             }
+            PopulateSongFitReports(request, outSlides);
             return Task.FromResult(outSlides);
+        }
+
+        private void PopulateSongFitReports(SplitSongSlides request, GeneratedSongSlides outSlides)
+        {
+            if (!request.ShrinkToFit && request.TargetOutputs.Count == 0 && request.TemplateId is null && string.IsNullOrEmpty(request.StyleJson))
+            {
+                return;
+            }
+            var style = ResolveTemplateStyle(request.TemplateId, "templates.default.song");
+            var body = style.Roles.Body;
+            var targets = request.TargetOutputs.Count > 0
+                ? request.TargetOutputs.ToList()
+                : [new FitTargetOutput { OutputIndex = 0, Name = "Main", Role = OutputRole.Main, Resolution = new Resolution { Width = 1920, Height = 1080 } }];
+            foreach (var target in targets)
+            {
+                var applied = body.Size > 0 ? body.Size : 74f;
+                var minSize = body.MinSize > 0 ? body.MinSize : 32f;
+                outSlides.FitReports.Add(new OutputFitReport
+                {
+                    OutputIndex = target.OutputIndex,
+                    OutputName = target.Name,
+                    AppliedSize = applied,
+                    MinSize = minSize,
+                    MatchedVariant = "16:9",
+                    Fits = true,
+                    Summary = $"Fits at {applied:0} pt",
+                });
+                var fitted = new OutputFittedSongSlides { OutputIndex = target.OutputIndex };
+                foreach (var s in outSlides.Slides)
+                {
+                    fitted.Slides.Add(s.Clone());
+                }
+                outSlides.PerOutputSlides.Add(fitted);
+            }
+        }
+
+        private TemplateStyleModel ResolveTemplateStyle(Id? templateId, string defaultPolicyKey)
+        {
+            Template? match = null;
+            if (templateId is { Value.IsEmpty: false })
+            {
+                match = Templates.FirstOrDefault(t => LibraryIds.Same(t.Id, templateId));
+            }
+            if (match is null && Policies.TryGetValue(defaultPolicyKey, out var setting) && !string.IsNullOrWhiteSpace(setting.ValueJson))
+            {
+                var hex = setting.ValueJson.Trim().Trim('"');
+                match = Templates.FirstOrDefault(t => string.Equals(LibraryIds.Hex(t.Id), hex, StringComparison.OrdinalIgnoreCase));
+            }
+            return match is not null ? TemplateStyleModel.FromProto(match) : TemplateStyleModel.StarterSanctuary();
         }
 
         public Task SaveEditorBufferAsync(Id docId, DocumentType docType, string content)
@@ -741,6 +971,29 @@ public sealed partial class LibraryAndEditorTests : IDisposable
                 }
                 reply.Slides.Add(slide);
             }
+            if (request.ShrinkToFit || request.TargetOutputs.Count > 0 || request.TemplateId is not null || !string.IsNullOrEmpty(request.StyleJson))
+            {
+                var style = ResolveTemplateStyle(request.TemplateId, "templates.default.scripture");
+                var body = style.Roles.Body;
+                var applied = body.Size > 0 ? body.Size : 64f;
+                var minSize = body.MinSize > 0 ? body.MinSize : 28f;
+                reply.FitReports.Add(new OutputFitReport
+                {
+                    OutputIndex = 0,
+                    OutputName = "Main",
+                    AppliedSize = applied,
+                    MinSize = minSize,
+                    MatchedVariant = "16:9",
+                    Fits = true,
+                    Summary = $"Fits at {applied:0} pt",
+                });
+                var fitted = new OutputFittedScriptureSlides { OutputIndex = 0 };
+                foreach (var s in reply.Slides)
+                {
+                    fitted.Slides.Add(s.Clone());
+                }
+                reply.PerOutputSlides.Add(fitted);
+            }
             return Task.FromResult(reply);
         }
 
@@ -844,6 +1097,105 @@ public sealed partial class LibraryAndEditorTests : IDisposable
                 results.Songs.Add(new SongSearchHit { Song = s.Clone(), Score = 1.0, Snippet = s.Key });
             }
             return Task.FromResult(results);
+        }
+
+        public Task<IReadOnlyList<Template>> ListTemplatesAsync(uint limit = 200, uint offset = 0) =>
+            Task.FromResult<IReadOnlyList<Template>>(Templates.Select(t => t.Clone()).ToList());
+
+        public Task<Template?> GetTemplateAsync(Id id) =>
+            Task.FromResult(Templates.FirstOrDefault(t => LibraryIds.Same(t.Id, id))?.Clone());
+
+        public Task SaveTemplateAsync(Template template, Id? undoGroup = null)
+        {
+            var idx = Templates.FindIndex(t => LibraryIds.Same(t.Id, template.Id));
+            if (idx >= 0)
+            {
+                Templates[idx] = template.Clone();
+            }
+            else
+            {
+                Templates.Add(template.Clone());
+            }
+            RaiseChanged(DocumentType.Template, template.Id);
+            return Task.CompletedTask;
+        }
+
+        public Task DeleteTemplateAsync(Id id, Id? undoGroup = null)
+        {
+            Templates.RemoveAll(t => LibraryIds.Same(t.Id, id));
+            RaiseChanged(DocumentType.Template, id);
+            return Task.CompletedTask;
+        }
+
+        public Task<IReadOnlyList<Presentation>> ListPresentationsAsync(uint limit = 200, uint offset = 0) =>
+            Task.FromResult<IReadOnlyList<Presentation>>(Presentations.Select(p => p.Clone()).ToList());
+
+        public Task<Presentation?> GetPresentationAsync(Id id) =>
+            Task.FromResult(Presentations.FirstOrDefault(p => LibraryIds.Same(p.Id, id))?.Clone());
+
+        public Task SavePresentationAsync(Presentation presentation, Id? undoGroup = null)
+        {
+            var idx = Presentations.FindIndex(p => LibraryIds.Same(p.Id, presentation.Id));
+            if (idx >= 0)
+            {
+                Presentations[idx] = presentation.Clone();
+            }
+            else
+            {
+                Presentations.Add(presentation.Clone());
+            }
+            RaiseChanged(DocumentType.Presentation, presentation.Id);
+            return Task.CompletedTask;
+        }
+
+        public Task DeletePresentationAsync(Id id, Id? undoGroup = null)
+        {
+            Presentations.RemoveAll(p => LibraryIds.Same(p.Id, id));
+            RaiseChanged(DocumentType.Presentation, id);
+            return Task.CompletedTask;
+        }
+
+        public Task<IReadOnlyList<OutputConfig>> GetOutputConfigsAsync() =>
+            Task.FromResult<IReadOnlyList<OutputConfig>>(Outputs.Select(o => o.Clone()).ToList());
+
+        public Task SetOutputConfigsAsync(IEnumerable<OutputConfig> outputs)
+        {
+            Outputs.Clear();
+            foreach (var o in outputs)
+            {
+                Outputs.Add(o.Clone());
+            }
+            return Task.CompletedTask;
+        }
+
+        public Task<GetPolicySettingReply> GetPolicySettingAsync(string key) =>
+            Task.FromResult(Policies.TryGetValue(key, out var s)
+                ? new GetPolicySettingReply { Found = true, Setting = s.Clone() }
+                : new GetPolicySettingReply { Found = false });
+
+        public Task SetPolicySettingAsync(string key, string valueJson, PolicyLevel level = PolicyLevel.User, bool locked = false)
+        {
+            Policies[key] = new PolicySetting { Key = key, ValueJson = valueJson, Level = level, Locked = locked };
+            return Task.CompletedTask;
+        }
+
+        public Task<FlashRiskReport> AnalyzeFlashRiskAsync(AnalyzeFlashRisk request)
+        {
+            var fps = request.RepeatCadenceMs > 0 ? 1000f / request.RepeatCadenceMs : request.FlashesPerSecondHint;
+            var flash = fps > 3.0f || request.RepeatCadenceMs is > 0 and <= 333;
+            return Task.FromResult(new FlashRiskReport
+            {
+                FlashWarning = flash,
+                FlashesPerSecond = fps,
+                Reason = flash ? "Rapid flash rate exceeds 3 flashes per second (WCAG 2.3.1)." : string.Empty,
+                WarningCodes = { flash ? "SAFE-04-FLASH" : string.Empty },
+            });
+        }
+
+        public Task PresentSceneAsync(Scene scene)
+        {
+            StagedScenes.Add(scene.Clone());
+            return Task.CompletedTask;
         }
 
         private void RaiseChanged(DocumentType docType, Id id)

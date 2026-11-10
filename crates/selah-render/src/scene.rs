@@ -14,8 +14,44 @@ use selah_proto::v1::{
 
 use crate::Frame;
 use crate::cpu::pattern_pixel;
+use crate::slide_elements::{SlideElementsDocument, VideoFrameSource, format_dynamic_tokens};
 use crate::template::TemplateStyle;
 use crate::text::{SlideTextStyle, TextRenderer, composite_over};
+
+/// Effective Unix epoch milliseconds for dynamic `{clock}` / `{timer}` overlays.
+pub fn effective_clock_unix_ms(clock_override: Option<i64>) -> i64 {
+    clock_override.unwrap_or_else(|| {
+        std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .map(|d| d.as_millis() as i64)
+            .unwrap_or(0)
+    })
+}
+
+/// Strictly validate custom `elements_json` across all outputs and layers (`SEC-03` / `SEC-04`).
+pub fn validate_scene_elements(scene: &Scene) -> Result<()> {
+    for out in &scene.outputs {
+        for layer in &out.layers {
+            match layer.content.as_ref() {
+                Some(layer_spec::Content::Slide(s)) => {
+                    if !s.style_json.trim().is_empty() {
+                        TemplateStyle::from_json(&s.style_json)?;
+                    }
+                    if !s.elements_json.trim().is_empty() {
+                        SlideElementsDocument::from_json_strict(&s.elements_json)?;
+                    }
+                }
+                Some(layer_spec::Content::Props(p)) => {
+                    if !p.elements_json.trim().is_empty() {
+                        SlideElementsDocument::from_json_strict(&p.elements_json)?;
+                    }
+                }
+                _ => {}
+            }
+        }
+    }
+    Ok(())
+}
 
 /// Canonical z-order from back (0) to front (4) on every output.
 pub const LAYER_ORDER: [LayerKind; 5] = [
@@ -116,7 +152,8 @@ fn video_input_has_content(v: &VideoInputLayerSpec) -> bool {
 fn slide_has_content(s: &SlideLayerSpec) -> bool {
     s.test_pattern != TestPattern::Unspecified as i32
         || !s.text.is_empty()
-        || !s.elements_json.trim().is_empty()
+        || (!s.elements_json.trim().is_empty()
+            && SlideElementsDocument::from_json_lenient(&s.elements_json).has_visible_content())
         || !s.title_text.is_empty()
         || !s.reference_text.is_empty()
         || !s.translation_text.is_empty()
@@ -125,7 +162,8 @@ fn slide_has_content(s: &SlideLayerSpec) -> bool {
 
 fn props_has_content(p: &PropsLayerSpec) -> bool {
     !p.label.trim().is_empty()
-        || !p.elements_json.trim().is_empty()
+        || (!p.elements_json.trim().is_empty()
+            && SlideElementsDocument::from_json_lenient(&p.elements_json).has_visible_content())
         || p.background_color.is_some_and(|c| c.alpha > 0.0)
         || p.effects
             .iter()
@@ -144,14 +182,20 @@ pub fn layer_is_time_varying(spec: &LayerSpec) -> bool {
         Some(layer_spec::Content::Slide(s)) => {
             s.text.contains("{clock}")
                 || s.text.contains("{timer}")
-                || s.elements_json.contains("{clock}")
-                || s.elements_json.contains("{timer}")
+                || (!s.elements_json.trim().is_empty()
+                    && (s.elements_json.contains("{clock}")
+                        || s.elements_json.contains("{timer}")
+                        || SlideElementsDocument::from_json_lenient(&s.elements_json)
+                            .has_time_varying_content()))
         }
         Some(layer_spec::Content::Props(p)) => {
             p.label.contains("{clock}")
                 || p.label.contains("{timer}")
-                || p.elements_json.contains("{clock}")
-                || p.elements_json.contains("{timer}")
+                || (!p.elements_json.trim().is_empty()
+                    && (p.elements_json.contains("{clock}")
+                        || p.elements_json.contains("{timer}")
+                        || SlideElementsDocument::from_json_lenient(&p.elements_json)
+                            .has_time_varying_content()))
         }
         Some(layer_spec::Content::Messages(m)) => {
             m.ticker || m.text.contains("{clock}") || m.text.contains("{timer}")
@@ -426,14 +470,20 @@ pub fn scene_is_continuously_animated(scene: &Scene) -> bool {
                     Some(layer_spec::Content::Slide(s)) => {
                         s.text.contains("{clock}")
                             || s.text.contains("{timer}")
-                            || s.elements_json.contains("{clock}")
-                            || s.elements_json.contains("{timer}")
+                            || (!s.elements_json.trim().is_empty()
+                                && (s.elements_json.contains("{clock}")
+                                    || s.elements_json.contains("{timer}")
+                                    || SlideElementsDocument::from_json_lenient(&s.elements_json)
+                                        .has_time_varying_content()))
                     }
                     Some(layer_spec::Content::Props(p)) => {
                         p.label.contains("{clock}")
                             || p.label.contains("{timer}")
-                            || p.elements_json.contains("{clock}")
-                            || p.elements_json.contains("{timer}")
+                            || (!p.elements_json.trim().is_empty()
+                                && (p.elements_json.contains("{clock}")
+                                    || p.elements_json.contains("{timer}")
+                                    || SlideElementsDocument::from_json_lenient(&p.elements_json)
+                                        .has_time_varying_content()))
                     }
                     Some(layer_spec::Content::Messages(m)) => {
                         m.ticker || m.text.contains("{clock}") || m.text.contains("{timer}")
@@ -674,6 +724,7 @@ pub fn media_backdrop_frame(
 }
 
 /// Rasterise (or return cached) premultiplied RGBA overlay for one normalized layer.
+#[allow(clippy::too_many_arguments)]
 pub fn rasterise_layer_overlay(
     layer: &NormalizedLayer,
     width: u32,
@@ -681,63 +732,89 @@ pub fn rasterise_layer_overlay(
     text_renderer: &mut Option<TextRenderer>,
     cache: &mut OverlayCache,
     media_root: Option<&Path>,
+    video_frames: &impl VideoFrameSource,
+    clock_unix_ms: i64,
 ) -> Result<Option<Arc<Frame>>> {
-    if let Some(hit) = cache.get(&layer.cache_key) {
+    if !layer.time_varying
+        && let Some(hit) = cache.get(&layer.cache_key)
+    {
         return Ok(Some(hit));
     }
 
-    let built: Option<Frame> =
-        match layer.spec.content.as_ref() {
-            Some(layer_spec::Content::VideoInput(v)) => {
-                let color = color_to_rgba(v.fallback_color, [24, 34, 48, 255]);
-                if color[3] == 0 {
-                    None
-                } else {
-                    Some(solid_frame(color, width, height))
+    let built: Option<Frame> = match layer.spec.content.as_ref() {
+        Some(layer_spec::Content::VideoInput(v)) => {
+            let color = color_to_rgba(v.fallback_color, [24, 34, 48, 255]);
+            if color[3] == 0 {
+                None
+            } else {
+                Some(solid_frame(color, width, height))
+            }
+        }
+        Some(layer_spec::Content::Media(m)) => {
+            media_backdrop_frame(m, width, height, media_root, true)?
+        }
+        Some(layer_spec::Content::Slide(s)) => {
+            let pattern = TestPattern::try_from(s.test_pattern).unwrap_or(TestPattern::Unspecified);
+            let mut base = if pattern != TestPattern::Unspecified {
+                let mut f = Frame::new(width, height);
+                for y in 0..height {
+                    for x in 0..width {
+                        let at = (y as usize * width as usize + x as usize) * 4;
+                        f.pixels[at..at + 4]
+                            .copy_from_slice(&pattern_pixel(pattern, x, y, width, height));
+                    }
+                }
+                Some(f)
+            } else {
+                None
+            };
+            if slide_has_renderable_text(s) {
+                if text_renderer.is_none() {
+                    *text_renderer = Some(TextRenderer::bundled()?);
+                }
+                let text_frame = rasterise_slide_text(
+                    s,
+                    width,
+                    height,
+                    text_renderer.as_mut().expect("text renderer exists"),
+                    clock_unix_ms,
+                )?;
+                match &mut base {
+                    Some(b) => composite_over(b, &text_frame),
+                    None => base = Some((*text_frame).clone()),
                 }
             }
-            Some(layer_spec::Content::Media(m)) => {
-                media_backdrop_frame(m, width, height, media_root, true)?
-            }
-            Some(layer_spec::Content::Slide(s)) => {
-                let pattern =
-                    TestPattern::try_from(s.test_pattern).unwrap_or(TestPattern::Unspecified);
-                let mut base = if pattern != TestPattern::Unspecified {
-                    let mut f = Frame::new(width, height);
-                    for y in 0..height {
-                        for x in 0..width {
-                            let at = (y as usize * width as usize + x as usize) * 4;
-                            f.pixels[at..at + 4]
-                                .copy_from_slice(&pattern_pixel(pattern, x, y, width, height));
-                        }
-                    }
-                    Some(f)
-                } else {
-                    None
-                };
-                if slide_has_renderable_text(s) {
+            if !s.elements_json.trim().is_empty() {
+                let doc = SlideElementsDocument::from_json_lenient(&s.elements_json);
+                if doc.has_visible_content() {
                     if text_renderer.is_none() {
                         *text_renderer = Some(TextRenderer::bundled()?);
                     }
-                    let text_frame = rasterise_slide_text(
-                        s,
+                    let elems_frame = crate::slide_elements::rasterise_elements(
+                        &doc,
                         width,
                         height,
                         text_renderer.as_mut().expect("text renderer exists"),
+                        media_root,
+                        video_frames,
+                        clock_unix_ms,
                     )?;
                     match &mut base {
-                        Some(b) => composite_over(b, &text_frame),
-                        None => base = Some((*text_frame).clone()),
+                        Some(b) => composite_over(b, &elems_frame),
+                        None => base = Some(elems_frame),
                     }
                 }
-                base
             }
-            Some(layer_spec::Content::Props(p)) => {
+            base
+        }
+        Some(layer_spec::Content::Props(p)) => {
+            let mut base =
                 if p.label.trim().is_empty() {
                     let solid = p.background_color.filter(|c| c.alpha > 0.0).map(|c| {
                         solid_frame(color_to_rgba(Some(c), [20, 40, 80, 220]), width, height)
                     });
                     if solid.is_none()
+                        && p.elements_json.trim().is_empty()
                         && layer.effects.stages.iter().any(|s| {
                             matches!(s, crate::effects::ResolvedEffect::BackgroundBlur { .. })
                         })
@@ -752,43 +829,87 @@ pub fn rasterise_layer_overlay(
                     }
                     let bg = color_to_rgba(p.background_color, [20, 40, 80, 220]);
                     let fg = color_to_rgba(p.text_color, [255, 255, 255, 255]);
+                    let label = format_dynamic_tokens(
+                        &p.label,
+                        clock_unix_ms,
+                        0,
+                        true,
+                        true,
+                        None,
+                        Some(300),
+                        false,
+                    );
                     let frame = text_renderer
                         .as_mut()
                         .expect("text renderer exists")
-                        .render_overlay_box(&p.label, bg, fg, false, width, height)?;
+                        .render_overlay_box(&label, bg, fg, false, width, height)?;
                     Some((*frame).clone())
-                }
-            }
-            Some(layer_spec::Content::Messages(MessagesLayerSpec {
-                text,
-                background_color,
-                text_color,
-                ..
-            })) => {
-                if text.trim().is_empty() {
-                    None
-                } else {
+                };
+            if !p.elements_json.trim().is_empty() {
+                let doc = SlideElementsDocument::from_json_lenient(&p.elements_json);
+                if doc.has_visible_content() {
                     if text_renderer.is_none() {
                         *text_renderer = Some(TextRenderer::bundled()?);
                     }
-                    let bg = color_to_rgba(*background_color, [140, 32, 32, 235]);
-                    let fg = color_to_rgba(*text_color, [255, 255, 255, 255]);
-                    let frame = text_renderer
-                        .as_mut()
-                        .expect("text renderer exists")
-                        .render_overlay_box(text, bg, fg, true, width, height)?;
-                    Some((*frame).clone())
+                    let elems_frame = crate::slide_elements::rasterise_elements(
+                        &doc,
+                        width,
+                        height,
+                        text_renderer.as_mut().expect("text renderer exists"),
+                        media_root,
+                        video_frames,
+                        clock_unix_ms,
+                    )?;
+                    match &mut base {
+                        Some(b) => composite_over(b, &elems_frame),
+                        None => base = Some(elems_frame),
+                    }
                 }
             }
-            None => None,
-        };
+            base
+        }
+        Some(layer_spec::Content::Messages(MessagesLayerSpec {
+            text,
+            background_color,
+            text_color,
+            ..
+        })) => {
+            if text.trim().is_empty() {
+                None
+            } else {
+                if text_renderer.is_none() {
+                    *text_renderer = Some(TextRenderer::bundled()?);
+                }
+                let bg = color_to_rgba(*background_color, [140, 32, 32, 235]);
+                let fg = color_to_rgba(*text_color, [255, 255, 255, 255]);
+                let resolved_msg = format_dynamic_tokens(
+                    text,
+                    clock_unix_ms,
+                    0,
+                    true,
+                    true,
+                    None,
+                    Some(300),
+                    false,
+                );
+                let frame = text_renderer
+                    .as_mut()
+                    .expect("text renderer exists")
+                    .render_overlay_box(&resolved_msg, bg, fg, true, width, height)?;
+                Some((*frame).clone())
+            }
+        }
+        None => None,
+    };
 
     let Some(mut frame) = built else {
         return Ok(None);
     };
     scale_frame_opacity(&mut frame, layer.opacity);
     let arc = Arc::new(frame);
-    cache.insert(layer.cache_key, arc.clone());
+    if !layer.time_varying {
+        cache.insert(layer.cache_key, arc.clone());
+    }
     Ok(Some(arc))
 }
 
@@ -805,7 +926,18 @@ fn rasterise_slide_text(
     width: u32,
     height: u32,
     renderer: &mut TextRenderer,
+    clock_unix_ms: i64,
 ) -> Result<Arc<Frame>> {
+    let dynamic_body = format_dynamic_tokens(
+        &s.text,
+        clock_unix_ms,
+        0,
+        true,
+        true,
+        None,
+        Some(300),
+        false,
+    );
     if s.style_json.trim().is_empty()
         && s.title_text.is_empty()
         && s.reference_text.is_empty()
@@ -814,7 +946,7 @@ fn rasterise_slide_text(
         && s.chords_json.is_empty()
     {
         let style = SlideTextStyle::for_output(height);
-        return renderer.render(&s.text, &style, width, height);
+        return renderer.render(&dynamic_body, &style, width, height);
     }
     let template = match TemplateStyle::from_json(&s.style_json) {
         Ok(t) => t,
@@ -824,7 +956,9 @@ fn rasterise_slide_text(
         }
     };
     let resolved = template.resolve_for_output(width, height, None);
-    let frame = renderer.render_slide(s, &resolved, width, height)?;
+    let mut formatted_slide = s.clone();
+    formatted_slide.text = dynamic_body;
+    let frame = renderer.render_slide(&formatted_slide, &resolved, width, height)?;
     Ok(Arc::new(frame))
 }
 
@@ -835,8 +969,9 @@ pub fn prerasterise_hints(
     overlay_cache: &mut OverlayCache,
 ) -> Result<usize> {
     let mut warmed = 0usize;
+    let clock_unix_ms = effective_clock_unix_ms(None);
     for hint in hints {
-        if hint.text.is_empty() {
+        if hint.text.is_empty() || hint.text.contains("{clock}") || hint.text.contains("{timer}") {
             continue;
         }
         let (width, height) = clamp_resolution(hint.resolution, (1920, 1080));
@@ -854,6 +989,7 @@ pub fn prerasterise_hints(
             width,
             height,
             text_renderer.as_mut().expect("text renderer exists"),
+            clock_unix_ms,
         )?;
         let spec = LayerSpec {
             kind: LayerKind::Slide as i32,

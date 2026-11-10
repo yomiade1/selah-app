@@ -10,6 +10,7 @@ pub mod gpu;
 pub mod media_bg;
 pub mod png;
 pub mod scene;
+pub mod slide_elements;
 pub mod template;
 pub mod text;
 pub mod transitions;
@@ -106,6 +107,10 @@ pub trait Compositor {
     ) -> anyhow::Result<()> {
         Ok(())
     }
+
+    /// Override the wall-clock Unix epoch milliseconds used by `{clock}` and `{timer}` elements
+    /// (`None` reads the current system clock). Used for deterministic tests and thumbnails.
+    fn set_clock_unix_ms(&mut self, _unix_ms: Option<i64>) {}
 
     /// The GPU compositor, when this is one (windows can only present GPU output).
     fn as_gpu(&mut self) -> Option<&mut gpu::GpuCompositor> {

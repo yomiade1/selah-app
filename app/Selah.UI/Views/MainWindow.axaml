@@ -55,6 +55,14 @@
                 Command="{Binding SelectModeCommand}" CommandParameter="SongEditor">
           <TextBlock Text="{Binding [mode-song-editor], Source={x:Static s:Localizer.Instance}}" />
         </Button>
+        <Button Name="ModeSlideEditorButton" Classes.primary="{Binding IsSlideEditorMode}"
+                Command="{Binding SelectModeCommand}" CommandParameter="SlideEditor">
+          <TextBlock Text="{Binding [mode-slide-editor], Source={x:Static s:Localizer.Instance}}" />
+        </Button>
+        <Button Name="ModeTemplatesButton" Classes.primary="{Binding IsTemplatesMode}"
+                Command="{Binding SelectModeCommand}" CommandParameter="Templates">
+          <TextBlock Text="{Binding [mode-templates], Source={x:Static s:Localizer.Instance}}" />
+        </Button>
         <Button Name="CommandPaletteButton" Classes="quiet" Command="{Binding OpenCommandPaletteCommand}"
                 s:Help.Anchor="shell.command-palette"
                 ToolTip.Tip="{Binding [command-search-hint], Source={x:Static s:Localizer.Instance}}">
@@ -179,6 +187,14 @@
                   Command="{Binding SelectModeCommand}" CommandParameter="SongEditor">
             <TextBlock Text="{Binding [mode-song-editor], Source={x:Static s:Localizer.Instance}}" />
           </Button>
+          <Button Name="SidebarSlideEditorButton" Classes="quiet" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left"
+                  Command="{Binding SelectModeCommand}" CommandParameter="SlideEditor">
+            <TextBlock Text="{Binding [mode-slide-editor], Source={x:Static s:Localizer.Instance}}" />
+          </Button>
+          <Button Name="SidebarTemplatesButton" Classes="quiet" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left"
+                  Command="{Binding SelectModeCommand}" CommandParameter="Templates">
+            <TextBlock Text="{Binding [mode-templates], Source={x:Static s:Localizer.Instance}}" />
+          </Button>
           <TextBlock Classes="caption" Margin="0,8,0,0" Text="{Binding [sidebar-heading-help], Source={x:Static s:Localizer.Instance}}" />
           <Button Name="HelpArticlesButton" Classes="quiet" Click="OnOpenHelp" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left">
             <TextBlock Text="{Binding [sidebar-help-articles], Source={x:Static s:Localizer.Instance}}" />
@@ -267,6 +283,14 @@
 
       <Panel Name="SongEditorWorkspace" IsVisible="{Binding IsSongEditorMode}">
         <views:SongEditorView Name="SongEditorViewControl" DataContext="{Binding SongEditor}" />
+      </Panel>
+
+      <Panel Name="SlideEditorWorkspace" IsVisible="{Binding IsSlideEditorMode}">
+        <views:SlideEditorView Name="SlideEditorViewControl" DataContext="{Binding SlideEditor}" />
+      </Panel>
+
+      <Panel Name="TemplatesWorkspace" IsVisible="{Binding IsTemplatesMode}">
+        <views:TemplateEditorView Name="TemplateEditorViewControl" DataContext="{Binding TemplateEditor}" />
       </Panel>
 
       <!-- Quick find (Ctrl/Cmd+K) never covers Toolbar / Clear everything. -->

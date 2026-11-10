@@ -53,7 +53,10 @@ fn default_white() -> [u8; 4] {
     [255, 255, 255, 255]
 }
 
-fn serialize_rgba<S>(rgba: &[u8; 4], serializer: S) -> std::result::Result<S::Ok, S::Error>
+pub(crate) fn serialize_rgba<S>(
+    rgba: &[u8; 4],
+    serializer: S,
+) -> std::result::Result<S::Ok, S::Error>
 where
     S: Serializer,
 {
@@ -68,7 +71,7 @@ where
     serializer.serialize_str(&hex)
 }
 
-fn deserialize_rgba<'de, D>(deserializer: D) -> std::result::Result<[u8; 4], D::Error>
+pub(crate) fn deserialize_rgba<'de, D>(deserializer: D) -> std::result::Result<[u8; 4], D::Error>
 where
     D: Deserializer<'de>,
 {
@@ -76,7 +79,9 @@ where
     parse_rgba_value(&value).map_err(serde::de::Error::custom)
 }
 
-fn deserialize_rgba_opt<'de, D>(deserializer: D) -> std::result::Result<Option<[u8; 4]>, D::Error>
+pub(crate) fn deserialize_rgba_opt<'de, D>(
+    deserializer: D,
+) -> std::result::Result<Option<[u8; 4]>, D::Error>
 where
     D: Deserializer<'de>,
 {

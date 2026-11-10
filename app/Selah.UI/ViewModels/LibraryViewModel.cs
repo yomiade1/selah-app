@@ -158,6 +158,7 @@ public sealed partial class LibraryViewModel : ObservableObject
     private readonly ILibraryService? library;
     private int songThumbGeneration;
     private int scriptureThumbGeneration;
+    private bool suppressTemplateRefresh;
 
     public LibraryViewModel(ILibraryService? library)
     {
@@ -216,6 +217,33 @@ public sealed partial class LibraryViewModel : ObservableObject
     public bool HasStatusMessage => !string.IsNullOrWhiteSpace(StatusMessage);
 
     public bool HasErrorMessage => !string.IsNullOrWhiteSpace(ErrorMessage);
+
+    // ----- Templates (M3.7) -----
+    public ObservableCollection<Template> AvailableTemplates { get; } = [];
+
+    [ObservableProperty]
+    private Template? selectedSongTemplate;
+
+    [ObservableProperty]
+    private Template? selectedScriptureTemplate;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasSongFitBadge))]
+    private string songFitSummaryText = string.Empty;
+
+    [ObservableProperty]
+    private bool hasSongFitWarning;
+
+    public bool HasSongFitBadge => !string.IsNullOrWhiteSpace(SongFitSummaryText);
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasScriptureFitBadge))]
+    private string scriptureFitSummaryText = string.Empty;
+
+    [ObservableProperty]
+    private bool hasScriptureFitWarning;
+
+    public bool HasScriptureFitBadge => !string.IsNullOrWhiteSpace(ScriptureFitSummaryText);
 
     // ----- Songs -----
     public ObservableCollection<Song> Songs { get; } = [];
@@ -361,6 +389,22 @@ public sealed partial class LibraryViewModel : ObservableObject
 
     partial void OnScriptureBlankSlideAtEndChanged(bool value) => _ = SplitScriptureSlidesAsync();
 
+    partial void OnSelectedSongTemplateChanged(Template? value)
+    {
+        if (!suppressTemplateRefresh && SelectedSong is not null)
+        {
+            _ = RefreshSelectedSongSlidesAsync(SelectedSong);
+        }
+    }
+
+    partial void OnSelectedScriptureTemplateChanged(Template? value)
+    {
+        if (!suppressTemplateRefresh && Verses.Count > 0)
+        {
+            _ = SplitScriptureSlidesAsync();
+        }
+    }
+
     [RelayCommand]
     public async Task LoadAsync()
     {
@@ -369,11 +413,64 @@ public sealed partial class LibraryViewModel : ObservableObject
             return;
         }
         ClearError();
+        await LoadTemplatesAsync();
         await Task.WhenAll(
             SearchSongsAsync(),
             SearchMediaAsync(),
             LoadBiblesAsync(),
             RefreshUndoStateAsync());
+    }
+
+    public async Task LoadTemplatesAsync()
+    {
+        if (library is null)
+        {
+            return;
+        }
+        try
+        {
+            var songHex = SelectedSongTemplate?.Id is { Value.IsEmpty: false } sId ? LibraryIds.Hex(sId) : string.Empty;
+            var scripHex = SelectedScriptureTemplate?.Id is { Value.IsEmpty: false } bId ? LibraryIds.Hex(bId) : string.Empty;
+            var list = await library.ListTemplatesAsync();
+            if (string.IsNullOrEmpty(songHex))
+            {
+                var policy = await library.GetPolicySettingAsync("templates.default.song");
+                if (policy.Found && !string.IsNullOrWhiteSpace(policy.Setting?.ValueJson))
+                {
+                    songHex = policy.Setting.ValueJson.Trim().Trim('"');
+                }
+            }
+            if (string.IsNullOrEmpty(scripHex))
+            {
+                var policy = await library.GetPolicySettingAsync("templates.default.scripture");
+                if (policy.Found && !string.IsNullOrWhiteSpace(policy.Setting?.ValueJson))
+                {
+                    scripHex = policy.Setting.ValueJson.Trim().Trim('"');
+                }
+            }
+            suppressTemplateRefresh = true;
+            try
+            {
+                AvailableTemplates.Clear();
+                foreach (var t in list)
+                {
+                    AvailableTemplates.Add(t);
+                }
+                SelectedSongTemplate = !string.IsNullOrEmpty(songHex)
+                    ? AvailableTemplates.FirstOrDefault(t => string.Equals(LibraryIds.Hex(t.Id), songHex, StringComparison.OrdinalIgnoreCase))
+                    : null;
+                SelectedScriptureTemplate = !string.IsNullOrEmpty(scripHex)
+                    ? AvailableTemplates.FirstOrDefault(t => string.Equals(LibraryIds.Hex(t.Id), scripHex, StringComparison.OrdinalIgnoreCase))
+                    : null;
+            }
+            finally
+            {
+                suppressTemplateRefresh = false;
+            }
+        }
+        catch (Exception)
+        {
+        }
     }
 
     public async Task RefreshUndoStateAsync()
@@ -471,20 +568,53 @@ public sealed partial class LibraryViewModel : ObservableObject
         var generation = Interlocked.Increment(ref songThumbGeneration);
         try
         {
-            var generated = await library.SplitSongSlidesAsync(new SplitSongSlides
+            var splitReq = new SplitSongSlides
             {
                 Song = song,
                 MaxLines = 4,
                 CopyrightPlacement = CopyrightPlacement.FirstAndLast,
+                ShrinkToFit = true,
+            };
+            splitReq.TargetOutputs.Add(new FitTargetOutput
+            {
+                OutputIndex = 0,
+                Name = "Main",
+                Role = OutputRole.Main,
+                Resolution = new Resolution { Width = 1920, Height = 1080 },
             });
+            if (SelectedSongTemplate?.Id is { Value.IsEmpty: false } tmplId)
+            {
+                splitReq.TemplateId = tmplId;
+            }
+            var generated = await library.SplitSongSlidesAsync(splitReq);
             if (Volatile.Read(ref songThumbGeneration) != generation)
             {
                 return;
             }
+            var fit = generated.FitReports.FirstOrDefault();
+            if (fit is not null && fit.AppliedSize > 0)
+            {
+                HasSongFitWarning = fit.OverflowsSafeArea || !fit.Fits || fit.ExtraSplits > 0 || fit.FlashWarning;
+                var pt = (int)Math.Round(fit.AppliedSize);
+                SongFitSummaryText = fit.ExtraSplits > 0
+                    ? Localizer.Instance.Get("editor-fit-split-badge", ("size", pt), ("splits", (int)fit.ExtraSplits))
+                    : Localizer.Instance.Get("editor-fit-ok-badge", ("size", pt));
+            }
+            else
+            {
+                HasSongFitWarning = false;
+                SongFitSummaryText = string.Empty;
+            }
+            var styleJson = SelectedSongTemplate is not null
+                ? TemplateStyleModel.FromProto(SelectedSongTemplate).ToJson()
+                : string.Empty;
+            var slides = generated.PerOutputSlides.FirstOrDefault(p => p.OutputIndex == 0)?.Slides is { Count: > 0 } perOut
+                ? perOut
+                : generated.Slides;
             SongPreviewSlides.Clear();
-            var cards = new List<SlidePreviewCard>(generated.Slides.Count);
+            var cards = new List<SlidePreviewCard>(slides.Count);
             var idx = 1;
-            foreach (var slide in generated.Slides)
+            foreach (var slide in slides)
             {
                 var body = string.Join("\n", slide.Lines.Select(l => l.Text));
                 var titleText = slide.IsTitle ? slide.SectionLabel : string.Empty;
@@ -498,7 +628,8 @@ public sealed partial class LibraryViewModel : ObservableObject
                     PreviewScene = SlidePreviewCard.BuildSlideScene(
                         body,
                         footer: slide.FooterCopyright,
-                        titleText: titleText),
+                        titleText: titleText,
+                        styleJson: styleJson),
                 };
                 SongPreviewSlides.Add(card);
                 cards.Add(card);
@@ -799,17 +930,49 @@ public sealed partial class LibraryViewModel : ObservableObject
                 ReferencePlacement = placement,
                 TitleSlide = ScriptureTitleSlide,
                 BlankSlideAtEnd = ScriptureBlankSlideAtEnd,
+                ShrinkToFit = true,
             };
+            request.TargetOutputs.Add(new FitTargetOutput
+            {
+                OutputIndex = 0,
+                Name = "Main",
+                Role = OutputRole.Main,
+                Resolution = new Resolution { Width = 1920, Height = 1080 },
+            });
+            if (SelectedScriptureTemplate?.Id is { Value.IsEmpty: false } tmplId)
+            {
+                request.TemplateId = tmplId;
+            }
             request.Verses.AddRange(Verses);
             var generated = await library.SplitScriptureSlidesAsync(request);
             if (Volatile.Read(ref scriptureThumbGeneration) != generation)
             {
                 return;
             }
+            var fit = generated.FitReports.FirstOrDefault();
+            if (fit is not null && fit.AppliedSize > 0)
+            {
+                HasScriptureFitWarning = fit.OverflowsSafeArea || !fit.Fits || fit.ExtraSplits > 0 || fit.FlashWarning;
+                var pt = (int)Math.Round(fit.AppliedSize);
+                ScriptureFitSummaryText = fit.ExtraSplits > 0
+                    ? Localizer.Instance.Get("editor-fit-split-badge", ("size", pt), ("splits", (int)fit.ExtraSplits))
+                    : Localizer.Instance.Get("editor-fit-ok-badge", ("size", pt));
+            }
+            else
+            {
+                HasScriptureFitWarning = false;
+                ScriptureFitSummaryText = string.Empty;
+            }
+            var styleJson = SelectedScriptureTemplate is not null
+                ? TemplateStyleModel.FromProto(SelectedScriptureTemplate).ToJson()
+                : string.Empty;
+            var slides = generated.PerOutputSlides.FirstOrDefault(p => p.OutputIndex == 0)?.Slides is { Count: > 0 } perOut
+                ? perOut
+                : generated.Slides;
             ScripturePreviewSlides.Clear();
-            var cards = new List<SlidePreviewCard>(generated.Slides.Count);
+            var cards = new List<SlidePreviewCard>(slides.Count);
             var idx = 1;
-            foreach (var slide in generated.Slides)
+            foreach (var slide in slides)
             {
                 var header = !string.IsNullOrWhiteSpace(slide.HeaderReference)
                     ? slide.HeaderReference
@@ -826,7 +989,8 @@ public sealed partial class LibraryViewModel : ObservableObject
                         slide.IsTitle ? string.Empty : body,
                         footer: slide.FooterReference,
                         referenceText: slide.HeaderReference,
-                        titleText: slide.IsTitle ? header : string.Empty),
+                        titleText: slide.IsTitle ? header : string.Empty,
+                        styleJson: styleJson),
                 };
                 ScripturePreviewSlides.Add(card);
                 cards.Add(card);

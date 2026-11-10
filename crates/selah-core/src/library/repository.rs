@@ -348,6 +348,11 @@ document!(
         unique_ids(value.slides.iter().map(|s| &s.id))?;
         for slide in &value.slides {
             optional_id(&slide.media_id)?;
+            if !slide.elements_json.trim().is_empty() {
+                selah_render::slide_elements::SlideElementsDocument::from_json_strict(
+                    &slide.elements_json,
+                )?;
+            }
         }
         Ok(())
     },

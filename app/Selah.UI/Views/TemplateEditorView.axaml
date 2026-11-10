@@ -1,0 +1,306 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:Selah.UI.ViewModels"
+             xmlns:pb="using:Selah.Contracts.V1"
+             xmlns:services="using:Selah.UI.Services"
+             xmlns:views="using:Selah.UI.Views"
+             xmlns:s="using:Selah.UI.Services"
+             x:Class="Selah.UI.Views.TemplateEditorView"
+             x:DataType="vm:TemplateEditorViewModel">
+  <DockPanel Margin="{DynamicResource Space.Text.Medium}">
+    <!-- Top bar -->
+    <Border DockPanel.Dock="Top" Padding="0,0,0,10" BorderBrush="{DynamicResource Brush.Line}" BorderThickness="{DynamicResource Line.Bottom}">
+      <StackPanel Spacing="{DynamicResource Space.3}">
+        <WrapPanel ItemSpacing="{DynamicResource Space.3}" LineSpacing="{DynamicResource Space.3}" VerticalAlignment="Center"
+                   s:Help.Anchor="templates.editor">
+          <TextBlock Classes="title-2" VerticalAlignment="Center"
+                     Text="{Binding [templates-title], Source={x:Static s:Localizer.Instance}}" />
+          <Button Name="NewTemplateButton" Command="{Binding NewTemplateCommand}">
+            <TextBlock Text="{Binding [templates-new], Source={x:Static s:Localizer.Instance}}" />
+          </Button>
+          <Button Name="DuplicateTemplateButton" Command="{Binding DuplicateTemplateCommand}">
+            <TextBlock Text="{Binding [templates-duplicate], Source={x:Static s:Localizer.Instance}}" />
+          </Button>
+          <Button Name="TemplatesUndoButton" Classes="quiet" Command="{Binding UndoCommand}" IsEnabled="{Binding CanUndo}">
+            <TextBlock Text="{Binding [library-undo], Source={x:Static s:Localizer.Instance}}" />
+          </Button>
+          <Button Name="TemplatesRedoButton" Classes="quiet" Command="{Binding RedoCommand}" IsEnabled="{Binding CanRedo}">
+            <TextBlock Text="{Binding [library-redo], Source={x:Static s:Localizer.Instance}}" />
+          </Button>
+          <Button Name="SaveTemplateButton" Classes="primary" Command="{Binding SaveTemplateCommand}">
+            <TextBlock Text="{Binding [templates-save], Source={x:Static s:Localizer.Instance}}" />
+          </Button>
+          <Button Name="DeleteTemplateButton" Classes="quiet" Command="{Binding DeleteSelectedTemplateCommand}">
+            <TextBlock Text="{Binding [templates-delete], Source={x:Static s:Localizer.Instance}}" />
+          </Button>
+          <views:InfoButton Name="TemplatesEditorInfoButton" Anchor="templates.editor" />
+        </WrapPanel>
+
+        <Border Classes="alert-success" IsVisible="{Binding HasStatusMessage}">
+          <TextBlock Name="TemplatesStatusText" Text="{Binding StatusMessage}" />
+        </Border>
+        <views:ErrorAlert Name="TemplatesErrorAlert"
+                          Message="{Binding ErrorMessage}"
+                          FixArticleId="{Binding ErrorFixArticleId}" />
+      </StackPanel>
+    </Border>
+
+    <!-- Main 3-column workspace (stacks below 960px effective width) -->
+    <ScrollViewer>
+      <Grid Name="TemplateMainGrid" ColumnDefinitions="260,*,310" RowDefinitions="Auto,Auto,Auto"
+            ColumnSpacing="14" RowSpacing="14" Margin="0,12,0,12">
+        <!-- LEFT PANE: Saved Templates + Starter Looks -->
+        <Border Name="TemplateLeftPane" Grid.Column="0" Grid.Row="0" Classes="card" VerticalAlignment="Top">
+          <StackPanel Spacing="{DynamicResource Space.4}">
+            <StackPanel Spacing="6">
+              <TextBlock Classes="title-3" Text="{Binding [templates-saved-heading], Source={x:Static s:Localizer.Instance}}" />
+              <ListBox Name="TemplatesList" ItemsSource="{Binding Templates}" SelectedItem="{Binding SelectedTemplate}" MaxHeight="260">
+                <ListBox.ItemTemplate>
+                  <DataTemplate x:DataType="pb:Template">
+                    <TextBlock Text="{Binding Name}" TextWrapping="Wrap" Margin="0,4" />
+                  </DataTemplate>
+                </ListBox.ItemTemplate>
+              </ListBox>
+            </StackPanel>
+
+            <StackPanel Spacing="6">
+              <TextBlock Classes="label" Text="{Binding [templates-looks-heading], Source={x:Static s:Localizer.Instance}}" />
+              <views:HintText Text="{Binding [templates-looks-hint], Source={x:Static s:Localizer.Instance}}" />
+              <Button Name="LookSanctuaryButton" HorizontalAlignment="Stretch"
+                      Command="{Binding ApplyLookCommand}" CommandParameter="sanctuary">
+                <TextBlock Text="{Binding [templates-look-sanctuary], Source={x:Static s:Localizer.Instance}}" />
+              </Button>
+              <Button Name="LookWarmSerifButton" HorizontalAlignment="Stretch"
+                      Command="{Binding ApplyLookCommand}" CommandParameter="warm-serif">
+                <TextBlock Text="{Binding [templates-look-warm-serif], Source={x:Static s:Localizer.Instance}}" />
+              </Button>
+              <Button Name="LookLowerThirdButton" HorizontalAlignment="Stretch"
+                      Command="{Binding ApplyLookCommand}" CommandParameter="lower-third">
+                <TextBlock Text="{Binding [templates-look-lower-third], Source={x:Static s:Localizer.Instance}}" />
+              </Button>
+              <Button Name="LookStageMonitorButton" HorizontalAlignment="Stretch"
+                      Command="{Binding ApplyLookCommand}" CommandParameter="stage-monitor">
+                <TextBlock Text="{Binding [templates-look-stage-monitor], Source={x:Static s:Localizer.Instance}}" />
+              </Button>
+            </StackPanel>
+          </StackPanel>
+        </Border>
+
+        <!-- CENTER PANE: Live Preview + Role Typography & Effects -->
+        <Border Name="TemplateCenterPane" Grid.Column="1" Grid.Row="0" Classes="card" VerticalAlignment="Top">
+          <StackPanel Spacing="{DynamicResource Space.4}">
+            <WrapPanel ItemSpacing="12" LineSpacing="8" VerticalAlignment="Center">
+              <StackPanel Spacing="2" MinWidth="220">
+                <TextBlock Classes="label" Text="{Binding [templates-name-label], Source={x:Static s:Localizer.Instance}}" />
+                <TextBox Name="TemplateNameBox" Text="{Binding TemplateName}"
+                         PlaceholderText="{Binding [templates-name-watermark], Source={x:Static s:Localizer.Instance}}" />
+              </StackPanel>
+              <StackPanel Spacing="2" MinWidth="120">
+                <TextBlock Classes="label" Text="{Binding [templates-preview-aspect-label], Source={x:Static s:Localizer.Instance}}" />
+                <ComboBox Name="PreviewAspectCombo" ItemsSource="{Binding AspectOptions}" SelectedItem="{Binding PreviewAspect}" />
+              </StackPanel>
+            </WrapPanel>
+
+            <Border Background="{DynamicResource Brush.PreviewBg}" CornerRadius="{DynamicResource Radius.Input}"
+                    Height="216" ClipToBounds="True">
+              <Panel>
+                <Image Name="TemplatePreviewImage" Source="{Binding PreviewBitmap}" Stretch="Uniform"
+                       IsVisible="{Binding HasPreviewBitmap}" />
+                <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" Classes="caption"
+                           IsVisible="{Binding !HasPreviewBitmap}"
+                           Text="{Binding [media-thumbnail-unavailable], Source={x:Static s:Localizer.Instance}}" />
+              </Panel>
+            </Border>
+
+            <Border Classes="alert-warning" IsVisible="{Binding HasFlashWarning}">
+              <TextBlock Text="{Binding [preview-flash-warning], Source={x:Static s:Localizer.Instance}}" />
+            </Border>
+
+            <!-- Active Role Typography -->
+            <StackPanel Spacing="{DynamicResource Space.3}">
+              <WrapPanel ItemSpacing="12" LineSpacing="8" VerticalAlignment="Center">
+                <StackPanel Spacing="2" MinWidth="140">
+                  <TextBlock Classes="label" Text="{Binding [templates-role-label], Source={x:Static s:Localizer.Instance}}" />
+                  <ComboBox Name="RoleKeyCombo" ItemsSource="{Binding RoleKeys}" SelectedItem="{Binding SelectedRoleKey}" />
+                </StackPanel>
+                <CheckBox Name="RoleVisibleCheck" VerticalAlignment="Bottom" IsChecked="{Binding RoleVisible}"
+                          Content="{Binding [templates-role-visible], Source={x:Static s:Localizer.Instance}}" />
+              </WrapPanel>
+
+              <WrapPanel ItemSpacing="12" LineSpacing="8">
+                <StackPanel Spacing="2" MinWidth="180">
+                  <TextBlock Classes="caption" Text="{Binding [templates-font-label], Source={x:Static s:Localizer.Instance}}" />
+                  <ComboBox Name="RoleFontCombo" ItemsSource="{Binding FontFamilies}" SelectedItem="{Binding RoleFontFamily}" />
+                </StackPanel>
+                <StackPanel Spacing="2" Width="110">
+                  <TextBlock Classes="caption" Text="{Binding [templates-size-label], Source={x:Static s:Localizer.Instance}}" />
+                  <NumericUpDown Name="RoleSizeInput" Minimum="8" Maximum="300" Increment="2" Value="{Binding RoleSize}" />
+                </StackPanel>
+                <StackPanel Spacing="2" Width="110">
+                  <TextBlock Classes="caption" Text="{Binding [templates-min-size-label], Source={x:Static s:Localizer.Instance}}" />
+                  <NumericUpDown Name="RoleMinSizeInput" Minimum="8" Maximum="200" Increment="2" Value="{Binding RoleMinSize}" />
+                </StackPanel>
+                <StackPanel Spacing="2" Width="110">
+                  <TextBlock Classes="caption" Text="{Binding [templates-weight-label], Source={x:Static s:Localizer.Instance}}" />
+                  <NumericUpDown Name="RoleWeightInput" Minimum="100" Maximum="900" Increment="100" Value="{Binding RoleWeight}" />
+                </StackPanel>
+              </WrapPanel>
+
+              <WrapPanel ItemSpacing="12" LineSpacing="8">
+                <StackPanel Spacing="2" Width="120">
+                  <TextBlock Classes="caption" Text="{Binding [templates-color-label], Source={x:Static s:Localizer.Instance}}" />
+                  <TextBox Name="RoleColorBox" Text="{Binding RoleColorHex}" />
+                </StackPanel>
+                <StackPanel Spacing="2" Width="110">
+                  <TextBlock Classes="caption" Text="{Binding [templates-align-h-label], Source={x:Static s:Localizer.Instance}}" />
+                  <ComboBox Name="RoleAlignHCombo" ItemsSource="{Binding AlignHOptions}" SelectedItem="{Binding RoleAlignH}" />
+                </StackPanel>
+                <StackPanel Spacing="2" Width="110">
+                  <TextBlock Classes="caption" Text="{Binding [templates-align-v-label], Source={x:Static s:Localizer.Instance}}" />
+                  <ComboBox Name="RoleAlignVCombo" ItemsSource="{Binding AlignVOptions}" SelectedItem="{Binding RoleAlignV}" />
+                </StackPanel>
+                <StackPanel Spacing="2" Width="110">
+                  <TextBlock Classes="caption" Text="{Binding [templates-line-height-label], Source={x:Static s:Localizer.Instance}}" />
+                  <NumericUpDown Name="RoleLineHeightInput" Minimum="0.8" Maximum="3.0" Increment="0.05" FormatString="0.00" Value="{Binding RoleLineHeight}" />
+                </StackPanel>
+                <StackPanel Spacing="2" Width="110">
+                  <TextBlock Classes="caption" Text="{Binding [templates-spacing-label], Source={x:Static s:Localizer.Instance}}" />
+                  <NumericUpDown Name="RoleLetterSpacingInput" Minimum="-12" Maximum="32" Increment="0.5" FormatString="0.0" Value="{Binding RoleLetterSpacing}" />
+                </StackPanel>
+                <StackPanel Spacing="2" Width="100">
+                  <TextBlock Classes="caption" Text="{Binding [templates-max-lines-label], Source={x:Static s:Localizer.Instance}}" />
+                  <NumericUpDown Name="RoleMaxLinesInput" Minimum="1" Maximum="16" Value="{Binding RoleMaxLines}" />
+                </StackPanel>
+              </WrapPanel>
+
+              <!-- Outline, Shadow, Card Box -->
+              <Border Background="{DynamicResource Brush.Surface2}" CornerRadius="{DynamicResource Radius.Button}" Padding="{DynamicResource Space.Text.Small}">
+                <StackPanel Spacing="8">
+                  <WrapPanel ItemSpacing="10" LineSpacing="6" VerticalAlignment="Center">
+                    <CheckBox Name="HasOutlineCheck" IsChecked="{Binding HasOutline}"
+                              Content="{Binding [templates-outline-label], Source={x:Static s:Localizer.Instance}}" />
+                    <TextBox Name="OutlineColorBox" Width="110" Text="{Binding OutlineColorHex}" IsEnabled="{Binding HasOutline}" />
+                    <NumericUpDown Name="OutlineWidthInput" Width="105" Minimum="0" Maximum="32" Increment="0.5" FormatString="0.0"
+                                   Value="{Binding OutlineWidth}" IsEnabled="{Binding HasOutline}" />
+                  </WrapPanel>
+                  <WrapPanel ItemSpacing="10" LineSpacing="6" VerticalAlignment="Center">
+                    <CheckBox Name="HasShadowCheck" IsChecked="{Binding HasShadow}"
+                              Content="{Binding [templates-shadow-label], Source={x:Static s:Localizer.Instance}}" />
+                    <TextBox Name="ShadowColorBox" Width="110" Text="{Binding ShadowColorHex}" IsEnabled="{Binding HasShadow}" />
+                    <NumericUpDown Name="ShadowBlurInput" Width="105" Minimum="0" Maximum="32" Increment="1" Value="{Binding ShadowBlur}" IsEnabled="{Binding HasShadow}" />
+                  </WrapPanel>
+                  <WrapPanel ItemSpacing="10" LineSpacing="6" VerticalAlignment="Center">
+                    <CheckBox Name="HasBackgroundBoxCheck" IsChecked="{Binding HasBackgroundBox}"
+                              Content="{Binding [templates-box-label], Source={x:Static s:Localizer.Instance}}" />
+                    <TextBox Name="BoxColorBox" Width="110" Text="{Binding BoxColorHex}" IsEnabled="{Binding HasBackgroundBox}" />
+                    <NumericUpDown Name="BoxRadiusInput" Width="105" Minimum="0" Maximum="64" Increment="2" Value="{Binding BoxRadius}" IsEnabled="{Binding HasBackgroundBox}" />
+                    <CheckBox Name="BoxFullWidthCheck" IsChecked="{Binding BoxFullWidth}" IsEnabled="{Binding HasBackgroundBox}"
+                              Content="{Binding [templates-box-full-width], Source={x:Static s:Localizer.Instance}}" />
+                  </WrapPanel>
+                </StackPanel>
+              </Border>
+            </StackPanel>
+          </StackPanel>
+        </Border>
+
+        <!-- RIGHT PANE: Aspect Variants, Safe Area, Default & Output Assignment -->
+        <StackPanel Name="TemplateRightPane" Grid.Column="2" Grid.Row="0" Spacing="{DynamicResource Space.4}" VerticalAlignment="Top">
+          <Border Classes="card">
+            <StackPanel Spacing="{DynamicResource Space.3}">
+              <TextBlock Classes="title-3" Text="{Binding [templates-variants-heading], Source={x:Static s:Localizer.Instance}}" />
+              <ListBox Name="VariantsList" ItemsSource="{Binding Variants}" SelectedItem="{Binding SelectedVariant}" MaxHeight="140">
+                <ListBox.ItemTemplate>
+                  <DataTemplate x:DataType="services:AspectVariantStyleModel">
+                    <TextBlock Text="{Binding AspectRatio}" />
+                  </DataTemplate>
+                </ListBox.ItemTemplate>
+              </ListBox>
+              <WrapPanel ItemSpacing="6" LineSpacing="6">
+                <Button Name="AddVariant16x9Button" Classes="quiet" Padding="8,4" MinHeight="28" Command="{Binding AddVariantCommand}" CommandParameter="16:9">
+                  <TextBlock Classes="caption" Text="{Binding [editor-preview-main], Source={x:Static s:Localizer.Instance}}" />
+                </Button>
+                <Button Name="AddVariant32x9Button" Classes="quiet" Padding="8,4" MinHeight="28" Command="{Binding AddVariantCommand}" CommandParameter="32:9">
+                  <TextBlock Classes="caption" Text="{Binding [editor-preview-wide], Source={x:Static s:Localizer.Instance}}" />
+                </Button>
+                <Button Name="AddVariant4x3Button" Classes="quiet" Padding="8,4" MinHeight="28" Command="{Binding AddVariantCommand}" CommandParameter="4:3">
+                  <TextBlock Classes="caption" Text="{Binding [templates-aspect-4x3], Source={x:Static s:Localizer.Instance}}" />
+                </Button>
+                <Button Name="AddVariant9x16Button" Classes="quiet" Padding="8,4" MinHeight="28" Command="{Binding AddVariantCommand}" CommandParameter="9:16">
+                  <TextBlock Classes="caption" Text="{Binding [templates-aspect-9x16], Source={x:Static s:Localizer.Instance}}" />
+                </Button>
+                <Button Name="RemoveVariantButton" Classes="quiet" Padding="8,4" MinHeight="28" Command="{Binding RemoveSelectedVariantCommand}">
+                  <TextBlock Classes="caption" Text="{Binding [editor-remove-section], Source={x:Static s:Localizer.Instance}}" />
+                </Button>
+              </WrapPanel>
+
+              <StackPanel Spacing="2">
+                <TextBlock Classes="caption" Text="{Binding [templates-variant-max-lines], Source={x:Static s:Localizer.Instance}}" />
+                <NumericUpDown Name="VariantMaxLinesInput" Minimum="1" Maximum="16" Value="{Binding VariantMaxLines}" />
+              </StackPanel>
+
+              <TextBlock Classes="label" Text="{Binding [templates-safe-area-heading], Source={x:Static s:Localizer.Instance}}" />
+              <WrapPanel ItemSpacing="8" LineSpacing="8">
+                <StackPanel Spacing="2" Width="115">
+                  <TextBlock Classes="caption" Text="{Binding [templates-margin-left], Source={x:Static s:Localizer.Instance}}" />
+                  <NumericUpDown Name="SafeLeftInput" Minimum="0" Maximum="0.45" Increment="0.01" FormatString="0.00" Value="{Binding SafeLeft}" />
+                </StackPanel>
+                <StackPanel Spacing="2" Width="115">
+                  <TextBlock Classes="caption" Text="{Binding [templates-margin-top], Source={x:Static s:Localizer.Instance}}" />
+                  <NumericUpDown Name="SafeTopInput" Minimum="0" Maximum="0.45" Increment="0.01" FormatString="0.00" Value="{Binding SafeTop}" />
+                </StackPanel>
+                <StackPanel Spacing="2" Width="115">
+                  <TextBlock Classes="caption" Text="{Binding [templates-margin-right], Source={x:Static s:Localizer.Instance}}" />
+                  <NumericUpDown Name="SafeRightInput" Minimum="0" Maximum="0.45" Increment="0.01" FormatString="0.00" Value="{Binding SafeRight}" />
+                </StackPanel>
+                <StackPanel Spacing="2" Width="115">
+                  <TextBlock Classes="caption" Text="{Binding [templates-margin-bottom], Source={x:Static s:Localizer.Instance}}" />
+                  <NumericUpDown Name="SafeBottomInput" Minimum="0" Maximum="0.45" Increment="0.01" FormatString="0.00" Value="{Binding SafeBottom}" />
+                </StackPanel>
+              </WrapPanel>
+            </StackPanel>
+          </Border>
+
+          <Border Classes="card" s:Help.Anchor="templates.assignment">
+            <StackPanel Spacing="{DynamicResource Space.3}">
+              <WrapPanel ItemSpacing="{DynamicResource Space.2}" VerticalAlignment="Center">
+                <TextBlock Classes="title-3" VerticalAlignment="Center"
+                           Text="{Binding [templates-assignment-heading], Source={x:Static s:Localizer.Instance}}" />
+                <views:InfoButton Name="TemplatesAssignmentInfoButton" Anchor="templates.assignment" />
+              </WrapPanel>
+
+              <StackPanel Spacing="4">
+                <TextBlock Classes="caption" Text="{Binding [templates-default-song-label], Source={x:Static s:Localizer.Instance}}" />
+                <TextBlock Name="DefaultSongTemplateNameText" Classes="label" Text="{Binding DefaultSongTemplateName}" />
+                <Button Name="SetDefaultSongButton" Command="{Binding SetAsDefaultSongTemplateCommand}">
+                  <TextBlock Text="{Binding [templates-set-default-song], Source={x:Static s:Localizer.Instance}}" />
+                </Button>
+              </StackPanel>
+
+              <StackPanel Spacing="4">
+                <TextBlock Classes="caption" Text="{Binding [templates-default-scripture-label], Source={x:Static s:Localizer.Instance}}" />
+                <TextBlock Name="DefaultScriptureTemplateNameText" Classes="label" Text="{Binding DefaultScriptureTemplateName}" />
+                <Button Name="SetDefaultScriptureButton" Command="{Binding SetAsDefaultScriptureTemplateCommand}">
+                  <TextBlock Text="{Binding [templates-set-default-scripture], Source={x:Static s:Localizer.Instance}}" />
+                </Button>
+              </StackPanel>
+
+              <StackPanel Spacing="4">
+                <TextBlock Classes="caption" Text="{Binding [templates-output-label], Source={x:Static s:Localizer.Instance}}" />
+                <ComboBox Name="OutputConfigsCombo" ItemsSource="{Binding OutputConfigs}" SelectedItem="{Binding SelectedOutputConfig}" HorizontalAlignment="Stretch">
+                  <ComboBox.ItemTemplate>
+                    <DataTemplate x:DataType="pb:OutputConfig">
+                      <TextBlock Text="{Binding Name}" />
+                    </DataTemplate>
+                  </ComboBox.ItemTemplate>
+                </ComboBox>
+                <Button Name="AssignOutputButton" Command="{Binding AssignToSelectedOutputCommand}">
+                  <TextBlock Text="{Binding [templates-assign-output], Source={x:Static s:Localizer.Instance}}" />
+                </Button>
+              </StackPanel>
+            </StackPanel>
+          </Border>
+        </StackPanel>
+      </Grid>
+    </ScrollViewer>
+  </DockPanel>
+</UserControl>

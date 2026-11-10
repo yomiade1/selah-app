@@ -118,6 +118,14 @@ public sealed partial class MainWindow : Window, IHelpHost
             {
                 Model.SongEditor.SaveSongCommand.Execute(null);
             }
+            else if (Model?.IsSlideEditorMode == true)
+            {
+                Model.SlideEditor.SavePresentationCommand.Execute(null);
+            }
+            else if (Model?.IsTemplatesMode == true)
+            {
+                Model.TemplateEditor.SaveTemplateCommand.Execute(null);
+            }
         });
     }
 
@@ -265,6 +273,8 @@ public sealed partial class MainWindow : Window, IHelpHost
             subscribedModel.PropertyChanged -= OnModelPropertyChanged;
             subscribedModel.Library.PropertyChanged -= OnLibraryPropertyChanged;
             subscribedModel.SongEditor.PropertyChanged -= OnEditorPropertyChanged;
+            subscribedModel.SlideEditor.PropertyChanged -= OnSlideEditorPropertyChanged;
+            subscribedModel.TemplateEditor.PropertyChanged -= OnTemplateEditorPropertyChanged;
             subscribedModel.ArticleRequested -= OnArticleRequested;
             subscribedModel.OpenUrlRequested -= OnOpenUrlRequested;
             subscribedModel.ShowFileRequested -= OnShowFileRequested;
@@ -275,6 +285,8 @@ public sealed partial class MainWindow : Window, IHelpHost
             model.PropertyChanged += OnModelPropertyChanged;
             model.Library.PropertyChanged += OnLibraryPropertyChanged;
             model.SongEditor.PropertyChanged += OnEditorPropertyChanged;
+            model.SlideEditor.PropertyChanged += OnSlideEditorPropertyChanged;
+            model.TemplateEditor.PropertyChanged += OnTemplateEditorPropertyChanged;
             model.ArticleRequested += OnArticleRequested;
             model.OpenUrlRequested += OnOpenUrlRequested;
             model.ShowFileRequested += OnShowFileRequested;
@@ -305,6 +317,22 @@ public sealed partial class MainWindow : Window, IHelpHost
     private void OnEditorPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs args)
     {
         if (args.PropertyName is nameof(SongEditorViewModel.CurrentStep) or nameof(SongEditorViewModel.InspectorTab))
+        {
+            ScheduleHelpContextRefresh();
+        }
+    }
+
+    private void OnSlideEditorPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs args)
+    {
+        if (args.PropertyName is nameof(SlideEditorViewModel.SelectedSlide) or nameof(SlideEditorViewModel.SelectedElement))
+        {
+            ScheduleHelpContextRefresh();
+        }
+    }
+
+    private void OnTemplateEditorPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs args)
+    {
+        if (args.PropertyName is nameof(TemplateEditorViewModel.SelectedTemplate) or nameof(TemplateEditorViewModel.SelectedRoleKey))
         {
             ScheduleHelpContextRefresh();
         }

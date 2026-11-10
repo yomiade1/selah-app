@@ -63,6 +63,7 @@ pub struct CpuCompositor {
     video_frames: HashMap<String, crate::video::Nv12Frame>,
     overlays: crate::scene::OverlayCache,
     media_root: Option<PathBuf>,
+    clock_unix_ms: Option<i64>,
 }
 
 impl Default for CpuCompositor {
@@ -73,6 +74,7 @@ impl Default for CpuCompositor {
             video_frames: HashMap::new(),
             overlays: crate::scene::OverlayCache::default(),
             media_root: crate::media_bg::default_media_root_from_env(),
+            clock_unix_ms: None,
         }
     }
 }
@@ -160,6 +162,7 @@ impl CpuCompositor {
             }
             Some(f)
         } else {
+            let clock_ms = crate::scene::effective_clock_unix_ms(self.clock_unix_ms);
             crate::scene::rasterise_layer_overlay(
                 layer,
                 width,
@@ -167,6 +170,8 @@ impl CpuCompositor {
                 &mut self.text,
                 &mut self.overlays,
                 self.media_root.as_deref(),
+                &self.video_frames,
+                clock_ms,
             )?
             .map(|arc| (*arc).clone())
         };
@@ -428,6 +433,10 @@ impl Compositor for CpuCompositor {
             }
         }
         Ok(())
+    }
+
+    fn set_clock_unix_ms(&mut self, unix_ms: Option<i64>) {
+        self.clock_unix_ms = unix_ms;
     }
 
     fn render(&mut self, scene: &Scene, width: u32, height: u32) -> anyhow::Result<Frame> {

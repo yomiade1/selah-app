@@ -39,6 +39,8 @@ public enum WorkspaceMode
     Preview,
     Library,
     SongEditor,
+    SlideEditor,
+    Templates,
 }
 
 /// <summary>Sub-sections in the Library browser.</summary>
@@ -153,4 +155,32 @@ public interface ILibraryService
         SearchScope scope = SearchScope.All,
         string translation = "",
         uint limit = 20);
+
+    Task<IReadOnlyList<Template>> ListTemplatesAsync(uint limit = 200, uint offset = 0);
+
+    Task<Template?> GetTemplateAsync(Id id);
+
+    Task SaveTemplateAsync(Template template, Id? undoGroup = null);
+
+    Task DeleteTemplateAsync(Id id, Id? undoGroup = null);
+
+    Task<IReadOnlyList<Presentation>> ListPresentationsAsync(uint limit = 200, uint offset = 0);
+
+    Task<Presentation?> GetPresentationAsync(Id id);
+
+    Task SavePresentationAsync(Presentation presentation, Id? undoGroup = null);
+
+    Task DeletePresentationAsync(Id id, Id? undoGroup = null);
+
+    Task<IReadOnlyList<OutputConfig>> GetOutputConfigsAsync();
+
+    Task SetOutputConfigsAsync(IEnumerable<OutputConfig> outputs);
+
+    Task<GetPolicySettingReply> GetPolicySettingAsync(string key);
+
+    Task SetPolicySettingAsync(string key, string valueJson, PolicyLevel level = PolicyLevel.User, bool locked = false);
+
+    Task<FlashRiskReport> AnalyzeFlashRiskAsync(AnalyzeFlashRisk request);
+
+    Task PresentSceneAsync(Scene scene);
 }

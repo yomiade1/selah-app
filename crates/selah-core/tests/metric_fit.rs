@@ -386,6 +386,231 @@ fn service_splits_song_and_scripture_with_saved_template_variants_and_validates_
 }
 
 #[test]
+fn policy_default_templates_apply_to_songs_and_scripture_and_reject_bad_elements() {
+    let dir = tempfile::tempdir().unwrap();
+    let mut core = CoreService::new(dir.path(), false);
+
+    // Save two custom templates: Warm Serif (for songs) and Lower Third (for scripture).
+    let song_tmpl_id = new_id();
+    let song_tmpl = Template {
+        id: Some(song_tmpl_id.clone()),
+        name: "Default Song Look".into(),
+        variants: vec![TemplateVariant {
+            id: Some(new_id()),
+            resolution: Some(Resolution {
+                width: 1920,
+                height: 1080,
+            }),
+            max_lines: 3,
+            style_json: TemplateStyle::preset_warm_serif().to_json().unwrap(),
+        }],
+    };
+    let scr_tmpl_id = new_id();
+    let scr_tmpl = Template {
+        id: Some(scr_tmpl_id.clone()),
+        name: "Default Scripture Look".into(),
+        variants: vec![TemplateVariant {
+            id: Some(new_id()),
+            resolution: Some(Resolution {
+                width: 1920,
+                height: 1080,
+            }),
+            max_lines: 2,
+            style_json: TemplateStyle::preset_lower_third().to_json().unwrap(),
+        }],
+    };
+    for (seq, t) in [song_tmpl, scr_tmpl].into_iter().enumerate() {
+        let out = core.handle(&envelope(
+            1 + seq as u64,
+            ActorOrigin::Ui,
+            envelope::Body::Command(Command {
+                action: Some(command::Action::SaveTemplate(
+                    selah_proto::v1::SaveTemplate { template: Some(t) },
+                )),
+                ..Default::default()
+            }),
+        ));
+        assert!(matches!(
+            out.reply.and_then(|r| r.body),
+            Some(envelope::Body::Reply(_))
+        ));
+    }
+
+    let to_hex = |id: &selah_proto::v1::Id| -> String {
+        id.value.iter().map(|b| format!("{b:02x}")).collect()
+    };
+    for (seq, (key, tid)) in [
+        ("templates.default.song", &song_tmpl_id),
+        ("templates.default.scripture", &scr_tmpl_id),
+    ]
+    .into_iter()
+    .enumerate()
+    {
+        let out = core.handle(&envelope(
+            10 + seq as u64,
+            ActorOrigin::Ui,
+            envelope::Body::Command(Command {
+                action: Some(command::Action::SetPolicySetting(
+                    selah_proto::v1::SetPolicySetting {
+                        key: key.into(),
+                        value_json: serde_json::to_string(&to_hex(tid)).unwrap(),
+                        level: selah_proto::v1::PolicyLevel::User as i32,
+                        locked: false,
+                    },
+                )),
+                ..Default::default()
+            }),
+        ));
+        assert!(matches!(
+            out.reply.and_then(|r| r.body),
+            Some(envelope::Body::Reply(_))
+        ));
+    }
+
+    // Splitting a song WITHOUT explicit template_id or output configs picks up templates.default.song!
+    let song = Song {
+        id: Some(new_id()),
+        title: "Policy Song".into(),
+        sections: vec![Section {
+            id: Some(new_id()),
+            label: "Verse 1".into(),
+            kind: SectionKind::Verse as i32,
+            lines: vec![
+                LyricLine {
+                    text: "Line one".into(),
+                    ..Default::default()
+                },
+                LyricLine {
+                    text: "Line two".into(),
+                    ..Default::default()
+                },
+            ],
+            ..Default::default()
+        }],
+        ..Default::default()
+    };
+    let song_split = core.handle(&envelope(
+        20,
+        ActorOrigin::Ui,
+        envelope::Body::Query(Query {
+            request: Some(query::Request::SplitSongSlides(SplitSongSlides {
+                song: Some(song),
+                max_lines: 4,
+                copyright_placement: CopyrightPlacement::None as i32,
+                ..Default::default()
+            })),
+        }),
+    ));
+    let song_reply = match song_split.reply.and_then(|r| r.body) {
+        Some(envelope::Body::Reply(reply)) => match reply.result {
+            Some(reply::Result::GeneratedSongSlides(s)) => s,
+            other => panic!("expected GeneratedSongSlides, got {other:?}"),
+        },
+        other => panic!("unexpected song split reply: {other:?}"),
+    };
+    assert_eq!(song_reply.fit_reports.len(), 1);
+    assert!((song_reply.fit_reports[0].min_size - 32.0).abs() < 0.5);
+    assert!((song_reply.fit_reports[0].applied_size - 74.0).abs() < 0.5);
+
+    // Splitting scripture WITHOUT explicit template_id picks up templates.default.scripture!
+    let scr_split = core.handle(&envelope(
+        21,
+        ActorOrigin::Ui,
+        envelope::Body::Query(Query {
+            request: Some(query::Request::SplitScriptureSlides(SplitScriptureSlides {
+                translation: "KJV".into(),
+                translation_name: "KJV".into(),
+                reference: "Psalm 23:1".into(),
+                verses: vec![selah_proto::v1::ScriptureVerse {
+                    translation: "KJV".into(),
+                    book_num: 19,
+                    book_code: "PSA".into(),
+                    book_name: "Psalms".into(),
+                    chapter: 23,
+                    verse: 1,
+                    text: "The LORD is my shepherd; I shall not want.".into(),
+                }],
+                max_lines: 4,
+                reference_placement: ReferencePlacement::SlideFooter as i32,
+                ..Default::default()
+            })),
+        }),
+    ));
+    let scr_reply = match scr_split.reply.and_then(|r| r.body) {
+        Some(envelope::Body::Reply(reply)) => match reply.result {
+            Some(reply::Result::GeneratedScriptureSlides(s)) => s,
+            other => panic!("expected GeneratedScriptureSlides, got {other:?}"),
+        },
+        other => panic!("unexpected scr split reply: {other:?}"),
+    };
+    assert_eq!(scr_reply.fit_reports.len(), 1);
+    assert!((scr_reply.fit_reports[0].applied_size - 46.0).abs() < 0.5);
+
+    // Presentation + PresentScene + StagePreviewScene reject custom shader keys in elements_json
+    let bad_pres = selah_proto::v1::Presentation {
+        id: Some(new_id()),
+        name: "Bad Custom Slide".into(),
+        slides: vec![selah_proto::v1::Slide {
+            id: Some(new_id()),
+            text: String::new(),
+            media_id: None,
+            elements_json: r#"{"wgsl":"bad()"}"#.into(),
+        }],
+        template_id: None,
+    };
+    let bad_save = core.handle(&envelope(
+        22,
+        ActorOrigin::Ui,
+        envelope::Body::Command(Command {
+            action: Some(command::Action::SavePresentation(
+                selah_proto::v1::SavePresentation {
+                    presentation: Some(bad_pres),
+                },
+            )),
+            ..Default::default()
+        }),
+    ));
+    assert!(matches!(
+        bad_save.reply.and_then(|r| r.body),
+        Some(envelope::Body::Error(_))
+    ));
+
+    let bad_stage = core.handle(&envelope(
+        23,
+        ActorOrigin::Ui,
+        envelope::Body::Command(Command {
+            action: Some(command::Action::StagePreviewScene(
+                selah_proto::v1::StagePreviewScene {
+                    scene: Some(selah_proto::v1::Scene {
+                        outputs: vec![selah_proto::v1::OutputScene {
+                            output_index: 0,
+                            layers: vec![selah_proto::v1::LayerSpec {
+                                kind: selah_proto::v1::LayerKind::Slide as i32,
+                                enabled: true,
+                                content: Some(selah_proto::v1::layer_spec::Content::Slide(
+                                    selah_proto::v1::SlideLayerSpec {
+                                        elements_json: r#"[{"id":"1","kind":"image","x":0.1,"y":0.1,"width":0.2,"height":0.2,"content_hash":"../bad","media_extension":"png"}]"#.into(),
+                                        ..Default::default()
+                                    },
+                                )),
+                                ..Default::default()
+                            }],
+                            ..Default::default()
+                        }],
+                        ..Default::default()
+                    }),
+                },
+            )),
+            ..Default::default()
+        }),
+    ));
+    assert!(matches!(
+        bad_stage.reply.and_then(|r| r.body),
+        Some(envelope::Body::Error(_))
+    ));
+}
+
+#[test]
 fn m3_a2_property_five_thousand_random_lyric_sets_across_three_outputs() {
     let mut renderer = TextRenderer::bundled().expect("bundled fonts");
     let mut rng = fastrand::Rng::with_seed(0x005E_1AA2_0003);

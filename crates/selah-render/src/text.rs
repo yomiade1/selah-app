@@ -374,6 +374,17 @@ impl TextRenderer {
         measure_laid_out_paragraph(&mut p, effective_w)
     }
 
+    /// Paint a styled single-slot text block into `slot_rect` on an existing Skia canvas.
+    pub fn paint_styled_text(
+        &mut self,
+        text: &str,
+        style: &SlotTextStyle,
+        slot_rect: SafeRect,
+        canvas: &Canvas,
+    ) {
+        self.paint_slot(text, style, slot_rect, canvas);
+    }
+
     /// Measure a body slide's text lines with chord rows and optional translation using the exact
     /// geometry of [`TextRenderer::paint_body_with_chords`].
     pub fn measure_body_with_chords(

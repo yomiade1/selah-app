@@ -46,12 +46,16 @@ public sealed partial class MainViewModel : ObservableObject
         };
         Library = new LibraryViewModel(resolvedLibrary);
         SongEditor = new SongEditorViewModel(resolvedLibrary);
+        SlideEditor = new SlideEditorViewModel(resolvedLibrary);
+        TemplateEditor = new TemplateEditorViewModel(resolvedLibrary);
         CommandPalette = new CommandPaletteViewModel(resolvedLibrary, resolvedHelp);
 
         Library.EditSongRequested += (_, song) => _ = EditSongInEditorAsync(song);
         Library.SceneStaged += (_, _) => HasStagedPreview = true;
         SongEditor.SongSaved += (_, song) => _ = OnSongSavedAsync(song);
         SongEditor.SceneStaged += (_, _) => HasStagedPreview = true;
+        SlideEditor.SceneStaged += (_, _) => HasStagedPreview = true;
+        TemplateEditor.TemplatesChanged += (_, _) => _ = RefreshTemplatesEverywhereAsync();
 
         RegisterPaletteCommands();
         CommandPalette.SongChosen += (_, song) => _ = EditSongInEditorAsync(song);
@@ -98,6 +102,10 @@ public sealed partial class MainViewModel : ObservableObject
 
     public SongEditorViewModel SongEditor { get; }
 
+    public SlideEditorViewModel SlideEditor { get; }
+
+    public TemplateEditorViewModel TemplateEditor { get; }
+
     public CommandPaletteViewModel CommandPalette { get; }
 
     [ObservableProperty]
@@ -112,6 +120,8 @@ public sealed partial class MainViewModel : ObservableObject
     [NotifyPropertyChangedFor(nameof(IsPreviewMode))]
     [NotifyPropertyChangedFor(nameof(IsLibraryMode))]
     [NotifyPropertyChangedFor(nameof(IsSongEditorMode))]
+    [NotifyPropertyChangedFor(nameof(IsSlideEditorMode))]
+    [NotifyPropertyChangedFor(nameof(IsTemplatesMode))]
     private WorkspaceMode activeMode = WorkspaceMode.Preview;
 
     public bool IsPreviewMode => ActiveMode == WorkspaceMode.Preview;
@@ -119,6 +129,10 @@ public sealed partial class MainViewModel : ObservableObject
     public bool IsLibraryMode => ActiveMode == WorkspaceMode.Library;
 
     public bool IsSongEditorMode => ActiveMode == WorkspaceMode.SongEditor;
+
+    public bool IsSlideEditorMode => ActiveMode == WorkspaceMode.SlideEditor;
+
+    public bool IsTemplatesMode => ActiveMode == WorkspaceMode.Templates;
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(StatusText))]
@@ -236,6 +250,7 @@ public sealed partial class MainViewModel : ObservableObject
         {
             wasConnected = true;
             _ = Library.LoadAsync();
+            _ = SongEditor.LoadTemplatesAsync();
             libraryLoadedOnce = true;
         }
         else if (!snapshot.Connected)
@@ -251,6 +266,18 @@ public sealed partial class MainViewModel : ObservableObject
             libraryLoadedOnce = true;
             _ = Library.LoadAsync();
         }
+        else if (value == WorkspaceMode.SongEditor)
+        {
+            _ = SongEditor.LoadTemplatesAsync();
+        }
+        else if (value == WorkspaceMode.SlideEditor)
+        {
+            _ = SlideEditor.LoadAsync();
+        }
+        else if (value == WorkspaceMode.Templates)
+        {
+            _ = TemplateEditor.LoadAsync();
+        }
     }
 
     [RelayCommand]
@@ -260,8 +287,23 @@ public sealed partial class MainViewModel : ObservableObject
         {
             "Library" => WorkspaceMode.Library,
             "SongEditor" => WorkspaceMode.SongEditor,
+            "SlideEditor" => WorkspaceMode.SlideEditor,
+            "Templates" => WorkspaceMode.Templates,
             _ => WorkspaceMode.Preview,
         };
+    }
+
+    private async Task RefreshTemplatesEverywhereAsync()
+    {
+        await Task.WhenAll(
+            Library.LoadTemplatesAsync(),
+            SongEditor.LoadTemplatesAsync(),
+            SlideEditor.LoadAsync());
+        if (Library.SelectedSong is not null)
+        {
+            _ = Library.SearchSongsAsync();
+        }
+        _ = SongEditor.RefreshSlidesAsync();
     }
 
     [RelayCommand]
@@ -308,6 +350,8 @@ public sealed partial class MainViewModel : ObservableObject
         CommandPalette.RegisterCommand("library-tab-media", "library-title", () => OpenLibraryTab("Media"));
         CommandPalette.RegisterCommand("library-tab-bibles", "bible-translation-label", () => OpenLibraryTab("Bibles"));
         CommandPalette.RegisterCommand("mode-song-editor", "editor-title", () => SelectMode("SongEditor"));
+        CommandPalette.RegisterCommand("mode-slide-editor", "slides-title", () => SelectMode("SlideEditor"));
+        CommandPalette.RegisterCommand("mode-templates", "templates-title", () => SelectMode("Templates"));
         CommandPalette.RegisterCommand("library-new-song", "editor-paste-heading", OpenNewSong);
         CommandPalette.RegisterCommand("command-show-test-pattern", "command-show-test-pattern-hint", () => ShowTestPatternCommand.Execute(null));
         CommandPalette.RegisterCommand("command-clear-everything", "command-clear-everything-hint", () => ClearEverythingCommand.Execute(null));
@@ -316,6 +360,14 @@ public sealed partial class MainViewModel : ObservableObject
             if (ActiveMode == WorkspaceMode.SongEditor)
             {
                 SongEditor.UndoCommand.Execute(null);
+            }
+            else if (ActiveMode == WorkspaceMode.SlideEditor)
+            {
+                SlideEditor.UndoCommand.Execute(null);
+            }
+            else if (ActiveMode == WorkspaceMode.Templates)
+            {
+                TemplateEditor.UndoCommand.Execute(null);
             }
             else
             {
@@ -327,6 +379,14 @@ public sealed partial class MainViewModel : ObservableObject
             if (ActiveMode == WorkspaceMode.SongEditor)
             {
                 SongEditor.RedoCommand.Execute(null);
+            }
+            else if (ActiveMode == WorkspaceMode.SlideEditor)
+            {
+                SlideEditor.RedoCommand.Execute(null);
+            }
+            else if (ActiveMode == WorkspaceMode.Templates)
+            {
+                TemplateEditor.RedoCommand.Execute(null);
             }
             else
             {

@@ -24,6 +24,8 @@ command-search-hint = Search commands, songs, scripture, media, and help (Ctrl+K
 mode-preview = Preview
 mode-library = Library
 mode-song-editor = Song editor
+mode-slide-editor = Slide editor
+mode-templates = Templates
 
 ## Sidebar
 sidebar-heading-plan = Plan

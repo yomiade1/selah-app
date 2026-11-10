@@ -14,6 +14,7 @@ use selah_render::effects::validate_scene_shader_chains;
 use selah_render::flash::analyze_transition_risk;
 use selah_render::png::{decode as decode_png, encode_rgba_thumbnail, fit_dimensions};
 use selah_render::scene::clamp_resolution;
+use selah_render::slide_elements::SlideElementsDocument;
 use selah_render::template::TemplateStyle;
 use selah_render::video::Nv12Frame;
 
@@ -28,8 +29,8 @@ use crate::live::LiveState;
 /// Hard bounds for the cached scene thumbnail directory (`library/thumbnails/scenes/`).
 pub const MAX_SCENE_THUMB_FILES: usize = 512;
 pub const MAX_SCENE_THUMB_BYTES: u64 = 64 * 1024 * 1024;
-const MAX_ELEMENTS_JSON_BYTES: usize = 131_072;
 const MAX_RENDER_PIXELS: u64 = 3840 * 2160;
+const DETERMINISTIC_THUMB_CLOCK_UNIX_MS: i64 = 1_731_240_000_000;
 
 struct ThumbRenderJob {
     media_root: PathBuf,
@@ -51,6 +52,7 @@ fn thumb_worker() -> &'static mpsc::Sender<ThumbRenderJob> {
             .name("selah-thumb-render".into())
             .spawn(move || {
                 let mut compositor = CpuCompositor::default();
+                compositor.set_clock_unix_ms(Some(DETERMINISTIC_THUMB_CLOCK_UNIX_MS));
                 let mut current_media_root: Option<PathBuf> = None;
                 while let Ok(job) = rx.recv() {
                     if current_media_root.as_ref() != Some(&job.media_root) {
@@ -153,14 +155,9 @@ fn validate_scene_inputs(scene: &Scene) -> Result<(), CommandBusError> {
                         })?;
                     }
                     if !s.elements_json.trim().is_empty() {
-                        if s.elements_json.len() > MAX_ELEMENTS_JSON_BYTES {
-                            return Err(CommandBusError::Invalid(
-                                "elements_json exceeds size limit".into(),
-                            ));
-                        }
-                        if serde_json::from_str::<serde_json::Value>(&s.elements_json).is_err() {
-                            return Err(CommandBusError::Invalid("invalid elements_json".into()));
-                        }
+                        SlideElementsDocument::from_json_strict(&s.elements_json).map_err(|e| {
+                            CommandBusError::Invalid(format!("invalid elements_json: {e}"))
+                        })?;
                     }
                 }
                 Some(layer_spec::Content::Props(p)) => {
@@ -170,14 +167,9 @@ fn validate_scene_inputs(scene: &Scene) -> Result<(), CommandBusError> {
                         ));
                     }
                     if !p.elements_json.trim().is_empty() {
-                        if p.elements_json.len() > MAX_ELEMENTS_JSON_BYTES {
-                            return Err(CommandBusError::Invalid(
-                                "elements_json exceeds size limit".into(),
-                            ));
-                        }
-                        if serde_json::from_str::<serde_json::Value>(&p.elements_json).is_err() {
-                            return Err(CommandBusError::Invalid("invalid elements_json".into()));
-                        }
+                        SlideElementsDocument::from_json_strict(&p.elements_json).map_err(|e| {
+                            CommandBusError::Invalid(format!("invalid elements_json: {e}"))
+                        })?;
                     }
                 }
                 Some(layer_spec::Content::Messages(m)) => {
@@ -253,16 +245,37 @@ fn collect_active_media_refs(scene: &Scene, output_index: u32) -> Vec<(String, S
         if !layer.enabled {
             continue;
         }
-        if let Some(layer_spec::Content::Media(m)) = layer.content.as_ref() {
-            let hash = m.content_hash.trim();
-            if hash.is_empty() {
-                continue;
+        match layer.content.as_ref() {
+            Some(layer_spec::Content::Media(m)) => {
+                let hash = m.content_hash.trim();
+                if hash.is_empty() {
+                    continue;
+                }
+                let ext = media_extension_for(m).to_owned();
+                let is_video = m.media_kind == "video";
+                if seen.insert((hash.to_owned(), ext.clone(), is_video)) {
+                    refs.push((hash.to_owned(), ext, is_video));
+                }
             }
-            let ext = media_extension_for(m).to_owned();
-            let is_video = m.media_kind == "video";
-            if seen.insert((hash.to_owned(), ext.clone(), is_video)) {
-                refs.push((hash.to_owned(), ext, is_video));
+            Some(layer_spec::Content::Slide(s)) if !s.elements_json.trim().is_empty() => {
+                for (hash, ext, is_video) in
+                    SlideElementsDocument::from_json_lenient(&s.elements_json).collect_media_refs()
+                {
+                    if seen.insert((hash.clone(), ext.clone(), is_video)) {
+                        refs.push((hash, ext, is_video));
+                    }
+                }
             }
+            Some(layer_spec::Content::Props(p)) if !p.elements_json.trim().is_empty() => {
+                for (hash, ext, is_video) in
+                    SlideElementsDocument::from_json_lenient(&p.elements_json).collect_media_refs()
+                {
+                    if seen.insert((hash.clone(), ext.clone(), is_video)) {
+                        refs.push((hash, ext, is_video));
+                    }
+                }
+            }
+            _ => {}
         }
     }
     refs

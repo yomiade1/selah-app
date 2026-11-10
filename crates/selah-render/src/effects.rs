@@ -19,8 +19,9 @@ pub const MAX_EFFECTS_PER_CHAIN: usize = 8;
 pub const MAX_EFFECT_PARAMS_BYTES: usize = 16 * 1024;
 
 /// JSON object keys forbidden across the closed M3 effect pipeline (`SEC-04`).
-const FORBIDDEN_SHADER_KEYS: &[&str] = &[
+pub const FORBIDDEN_SHADER_KEYS: &[&str] = &[
     "shader",
+    "shader_code",
     "wgsl",
     "glsl",
     "hlsl",
@@ -29,6 +30,10 @@ const FORBIDDEN_SHADER_KEYS: &[&str] = &[
     "source",
     "shader_source",
     "custom_shader",
+    "custom_wgsl",
+    "custom_glsl",
+    "fragment_shader",
+    "vertex_shader",
     "entry_point",
     "entrypoint",
     "script",
@@ -175,7 +180,8 @@ impl ValidatedShaderChain {
     }
 }
 
-fn check_forbidden_shader_keys(value: &Value) -> Result<()> {
+/// Reject custom shader keys recursively anywhere inside a parsed JSON value (`SEC-04`).
+pub fn check_forbidden_shader_keys(value: &Value) -> Result<()> {
     match value {
         Value::Object(map) => {
             for (k, v) in map {

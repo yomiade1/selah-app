@@ -145,6 +145,7 @@ pub struct GpuCompositor {
     effects: crate::effects::EffectsPipeline,
     transitions: crate::transitions::TransitionPipeline,
     media_root: Option<PathBuf>,
+    clock_unix_ms: Option<i64>,
 }
 
 fn backends() -> wgpu::Backends {
@@ -348,6 +349,7 @@ impl GpuCompositor {
             effects,
             transitions,
             media_root: crate::media_bg::default_media_root_from_env(),
+            clock_unix_ms: None,
         })
     }
 
@@ -465,9 +467,43 @@ impl GpuCompositor {
     }
 
     fn upload_overlay_keyed(&mut self, key: [u8; 32], frame: &Frame) -> ([u8; 32], u32, u32) {
+        self.upload_overlay_inner(key, frame, false)
+    }
+
+    fn upload_overlay_dynamic(&mut self, key: [u8; 32], frame: &Frame) -> ([u8; 32], u32, u32) {
+        self.upload_overlay_inner(key, frame, true)
+    }
+
+    fn upload_overlay_inner(
+        &mut self,
+        key: [u8; 32],
+        frame: &Frame,
+        force_update: bool,
+    ) -> ([u8; 32], u32, u32) {
         let (width, height) = (frame.width.max(1), frame.height.max(1));
         let full_key = (key, width, height);
-        if self.overlay_slots.contains_key(&full_key) {
+        if let Some(existing) = self.overlay_slots.get(&full_key) {
+            if force_update {
+                self.queue.write_texture(
+                    wgpu::TexelCopyTextureInfo {
+                        texture: &existing.texture,
+                        mip_level: 0,
+                        origin: wgpu::Origin3d::ZERO,
+                        aspect: wgpu::TextureAspect::All,
+                    },
+                    &frame.pixels,
+                    wgpu::TexelCopyBufferLayout {
+                        offset: 0,
+                        bytes_per_row: Some(width * 4),
+                        rows_per_image: Some(height),
+                    },
+                    wgpu::Extent3d {
+                        width,
+                        height,
+                        depth_or_array_layers: 1,
+                    },
+                );
+            }
             self.overlay_order.retain(|k| *k != full_key);
             self.overlay_order.push(full_key);
             return full_key;
@@ -622,6 +658,7 @@ impl GpuCompositor {
                 effects: layer.effects.clone(),
             }));
         }
+        let clock_ms = crate::scene::effective_clock_unix_ms(self.clock_unix_ms);
         if let Some(overlay) = crate::scene::rasterise_layer_overlay(
             layer,
             width,
@@ -629,8 +666,14 @@ impl GpuCompositor {
             &mut self.text,
             &mut self.overlays,
             self.media_root.as_deref(),
+            &self.video_frames,
+            clock_ms,
         )? {
-            let key = self.upload_overlay_keyed(layer.cache_key, &overlay);
+            let key = if layer.time_varying {
+                self.upload_overlay_dynamic(layer.cache_key, &overlay)
+            } else {
+                self.upload_overlay_keyed(layer.cache_key, &overlay)
+            };
             return Ok(Some(PreparedLayerEntry::Overlay {
                 key,
                 effects: layer.effects.clone(),
@@ -1261,6 +1304,10 @@ impl Compositor for GpuCompositor {
             }
         }
         Ok(())
+    }
+
+    fn set_clock_unix_ms(&mut self, unix_ms: Option<i64>) {
+        self.clock_unix_ms = unix_ms;
     }
 
     fn render(&mut self, scene: &Scene, width: u32, height: u32) -> Result<Frame> {
