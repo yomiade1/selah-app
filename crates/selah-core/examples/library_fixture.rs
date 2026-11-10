@@ -272,6 +272,7 @@ fn seed_m2(library: &mut Library) -> anyhow::Result<()> {
         }),
         duration_milliseconds: 0,
         tags: vec!["Background".into(), "Motionless".into()],
+        ..Default::default()
     };
     library.save_document_op(&media, &next_meta(10))?;
 

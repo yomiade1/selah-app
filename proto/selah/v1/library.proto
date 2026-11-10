@@ -95,6 +95,7 @@ message MediaItem {
   Resolution resolution = 7;
   uint64 duration_milliseconds = 8;
   repeated string tags = 9;
+  bool flash_warning = 10;
 }
 
 message Slide {
@@ -510,6 +511,8 @@ message SplitSongSlides {
   Id template_id = 9;
   repeated FitTargetOutput target_outputs = 10;
   bool shrink_to_fit = 11;
+  TransitionSpec transition = 12;
+  Id media_id = 13;
 }
 
 message GeneratedSlide {
@@ -642,6 +645,8 @@ message SplitScriptureSlides {
   Id template_id = 14;
   repeated FitTargetOutput target_outputs = 15;
   bool shrink_to_fit = 16;
+  TransitionSpec transition = 17;
+  Id media_id = 18;
 }
 
 message GeneratedScriptureSlide {

@@ -47,6 +47,7 @@ pub(crate) struct MediaPlaybackManager {
     on_ready: Arc<dyn Fn() + Send + Sync>,
     failed: HashSet<StructuralKey>,
     fading: Vec<(MediaPlayer, Instant)>,
+    held_compositor_hashes: HashSet<String>,
 }
 
 impl MediaPlaybackManager {
@@ -61,23 +62,43 @@ impl MediaPlaybackManager {
             on_ready,
             failed: HashSet::new(),
             fading: Vec::new(),
+            held_compositor_hashes: HashSet::new(),
         }
     }
 
     /// Reconcile active video layers in `scene` against running players, spawn non-blocking
     /// openers for new clips, apply parameter updates in-place, fade deactivated streams over
     /// 25 ms (SAFE-05), upload newly due NV12 frames, and return whether compositor frames changed.
-    pub(crate) fn sync_and_push(
+    pub(crate) fn sync_and_push_with_retained(
         &mut self,
         scene: &Scene,
         media_root: &Path,
         decode_mode: DecodeMode,
         compositor: &mut dyn Compositor,
+        retained_transition_hashes: &HashSet<String>,
     ) -> bool {
         self.retire_finished_fades();
 
         let desired = collect_video_specs(scene);
         let mut changed = false;
+
+        if !self.held_compositor_hashes.is_empty() {
+            let mut released = Vec::new();
+            for hash in &self.held_compositor_hashes {
+                if desired.contains_key(hash) || !retained_transition_hashes.contains(hash) {
+                    released.push(hash.clone());
+                }
+            }
+            for hash in released {
+                self.held_compositor_hashes.remove(&hash);
+                if !desired.contains_key(&hash) {
+                    changed = true;
+                    if let Err(error) = compositor.set_video_for_hash(&hash, None) {
+                        tracing::warn!(hash, %error, "failed releasing transition video frame from compositor");
+                    }
+                }
+            }
+        }
 
         // Drain any finished async opens first, discarding obsolete/superseded ones immediately.
         while let Ok(opened) = self.opened_rx.try_recv() {
@@ -124,13 +145,17 @@ impl MediaPlaybackManager {
             }
         }
 
-        if desired.is_empty() && self.active.is_empty() && self.pending.is_empty() {
+        if desired.is_empty()
+            && self.active.is_empty()
+            && self.pending.is_empty()
+            && self.held_compositor_hashes.is_empty()
+        {
             if scene.cleared
                 && let Err(error) = compositor.set_video(None)
             {
                 tracing::warn!(%error, "failed clearing legacy video frame");
             }
-            return false;
+            return changed;
         }
 
         // Remove failed & pending markers for clips no longer requested (or structurally changed).
@@ -157,7 +182,9 @@ impl MediaPlaybackManager {
 
         for hash in to_stop {
             changed = true;
-            if let Err(error) = compositor.set_video_for_hash(&hash, None) {
+            if retained_transition_hashes.contains(&hash) {
+                self.held_compositor_hashes.insert(hash.clone());
+            } else if let Err(error) = compositor.set_video_for_hash(&hash, None) {
                 tracing::warn!(hash, %error, "failed clearing video frame from compositor");
             }
             if let Some(stream) = self.active.remove(&hash) {

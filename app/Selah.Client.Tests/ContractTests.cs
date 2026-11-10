@@ -866,4 +866,72 @@ public sealed class ContractTests
         };
         Assert.Equal(splitScriptureReply, Envelope.Parser.ParseFrom(splitScriptureReply.ToByteArray()));
     }
+
+    [Fact]
+    public void M35FlashWarningAndTransitionsEffectsRoundTrip()
+    {
+        var flashQuery = new Envelope
+        {
+            Id = 5101,
+            Query = new Query
+            {
+                AnalyzeFlashRisk = new AnalyzeFlashRisk
+                {
+                    Transition = new TransitionSpec
+                    {
+                        Kind = TransitionKind.FadeThroughBlack,
+                        DurationMs = 200,
+                        Direction = TransitionDirection.Left,
+                        Easing = TransitionEasing.EaseInOut,
+                    },
+                    RepeatCadenceMs = 150,
+                    FlashesPerSecondHint = 5.0f,
+                },
+            },
+        };
+        Assert.Equal(flashQuery, Envelope.Parser.ParseFrom(flashQuery.ToByteArray()));
+
+        var flashReply = new Envelope
+        {
+            Id = 5102,
+            CorrelationId = 5101,
+            Reply = new Reply
+            {
+                FlashRiskReport = new FlashRiskReport
+                {
+                    FlashWarning = true,
+                    FlashesPerSecond = 5.0f,
+                    SaturatedRedRisk = false,
+                    Reason = "Exceeds 3 flashes per second",
+                    WarningCodes = { "FLASH_WARNING" },
+                },
+            },
+        };
+        Assert.Equal(flashReply, Envelope.Parser.ParseFrom(flashReply.ToByteArray()));
+
+        var statusWithFlash = new Envelope
+        {
+            Id = 5103,
+            Event = new Event
+            {
+                Status = new Status
+                {
+                    Connected = true,
+                    Live = true,
+                    FlashWarning = true,
+                    OutputStatuses =
+                    {
+                        new OutputFrameStatus
+                        {
+                            OutputIndex = 0,
+                            SceneRevision = 9,
+                            Live = true,
+                            FlashWarning = true,
+                        },
+                    },
+                },
+            },
+        };
+        Assert.Equal(statusWithFlash, Envelope.Parser.ParseFrom(statusWithFlash.ToByteArray()));
+    }
 }

@@ -121,6 +121,7 @@ pub struct EngineView {
     pub frame_checksum: Vec<u8>,
     pub output_statuses: Vec<OutputFrameStatus>,
     pub preview_scene_revision: u64,
+    pub flash_warning: bool,
 }
 
 /// Slow work the host runs away from the request path (network, disk). When it's done, the host
@@ -304,6 +305,7 @@ impl CoreService {
                 .preview_scene
                 .as_ref()
                 .map_or(self.engine.preview_scene_revision, |s| s.revision),
+            flash_warning: self.engine.flash_warning,
             ..Status::default()
         }
     }
@@ -574,6 +576,13 @@ impl CoreService {
                         ..Outcome::default()
                     };
                 }
+                if let Err(err) = selah_render::effects::validate_scene_shader_chains(&scene) {
+                    tracing::warn!(%err, "refused PresentScene with invalid or custom shader chain");
+                    return Outcome {
+                        reply: Some(self.error(request, codes::INVALID, "error-invalid-request")),
+                        ..Outcome::default()
+                    };
+                }
                 scene.is_preview = false;
                 self.live.change(|live| {
                     let prev = live.revision;
@@ -595,6 +604,13 @@ impl CoreService {
                     };
                 };
                 if !validate_scene_resolutions(&scene) {
+                    return Outcome {
+                        reply: Some(self.error(request, codes::INVALID, "error-invalid-request")),
+                        ..Outcome::default()
+                    };
+                }
+                if let Err(err) = selah_render::effects::validate_scene_shader_chains(&scene) {
+                    tracing::warn!(%err, "refused StagePreviewScene with invalid or custom shader chain");
                     return Outcome {
                         reply: Some(self.error(request, codes::INVALID, "error-invalid-request")),
                         ..Outcome::default()
@@ -1204,6 +1220,17 @@ impl CoreService {
                         };
                     }
                 };
+                let flash_risk = match self
+                    .analyze_split_flash_risk(q.transition.as_ref(), q.media_id.as_ref())
+                {
+                    Ok(risk) => risk,
+                    Err(err) => {
+                        return Outcome {
+                            reply: Some(self.bus_error(request, &err)),
+                            ..Outcome::default()
+                        };
+                    }
+                };
                 let options = crate::songs::SplitOptions {
                     arrangement_id: q.arrangement_id.clone(),
                     max_lines: q.max_lines,
@@ -1234,7 +1261,10 @@ impl CoreService {
                     }
                 });
                 match split_res {
-                    Ok(slides) => self.reply(request, reply::Result::GeneratedSongSlides(slides)),
+                    Ok(mut slides) => {
+                        apply_flash_warning_to_fit_reports(&mut slides.fit_reports, &flash_risk);
+                        self.reply(request, reply::Result::GeneratedSongSlides(slides))
+                    }
                     Err(error) => {
                         self.bus_error(request, &CommandBusError::Invalid(error.to_string()))
                     }
@@ -1274,6 +1304,17 @@ impl CoreService {
                 }
             }
             Some(query::Request::SplitScriptureSlides(q)) => {
+                let flash_risk = match self
+                    .analyze_split_flash_risk(q.transition.as_ref(), q.media_id.as_ref())
+                {
+                    Ok(risk) => risk,
+                    Err(err) => {
+                        return Outcome {
+                            reply: Some(self.bus_error(request, &err)),
+                            ..Outcome::default()
+                        };
+                    }
+                };
                 let needs_fit = q.shrink_to_fit
                     || !q.style_json.trim().is_empty()
                     || q.template_id.is_some()
@@ -1293,7 +1334,8 @@ impl CoreService {
                     }
                 };
                 match split_res {
-                    Ok(slides) => {
+                    Ok(mut slides) => {
+                        apply_flash_warning_to_fit_reports(&mut slides.fit_reports, &flash_risk);
                         self.reply(request, reply::Result::GeneratedScriptureSlides(slides))
                     }
                     Err(error) => {
@@ -1313,6 +1355,61 @@ impl CoreService {
                     outputs: self.live.output_configs().to_vec(),
                 }),
             ),
+            Some(query::Request::AnalyzeFlashRisk(q)) => {
+                let media_flash_warning =
+                    if let Some(media_id) = q.media_id.as_ref() {
+                        if let Err(error) = validate_id(media_id) {
+                            return Outcome {
+                                reply: Some(self.bus_error(
+                                    request,
+                                    &CommandBusError::Invalid(error.to_string()),
+                                )),
+                                ..Outcome::default()
+                            };
+                        }
+                        match self.library.get::<selah_proto::v1::MediaItem>(media_id) {
+                            Ok(Some(item)) => item.flash_warning,
+                            Ok(None) => {
+                                return Outcome {
+                                    reply: Some(self.bus_error(
+                                        request,
+                                        &CommandBusError::NotFound("media item not found".into()),
+                                    )),
+                                    ..Outcome::default()
+                                };
+                            }
+                            Err(error) => {
+                                return Outcome {
+                                    reply: Some(self.bus_error(
+                                        request,
+                                        &CommandBusError::Invalid(error.to_string()),
+                                    )),
+                                    ..Outcome::default()
+                                };
+                            }
+                        }
+                    } else {
+                        false
+                    };
+                let report = selah_render::flash::analyze_transition_risk(
+                    q.transition.as_ref(),
+                    q.repeat_cadence_ms,
+                    q.from_scene.as_ref(),
+                    q.to_scene.as_ref(),
+                    q.flashes_per_second_hint,
+                    media_flash_warning,
+                );
+                self.reply(
+                    request,
+                    reply::Result::FlashRiskReport(selah_proto::v1::FlashRiskReport {
+                        flash_warning: report.flash_warning,
+                        flashes_per_second: report.flashes_per_second,
+                        saturated_red_risk: report.saturated_red_risk,
+                        reason: report.reason,
+                        warning_codes: report.warning_codes,
+                    }),
+                )
+            }
             Some(query::Request::GetWatchdogStatus(_)) | None => {
                 self.error(request, codes::UNSUPPORTED, "error-unsupported-request")
             }
@@ -1481,6 +1578,34 @@ impl CoreService {
             });
         }
         Ok(out)
+    }
+
+    fn analyze_split_flash_risk(
+        &self,
+        transition: Option<&selah_proto::v1::TransitionSpec>,
+        media_id: Option<&selah_proto::v1::Id>,
+    ) -> Result<selah_render::flash::FlashAnalysis, CommandBusError> {
+        let media_flash_warning = if let Some(id) = media_id {
+            validate_id(id).map_err(|e| CommandBusError::Invalid(e.to_string()))?;
+            match self
+                .library
+                .get::<selah_proto::v1::MediaItem>(id)
+                .map_err(|e| CommandBusError::Invalid(e.to_string()))?
+            {
+                Some(item) => item.flash_warning,
+                None => return Err(CommandBusError::NotFound("media item not found".into())),
+            }
+        } else {
+            false
+        };
+        Ok(selah_render::flash::analyze_transition_risk(
+            transition,
+            0,
+            None,
+            None,
+            0.0,
+            media_flash_warning,
+        ))
     }
 
     fn update_error(&self, request: &Envelope, error: &UpdateError) -> Outcome {
@@ -1687,6 +1812,7 @@ impl CoreService {
                     frame_checksum: frame.frame_checksum.clone(),
                     resolution: frame.resolution,
                     live: output_live,
+                    flash_warning: frame.flash_warning,
                 };
                 let prev_entry = self
                     .engine
@@ -1706,6 +1832,9 @@ impl CoreService {
                     self.engine.output_statuses.push(status_entry);
                     self.engine.output_statuses.sort_by_key(|s| s.output_index);
                 }
+                let prev_flash = self.engine.flash_warning;
+                self.engine.flash_warning =
+                    self.engine.output_statuses.iter().any(|s| s.flash_warning);
                 let mut primary_changed = false;
                 if frame.output_index == 0 {
                     primary_changed = self.engine.frame_checksum != frame.frame_checksum
@@ -1714,7 +1843,7 @@ impl CoreService {
                     self.engine.frame_checksum = frame.frame_checksum.clone();
                 }
                 let mut out = vec![event.clone()];
-                if primary_changed || entry_changed {
+                if primary_changed || entry_changed || prev_flash != self.engine.flash_warning {
                     out.push(self.status_event());
                 }
                 out
@@ -1741,10 +1870,58 @@ impl CoreService {
                 });
                 for status in &mut self.engine.output_statuses {
                     status.live = false;
+                    status.flash_warning = false;
                 }
+                self.engine.flash_warning = false;
                 vec![event.clone(), self.status_event()]
             }
             _ => Vec::new(),
+        }
+    }
+}
+
+fn apply_flash_warning_to_fit_reports(
+    fit_reports: &mut Vec<selah_proto::v1::OutputFitReport>,
+    risk: &selah_render::flash::FlashAnalysis,
+) {
+    if !risk.flash_warning {
+        return;
+    }
+    if fit_reports.is_empty() {
+        fit_reports.push(selah_proto::v1::OutputFitReport {
+            output_index: 0,
+            output_name: "Main Output".into(),
+            fits: true,
+            flash_warning: true,
+            warning_codes: {
+                let mut codes = vec!["FLASH_WARNING".to_owned()];
+                for code in &risk.warning_codes {
+                    if !codes.iter().any(|c| c == code) {
+                        codes.push(code.clone());
+                    }
+                }
+                codes
+            },
+            summary: risk.reason.clone(),
+            ..Default::default()
+        });
+        return;
+    }
+    for rep in fit_reports {
+        rep.flash_warning = true;
+        if !rep.warning_codes.iter().any(|c| c == "FLASH_WARNING") {
+            rep.warning_codes.push("FLASH_WARNING".to_owned());
+        }
+        for code in &risk.warning_codes {
+            if !rep.warning_codes.iter().any(|c| c == code) {
+                rep.warning_codes.push(code.clone());
+            }
+        }
+        if !risk.reason.is_empty() {
+            if !rep.summary.is_empty() {
+                rep.summary.push_str("; ");
+            }
+            rep.summary.push_str(&risk.reason);
         }
     }
 }

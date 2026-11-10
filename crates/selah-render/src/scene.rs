@@ -6,9 +6,10 @@ use std::sync::Arc;
 use anyhow::{Context, Result};
 use prost::Message;
 use selah_proto::v1::{
-    Color, GradientKind, GradientSpec, LayerKind, LayerSpec, MediaFitMode, MediaLayerSpec,
-    MessagesLayerSpec, OutputConfig, OutputRole, OutputScene, PreloadHint, PropsLayerSpec,
-    Resolution, Scene, SlideLayerSpec, TestPattern, VideoInputLayerSpec, layer_spec,
+    Color, EffectKind, GradientKind, GradientSpec, LayerKind, LayerSpec, MediaFitMode,
+    MediaLayerSpec, MessagesLayerSpec, OutputConfig, OutputRole, OutputScene, PreloadHint,
+    PropsLayerSpec, Resolution, Scene, SlideLayerSpec, TestPattern, TransitionSpec,
+    VideoInputLayerSpec, layer_spec,
 };
 
 use crate::Frame;
@@ -53,7 +54,7 @@ pub fn color_to_rgba(color: Option<Color>, default: [u8; 4]) -> [u8; 4] {
     ]
 }
 
-fn layer_kind_of(spec: &LayerSpec) -> LayerKind {
+pub fn layer_kind_of(spec: &LayerSpec) -> LayerKind {
     match LayerKind::try_from(spec.kind) {
         Ok(kind) if kind != LayerKind::Unspecified => kind,
         _ => match spec.content.as_ref() {
@@ -96,7 +97,13 @@ pub fn layer_has_content(spec: &LayerSpec) -> bool {
                 || m.gradient.as_ref().is_some_and(|g| !g.stops.is_empty())
         }
         Some(layer_spec::Content::Slide(s)) => slide_has_content(s),
-        Some(layer_spec::Content::Props(p)) => props_has_content(p),
+        Some(layer_spec::Content::Props(p)) => {
+            props_has_content(p)
+                || spec
+                    .effects
+                    .iter()
+                    .any(|e| e.enabled && e.kind == EffectKind::BackgroundBlur as i32)
+        }
         Some(layer_spec::Content::Messages(m)) => !m.text.trim().is_empty(),
         None => false,
     }
@@ -120,17 +127,16 @@ fn props_has_content(p: &PropsLayerSpec) -> bool {
     !p.label.trim().is_empty()
         || !p.elements_json.trim().is_empty()
         || p.background_color.is_some_and(|c| c.alpha > 0.0)
+        || p.effects
+            .iter()
+            .any(|e| e.enabled && e.kind == EffectKind::BackgroundBlur as i32)
 }
 
 pub fn layer_is_time_varying(spec: &LayerSpec) -> bool {
     if !spec.enabled {
         return false;
     }
-    if spec
-        .transition
-        .as_ref()
-        .is_some_and(|t| t.duration_ms > 0 && t.kind > 1)
-    {
+    if crate::transitions::transition_is_animated(spec.transition.as_ref()) {
         return true;
     }
     match spec.content.as_ref() {
@@ -183,10 +189,7 @@ pub fn scene_is_time_varying(scene: &Scene) -> bool {
     scene.outputs.iter().any(|out| {
         !out.cleared
             && !out.show_logo
-            && (out
-                .transition
-                .as_ref()
-                .is_some_and(|t| t.duration_ms > 0 && t.kind > 1)
+            && (crate::transitions::transition_is_animated(out.transition.as_ref())
                 || out.layers.iter().any(layer_is_time_varying))
     })
 }
@@ -197,6 +200,7 @@ pub struct NormalizedLayer {
     pub kind: LayerKind,
     pub opacity: f32,
     pub spec: LayerSpec,
+    pub effects: crate::effects::ValidatedShaderChain,
     pub time_varying: bool,
     pub cache_key: [u8; 32],
 }
@@ -213,6 +217,8 @@ pub struct NormalizedOutputScene {
     pub test_pattern: TestPattern,
     pub legacy_text: String,
     pub layers: Vec<NormalizedLayer>,
+    pub output_effects: crate::effects::ValidatedShaderChain,
+    pub output_transition: Option<TransitionSpec>,
     pub time_varying: bool,
     pub live: bool,
 }
@@ -298,6 +304,8 @@ pub fn normalize_output_scene(
             test_pattern,
             legacy_text: scene.text.clone(),
             layers: Vec::new(),
+            output_effects: crate::effects::ValidatedShaderChain::default(),
+            output_transition: None,
             time_varying: false,
             live,
         };
@@ -319,6 +327,8 @@ pub fn normalize_output_scene(
             test_pattern: TestPattern::Unspecified,
             legacy_text: String::new(),
             layers: Vec::new(),
+            output_effects: crate::effects::ValidatedShaderChain::default(),
+            output_transition: None,
             time_varying: false,
             live: false,
         };
@@ -338,17 +348,16 @@ pub fn normalize_output_scene(
             test_pattern: TestPattern::Unspecified,
             legacy_text: String::new(),
             layers: Vec::new(),
-            time_varying: false,
+            output_effects: crate::effects::ValidatedShaderChain::default(),
+            output_transition: out.transition,
+            time_varying: crate::transitions::transition_is_animated(out.transition.as_ref()),
             live: false,
         };
     }
 
     let test_pattern = TestPattern::try_from(out.test_pattern).unwrap_or(TestPattern::Unspecified);
     let mut indexed: Vec<(u8, usize, NormalizedLayer)> = Vec::new();
-    let mut time_varying = out
-        .transition
-        .as_ref()
-        .is_some_and(|t| t.duration_ms > 0 && t.kind > 1);
+    let mut time_varying = crate::transitions::transition_is_animated(out.transition.as_ref());
 
     for (pos, spec) in out.layers.iter().enumerate() {
         let kind = layer_kind_of(spec);
@@ -360,6 +369,8 @@ pub fn normalize_output_scene(
         }
         let opacity = layer_opacity(spec);
         let cache_key = layer_cache_key(kind, opacity, spec, width, height);
+        let raw_effects = crate::effects::collect_layer_effect_specs(spec);
+        let effects = crate::effects::ValidatedShaderChain::from_specs_lossy(&raw_effects);
         indexed.push((
             layer_rank(kind),
             pos,
@@ -367,6 +378,7 @@ pub fn normalize_output_scene(
                 kind,
                 opacity,
                 spec: spec.clone(),
+                effects,
                 time_varying: layer_is_time_varying(spec),
                 cache_key,
             },
@@ -375,6 +387,7 @@ pub fn normalize_output_scene(
 
     indexed.sort_by_key(|(rank, pos, _)| (*rank, *pos));
     let layers: Vec<NormalizedLayer> = indexed.into_iter().map(|(_, _, l)| l).collect();
+    let output_effects = crate::effects::ValidatedShaderChain::from_specs_lossy(&out.effects);
     let live = test_pattern != TestPattern::Unspecified || !layers.is_empty();
 
     NormalizedOutputScene {
@@ -388,9 +401,47 @@ pub fn normalize_output_scene(
         test_pattern,
         legacy_text: String::new(),
         layers,
+        output_effects,
+        output_transition: out.transition,
         time_varying,
         live,
     }
+}
+
+/// Whether `scene` contains any continuous per-frame animations (unpaused video, clocks,
+/// timers, or ticker text) distinct from finite transitions.
+pub fn scene_is_continuously_animated(scene: &Scene) -> bool {
+    if scene.cleared {
+        return false;
+    }
+    scene.outputs.iter().any(|out| {
+        !out.cleared
+            && !out.show_logo
+            && out.layers.iter().any(|spec| {
+                if !spec.enabled {
+                    return false;
+                }
+                match spec.content.as_ref() {
+                    Some(layer_spec::Content::Media(m)) => m.media_kind == "video" && !m.paused,
+                    Some(layer_spec::Content::Slide(s)) => {
+                        s.text.contains("{clock}")
+                            || s.text.contains("{timer}")
+                            || s.elements_json.contains("{clock}")
+                            || s.elements_json.contains("{timer}")
+                    }
+                    Some(layer_spec::Content::Props(p)) => {
+                        p.label.contains("{clock}")
+                            || p.label.contains("{timer}")
+                            || p.elements_json.contains("{clock}")
+                            || p.elements_json.contains("{timer}")
+                    }
+                    Some(layer_spec::Content::Messages(m)) => {
+                        m.ticker || m.text.contains("{clock}") || m.text.contains("{timer}")
+                    }
+                    _ => false,
+                }
+            })
+    })
 }
 
 /// LRU cache for rasterised premultiplied RGBA overlays across layer types.
@@ -635,91 +686,102 @@ pub fn rasterise_layer_overlay(
         return Ok(Some(hit));
     }
 
-    let built: Option<Frame> = match layer.spec.content.as_ref() {
-        Some(layer_spec::Content::VideoInput(v)) => {
-            let color = color_to_rgba(v.fallback_color, [24, 34, 48, 255]);
-            if color[3] == 0 {
-                None
-            } else {
-                Some(solid_frame(color, width, height))
+    let built: Option<Frame> =
+        match layer.spec.content.as_ref() {
+            Some(layer_spec::Content::VideoInput(v)) => {
+                let color = color_to_rgba(v.fallback_color, [24, 34, 48, 255]);
+                if color[3] == 0 {
+                    None
+                } else {
+                    Some(solid_frame(color, width, height))
+                }
             }
-        }
-        Some(layer_spec::Content::Media(m)) => {
-            media_backdrop_frame(m, width, height, media_root, true)?
-        }
-        Some(layer_spec::Content::Slide(s)) => {
-            let pattern = TestPattern::try_from(s.test_pattern).unwrap_or(TestPattern::Unspecified);
-            let mut base = if pattern != TestPattern::Unspecified {
-                let mut f = Frame::new(width, height);
-                for y in 0..height {
-                    for x in 0..width {
-                        let at = (y as usize * width as usize + x as usize) * 4;
-                        f.pixels[at..at + 4]
-                            .copy_from_slice(&pattern_pixel(pattern, x, y, width, height));
+            Some(layer_spec::Content::Media(m)) => {
+                media_backdrop_frame(m, width, height, media_root, true)?
+            }
+            Some(layer_spec::Content::Slide(s)) => {
+                let pattern =
+                    TestPattern::try_from(s.test_pattern).unwrap_or(TestPattern::Unspecified);
+                let mut base = if pattern != TestPattern::Unspecified {
+                    let mut f = Frame::new(width, height);
+                    for y in 0..height {
+                        for x in 0..width {
+                            let at = (y as usize * width as usize + x as usize) * 4;
+                            f.pixels[at..at + 4]
+                                .copy_from_slice(&pattern_pixel(pattern, x, y, width, height));
+                        }
+                    }
+                    Some(f)
+                } else {
+                    None
+                };
+                if slide_has_renderable_text(s) {
+                    if text_renderer.is_none() {
+                        *text_renderer = Some(TextRenderer::bundled()?);
+                    }
+                    let text_frame = rasterise_slide_text(
+                        s,
+                        width,
+                        height,
+                        text_renderer.as_mut().expect("text renderer exists"),
+                    )?;
+                    match &mut base {
+                        Some(b) => composite_over(b, &text_frame),
+                        None => base = Some((*text_frame).clone()),
                     }
                 }
-                Some(f)
-            } else {
-                None
-            };
-            if slide_has_renderable_text(s) {
-                if text_renderer.is_none() {
-                    *text_renderer = Some(TextRenderer::bundled()?);
-                }
-                let text_frame = rasterise_slide_text(
-                    s,
-                    width,
-                    height,
-                    text_renderer.as_mut().expect("text renderer exists"),
-                )?;
-                match &mut base {
-                    Some(b) => composite_over(b, &text_frame),
-                    None => base = Some((*text_frame).clone()),
+                base
+            }
+            Some(layer_spec::Content::Props(p)) => {
+                if p.label.trim().is_empty() {
+                    let solid = p.background_color.filter(|c| c.alpha > 0.0).map(|c| {
+                        solid_frame(color_to_rgba(Some(c), [20, 40, 80, 220]), width, height)
+                    });
+                    if solid.is_none()
+                        && layer.effects.stages.iter().any(|s| {
+                            matches!(s, crate::effects::ResolvedEffect::BackgroundBlur { .. })
+                        })
+                    {
+                        Some(Frame::new(width, height))
+                    } else {
+                        solid
+                    }
+                } else {
+                    if text_renderer.is_none() {
+                        *text_renderer = Some(TextRenderer::bundled()?);
+                    }
+                    let bg = color_to_rgba(p.background_color, [20, 40, 80, 220]);
+                    let fg = color_to_rgba(p.text_color, [255, 255, 255, 255]);
+                    let frame = text_renderer
+                        .as_mut()
+                        .expect("text renderer exists")
+                        .render_overlay_box(&p.label, bg, fg, false, width, height)?;
+                    Some((*frame).clone())
                 }
             }
-            base
-        }
-        Some(layer_spec::Content::Props(p)) => {
-            if p.label.trim().is_empty() {
-                p.background_color
-                    .filter(|c| c.alpha > 0.0)
-                    .map(|c| solid_frame(color_to_rgba(Some(c), [20, 40, 80, 220]), width, height))
-            } else {
-                if text_renderer.is_none() {
-                    *text_renderer = Some(TextRenderer::bundled()?);
+            Some(layer_spec::Content::Messages(MessagesLayerSpec {
+                text,
+                background_color,
+                text_color,
+                ..
+            })) => {
+                if text.trim().is_empty() {
+                    None
+                } else {
+                    if text_renderer.is_none() {
+                        *text_renderer = Some(TextRenderer::bundled()?);
+                    }
+                    let bg = color_to_rgba(*background_color, [140, 32, 32, 235]);
+                    let fg = color_to_rgba(*text_color, [255, 255, 255, 255]);
+                    let frame = text_renderer
+                        .as_mut()
+                        .expect("text renderer exists")
+                        .render_overlay_box(text, bg, fg, true, width, height)?;
+                    Some((*frame).clone())
                 }
-                let bg = color_to_rgba(p.background_color, [20, 40, 80, 220]);
-                let fg = color_to_rgba(p.text_color, [255, 255, 255, 255]);
-                let frame = text_renderer
-                    .as_mut()
-                    .expect("text renderer exists")
-                    .render_overlay_box(&p.label, bg, fg, false, width, height)?;
-                Some((*frame).clone())
             }
-        }
-        Some(layer_spec::Content::Messages(MessagesLayerSpec {
-            text,
-            background_color,
-            text_color,
-            ..
-        })) => {
-            if text.trim().is_empty() {
-                None
-            } else {
-                if text_renderer.is_none() {
-                    *text_renderer = Some(TextRenderer::bundled()?);
-                }
-                let bg = color_to_rgba(*background_color, [140, 32, 32, 235]);
-                let fg = color_to_rgba(*text_color, [255, 255, 255, 255]);
-                let frame = text_renderer
-                    .as_mut()
-                    .expect("text renderer exists")
-                    .render_overlay_box(text, bg, fg, true, width, height)?;
-                Some((*frame).clone())
-            }
-        }
-        None => None,
-    };
+            None => None,
+        };
 
     let Some(mut frame) = built else {
         return Ok(None);

@@ -202,7 +202,10 @@ fn rgba_render_tex(device: &wgpu::Device, label: &str, width: u32, height: u32) 
         sample_count: 1,
         dimension: wgpu::TextureDimension::D2,
         format: TARGET_FORMAT,
-        usage: wgpu::TextureUsages::RENDER_ATTACHMENT | wgpu::TextureUsages::TEXTURE_BINDING,
+        usage: wgpu::TextureUsages::RENDER_ATTACHMENT
+            | wgpu::TextureUsages::TEXTURE_BINDING
+            | wgpu::TextureUsages::COPY_DST
+            | wgpu::TextureUsages::COPY_SRC,
         view_formats: &[],
     })
 }
@@ -213,6 +216,8 @@ pub struct BlurPipeline {
     pipeline_blend: wgpu::RenderPipeline,
     layout: wgpu::BindGroupLayout,
     sampler: wgpu::Sampler,
+    params_pool: Vec<wgpu::Buffer>,
+    pool_cursor: usize,
     targets: Option<BlurTargets>,
 }
 
@@ -298,8 +303,53 @@ impl BlurPipeline {
             pipeline_blend: make_pipeline(true),
             layout,
             sampler,
+            params_pool: Vec::new(),
+            pool_cursor: 0,
             targets: None,
         }
+    }
+
+    /// Reset uniform buffer reuse cursor at the start of each frame submission.
+    pub fn begin_frame(&mut self) {
+        self.pool_cursor = 0;
+    }
+
+    #[allow(clippy::too_many_arguments)]
+    fn alloc_params_slot(
+        &mut self,
+        device: &wgpu::Device,
+        queue: &wgpu::Queue,
+        width: u32,
+        height: u32,
+        dir_x: f32,
+        dir_y: f32,
+        radius: usize,
+        weights: &[f32; 36],
+        opacity: f32,
+    ) -> usize {
+        let idx = self.pool_cursor;
+        self.pool_cursor += 1;
+        if idx >= self.params_pool.len() {
+            self.params_pool
+                .push(device.create_buffer(&wgpu::BufferDescriptor {
+                    label: Some("blur-params"),
+                    size: 176,
+                    usage: wgpu::BufferUsages::UNIFORM | wgpu::BufferUsages::COPY_DST,
+                    mapped_at_creation: false,
+                }));
+        }
+        Self::write_params_buffer(
+            queue,
+            &self.params_pool[idx],
+            width,
+            height,
+            dir_x,
+            dir_y,
+            radius,
+            weights,
+            opacity,
+        );
+        idx
     }
 
     /// Ensure the reusable scratch textures exist and return the intermediate full-resolution
@@ -344,7 +394,8 @@ impl BlurPipeline {
 
     #[allow(clippy::too_many_arguments)]
     fn write_params_buffer(
-        device: &wgpu::Device,
+        queue: &wgpu::Queue,
+        buffer: &wgpu::Buffer,
         width: u32,
         height: u32,
         dir_x: f32,
@@ -352,31 +403,19 @@ impl BlurPipeline {
         radius: usize,
         weights: &[f32; 36],
         opacity: f32,
-    ) -> wgpu::Buffer {
-        let mut bytes = Vec::with_capacity(176);
-        bytes.extend_from_slice(&width.to_le_bytes());
-        bytes.extend_from_slice(&height.to_le_bytes());
-        bytes.extend_from_slice(&dir_x.to_le_bytes());
-        bytes.extend_from_slice(&dir_y.to_le_bytes());
-        bytes.extend_from_slice(&(radius as i32).to_le_bytes());
-        bytes.extend_from_slice(&opacity.to_le_bytes());
-        bytes.extend_from_slice(&0_u32.to_le_bytes());
-        bytes.extend_from_slice(&0_u32.to_le_bytes());
-        for w in weights {
-            bytes.extend_from_slice(&w.to_le_bytes());
+    ) {
+        let mut bytes = [0_u8; 176];
+        bytes[0..4].copy_from_slice(&width.to_le_bytes());
+        bytes[4..8].copy_from_slice(&height.to_le_bytes());
+        bytes[8..12].copy_from_slice(&dir_x.to_le_bytes());
+        bytes[12..16].copy_from_slice(&dir_y.to_le_bytes());
+        bytes[16..20].copy_from_slice(&(radius as i32).to_le_bytes());
+        bytes[20..24].copy_from_slice(&opacity.to_le_bytes());
+        for (i, w) in weights.iter().enumerate() {
+            let off = 32 + i * 4;
+            bytes[off..off + 4].copy_from_slice(&w.to_le_bytes());
         }
-        let buffer = device.create_buffer(&wgpu::BufferDescriptor {
-            label: Some("blur-params"),
-            size: bytes.len() as u64,
-            usage: wgpu::BufferUsages::UNIFORM,
-            mapped_at_creation: true,
-        });
-        buffer
-            .get_mapped_range_mut(..)
-            .expect("mapped blur uniform buffer")
-            .copy_from_slice(&bytes);
-        buffer.unmap();
-        buffer
+        queue.write_buffer(buffer, 0, &bytes);
     }
 
     fn run_pass(
@@ -435,70 +474,169 @@ impl BlurPipeline {
     /// Run separable blur on `self.targets.src_view` and composite onto `final_target` using
     /// premultiplied-alpha blending with `opacity`.
     pub fn blur_and_blend(
-        &self,
+        &mut self,
         device: &wgpu::Device,
+        queue: &wgpu::Queue,
         encoder: &mut wgpu::CommandEncoder,
         final_target: &wgpu::TextureView,
         sigma: f32,
         opacity: f32,
     ) {
-        let Some(t) = self.targets.as_ref() else {
+        if self.targets.is_none() {
+            return;
+        }
+        self.run_blur_sequence(
+            device,
+            queue,
+            encoder,
+            None,
+            final_target,
+            sigma,
+            opacity,
+            true,
+        );
+    }
+
+    /// Run separable blur from `src_view` into `dst_view` (must be backed by distinct textures).
+    #[allow(clippy::too_many_arguments)]
+    pub fn blur_view_to_view(
+        &mut self,
+        device: &wgpu::Device,
+        queue: &wgpu::Queue,
+        encoder: &mut wgpu::CommandEncoder,
+        src_view: &wgpu::TextureView,
+        dst_view: &wgpu::TextureView,
+        full_w: u32,
+        full_h: u32,
+        sigma: f32,
+        opacity: f32,
+        blend_onto_dst: bool,
+    ) {
+        let _ = self.ensure_source_view(device, full_w, full_h, sigma);
+        self.run_blur_sequence(
+            device,
+            queue,
+            encoder,
+            Some(src_view),
+            dst_view,
+            sigma,
+            opacity,
+            blend_onto_dst,
+        );
+    }
+
+    #[allow(clippy::too_many_arguments)]
+    fn run_blur_sequence(
+        &mut self,
+        device: &wgpu::Device,
+        queue: &wgpu::Queue,
+        encoder: &mut wgpu::CommandEncoder,
+        external_src: Option<&wgpu::TextureView>,
+        final_target: &wgpu::TextureView,
+        sigma: f32,
+        opacity: f32,
+        blend_onto_dst: bool,
+    ) {
+        let Some((full_w, full_h, work_w, work_h)) = self
+            .targets
+            .as_ref()
+            .map(|t| (t.full_w, t.full_h, t.work_w, t.work_h))
+        else {
             return;
         };
         let (div, radius, weights) = kernel_for_sigma(sigma);
         let mut copy_weights = [0.0_f32; 36];
         copy_weights[0] = 1.0;
 
-        let work_input: &wgpu::TextureView = if div > 1 {
-            let p = Self::write_params_buffer(
+        let ds_slot = (div > 1).then(|| {
+            self.alloc_params_slot(
                 device,
-                t.full_w,
-                t.full_h,
+                queue,
+                full_w,
+                full_h,
                 0.0,
                 0.0,
                 0,
                 &copy_weights,
                 1.0,
+            )
+        });
+        let h_slot = self.alloc_params_slot(
+            device, queue, work_w, work_h, 1.0, 0.0, radius, &weights, 1.0,
+        );
+        let v_opacity = if div == 1 {
+            opacity.clamp(0.0, 1.0)
+        } else {
+            1.0
+        };
+        let v_slot = self.alloc_params_slot(
+            device, queue, work_w, work_h, 0.0, 1.0, radius, &weights, v_opacity,
+        );
+        let up_slot = (div > 1).then(|| {
+            self.alloc_params_slot(
+                device,
+                queue,
+                work_w,
+                work_h,
+                0.0,
+                0.0,
+                0,
+                &copy_weights,
+                opacity.clamp(0.0, 1.0),
+            )
+        });
+
+        let t = self.targets.as_ref().expect("targets exist");
+        let base_src = external_src.unwrap_or(&t.src_view);
+        let work_input: &wgpu::TextureView = if let Some(ds) = ds_slot {
+            self.run_pass(
+                device,
+                encoder,
+                base_src,
+                &t.work_b_view,
+                false,
+                &self.params_pool[ds],
             );
-            self.run_pass(device, encoder, &t.src_view, &t.work_b_view, false, &p);
             &t.work_b_view
         } else {
-            &t.src_view
+            base_src
         };
 
-        let ph =
-            Self::write_params_buffer(device, t.work_w, t.work_h, 1.0, 0.0, radius, &weights, 1.0);
-        self.run_pass(device, encoder, work_input, &t.work_a_view, false, &ph);
+        self.run_pass(
+            device,
+            encoder,
+            work_input,
+            &t.work_a_view,
+            false,
+            &self.params_pool[h_slot],
+        );
 
-        if div == 1 {
-            let pv = Self::write_params_buffer(
+        if let Some(up) = up_slot {
+            self.run_pass(
                 device,
-                t.work_w,
-                t.work_h,
-                0.0,
-                1.0,
-                radius,
-                &weights,
-                opacity.clamp(0.0, 1.0),
+                encoder,
+                &t.work_a_view,
+                &t.work_b_view,
+                false,
+                &self.params_pool[v_slot],
             );
-            self.run_pass(device, encoder, &t.work_a_view, final_target, true, &pv);
+            self.run_pass(
+                device,
+                encoder,
+                &t.work_b_view,
+                final_target,
+                blend_onto_dst,
+                &self.params_pool[up],
+            );
         } else {
-            let pv = Self::write_params_buffer(
-                device, t.work_w, t.work_h, 0.0, 1.0, radius, &weights, 1.0,
-            );
-            self.run_pass(device, encoder, &t.work_a_view, &t.work_b_view, false, &pv);
-
-            let pu = Self::write_params_buffer(
+            self.run_pass(
                 device,
-                t.work_w,
-                t.work_h,
-                0.0,
-                0.0,
-                0,
-                &copy_weights,
-                opacity.clamp(0.0, 1.0),
+                encoder,
+                &t.work_a_view,
+                final_target,
+                blend_onto_dst,
+                &self.params_pool[v_slot],
             );
-            self.run_pass(device, encoder, &t.work_b_view, final_target, true, &pu);
         }
     }
 }

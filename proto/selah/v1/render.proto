@@ -258,6 +258,7 @@ message OutputFrameStatus {
   bytes frame_checksum = 3;
   Resolution resolution = 4;
   bool live = 5;
+  bool flash_warning = 6;
 }
 
 message RenderCommand {
@@ -296,6 +297,24 @@ message FrameShown {
   uint64 frame_period_nanoseconds = 6;
   Resolution resolution = 7;
   bool is_preview = 8;
+  bool flash_warning = 9;
+}
+
+message AnalyzeFlashRisk {
+  TransitionSpec transition = 1;
+  uint32 repeat_cadence_ms = 2;
+  Scene from_scene = 3;
+  Scene to_scene = 4;
+  Id media_id = 5;
+  float flashes_per_second_hint = 6;
+}
+
+message FlashRiskReport {
+  bool flash_warning = 1;
+  float flashes_per_second = 2;
+  bool saturated_red_risk = 3;
+  string reason = 4;
+  repeated string warning_codes = 5;
 }
 
 // Engine → core after the emergency lane cleared the screens or showed the logo (SAFE-03).

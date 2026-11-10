@@ -7,10 +7,12 @@ import {
     ActorOrigin,
 } from "../dist/gen/selah/v1/envelope_pb.js";
 import {
+    EffectKind,
     GradientKind,
     LayerKind,
     MediaFitMode,
     OutputRole,
+    TransitionDirection,
     TransitionEasing,
     TransitionKind,
 } from "../dist/gen/selah/v1/render_pb.js";
@@ -828,5 +830,95 @@ test("M3 metric fit request and fit reports round-trip", () => {
     assert.deepEqual(
         fromBinary(EnvelopeSchema, toBinary(EnvelopeSchema, fitReply)),
         fitReply,
+    );
+});
+
+test("M3.5 flash warning, transitions and effects round trip", () => {
+    const query = create(EnvelopeSchema, {
+        id: 5101n,
+        body: {
+            case: "query",
+            value: {
+                request: {
+                    case: "analyzeFlashRisk",
+                    value: {
+                        transition: {
+                            kind: TransitionKind.WIPE,
+                            durationMs: 250,
+                            direction: TransitionDirection.RIGHT,
+                            easing: TransitionEasing.EASE_OUT,
+                        },
+                        repeatCadenceMs: 120,
+                        flashesPerSecondHint: 4.5,
+                    },
+                },
+            },
+        },
+    });
+    assert.deepEqual(
+        fromBinary(EnvelopeSchema, toBinary(EnvelopeSchema, query)),
+        query,
+    );
+
+    const status = create(EnvelopeSchema, {
+        id: 5102n,
+        body: {
+            case: "event",
+            value: {
+                notification: {
+                    case: "status",
+                    value: {
+                        connected: true,
+                        live: true,
+                        flashWarning: true,
+                        outputStatuses: [
+                            {
+                                outputIndex: 0,
+                                sceneRevision: 5n,
+                                live: true,
+                                flashWarning: true,
+                            },
+                        ],
+                    },
+                },
+            },
+        },
+    });
+    assert.deepEqual(
+        fromBinary(EnvelopeSchema, toBinary(EnvelopeSchema, status)),
+        status,
+    );
+
+    const sceneCmd = create(EnvelopeSchema, {
+        id: 5103n,
+        body: {
+            case: "command",
+            value: {
+                action: {
+                    case: "presentScene",
+                    value: {
+                        scene: {
+                            outputs: [
+                                {
+                                    outputIndex: 0,
+                                    effects: [
+                                        {
+                                            kind: EffectKind.VIGNETTE,
+                                            enabled: true,
+                                            intensity: 0.75,
+                                            paramsJson: '{"softness":0.4}',
+                                        },
+                                    ],
+                                },
+                            ],
+                        },
+                    },
+                },
+            },
+        },
+    });
+    assert.deepEqual(
+        fromBinary(EnvelopeSchema, toBinary(EnvelopeSchema, sceneCmd)),
+        sceneCmd,
     );
 });

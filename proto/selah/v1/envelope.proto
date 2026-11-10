@@ -149,6 +149,7 @@ message Query {
     SplitScriptureSlides split_scripture_slides = 34;
     GetMediaThumbnail get_media_thumbnail = 35;
     GetOutputConfigs get_output_configs = 36;
+    AnalyzeFlashRisk analyze_flash_risk = 37;
   }
 }
 
@@ -172,6 +173,7 @@ message Status {
   Resolution output_resolution = 10;
   repeated OutputFrameStatus output_statuses = 11;
   uint64 preview_scene_revision = 12;
+  bool flash_warning = 13;
 }
 
 message GetWatchdogStatus {}
@@ -252,6 +254,7 @@ message Reply {
     LibraryBackupInfo library_backup_info = 40;
     RestoreLibraryBackupResult restore_library_backup_result = 41;
     OutputConfigList output_config_list = 42;
+    FlashRiskReport flash_risk_report = 43;
   }
 }
 

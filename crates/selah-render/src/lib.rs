@@ -3,13 +3,16 @@
 pub mod blit;
 pub mod blur;
 pub mod cpu;
+pub mod effects;
 pub mod fit;
+pub mod flash;
 pub mod gpu;
 pub mod media_bg;
 pub mod png;
 pub mod scene;
 pub mod template;
 pub mod text;
+pub mod transitions;
 pub mod video;
 
 use selah_proto::v1::{PreloadHint, Scene};
@@ -63,6 +66,19 @@ pub trait Compositor {
     ) -> anyhow::Result<Frame> {
         let _ = output_index;
         self.render(scene, width, height)
+    }
+
+    /// Render `output_index` with active output/layer transitions (`plan`).
+    fn render_output_with_plan(
+        &mut self,
+        scene: &Scene,
+        output_index: u32,
+        width: u32,
+        height: u32,
+        plan: &transitions::RenderTransitionPlan,
+    ) -> anyhow::Result<Frame> {
+        let _ = plan;
+        self.render_output(scene, output_index, width, height)
     }
 
     /// Warm text and overlay caches for upcoming slides without affecting active outputs.

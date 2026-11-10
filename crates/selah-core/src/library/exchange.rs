@@ -52,6 +52,8 @@ struct WorkerReport {
     thumbnail_width: u32,
     thumbnail_height: u32,
     thumbnail_written: bool,
+    #[serde(default)]
+    flash_warning: bool,
 }
 
 fn check_no_url_or_protocol(raw: &str) -> Result<(), CommandBusError> {
@@ -369,6 +371,7 @@ fn run_media_worker(
     max_width: u32,
     max_height: u32,
     thumb_out: Option<&Path>,
+    scan_flash: bool,
 ) -> Result<WorkerReport, CommandBusError> {
     let worker = find_media_worker()?;
     let mut cmd = Command::new(&worker);
@@ -382,6 +385,9 @@ fn run_media_worker(
         .arg(max_height.to_string());
     if let Some(out) = thumb_out {
         cmd.arg("--thumb-out").arg(out);
+    }
+    if !scan_flash {
+        cmd.arg("--no-flash-scan");
     }
     cmd.stdin(Stdio::null())
         .stdout(Stdio::piped())
@@ -1071,6 +1077,7 @@ fn bundle_to_media(b: &BundleMediaItem) -> anyhow::Result<MediaItem> {
             height: r.height,
         }),
         duration_milliseconds: b.duration_milliseconds,
+        flash_warning: b.tags.iter().any(|t| t.eq_ignore_ascii_case("flashing")),
         tags: b.tags.clone(),
     };
     ensure!(
@@ -1581,6 +1588,7 @@ impl Library {
             DEFAULT_THUMB_W,
             DEFAULT_THUMB_H,
             Some(&probe_thumb_path),
+            true,
         )?;
 
         let thumb_bytes = if report.thumbnail_written {
@@ -1607,6 +1615,15 @@ impl Library {
             }
         }
 
+        if report.flash_warning
+            && !clean_tags
+                .iter()
+                .any(|t| t.eq_ignore_ascii_case("flashing"))
+            && clean_tags.len() < super::MAX_CHILDREN
+        {
+            clean_tags.push("Flashing".to_owned());
+        }
+
         let item = MediaItem {
             id: Some(new_id()),
             name: display_name,
@@ -1628,6 +1645,7 @@ impl Library {
                 height: report.height,
             }),
             duration_milliseconds: report.duration_ms,
+            flash_warning: report.flash_warning,
             tags: clean_tags,
         };
 
@@ -1722,6 +1740,7 @@ impl Library {
             max_w,
             max_h,
             Some(&probe_thumb_path),
+            false,
         )?;
         if !report.thumbnail_written {
             return Err(CommandBusError::Invalid(

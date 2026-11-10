@@ -84,17 +84,30 @@ def committed(ffmpeg, destination):
         print(f"generated {target.relative_to(ROOT)} ({target.stat().st_size} bytes)")
 
     av_target = destination / "flash-beep-360p60.mp4"
-    av_video = ("testsrc2=size=640x360:rate=60:duration=1,"
-                "drawbox=x=0:y=0:w=iw:h=ih:color=white:t=fill:enable='eq(n,30)'")
-    av_audio = "aevalsrc=if(between(t\\,0.5\\,0.52)\\,0.7*sin(2*PI*1000*t)\\,0):s=48000:d=1"
-    run([str(ffmpeg), "-hide_banner", "-loglevel", "error", "-nostdin", "-y",
-         "-f", "lavfi", "-i", av_video, "-f", "lavfi", "-i", av_audio,
-         "-map", "0:v", "-map", "1:a", "-c:v", "libopenh264", "-b:v", "400k",
-         "-g", "60", "-threads", "1", "-pix_fmt", "yuv420p",
-         "-c:a", "aac", "-b:a", "96k", "-frames:v", "60", "-t", "1",
-         "-map_metadata", "-1", "-fflags", "+bitexact", "-flags:v", "+bitexact",
-         str(av_target)])
-    print(f"generated {av_target.relative_to(ROOT)} ({av_target.stat().st_size} bytes)")
+    if not av_target.exists():
+        av_video = ("testsrc2=size=640x360:rate=60:duration=1,"
+                    "drawbox=x=0:y=0:w=iw:h=ih:color=white:t=fill:enable='eq(n,30)'")
+        av_audio = "aevalsrc=if(between(t\\,0.5\\,0.52)\\,0.7*sin(2*PI*1000*t)\\,0):s=48000:d=1"
+        run([str(ffmpeg), "-hide_banner", "-loglevel", "error", "-nostdin", "-y",
+             "-f", "lavfi", "-i", av_video, "-f", "lavfi", "-i", av_audio,
+             "-map", "0:v", "-map", "1:a", "-c:v", "libopenh264", "-b:v", "400k",
+             "-g", "60", "-threads", "1", "-pix_fmt", "yuv420p",
+             "-c:a", "aac", "-b:a", "96k", "-frames:v", "60", "-t", "1",
+             "-map_metadata", "-1", "-fflags", "+bitexact", "-flags:v", "+bitexact",
+             str(av_target)])
+        print(f"generated {av_target.relative_to(ROOT)} ({av_target.stat().st_size} bytes)")
+
+    strobe_target = destination / "wcag-flash-360p60.mp4"
+    if not strobe_target.exists():
+        strobe_video = ("color=c=black:s=640x360:rate=60:d=1,"
+                        "drawbox=x=0:y=0:w=iw:h=ih:color=white:t=fill:enable='lt(mod(n\\,10)\\,5)'")
+        run([str(ffmpeg), "-hide_banner", "-loglevel", "error", "-nostdin", "-y",
+             "-f", "lavfi", "-i", strobe_video,
+             "-c:v", "libopenh264", "-b:v", "400k", "-g", "60", "-threads", "1",
+             "-pix_fmt", "yuv420p", "-frames:v", "60", "-an",
+             "-map_metadata", "-1", "-fflags", "+bitexact", "-flags:v", "+bitexact",
+             str(strobe_target)])
+        print(f"generated {strobe_target.relative_to(ROOT)} ({strobe_target.stat().st_size} bytes)")
 
 
 def main():

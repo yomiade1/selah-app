@@ -16,6 +16,7 @@ struct WorkerReport {
     thumbnail_width: u32,
     thumbnail_height: u32,
     thumbnail_written: bool,
+    flash_warning: bool,
 }
 
 fn parse_kind(value: &str) -> Result<selah_media::MediaProbeKind, String> {
@@ -63,6 +64,7 @@ fn run() -> Result<(), String> {
     let mut max_width: u32 = 320;
     let mut max_height: u32 = 180;
     let mut thumb_out: Option<PathBuf> = None;
+    let mut scan_flash = true;
 
     while let Some(flag) = args.next() {
         match flag.as_str() {
@@ -100,6 +102,9 @@ fn run() -> Result<(), String> {
                     .ok_or_else(|| "missing value for --thumb-out".to_owned())?;
                 thumb_out = Some(PathBuf::from(value));
             }
+            "--no-flash-scan" => {
+                scan_flash = false;
+            }
             other => return Err(format!("unknown argument '{other}'")),
         }
     }
@@ -111,8 +116,14 @@ fn run() -> Result<(), String> {
         (0, 0)
     };
 
-    let result = selah_media::probe_and_thumbnail(&input_path, kind_hint, thumb_w, thumb_h)
-        .map_err(|e| e.to_string())?;
+    let result = selah_media::probe_and_thumbnail_with_options(
+        &input_path,
+        kind_hint,
+        thumb_w,
+        thumb_h,
+        scan_flash,
+    )
+    .map_err(|e| e.to_string())?;
 
     let mut thumbnail_written = false;
     if let Some(out_path) = thumb_out
@@ -132,6 +143,7 @@ fn run() -> Result<(), String> {
         thumbnail_width: result.thumbnail_width,
         thumbnail_height: result.thumbnail_height,
         thumbnail_written,
+        flash_warning: result.flash_warning,
     };
     let json = serde_json::to_string(&report).map_err(|e| e.to_string())?;
     println!("{json}");

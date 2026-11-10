@@ -4,7 +4,7 @@
 //! newest scene across every configured output, presents it on a vsync-locked schedule, and
 //! broadcasts `FrameShown`. The emergency lane takes the same lock, so it waits behind nothing
 //! but a state update, and the render thread picks it up on the next frame (SAFE-03).
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, HashSet};
 use std::path::PathBuf;
 use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 use std::sync::{Arc, Condvar, Mutex};
@@ -12,11 +12,13 @@ use std::time::{Duration, Instant};
 
 use selah_ipc::FrameSender;
 use selah_proto::v1::{
-    Actor, ActorOrigin, EmergencyApplied, Envelope, Event, FrameShown, OutputConfig,
-    OutputFrameStatus, OutputRole, PreloadHint, RenderCommand, Reply, Resolution, Scene, Status,
-    TestPattern, envelope, event, render_command, reply,
+    Actor, ActorOrigin, EmergencyApplied, Envelope, Event, FrameShown, LayerKind, LayerSpec,
+    OutputConfig, OutputFrameStatus, OutputRole, PreloadHint, RenderCommand, Reply, Resolution,
+    Scene, Status, TestPattern, TransitionDirection, TransitionKind, TransitionSpec, envelope,
+    event, layer_spec, render_command, reply,
 };
 use selah_render::Compositor;
+use selah_render::transitions::{LayerTransitionBlend, RenderTransitionPlan};
 
 use crate::media_playback::{MediaPlaybackManager, default_decode_mode, resolve_media_root};
 use crate::outputs::{OutputMessage, OutputSurface, PreviewWriter, apply_output_message};
@@ -65,6 +67,26 @@ struct State {
     scheduler_stats: SchedulerStats,
     cache_stats: (u64, u64),
     active_video_streams: usize,
+    active_transitions: bool,
+}
+
+#[derive(Clone)]
+struct ActiveOutputTransition {
+    from_scene: Scene,
+    kind: TransitionKind,
+    direction: TransitionDirection,
+    spec: TransitionSpec,
+    started: Instant,
+}
+
+#[derive(Clone)]
+struct ActiveLayerTransition {
+    kind: LayerKind,
+    from_layer: Option<LayerSpec>,
+    transition: TransitionKind,
+    direction: TransitionDirection,
+    spec: TransitionSpec,
+    started: Instant,
 }
 
 pub struct Engine {
@@ -138,6 +160,7 @@ impl Engine {
                 scheduler_stats: SchedulerStats::default(),
                 cache_stats: (0, 0),
                 active_video_streams: 0,
+                active_transitions: false,
             }),
             wake: Condvar::new(),
             clients: Mutex::new(Vec::new()),
@@ -401,6 +424,12 @@ impl Engine {
         let _ = std::thread::Builder::new()
             .name("selah-frames".into())
             .spawn(move || engine.after_frames(frames));
+
+        let mut prev_scene: Option<Scene> = None;
+        let mut active_output_transitions: BTreeMap<u32, ActiveOutputTransition> = BTreeMap::new();
+        let mut active_layer_transitions: BTreeMap<(u32, LayerKind), ActiveLayerTransition> =
+            BTreeMap::new();
+
         loop {
             let (
                 scene,
@@ -415,7 +444,8 @@ impl Engine {
                 media_root_update,
             ) = {
                 let mut state = self.lock();
-                let animating = selah_render::scene::scene_is_time_varying(&state.scene);
+                let animating = state.active_transitions
+                    || selah_render::scene::scene_is_continuously_animated(&state.scene);
                 let mut timed_out = false;
                 while !state.dirty
                     && !state.media_root_dirty
@@ -490,25 +520,69 @@ impl Engine {
                 continue;
             }
 
-            let media_updated =
-                playback.sync_and_push(&scene, &media_root, decode_mode, compositor.as_mut());
-
-            if !dirty
-                && emergency.is_none()
-                && !media_updated
-                && !scene_needs_non_media_tick(&scene)
-            {
-                scheduler.advance_idle(Instant::now());
-                continue;
-            }
-
-            if emergency.is_none() && self.emergency_pending.load(Ordering::Acquire) {
-                continue;
+            let emergency_active =
+                emergency.is_some() || self.emergency_pending.load(Ordering::Acquire);
+            if emergency_active {
+                active_output_transitions.clear();
+                active_layer_transitions.clear();
+                if emergency.is_some() {
+                    prev_scene = Some(scene.clone());
+                }
             }
 
             let targets =
                 selah_render::scene::resolve_targets(&scene, &output_configs, explicit_configs);
+
+            if !emergency_active && prev_scene.as_ref() != Some(&scene) {
+                update_transitions_for_scene(
+                    prev_scene.as_ref(),
+                    &scene,
+                    &targets,
+                    &mut active_output_transitions,
+                    &mut active_layer_transitions,
+                );
+            }
+
+            let retained_hashes = if emergency_active || scene.cleared {
+                HashSet::new()
+            } else {
+                collect_transition_media_hashes(
+                    &active_output_transitions,
+                    &active_layer_transitions,
+                )
+            };
+
+            let media_updated = playback.sync_and_push_with_retained(
+                &scene,
+                &media_root,
+                decode_mode,
+                compositor.as_mut(),
+                &retained_hashes,
+            );
+
+            let has_active_transitions =
+                !active_output_transitions.is_empty() || !active_layer_transitions.is_empty();
+
+            if !dirty
+                && emergency.is_none()
+                && !media_updated
+                && !has_active_transitions
+                && !scene_needs_non_media_tick(&scene)
+            {
+                scheduler.advance_idle(Instant::now());
+                self.lock().active_transitions = false;
+                continue;
+            }
+
+            if emergency.is_none() && self.emergency_pending.load(Ordering::Acquire) {
+                active_output_transitions.clear();
+                active_layer_transitions.clear();
+                self.lock().active_transitions = false;
+                continue;
+            }
+
             let render_started = self.now_ns();
+            let render_now = Instant::now();
             let mut rendered = Vec::with_capacity(targets.len());
             let mut render_ok = true;
             for (output_index, (width, height)) in targets {
@@ -516,7 +590,45 @@ impl Engine {
                     render_ok = false;
                     break;
                 }
-                match compositor.render_output(&scene, output_index, width, height) {
+                let mut plan = RenderTransitionPlan::default();
+                if let Some(tr) = active_output_transitions.get(&output_index) {
+                    let elapsed_ms = render_now
+                        .saturating_duration_since(tr.started)
+                        .as_millis()
+                        .min(u128::from(u32::MAX)) as u32;
+                    let progress =
+                        selah_render::transitions::transition_progress(Some(&tr.spec), elapsed_ms);
+                    if progress < 1.0 {
+                        plan.output_transition =
+                            Some((tr.from_scene.clone(), tr.kind, tr.direction, progress));
+                    }
+                } else {
+                    for ((out_idx, _), tr) in &active_layer_transitions {
+                        if *out_idx != output_index {
+                            continue;
+                        }
+                        let elapsed_ms = render_now
+                            .saturating_duration_since(tr.started)
+                            .as_millis()
+                            .min(u128::from(u32::MAX))
+                            as u32;
+                        let progress = selah_render::transitions::transition_progress(
+                            Some(&tr.spec),
+                            elapsed_ms,
+                        );
+                        if progress < 1.0 {
+                            plan.layer_transitions.push(LayerTransitionBlend {
+                                kind: tr.kind,
+                                from_layer: tr.from_layer.clone(),
+                                transition: tr.transition,
+                                direction: tr.direction,
+                                progress,
+                            });
+                        }
+                    }
+                }
+                match compositor.render_output_with_plan(&scene, output_index, width, height, &plan)
+                {
                     Ok(frame) => {
                         let norm = selah_render::scene::normalize_output_scene(
                             &scene,
@@ -537,6 +649,19 @@ impl Engine {
             {
                 continue;
             }
+            prev_scene = Some(scene.clone());
+
+            let finish_now = Instant::now();
+            active_output_transitions.retain(|_, tr| {
+                finish_now.saturating_duration_since(tr.started).as_millis()
+                    < u128::from(tr.spec.duration_ms)
+            });
+            active_layer_transitions.retain(|_, tr| {
+                finish_now.saturating_duration_since(tr.started).as_millis()
+                    < u128::from(tr.spec.duration_ms)
+            });
+            let remaining_transitions =
+                !active_output_transitions.is_empty() || !active_layer_transitions.is_empty();
 
             tracing::debug!(
                 revision = scene.revision,
@@ -560,6 +685,7 @@ impl Engine {
                 state.scheduler_stats = sched_stats;
                 state.cache_stats = compositor.cache_stats();
                 state.active_video_streams = playback.active_stream_count();
+                state.active_transitions = remaining_transitions;
                 (state.emergency_floor.unwrap_or(0), state.cache_stats)
             };
             let _ = cache_stats;
@@ -595,11 +721,15 @@ impl Engine {
     /// Runs on the frames thread: checksum, tell core and other clients, publish the preview.
     fn after_frames(self: Arc<Self>, frames: std::sync::mpsc::Receiver<Vec<Shown>>) {
         let mut preview = PreviewWriter::open();
+        let mut flash_analyzers: BTreeMap<u32, selah_render::flash::FlashAnalyzer> =
+            BTreeMap::new();
         while let Ok(batch) = frames.recv() {
             if batch.is_empty() {
                 continue;
             }
             let active_indices: Vec<u32> = batch.iter().map(|s| s.output_index).collect();
+            flash_analyzers.retain(|idx, _| active_indices.contains(idx));
+            let batch_emergency = batch.iter().any(|s| s.emergency.is_some());
             let mut messages = Vec::with_capacity(batch.len());
             let mut new_statuses = Vec::with_capacity(batch.len());
             let mut emergency_applied = None;
@@ -612,6 +742,17 @@ impl Engine {
                         monotonic_nanoseconds: shown.shown_ns,
                     });
                 }
+                let flash_warning = if batch_emergency || !shown.live {
+                    if let Some(analyzer) = flash_analyzers.get_mut(&shown.output_index) {
+                        analyzer.reset();
+                    }
+                    false
+                } else {
+                    let analyzer = flash_analyzers.entry(shown.output_index).or_default();
+                    analyzer
+                        .push_frame(&shown.frame, shown.shown_ns)
+                        .flash_warning
+                };
                 let checksum = shown.frame.checksum().to_vec();
                 let res = Resolution {
                     width: shown.frame.width,
@@ -626,6 +767,7 @@ impl Engine {
                     frame_period_nanoseconds: FRAME_PERIOD.as_nanos() as u64,
                     resolution: Some(res),
                     is_preview: false,
+                    flash_warning,
                 };
                 let status = OutputFrameStatus {
                     output_index: shown.output_index,
@@ -633,6 +775,7 @@ impl Engine {
                     frame_checksum: checksum,
                     resolution: Some(res),
                     live: shown.live,
+                    flash_warning,
                 };
                 messages.push(message);
                 new_statuses.push(status);
@@ -718,6 +861,7 @@ impl Engine {
                 .or(state.scene.resolution),
             output_statuses: state.output_statuses.values().cloned().collect(),
             preview_scene_revision: state.preview_scene.as_ref().map_or(0, |s| s.revision),
+            flash_warning: state.output_statuses.values().any(|s| s.flash_warning),
         }
     }
 
@@ -758,6 +902,209 @@ impl Engine {
     }
 }
 
+fn find_layer_for_kind(
+    scene: Option<&Scene>,
+    output_index: u32,
+    kind: LayerKind,
+) -> Option<&LayerSpec> {
+    let scene = scene?;
+    if scene.cleared {
+        return None;
+    }
+    let out = scene
+        .outputs
+        .iter()
+        .find(|o| o.output_index == output_index)?;
+    if out.cleared || out.show_logo {
+        return None;
+    }
+    out.layers
+        .iter()
+        .find(|l| selah_render::scene::layer_kind_of(l) == kind)
+}
+
+fn layers_functionally_equal(a: Option<&LayerSpec>, b: Option<&LayerSpec>) -> bool {
+    match (a, b) {
+        (None, None) => true,
+        (Some(x), Some(y)) => {
+            x.kind == y.kind
+                && x.enabled == y.enabled
+                && x.use_opacity == y.use_opacity
+                && x.opacity.to_bits() == y.opacity.to_bits()
+                && x.effects == y.effects
+                && x.content == y.content
+        }
+        _ => false,
+    }
+}
+
+fn outputs_functionally_equal(
+    prev_scene: Option<&Scene>,
+    output_index: u32,
+    new_out: &selah_proto::v1::OutputScene,
+) -> bool {
+    let Some(scene) = prev_scene else {
+        return false;
+    };
+    if scene.cleared {
+        return false;
+    }
+    let Some(old_out) = scene
+        .outputs
+        .iter()
+        .find(|o| o.output_index == output_index)
+    else {
+        return false;
+    };
+    if old_out.cleared != new_out.cleared
+        || old_out.show_logo != new_out.show_logo
+        || old_out.test_pattern != new_out.test_pattern
+        || old_out.effects != new_out.effects
+        || old_out.layers.len() != new_out.layers.len()
+    {
+        return false;
+    }
+    old_out
+        .layers
+        .iter()
+        .zip(&new_out.layers)
+        .all(|(a, b)| layers_functionally_equal(Some(a), Some(b)))
+}
+
+fn update_transitions_for_scene(
+    prev_scene: Option<&Scene>,
+    scene: &Scene,
+    targets: &[(u32, (u32, u32))],
+    active_outputs: &mut BTreeMap<u32, ActiveOutputTransition>,
+    active_layers: &mut BTreeMap<(u32, LayerKind), ActiveLayerTransition>,
+) {
+    if scene.cleared {
+        active_outputs.clear();
+        active_layers.clear();
+        return;
+    }
+    let from_scene_snapshot = prev_scene.cloned().unwrap_or_else(|| Scene {
+        cleared: true,
+        ..Default::default()
+    });
+    let active_output_indices: HashSet<u32> = targets.iter().map(|(i, _)| *i).collect();
+    active_outputs.retain(|idx, _| active_output_indices.contains(idx));
+    active_layers.retain(|(idx, _), _| active_output_indices.contains(idx));
+
+    for (output_index, _) in targets {
+        let Some(out) = scene
+            .outputs
+            .iter()
+            .find(|o| o.output_index == *output_index)
+        else {
+            active_outputs.remove(output_index);
+            active_layers.retain(|(idx, _), _| idx != output_index);
+            continue;
+        };
+
+        let out_changed = !outputs_functionally_equal(prev_scene, *output_index, out);
+        if selah_render::transitions::transition_is_animated(out.transition.as_ref()) {
+            if out_changed {
+                let spec = out.transition.expect("checked");
+                let (kind, direction, _, _) =
+                    selah_render::transitions::resolve_transition_spec(Some(&spec));
+                active_outputs.insert(
+                    *output_index,
+                    ActiveOutputTransition {
+                        from_scene: from_scene_snapshot.clone(),
+                        kind,
+                        direction,
+                        spec,
+                        started: Instant::now(),
+                    },
+                );
+                active_layers.retain(|(idx, _), _| idx != output_index);
+            }
+            continue;
+        }
+
+        if out_changed {
+            active_outputs.remove(output_index);
+        }
+        if out.cleared || out.show_logo {
+            active_layers.retain(|(idx, _), _| idx != output_index);
+            continue;
+        }
+
+        let mut seen_kinds = HashSet::new();
+        for layer in &out.layers {
+            let lk = selah_render::scene::layer_kind_of(layer);
+            if lk == LayerKind::Unspecified {
+                continue;
+            }
+            seen_kinds.insert(lk);
+            let prev_layer = find_layer_for_kind(prev_scene, *output_index, lk);
+            if layers_functionally_equal(prev_layer, Some(layer)) {
+                continue;
+            }
+            if selah_render::transitions::transition_is_animated(layer.transition.as_ref()) {
+                let spec = layer.transition.expect("checked");
+                let (transition, direction, _, _) =
+                    selah_render::transitions::resolve_transition_spec(Some(&spec));
+                let from_layer = prev_layer.and_then(|pl| {
+                    (pl.enabled && selah_render::scene::layer_has_content(pl)).then(|| pl.clone())
+                });
+                active_layers.insert(
+                    (*output_index, lk),
+                    ActiveLayerTransition {
+                        kind: lk,
+                        from_layer,
+                        transition,
+                        direction,
+                        spec,
+                        started: Instant::now(),
+                    },
+                );
+            } else {
+                active_layers.remove(&(*output_index, lk));
+            }
+        }
+        active_layers.retain(|(idx, lk), _| idx != output_index || seen_kinds.contains(lk));
+    }
+}
+
+fn collect_hashes_from_layer(spec: &LayerSpec, out: &mut HashSet<String>) {
+    if !spec.enabled {
+        return;
+    }
+    if let Some(layer_spec::Content::Media(media)) = spec.content.as_ref()
+        && media.media_kind == "video"
+    {
+        let hash = media.content_hash.trim().to_ascii_lowercase();
+        if !hash.is_empty() {
+            out.insert(hash);
+        }
+    }
+}
+
+fn collect_transition_media_hashes(
+    active_outputs: &BTreeMap<u32, ActiveOutputTransition>,
+    active_layers: &BTreeMap<(u32, LayerKind), ActiveLayerTransition>,
+) -> HashSet<String> {
+    let mut hashes = HashSet::new();
+    for tr in active_outputs.values() {
+        for out in &tr.from_scene.outputs {
+            if out.cleared || out.show_logo {
+                continue;
+            }
+            for layer in &out.layers {
+                collect_hashes_from_layer(layer, &mut hashes);
+            }
+        }
+    }
+    for tr in active_layers.values() {
+        if let Some(layer) = tr.from_layer.as_ref() {
+            collect_hashes_from_layer(layer, &mut hashes);
+        }
+    }
+    hashes
+}
+
 fn scene_needs_non_media_tick(scene: &Scene) -> bool {
     if scene.cleared {
         return false;
@@ -766,23 +1113,9 @@ fn scene_needs_non_media_tick(scene: &Scene) -> bool {
         if out.cleared || out.show_logo {
             return false;
         }
-        if out
-            .transition
-            .as_ref()
-            .is_some_and(|t| t.duration_ms > 0 && t.kind > 1)
-        {
-            return true;
-        }
         out.layers.iter().any(|layer| {
             if !layer.enabled {
                 return false;
-            }
-            if layer
-                .transition
-                .as_ref()
-                .is_some_and(|t| t.duration_ms > 0 && t.kind > 1)
-            {
-                return true;
             }
             match layer.content.as_ref() {
                 Some(selah_proto::v1::layer_spec::Content::Slide(s)) => {
@@ -1102,5 +1435,193 @@ mod tests {
             );
             tokio::time::sleep(Duration::from_millis(10)).await;
         }
+    }
+
+    #[tokio::test]
+    async fn timed_transitions_animate_across_frames_and_emergency_cancels_immediately() {
+        // safe: SAFE-03
+        use selah_proto::v1::{
+            Color, MediaLayerSpec, TransitionDirection, TransitionEasing, TransitionKind,
+            TransitionSpec,
+        };
+
+        let (engine, _) = Engine::start(Mode::Headless).expect("engine starts headless");
+        engine.apply(&RenderCommand {
+            action: Some(render_command::Action::SetOutputConfigs(
+                selah_proto::v1::SetOutputConfigs {
+                    outputs: vec![OutputConfig {
+                        output_index: 0,
+                        name: "Main".into(),
+                        role: OutputRole::Main as i32,
+                        resolution: Some(Resolution {
+                            width: 160,
+                            height: 90,
+                        }),
+                        enabled: true,
+                        ..Default::default()
+                    }],
+                },
+            )),
+        });
+
+        let blue_scene = Scene {
+            revision: 1,
+            outputs: vec![OutputScene {
+                output_index: 0,
+                layers: vec![LayerSpec {
+                    kind: LayerKind::Media as i32,
+                    enabled: true,
+                    content: Some(layer_spec::Content::Media(MediaLayerSpec {
+                        solid_color: Some(Color {
+                            red: 0.0,
+                            green: 0.0,
+                            blue: 1.0,
+                            alpha: 1.0,
+                        }),
+                        ..Default::default()
+                    })),
+                    ..Default::default()
+                }],
+                ..Default::default()
+            }],
+            ..Default::default()
+        };
+        engine.apply(&RenderCommand {
+            action: Some(render_command::Action::SetScene(blue_scene)),
+        });
+
+        let deadline = Instant::now() + Duration::from_secs(5);
+        let blue_checksum = loop {
+            let st = engine.status();
+            if st.output_statuses.len() == 1
+                && st.output_statuses[0].scene_revision == 1
+                && st.output_statuses[0].live
+            {
+                break st.output_statuses[0].frame_checksum.clone();
+            }
+            assert!(
+                Instant::now() < deadline,
+                "timed out waiting for blue frame"
+            );
+            tokio::time::sleep(Duration::from_millis(8)).await;
+        };
+
+        // Start a 260 ms output Fade to green and collect intermediate distinct checksums.
+        let green_scene = Scene {
+            revision: 2,
+            outputs: vec![OutputScene {
+                output_index: 0,
+                transition: Some(TransitionSpec {
+                    kind: TransitionKind::Fade as i32,
+                    direction: TransitionDirection::Left as i32,
+                    easing: TransitionEasing::Linear as i32,
+                    duration_ms: 260,
+                }),
+                layers: vec![LayerSpec {
+                    kind: LayerKind::Media as i32,
+                    enabled: true,
+                    content: Some(layer_spec::Content::Media(MediaLayerSpec {
+                        solid_color: Some(Color {
+                            red: 0.0,
+                            green: 1.0,
+                            blue: 0.0,
+                            alpha: 1.0,
+                        }),
+                        ..Default::default()
+                    })),
+                    ..Default::default()
+                }],
+                ..Default::default()
+            }],
+            ..Default::default()
+        };
+        engine.apply(&RenderCommand {
+            action: Some(render_command::Action::SetScene(green_scene)),
+        });
+
+        let mut seen_checksums = std::collections::HashSet::new();
+        let wait_until = Instant::now() + Duration::from_millis(450);
+        while Instant::now() < wait_until {
+            let st = engine.status();
+            if st.engine_scene_revision == 2 && !st.frame_checksum.is_empty() {
+                seen_checksums.insert(st.frame_checksum);
+            }
+            tokio::time::sleep(Duration::from_millis(8)).await;
+        }
+        assert!(
+            seen_checksums.len() >= 3,
+            "expected >= 3 intermediate transition checksums, got {}",
+            seen_checksums.len()
+        );
+        assert_ne!(
+            engine.status().frame_checksum,
+            blue_checksum,
+            "completed fade must settle on destination green frame"
+        );
+
+        // Once completed, the scheduler must return to idle (no runaway polling).
+        let frames_after_settle = engine.scheduler_stats().scheduled_frames;
+        tokio::time::sleep(Duration::from_millis(120)).await;
+        assert_eq!(
+            engine.scheduler_stats().scheduled_frames,
+            frames_after_settle,
+            "engine must stop waking at 60 Hz after finite transition finishes"
+        );
+
+        // SAFE-03: emergency clear during a long 3000 ms transition cancels immediately.
+        let slow_red = Scene {
+            revision: 3,
+            outputs: vec![OutputScene {
+                output_index: 0,
+                transition: Some(TransitionSpec {
+                    kind: TransitionKind::Wipe as i32,
+                    direction: TransitionDirection::Right as i32,
+                    easing: TransitionEasing::EaseInOut as i32,
+                    duration_ms: 3000,
+                }),
+                layers: vec![LayerSpec {
+                    kind: LayerKind::Media as i32,
+                    enabled: true,
+                    content: Some(layer_spec::Content::Media(MediaLayerSpec {
+                        solid_color: Some(Color {
+                            red: 1.0,
+                            green: 0.0,
+                            blue: 0.0,
+                            alpha: 1.0,
+                        }),
+                        ..Default::default()
+                    })),
+                    ..Default::default()
+                }],
+                ..Default::default()
+            }],
+            ..Default::default()
+        };
+        engine.apply(&RenderCommand {
+            action: Some(render_command::Action::SetScene(slow_red)),
+        });
+        tokio::time::sleep(Duration::from_millis(50)).await;
+        engine.emergency(false);
+
+        let clear_deadline = Instant::now() + Duration::from_secs(3);
+        loop {
+            let st = engine.status();
+            if !st.live && st.output_statuses.iter().all(|s| !s.live) {
+                break;
+            }
+            assert!(
+                Instant::now() < clear_deadline,
+                "timed out waiting for emergency cancellation of slow transition"
+            );
+            tokio::time::sleep(Duration::from_millis(10)).await;
+        }
+        // Must remain cleared and idle even though 3000 ms transition had 2950 ms remaining.
+        let frames_after_clear = engine.scheduler_stats().scheduled_frames;
+        tokio::time::sleep(Duration::from_millis(120)).await;
+        assert!(!engine.status().live);
+        assert_eq!(
+            engine.scheduler_stats().scheduled_frames,
+            frames_after_clear
+        );
     }
 }
