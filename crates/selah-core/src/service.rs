@@ -3053,11 +3053,7 @@ Was [Em]blind, but [D]now I [G]see.
                 ActorOrigin::Sync,
                 ActorOrigin::Engine,
             ] {
-                let refused = core.handle(&request_with_id(
-                    850,
-                    origin,
-                    command(action.clone()),
-                ));
+                let refused = core.handle(&request_with_id(850, origin, command(action.clone())));
                 assert_eq!(error_code(&refused), DENIED_CODE);
                 assert!(refused.to_engine.is_none());
             }

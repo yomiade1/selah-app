@@ -2283,6 +2283,8 @@ dependencies = [
  "pollster",
  "prost",
  "selah-proto",
+ "serde",
+ "serde_json",
  "skia-safe",
  "tracing",
  "wgpu",

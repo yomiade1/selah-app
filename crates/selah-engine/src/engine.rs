@@ -382,10 +382,7 @@ impl Engine {
                 let mut state = self.lock();
                 let animating = selah_render::scene::scene_is_time_varying(&state.scene);
                 let mut timed_out = false;
-                while !state.dirty
-                    && state.outputs.is_empty()
-                    && state.pending_preload.is_empty()
-                {
+                while !state.dirty && state.outputs.is_empty() && state.pending_preload.is_empty() {
                     if let Some(wait) = scheduler.wait_timeout(Instant::now(), animating) {
                         if wait.is_zero() {
                             timed_out = true;
@@ -634,7 +631,9 @@ impl Engine {
             scene_revision: state.scene.revision,
             engine_connected: true,
             engine_scene_revision: primary.map_or(0, |f| f.scene_revision),
-            frame_checksum: primary.map(|f| f.frame_checksum.clone()).unwrap_or_default(),
+            frame_checksum: primary
+                .map(|f| f.frame_checksum.clone())
+                .unwrap_or_default(),
             version: selah_runtime::VERSION.into(),
             live: selah_render::scene::scene_is_live(&state.scene),
             renderer: self.compositor_name().to_owned(),

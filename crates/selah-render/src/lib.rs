@@ -5,6 +5,7 @@ pub mod cpu;
 pub mod gpu;
 pub mod png;
 pub mod scene;
+pub mod template;
 pub mod text;
 pub mod video;
 

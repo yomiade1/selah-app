@@ -12,6 +12,7 @@ use selah_proto::v1::{
 
 use crate::Frame;
 use crate::cpu::pattern_pixel;
+use crate::template::TemplateStyle;
 use crate::text::{SlideTextStyle, TextRenderer, composite_over};
 
 /// Canonical z-order from back (0) to front (4) on every output.
@@ -606,15 +607,16 @@ pub fn rasterise_layer_overlay(
             } else {
                 None
             };
-            if !s.text.is_empty() {
+            if slide_has_renderable_text(s) {
                 if text_renderer.is_none() {
                     *text_renderer = Some(TextRenderer::bundled()?);
                 }
-                let style = SlideTextStyle::for_output(height);
-                let text_frame = text_renderer
-                    .as_mut()
-                    .expect("text renderer exists")
-                    .render(&s.text, &style, width, height)?;
+                let text_frame = rasterise_slide_text(
+                    s,
+                    width,
+                    height,
+                    text_renderer.as_mut().expect("text renderer exists"),
+                )?;
                 match &mut base {
                     Some(b) => composite_over(b, &text_frame),
                     None => base = Some((*text_frame).clone()),
@@ -673,6 +675,42 @@ pub fn rasterise_layer_overlay(
     Ok(Some(arc))
 }
 
+fn slide_has_renderable_text(s: &SlideLayerSpec) -> bool {
+    !s.text.is_empty()
+        || !s.title_text.is_empty()
+        || !s.reference_text.is_empty()
+        || !s.translation_text.is_empty()
+        || !s.footer_text.is_empty()
+}
+
+fn rasterise_slide_text(
+    s: &SlideLayerSpec,
+    width: u32,
+    height: u32,
+    renderer: &mut TextRenderer,
+) -> Result<Arc<Frame>> {
+    if s.style_json.trim().is_empty()
+        && s.title_text.is_empty()
+        && s.reference_text.is_empty()
+        && s.translation_text.is_empty()
+        && s.footer_text.is_empty()
+        && s.chords_json.is_empty()
+    {
+        let style = SlideTextStyle::for_output(height);
+        return renderer.render(&s.text, &style, width, height);
+    }
+    let template = match TemplateStyle::from_json(&s.style_json) {
+        Ok(t) => t,
+        Err(error) => {
+            tracing::warn!(%error, "ignoring malformed template style_json on slide");
+            TemplateStyle::default()
+        }
+    };
+    let resolved = template.resolve_for_output(width, height, None);
+    let frame = renderer.render_slide(s, &resolved, width, height)?;
+    Ok(Arc::new(frame))
+}
+
 /// Pre-rasterise slide text and normalized layers for upcoming hints or scene outputs.
 pub fn prerasterise_hints(
     hints: &[PreloadHint],
@@ -688,20 +726,22 @@ pub fn prerasterise_hints(
         if text_renderer.is_none() {
             *text_renderer = Some(TextRenderer::bundled()?);
         }
-        let style = SlideTextStyle::for_output(height);
-        let frame = text_renderer
-            .as_mut()
-            .expect("text renderer exists")
-            .render(&hint.text, &style, width, height)?;
+        let slide = SlideLayerSpec {
+            text: hint.text.clone(),
+            style_json: hint.style_json.clone(),
+            elements_json: hint.elements_json.clone(),
+            ..Default::default()
+        };
+        let frame = rasterise_slide_text(
+            &slide,
+            width,
+            height,
+            text_renderer.as_mut().expect("text renderer exists"),
+        )?;
         let spec = LayerSpec {
             kind: LayerKind::Slide as i32,
             enabled: true,
-            content: Some(layer_spec::Content::Slide(SlideLayerSpec {
-                text: hint.text.clone(),
-                style_json: hint.style_json.clone(),
-                elements_json: hint.elements_json.clone(),
-                ..Default::default()
-            })),
+            content: Some(layer_spec::Content::Slide(slide)),
             ..Default::default()
         };
         let key = layer_cache_key(LayerKind::Slide, 1.0, &spec, width, height);
