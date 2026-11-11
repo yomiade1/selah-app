@@ -140,6 +140,7 @@ message Command {
     SendBoothMessage send_booth_message = 88;
     SetBoothLock set_booth_lock = 89;
     SetRoleLock set_role_lock = 90;
+    SetPracticeMode set_practice_mode = 91;
   }
   // Optional client-supplied UUIDv7 grouping multiple mutations into one undo/redo step.
   Id undo_group = 100;
@@ -227,6 +228,7 @@ message Query {
     ListClearGroups list_clear_groups = 58;
     GetStageLayout get_stage_layout = 59;
     ListStageLayouts list_stage_layouts = 60;
+    RunReadyCheck run_ready_check = 61;
   }
 }
 
@@ -357,6 +359,7 @@ message Reply {
     ClearGroupList clear_group_list = 65;
     StageLayout stage_layout = 66;
     StageLayoutList stage_layout_list = 67;
+    ReadyReport ready_report = 68;
   }
 }
 

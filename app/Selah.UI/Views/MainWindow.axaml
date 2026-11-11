@@ -1,6 +1,7 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:vm="using:Selah.UI.ViewModels"
+        xmlns:pb="using:Selah.Contracts.V1"
         xmlns:views="using:Selah.UI.Views"
         xmlns:s="using:Selah.UI.Services"
         x:Class="Selah.UI.Views.MainWindow"
@@ -112,6 +113,8 @@
                         Header="{Binding [help-for-this-screen-menu], Source={x:Static s:Localizer.Instance}}" />
               <MenuItem Name="WhatsThisMenuItem" Click="OnToggleWhatsThis"
                         Header="{Binding [help-whats-this-menu], Source={x:Static s:Localizer.Instance}}" />
+              <MenuItem Name="StartTourItem" Command="{Binding Tour.ShowPickerCommand}"
+                        Header="{Binding [tour-start], Source={x:Static s:Localizer.Instance}}" />
               <MenuItem Name="HelpArticlesItem" Click="OnOpenHelp"
                         Header="{Binding [sidebar-help-articles], Source={x:Static s:Localizer.Instance}}" />
               <MenuItem Name="ReportProblemItem" Command="{Binding ReportProblemCommand}"
@@ -178,6 +181,69 @@
                       Margin="12,6,12,0"
                       Message="{Binding LastError}"
                       FixArticleId="{Binding LastErrorFixArticleId}" />
+
+    <!-- M4.7 first-run setup. -->
+    <Border Name="SetupPanel" DockPanel.Dock="Top" IsVisible="{Binding Setup.IsOpen}" Classes="card"
+            Margin="{DynamicResource Space.Text.Small}" s:Help.Anchor="setup.wizard">
+      <StackPanel Spacing="{DynamicResource Space.2}" MaxWidth="720" HorizontalAlignment="Left">
+        <TextBlock Classes="title-3" Text="{Binding [setup-title], Source={x:Static s:Localizer.Instance}}" />
+        <TextBlock Classes="caption" Text="{Binding Setup.StepText}" />
+        <TextBlock TextWrapping="Wrap" IsVisible="{Binding Setup.IsWelcome}" Text="{Binding [setup-intro], Source={x:Static s:Localizer.Instance}}" />
+        <StackPanel Spacing="{DynamicResource Space.1}" IsVisible="{Binding Setup.IsScreens}">
+          <TextBlock Classes="label" Text="{Binding [setup-screens-title], Source={x:Static s:Localizer.Instance}}" />
+          <TextBlock TextWrapping="Wrap" Text="{Binding [setup-screens-hint], Source={x:Static s:Localizer.Instance}}" IsVisible="{Binding Setup.HasScreens}" />
+          <TextBlock TextWrapping="Wrap" Text="{Binding [setup-screens-none], Source={x:Static s:Localizer.Instance}}" IsVisible="{Binding !Setup.HasScreens}" />
+          <ItemsControl ItemsSource="{Binding Setup.Screens}">
+            <ItemsControl.ItemTemplate>
+              <DataTemplate x:DataType="pb:OutputConfig">
+                <TextBlock Text="{Binding Name}" />
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+        </StackPanel>
+        <StackPanel Spacing="{DynamicResource Space.1}" IsVisible="{Binding Setup.IsBible}">
+          <TextBlock Classes="label" Text="{Binding [setup-bible-title], Source={x:Static s:Localizer.Instance}}" />
+          <TextBlock TextWrapping="Wrap" Text="{Binding [setup-bible-hint], Source={x:Static s:Localizer.Instance}}" />
+          <ComboBox Name="SetupBibleCombo" MinWidth="200" ItemsSource="{Binding Setup.Bibles}" SelectedItem="{Binding Setup.SelectedBible}"
+                    AutomationProperties.Name="{Binding [setup-bible-title], Source={x:Static s:Localizer.Instance}}">
+            <ComboBox.ItemTemplate>
+              <DataTemplate x:DataType="pb:BibleTranslation">
+                <TextBlock Text="{Binding Name}" />
+              </DataTemplate>
+            </ComboBox.ItemTemplate>
+          </ComboBox>
+        </StackPanel>
+        <StackPanel Spacing="{DynamicResource Space.1}" IsVisible="{Binding Setup.IsCcli}" s:Help.Anchor="setup.ccli">
+          <TextBlock Classes="label" Text="{Binding [setup-ccli-label], Source={x:Static s:Localizer.Instance}}" />
+          <TextBlock TextWrapping="Wrap" Text="{Binding [setup-ccli-hint], Source={x:Static s:Localizer.Instance}}" />
+          <TextBox Name="SetupCcliBox" MaxLength="12" MaxWidth="240" HorizontalAlignment="Left" Text="{Binding Setup.CcliNumber}"
+                   AutomationProperties.Name="{Binding [setup-ccli-label], Source={x:Static s:Localizer.Instance}}" />
+        </StackPanel>
+        <StackPanel Spacing="{DynamicResource Space.1}" IsVisible="{Binding Setup.IsSample}">
+          <TextBlock Classes="label" Text="{Binding [setup-sample-title], Source={x:Static s:Localizer.Instance}}" />
+          <TextBlock TextWrapping="Wrap" Text="{Binding [setup-sample-hint], Source={x:Static s:Localizer.Instance}}" />
+          <Button Name="SetupAddSampleButton" Command="{Binding Setup.AddSampleCommand}" IsEnabled="{Binding !Setup.SampleAdded}">
+            <TextBlock Text="{Binding [setup-sample-add], Source={x:Static s:Localizer.Instance}}" />
+          </Button>
+        </StackPanel>
+        <TextBlock Name="SetupStatus" TextWrapping="Wrap" Text="{Binding Setup.StatusText}"
+                   IsVisible="{Binding Setup.StatusText, Converter={x:Static ObjectConverters.IsNotNull}}" />
+        <WrapPanel ItemSpacing="{DynamicResource Space.2}" LineSpacing="{DynamicResource Space.2}">
+          <Button Name="SetupBackButton" Command="{Binding Setup.BackCommand}" IsEnabled="{Binding Setup.CanGoBack}">
+            <TextBlock Text="{Binding [setup-back], Source={x:Static s:Localizer.Instance}}" />
+          </Button>
+          <Button Name="SetupNextButton" Classes="primary" Command="{Binding Setup.NextCommand}" IsVisible="{Binding Setup.IsNotLastStep}">
+            <TextBlock Text="{Binding [setup-next], Source={x:Static s:Localizer.Instance}}" />
+          </Button>
+          <Button Name="SetupFinishButton" Classes="primary" Command="{Binding Setup.FinishCommand}" IsVisible="{Binding Setup.IsLastStep}">
+            <TextBlock Text="{Binding [setup-finish], Source={x:Static s:Localizer.Instance}}" />
+          </Button>
+          <Button Name="SetupSkipButton" Classes="quiet" Command="{Binding Setup.SkipCommand}">
+            <TextBlock Text="{Binding [setup-skip], Source={x:Static s:Localizer.Instance}}" />
+          </Button>
+        </WrapPanel>
+      </StackPanel>
+    </Border>
 
     <!-- Sidebar: an Apple-style source list. -->
     <Border Name="Sidebar" DockPanel.Dock="Left" Width="{DynamicResource Size.SidebarWidth}"
@@ -325,6 +391,70 @@
         <views:LiveProducerView Name="LiveProducerViewControl" DataContext="{Binding LiveProducer}" IsVisible="{Binding $parent[Window].((vm:MainViewModel)DataContext).IsProducerView}" />
         <views:SimpleModeView Name="SimpleModeViewControl" DataContext="{Binding Simple}" IsVisible="{Binding $parent[Window].((vm:MainViewModel)DataContext).IsSimpleView}" />
       </Panel>
+
+      <!-- M4.7: practice banner and tour coach marks float at the top of the workspace, on the side
+           away from the program preview, so they never push or cover Next and Clear (DESIGN-SYSTEM §1). -->
+      <StackPanel Name="GuideOverlay" VerticalAlignment="Top" HorizontalAlignment="{Binding GuideAlignment}"
+                  MaxWidth="560" Margin="{DynamicResource Space.Text.Small}" Spacing="{DynamicResource Space.1}" ZIndex="10">
+      <!-- M4.7 practice mode: says plainly that nothing reaches the room. Docked, never on top. -->
+      <Border Name="PracticeBanner" IsVisible="{Binding IsPracticeMode}"
+              Background="{DynamicResource Brush.WarningBg}" BorderBrush="{DynamicResource Brush.Warning}"
+              BorderThickness="{DynamicResource Line.AlertBar}" Padding="{DynamicResource Space.Text.Small}"
+              s:Help.Anchor="live.practice-mode">
+        <!-- One line, so the live controls keep their room at 200% text; Stop practice is in the toolbar. -->
+        <Grid ColumnDefinitions="Auto,*" ColumnSpacing="{DynamicResource Space.3}">
+          <TextBlock Classes="label" VerticalAlignment="Center" Text="{Binding [live-practice-banner], Source={x:Static s:Localizer.Instance}}" />
+          <TextBlock Grid.Column="1" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"
+                     Text="{Binding [live-practice-banner-detail], Source={x:Static s:Localizer.Instance}}"
+                     ToolTip.Tip="{Binding [live-practice-banner-detail], Source={x:Static s:Localizer.Instance}}" />
+        </Grid>
+      </Border>
+
+      <!-- M4.7 tours: the picker and one coach mark at a time, docked so nothing live is covered. -->
+      <Border Name="TourBar" Background="{DynamicResource Brush.Surface}"
+              BorderBrush="{DynamicResource Brush.Focus}" BorderThickness="{DynamicResource Line.AlertBar}"
+              Padding="{DynamicResource Space.Text.Small}" IsVisible="{Binding Tour.IsVisible}" s:Help.Anchor="help.tour">
+        <StackPanel Spacing="{DynamicResource Space.2}">
+          <StackPanel Name="TourPicker" Spacing="{DynamicResource Space.2}" IsVisible="{Binding Tour.IsPicking}">
+            <TextBlock Classes="label" Text="{Binding [tour-pick], Source={x:Static s:Localizer.Instance}}" />
+            <ItemsControl Name="TourList" ItemsSource="{Binding Tour.Tours}">
+              <ItemsControl.ItemsPanel>
+                <ItemsPanelTemplate><WrapPanel ItemSpacing="{DynamicResource Space.2}" LineSpacing="{DynamicResource Space.2}" /></ItemsPanelTemplate>
+              </ItemsControl.ItemsPanel>
+              <ItemsControl.ItemTemplate>
+                <DataTemplate x:DataType="vm:TourDefinition">
+                  <Button Command="{Binding $parent[Window].((vm:MainViewModel)DataContext).Tour.StartCommand}" CommandParameter="{Binding}">
+                    <TextBlock Text="{Binding Title}" />
+                  </Button>
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+            <TextBlock Name="TourRefusal" TextWrapping="Wrap" Foreground="{DynamicResource Brush.Live}" Text="{Binding Tour.Refusal}"
+                       IsVisible="{Binding Tour.Refusal, Converter={x:Static ObjectConverters.IsNotNull}}" />
+            <Button Name="TourPickerClose" Classes="quiet" Command="{Binding Tour.SkipCommand}">
+              <TextBlock Text="{Binding [tour-skip], Source={x:Static s:Localizer.Instance}}" />
+            </Button>
+          </StackPanel>
+          <Grid Name="TourCoachMark" ColumnDefinitions="*,Auto" ColumnSpacing="{DynamicResource Space.3}" IsVisible="{Binding Tour.IsOpen}">
+            <TextBlock Name="TourStepText" TextWrapping="Wrap" VerticalAlignment="Center">
+              <Run FontWeight="SemiBold" Text="{Binding Tour.StepCounter}" />
+              <Run Text="{Binding Tour.StepText}" />
+            </TextBlock>
+            <WrapPanel Grid.Column="1" VerticalAlignment="Center" ItemSpacing="{DynamicResource Space.2}" LineSpacing="{DynamicResource Space.2}">
+              <Button Name="TourBackButton" Command="{Binding Tour.BackCommand}" IsEnabled="{Binding Tour.CanGoBack}">
+                <TextBlock Text="{Binding [tour-back], Source={x:Static s:Localizer.Instance}}" />
+              </Button>
+              <Button Name="TourNextButton" Classes="primary" Command="{Binding Tour.NextCommand}">
+                <TextBlock Text="{Binding Tour.NextText}" />
+              </Button>
+              <Button Name="TourSkipButton" Classes="quiet" Command="{Binding Tour.SkipCommand}">
+                <TextBlock Text="{Binding [tour-skip], Source={x:Static s:Localizer.Instance}}" />
+              </Button>
+            </WrapPanel>
+          </Grid>
+        </StackPanel>
+      </Border>
+      </StackPanel>
 
       <!-- Quick find (Ctrl/Cmd+K) never covers Toolbar / Clear everything. -->
       <views:CommandPaletteView Name="CommandPaletteControl" DataContext="{Binding CommandPalette}"

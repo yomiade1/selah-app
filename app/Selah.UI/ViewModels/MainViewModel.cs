@@ -62,7 +62,25 @@ public sealed partial class MainViewModel : ObservableObject
             {
                 OnRoleLockChanged(LiveProducer.IsRoleLocked);
             }
+            if (args.PropertyName == nameof(LiveProducerViewModel.Status))
+            {
+                OnPropertyChanged(nameof(IsPracticeMode));
+                OnPropertyChanged(nameof(PracticeButtonText));
+            }
         };
+
+        Setup = new SetupViewModel(resolvedLibrary);
+        Tour = new TourViewModel(
+            () => IsLive || (LiveProducer.Status.HasActiveItem && !LiveProducer.Status.Cleared),
+            () => IsPracticeMode,
+            SetPracticeAsync,
+            mode =>
+            {
+                ActiveMode = WorkspaceMode.Live;
+                IsSimpleMode = mode == "simple" || IsRoleLocked;
+            });
+
+        Tour.AnchorShown += (_, anchor) => LiveProducer.ShowPaneFor(anchor);
 
         Library.EditSongRequested += (_, song) => _ = EditSongInEditorAsync(song);
         Library.SceneStaged += (_, _) => HasStagedPreview = true;
@@ -72,6 +90,7 @@ public sealed partial class MainViewModel : ObservableObject
         TemplateEditor.TemplatesChanged += (_, _) => _ = RefreshTemplatesEverywhereAsync();
         ServicePlanner.RehearseRequested += (_, _) => HasStagedPreview = true;
         ServicePlanner.GoLiveRequested += (_, service) => _ = GoLiveAsync(service);
+        ServicePlanner.Ready.FixRequested += (_, article) => ArticleRequested?.Invoke(this, article);
 
         RegisterPaletteCommands();
         CommandPalette.SongChosen += (_, song) => _ = EditSongInEditorAsync(song);
@@ -136,6 +155,7 @@ public sealed partial class MainViewModel : ObservableObject
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(IsSimpleView))]
     [NotifyPropertyChangedFor(nameof(IsProducerView))]
+    [NotifyPropertyChangedFor(nameof(GuideAlignment))]
     private bool isSimpleMode;
 
     public bool IsSimpleView => IsLiveMode && IsSimpleMode;
@@ -171,6 +191,39 @@ public sealed partial class MainViewModel : ObservableObject
     }
 
     private readonly ILiveService? liveService;
+
+    /// <summary>First-run setup (M4.7).</summary>
+    public SetupViewModel Setup { get; }
+
+    /// <summary>Guided tours (M4.7).</summary>
+    public TourViewModel Tour { get; }
+
+    /// <summary>Practice mode (M4.7): core sends live changes to the preview window only.</summary>
+    public bool IsPracticeMode => LiveProducer.Status.Automation.FirstOrDefault()?.PracticeMode == true;
+
+    /// <summary>Where the practice banner and coach marks float: away from the program preview.</summary>
+    public Avalonia.Layout.HorizontalAlignment GuideAlignment => IsSimpleView ? Avalonia.Layout.HorizontalAlignment.Right : Avalonia.Layout.HorizontalAlignment.Left;
+
+    public string PracticeButtonText => Localizer.Instance[IsPracticeMode ? "live-practice-stop" : "live-practice-start"];
+
+    public async Task SetPracticeAsync(bool on)
+    {
+        if (liveService is null)
+        {
+            return;
+        }
+        try
+        {
+            LiveProducer.Apply(await liveService.SetPracticeModeAsync(on));
+        }
+        catch (CoreException error)
+        {
+            LastError = Localizer.Instance.Get(error.MessageKey);
+        }
+    }
+
+    [RelayCommand]
+    private Task TogglePractice() => SetPracticeAsync(!IsPracticeMode);
 
     /// <summary>Holding Esc for 1 second clears the screens from every view (SAFE-03, M4-A12).</summary>
     public HoldGesture EscapeHold { get; } = new(TimeSpan.FromSeconds(1));
@@ -217,6 +270,7 @@ public sealed partial class MainViewModel : ObservableObject
     [NotifyPropertyChangedFor(nameof(IsTemplatesMode))]
     [NotifyPropertyChangedFor(nameof(IsServicePlannerMode))]
     [NotifyPropertyChangedFor(nameof(IsLiveMode))]
+    [NotifyPropertyChangedFor(nameof(GuideAlignment))]
     [NotifyPropertyChangedFor(nameof(IsSimpleView))]
     [NotifyPropertyChangedFor(nameof(IsProducerView))]
     private WorkspaceMode activeMode = WorkspaceMode.Preview;
@@ -352,6 +406,7 @@ public sealed partial class MainViewModel : ObservableObject
             wasConnected = true;
             _ = Library.LoadAsync();
             _ = SongEditor.LoadTemplatesAsync();
+            _ = Setup.OpenIfFirstRunAsync();
             libraryLoadedOnce = true;
         }
         else if (!snapshot.Connected)

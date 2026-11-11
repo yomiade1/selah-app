@@ -209,6 +209,30 @@ public sealed partial class LiveProducerViewModel : ObservableObject
 
     public ProducerDockFactory Dock { get; }
 
+    /// <summary>Bring forward the inspector tab that holds a help anchor (tours, M4.7).</summary>
+    public void ShowPaneFor(string anchor)
+    {
+        var id = anchor switch
+        {
+            "live.tiles" => "tiles",
+            "live.layers" => "layers",
+            "live.stage-editor" or "live.stage-preview" => "stage",
+            _ => null,
+        };
+        if (id is null)
+        {
+            return;
+        }
+        Dock.Model.Core.IDockable? Find(Dock.Model.Core.IDockable node) =>
+            node is ProducerPane pane && pane.Id == id ? pane
+            : node is Dock.Model.Core.IDock { VisibleDockables: { } children } ? children.Select(Find).FirstOrDefault(f => f is not null)
+            : null;
+        if (Find(DockLayout) is { } found)
+        {
+            this.Dock.SetActiveDockable(found);
+        }
+    }
+
     /// <summary>The stage display editor (M4.6), the Stage tab of the inspector.</summary>
     public StageEditorViewModel Stage { get; }
 

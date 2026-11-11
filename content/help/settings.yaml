@@ -11,3 +11,7 @@ settings:
     hint: updates-allow-hint
   - key: updates.feed-url
     hint: updates-feed-hint
+  - key: church.ccli-licence
+    hint: ccli-licence-hint
+  - key: scripture.default-translation
+    hint: default-bible-hint

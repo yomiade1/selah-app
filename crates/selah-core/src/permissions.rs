@@ -102,9 +102,10 @@ pub enum CommandKind {
     SendBoothMessage,
     SetBoothLock,
     SetRoleLock,
+    SetPracticeMode,
 }
 
-pub const ALL_COMMANDS: [CommandKind; 90] = [
+pub const ALL_COMMANDS: [CommandKind; 91] = [
     CommandKind::Render,
     CommandKind::SetAppearance,
     CommandKind::RecordFeedback,
@@ -195,6 +196,7 @@ pub const ALL_COMMANDS: [CommandKind; 90] = [
     CommandKind::SendBoothMessage,
     CommandKind::SetBoothLock,
     CommandKind::SetRoleLock,
+    CommandKind::SetPracticeMode,
 ];
 
 pub fn kind_of(action: &command::Action) -> CommandKind {
@@ -289,6 +291,7 @@ pub fn kind_of(action: &command::Action) -> CommandKind {
         command::Action::SendBoothMessage(_) => CommandKind::SendBoothMessage,
         command::Action::SetBoothLock(_) => CommandKind::SetBoothLock,
         command::Action::SetRoleLock(_) => CommandKind::SetRoleLock,
+        command::Action::SetPracticeMode(_) => CommandKind::SetPracticeMode,
     }
 }
 
@@ -385,7 +388,9 @@ pub fn changes_screens(kind: CommandKind) -> bool {
         | CommandKind::DeleteStageLayout
         | CommandKind::SendBoothMessage
         | CommandKind::SetBoothLock
-        | CommandKind::SetRoleLock => false,
+        | CommandKind::SetRoleLock
+        // Practice mode stops changes reaching the screens; it never adds any.
+        | CommandKind::SetPracticeMode => false,
     }
 }
 
@@ -435,6 +440,8 @@ pub fn is_volunteer_allowed(kind: CommandKind) -> bool {
             | CommandKind::SendBoothMessage
             // Unlocking needs the PIN, which core checks.
             | CommandKind::SetRoleLock
+            // Practising is safe both ways: the screens never change (M4.7, M4-A11).
+            | CommandKind::SetPracticeMode
             | CommandKind::RecordFeedback
             | CommandKind::StagePreviewScene
             | CommandKind::PreloadItems
@@ -668,7 +675,8 @@ mod tests {
                 | CommandKind::SetStageLayout
                 | CommandKind::SendBoothMessage
                 | CommandKind::SetBoothLock
-                | CommandKind::SetRoleLock => {}
+                | CommandKind::SetRoleLock
+                | CommandKind::SetPracticeMode => {}
             }
         }
         let unique: std::collections::HashSet<_> = ALL_COMMANDS.iter().collect();

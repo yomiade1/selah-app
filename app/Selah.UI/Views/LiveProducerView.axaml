@@ -36,6 +36,10 @@
         <Button Name="LiveNextItemButton" Command="{Binding NextItemCommand}">
           <TextBlock Text="{Binding [live-next-item-key], Source={x:Static s:Localizer.Instance}}" />
         </Button>
+        <Button Name="LivePracticeButton" Classes.primary="{Binding $parent[Window].((vm:MainViewModel)DataContext).IsPracticeMode}"
+                Command="{Binding $parent[Window].((vm:MainViewModel)DataContext).TogglePracticeCommand}" s:Help.Anchor="live.practice-mode">
+          <TextBlock Text="{Binding $parent[Window].((vm:MainViewModel)DataContext).PracticeButtonText}" />
+        </Button>
         <Button Name="LiveUndoButton" Classes="quiet" Command="{Binding UndoCommand}" IsEnabled="{Binding CanUndo}">
           <TextBlock Text="{Binding [live-undo-key], Source={x:Static s:Localizer.Instance}}" />
         </Button>

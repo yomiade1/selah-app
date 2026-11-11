@@ -1,0 +1,18 @@
+# Run slides in 5 minutes (M4.7, KNOWLEDGE-BASE §6.5). Step words are in content/i18n/en/tours.ftl.
+id: tour.simple-mode-basics
+title_key: tour-simple-title
+mode: simple
+requires_practice_mode: true
+steps:
+  - anchor: simple.service-progress
+    text_key: tour-simple-progress
+  - anchor: simple.now-showing
+    text_key: tour-simple-now
+  - anchor: simple.controls
+    text_key: tour-simple-controls
+  - anchor: simple.slide-strip
+    text_key: tour-simple-strip
+  - anchor: shell.clear-everything
+    text_key: tour-simple-clear
+  - anchor: simple.message-the-booth
+    text_key: tour-simple-booth

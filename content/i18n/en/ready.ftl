@@ -1,0 +1,29 @@
+## Ready for Sunday (M4.7): checks before a service. Problems use error-ready-* in errors.ftl.
+
+ready-title = Ready for Sunday?
+ready-run = Check the service
+ready-hint = Selah checks the files, fonts, words, credits, screens, flashing and sound.
+ready-none-yet = Pick a service, then select Check the service.
+ready-all-good = Everything is ready.
+ready-has-problems = Fix the red items before Sunday.
+ready-has-warnings = Ready, but check the yellow items.
+ready-how-to-fix = How to fix
+ready-status-pass = Ready
+ready-status-warn = Check this
+ready-status-fail = Fix this
+ready-status-info = Note
+ready-kind-media = Files
+ready-kind-fonts = Fonts
+ready-kind-text-fits = Words on screens
+ready-kind-copyright = Copyright and licence
+ready-kind-outputs = Screens
+ready-kind-backup = Backup
+ready-kind-flash = Flashing
+ready-kind-sound = Sound level
+ready-media-ok = Every picture, video and sound file is here and unchanged.
+ready-fonts-ok = Every font is installed.
+ready-text-fits-ok = The words fit on every screen.
+ready-copyright-ok = Songs have credits and your CCLI licence number is set.
+ready-outputs-ok = Every screen is connected.
+ready-flash-ok = Nothing flashes too fast.
+ready-sound-ok = The volume limiter is on.

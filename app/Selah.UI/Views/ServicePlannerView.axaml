@@ -231,6 +231,47 @@
               <TextBox Name="SelectedItemNotesBox" Text="{Binding SelectedItemNotes}" AcceptsReturn="True" MinHeight="56" />
             </StackPanel>
 
+            <!-- Ready for Sunday? (M4.7): core's checks, problems first, each with How to fix. -->
+            <StackPanel Name="ReadyCheckPanel" Spacing="{DynamicResource Space.2}" s:Help.Anchor="services.ready-check">
+              <WrapPanel ItemSpacing="{DynamicResource Space.2}" VerticalAlignment="Center">
+                <TextBlock Classes="title-3" VerticalAlignment="Center"
+                           Text="{Binding [ready-title], Source={x:Static s:Localizer.Instance}}" />
+                <views:InfoButton Name="ReadyInfoButton" Anchor="services.ready-check" />
+              </WrapPanel>
+              <TextBlock Classes="hint" TextWrapping="Wrap" Text="{Binding [ready-hint], Source={x:Static s:Localizer.Instance}}" />
+              <Button Name="RunReadyCheckButton" Command="{Binding Ready.RunCommand}" IsEnabled="{Binding !Ready.IsRunning}">
+                <TextBlock Text="{Binding [ready-run], Source={x:Static s:Localizer.Instance}}" />
+              </Button>
+              <TextBlock Name="ReadySummaryText" Classes="label" TextWrapping="Wrap" Text="{Binding Ready.Summary}" />
+              <ItemsControl Name="ReadyCheckList" ItemsSource="{Binding Ready.Rows}">
+                <ItemsControl.ItemTemplate>
+                  <DataTemplate x:DataType="vm:ReadyCheckRow">
+                    <Border Padding="8,6" Margin="0,0,0,6" Background="{DynamicResource Brush.Surface2}"
+                            BorderBrush="{DynamicResource Brush.Line}" BorderThickness="{DynamicResource Line.Hairline}">
+                      <StackPanel Spacing="2">
+                        <WrapPanel ItemSpacing="{DynamicResource Space.2}">
+                          <Ellipse Width="{DynamicResource Space.3}" Height="{DynamicResource Space.3}" VerticalAlignment="Center"
+                                   Fill="{DynamicResource Brush.Success}" IsVisible="{Binding IsPass}" />
+                          <Ellipse Width="{DynamicResource Space.3}" Height="{DynamicResource Space.3}" VerticalAlignment="Center"
+                                   Fill="{DynamicResource Brush.Warning}" IsVisible="{Binding IsWarn}" />
+                          <Ellipse Width="{DynamicResource Space.3}" Height="{DynamicResource Space.3}" VerticalAlignment="Center"
+                                   Fill="{DynamicResource Brush.Live}" IsVisible="{Binding IsFail}" />
+                          <TextBlock Classes="label" Text="{Binding KindName}" />
+                          <TextBlock Classes="caption" VerticalAlignment="Center" Text="{Binding StatusText}" />
+                        </WrapPanel>
+                        <TextBlock TextWrapping="Wrap" Text="{Binding Message}" />
+                        <Button Classes="quiet" HorizontalAlignment="Left" IsVisible="{Binding HasFix}"
+                                Command="{Binding $parent[ItemsControl].((vm:ServicePlannerViewModel)DataContext).Ready.OpenFixCommand}"
+                                CommandParameter="{Binding}">
+                          <TextBlock Text="{Binding [ready-how-to-fix], Source={x:Static s:Localizer.Instance}}" />
+                        </Button>
+                      </StackPanel>
+                    </Border>
+                  </DataTemplate>
+                </ItemsControl.ItemTemplate>
+              </ItemsControl>
+            </StackPanel>
+
             <!-- Team Roster -->
             <StackPanel Spacing="8" s:Help.Anchor="services.team">
               <WrapPanel ItemSpacing="{DynamicResource Space.2}" VerticalAlignment="Center">

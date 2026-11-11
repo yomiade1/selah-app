@@ -1,0 +1,84 @@
+{
+  "_comment": "First-run sample service (M4.7). Every text here is in the public domain.",
+  "service_name": "Sample service",
+  "songs": [
+    {
+      "title": "Amazing Grace",
+      "authors": ["John Newton"],
+      "copyright": "Public Domain",
+      "key": "G",
+      "sections": [
+        {
+          "label": "Verse 1",
+          "lines": [
+            "Amazing grace! How sweet the sound",
+            "That saved a wretch like me!",
+            "I once was lost, but now am found;",
+            "Was blind, but now I see."
+          ]
+        },
+        {
+          "label": "Verse 2",
+          "lines": [
+            "'Twas grace that taught my heart to fear,",
+            "And grace my fears relieved;",
+            "How precious did that grace appear",
+            "The hour I first believed."
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Holy, Holy, Holy",
+      "authors": ["Reginald Heber"],
+      "copyright": "Public Domain",
+      "key": "D",
+      "sections": [
+        {
+          "label": "Verse 1",
+          "lines": [
+            "Holy, holy, holy! Lord God Almighty!",
+            "Early in the morning our song shall rise to Thee;",
+            "Holy, holy, holy, merciful and mighty!",
+            "God in three Persons, blessed Trinity!"
+          ]
+        },
+        {
+          "label": "Verse 2",
+          "lines": [
+            "Holy, holy, holy! All the saints adore Thee,",
+            "Casting down their golden crowns around the glassy sea;",
+            "Cherubim and seraphim falling down before Thee,",
+            "Who wert, and art, and evermore shalt be."
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Be Thou My Vision",
+      "authors": ["Irish hymn", "tr. Mary Byrne", "versified by Eleanor Hull"],
+      "copyright": "Public Domain",
+      "key": "Eb",
+      "sections": [
+        {
+          "label": "Verse 1",
+          "lines": [
+            "Be Thou my Vision, O Lord of my heart;",
+            "Naught be all else to me, save that Thou art.",
+            "Thou my best Thought, by day or by night,",
+            "Waking or sleeping, Thy presence my light."
+          ]
+        },
+        {
+          "label": "Verse 2",
+          "lines": [
+            "Be Thou my Wisdom, and Thou my true Word;",
+            "I ever with Thee and Thou with me, Lord;",
+            "Thou my great Father, I Thy true son;",
+            "Thou in me dwelling, and I with Thee one."
+          ]
+        }
+      ]
+    }
+  ]
+}

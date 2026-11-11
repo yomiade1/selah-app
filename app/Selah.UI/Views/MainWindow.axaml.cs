@@ -469,12 +469,15 @@ public sealed partial class MainWindow : Window, IHelpHost
     private void RefreshPreview()
     {
         var ns = Model?.IpcNamespace ?? IpcEndpoint.ForCurrentUser(IpcService.Engine).Namespace;
+        // M4.7: while practising, Program shows the practice frames (the preview ring) instead.
+        var practising = Model?.IsPracticeMode == true;
         if (RefreshRing(
                 Path.Combine(RuntimeDirectory.Path, $"{ns}-preview-0.ring"),
                 ref preview,
                 ref lastPreviewFrame,
                 ref previewBitmap,
                 PreviewImage)
+            && !practising
             && Model is { IsLiveMode: true } live)
         {
             // Producer's Program pane shows the same program frame (prototype 01).
@@ -486,10 +489,17 @@ public sealed partial class MainWindow : Window, IHelpHost
                 ref stagePreview,
                 ref lastStagePreviewFrame,
                 ref stagePreviewBitmap,
-                StagePreviewImage)
-            && Model is { HasStagedPreview: false })
+                StagePreviewImage))
         {
-            Model.HasStagedPreview = true;
+            if (practising && Model is { IsLiveMode: true } practice)
+            {
+                practice.LiveProducer.ProgramFrame = null;
+                practice.LiveProducer.ProgramFrame = stagePreviewBitmap;
+            }
+            else if (Model is { HasStagedPreview: false })
+            {
+                Model.HasStagedPreview = true;
+            }
         }
     }
 

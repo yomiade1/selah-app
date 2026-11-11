@@ -79,6 +79,16 @@ anchors:
     description: Live, the Stage tab that edits stage display layouts (M4.6).
   - id: live.stage-preview
     description: Live, the stage screen preview in the Stage tab.
+  - id: live.practice-mode
+    description: Live, Start practice / Stop practice and the practice banner (M4.7).
+  - id: services.ready-check
+    description: Services, the Ready for Sunday? checks for the selected service (M4.7).
+  - id: help.tour
+    description: Help, Start tour and the tour coach mark (M4.7).
+  - id: setup.wizard
+    description: First-run setup, Welcome to Selah (M4.7).
+  - id: setup.ccli
+    description: First-run setup, the CCLI licence number.
   - id: live.role-lock
     description: Live, Lock to Simple mode and its PIN (SEC-14).
   - id: simple.controls

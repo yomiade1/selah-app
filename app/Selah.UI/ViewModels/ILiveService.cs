@@ -73,6 +73,9 @@ public interface ILiveService
     /// <summary>Show this layout on every stage screen; an empty id goes back to the built-in one.</summary>
     Task<LiveStatus> SetStageLayoutAsync(Id layoutId);
 
+    /// <summary>Practice mode (M4.7): changes go to the preview only; leaving puts everything back.</summary>
+    Task<LiveStatus> SetPracticeModeAsync(bool on);
+
     /// <summary>The emergency lane (SAFE-03): works even if core is frozen.</summary>
     Task<bool> ClearEverythingAsync();
 }

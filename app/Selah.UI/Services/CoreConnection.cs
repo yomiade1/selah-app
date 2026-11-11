@@ -1079,6 +1079,15 @@ public sealed class CoreConnection : IAsyncDisposable, Selah.UI.ViewModels.IHelp
         await RequestAsync(new Envelope { Command = new Command { SaveStageLayout = new SaveStageLayout { StageLayout = layout } } }).ConfigureAwait(false);
     }
 
+    public Task<LiveStatus> SetPracticeModeAsync(bool on) =>
+        LiveAsync(new Command { SetPracticeMode = new SetPracticeMode { On = on } });
+
+    public async Task<ReadyReport> RunReadyCheckAsync(Id serviceId)
+    {
+        var reply = await RequestAsync(new Envelope { Query = new Query { RunReadyCheck = new RunReadyCheck { ServiceId = serviceId } } }, TimeSpan.FromSeconds(60)).ConfigureAwait(false);
+        return reply.Reply?.ReadyReport ?? new ReadyReport { ServiceId = serviceId };
+    }
+
     public Task<LiveStatus> SetStageLayoutAsync(Id layoutId) =>
         LiveAsync(new Command { SetStageLayout = new SetStageLayout { StageLayoutId = layoutId } });
 

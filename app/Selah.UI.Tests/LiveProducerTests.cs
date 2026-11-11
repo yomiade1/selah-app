@@ -250,6 +250,7 @@ public sealed class LiveProducerTests : IDisposable
         private static readonly HashSet<string> ProducerOnly = ["look", "macro", "timer-start", "timer-pause", "timer-reset", "booth-lock", "stage-use", "stage-save"];
 
         private Id? activeStage;
+        private bool practising;
 
         public List<StageLayout> StageLayouts { get; } = [];
 
@@ -304,6 +305,7 @@ public sealed class LiveProducerTests : IDisposable
                 ActiveLookId = activeLook,
                 ActiveLookName = activeLook is null ? string.Empty : "Worship",
                 ActiveStageLayoutId = activeStage,
+                PracticeMode = practising,
                 ActiveStageLayoutName = StageLayouts.FirstOrDefault(l => l.Id.Value == activeStage?.Value)?.Name ?? string.Empty,
             });
             return status;
@@ -435,6 +437,8 @@ public sealed class LiveProducerTests : IDisposable
             });
             return Task.CompletedTask;
         }
+
+        public Task<LiveStatus> SetPracticeModeAsync(bool on) => Do($"practice:{on}", () => practising = on, allowedWhenLocked: false);
 
         public Task<LiveStatus> SetStageLayoutAsync(Id layoutId) => Do("stage-use", () => activeStage = layoutId);
 

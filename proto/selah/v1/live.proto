@@ -197,6 +197,59 @@ message StageLayout {
   repeated StageElement elements = 11;
 }
 
+// Practice mode (M4.7): live changes go to the preview window only; the screens keep showing
+// what they showed when practice began. Leaving practice puts the live state back as it was.
+message SetPracticeMode {
+  bool on = 1;
+}
+
+// Ready for Sunday (M4.7): checks to run before a service. Each check that doesn't pass carries
+// an error code from content/errors/errors.yaml, which names its fix article.
+enum ReadyCheckKind {
+  READY_CHECK_KIND_UNSPECIFIED = 0;
+  READY_CHECK_KIND_MEDIA = 1;
+  READY_CHECK_KIND_FONTS = 2;
+  READY_CHECK_KIND_TEXT_FITS = 3;
+  READY_CHECK_KIND_COPYRIGHT = 4;
+  READY_CHECK_KIND_OUTPUTS = 5;
+  READY_CHECK_KIND_BACKUP = 6;
+  READY_CHECK_KIND_FLASH = 7;
+  READY_CHECK_KIND_SOUND = 8;
+}
+
+enum ReadyCheckStatus {
+  READY_CHECK_STATUS_UNSPECIFIED = 0;
+  READY_CHECK_STATUS_PASS = 1;
+  READY_CHECK_STATUS_WARN = 2;
+  READY_CHECK_STATUS_FAIL = 3;
+  READY_CHECK_STATUS_INFO = 4;
+}
+
+message ReadyCheck {
+  ReadyCheckKind kind = 1;
+  ReadyCheckStatus status = 2;
+  // SEL-RDY-xxxx (or another catalogue code) when the check doesn't pass.
+  string code = 3;
+  // A message id in content/i18n/en/*.ftl, filled in with `args`.
+  string message_key = 4;
+  map<string, string> args = 5;
+  string fix_article_id = 6;
+  // The service item the check is about, or -1.
+  int32 item_index = 7;
+  string item_title = 8;
+}
+
+message RunReadyCheck {
+  Id service_id = 1;
+}
+
+message ReadyReport {
+  Id service_id = 1;
+  repeated ReadyCheck checks = 2;
+  // No check failed (warnings and notes don't stop a service).
+  bool ready = 3;
+}
+
 // Library CRUD messages for M4.3 / M4.6 documents.
 message SaveLook {
   Look look = 1;

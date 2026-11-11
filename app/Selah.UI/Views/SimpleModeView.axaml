@@ -52,6 +52,10 @@
               <TextBlock Text="{Binding [role-lock-unlock], Source={x:Static s:Localizer.Instance}}" />
             </Button>
           </StackPanel>
+          <Button Name="SimplePracticeButton" DockPanel.Dock="Right" Classes.primary="{Binding $parent[Window].((vm:MainViewModel)DataContext).IsPracticeMode}"
+                  Command="{Binding $parent[Window].((vm:MainViewModel)DataContext).TogglePracticeCommand}" s:Help.Anchor="live.practice-mode">
+            <TextBlock Text="{Binding $parent[Window].((vm:MainViewModel)DataContext).PracticeButtonText}" />
+          </Button>
           <Button Name="SimpleQuickTipsButton" DockPanel.Dock="Right" Classes="link" Command="{Binding NextTipCommand}">
             <TextBlock Text="{Binding [simple-quick-tips], Source={x:Static s:Localizer.Instance}}" />
           </Button>

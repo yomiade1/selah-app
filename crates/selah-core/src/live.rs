@@ -38,6 +38,8 @@ pub struct LiveState {
     output_configs: Vec<OutputConfig>,
     explicit_configs: bool,
     snapshot: LiveMachineSnapshot,
+    /// M4.7: while practising nothing is saved, so a restart never brings practice to the screens.
+    practicing: bool,
 }
 
 fn default_output_config() -> OutputConfig {
@@ -695,6 +697,7 @@ impl LiveState {
             output_configs,
             explicit_configs,
             snapshot,
+            practicing: false,
         }
     }
 
@@ -1758,6 +1761,34 @@ impl LiveState {
     }
 
     /// Core's role lock (SEC-14), mirrored into every status so the UI can show Simple mode.
+    /// Practice mode (M4.7): remember what the screens show now. Changes after this go to the
+    /// preview window only (core sends them as a preview scene) and are never saved.
+    pub fn begin_practice(&mut self) -> (LiveMachineSnapshot, Scene) {
+        let checkpoint = (self.snapshot.clone(), self.scene.clone());
+        self.practicing = true;
+        self.automation_mut().practice_mode = true;
+        self.sync_status_flags();
+        checkpoint
+    }
+
+    /// Leave practice: put the live state back exactly as it was, with a newer revision.
+    pub fn end_practice(&mut self, checkpoint: (LiveMachineSnapshot, Scene)) -> LiveStatus {
+        let (snapshot, mut scene) = checkpoint;
+        let revision = self.scene.revision.max(scene.revision) + 1;
+        self.snapshot = snapshot;
+        scene.revision = revision;
+        self.scene = scene;
+        self.practicing = false;
+        self.automation_mut().practice_mode = false;
+        self.sync_status_flags();
+        self.save();
+        self.status()
+    }
+
+    pub fn is_practicing(&self) -> bool {
+        self.practicing
+    }
+
     pub fn set_role_locked(&mut self, locked: bool) -> LiveStatus {
         self.automation_mut().role_locked = locked;
         self.sync_status_flags();
@@ -2678,6 +2709,9 @@ impl LiveState {
     }
 
     fn save_machine(&self) {
+        if self.practicing {
+            return;
+        }
         if let Err(error) =
             selah_runtime::paths::write_atomic(&self.machine_path, &self.snapshot.encode_to_vec())
         {
@@ -2686,6 +2720,9 @@ impl LiveState {
     }
 
     fn save(&self) {
+        if self.practicing {
+            return;
+        }
         if let Err(error) =
             selah_runtime::paths::write_atomic(&self.path, &self.scene.encode_to_vec())
         {

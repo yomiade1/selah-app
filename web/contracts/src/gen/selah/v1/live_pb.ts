@@ -14,7 +14,7 @@ import type { Message } from "@bufbuild/protobuf";
  * Describes the file selah/v1/live.proto.
  */
 export const file_selah_v1_live: GenFile = /*@__PURE__*/
-  fileDesc("ChNzZWxhaC92MS9saXZlLnByb3RvEghzZWxhaC52MSLGAQoITG9va1J1bGUSGAoCaWQYASABKAsyDC5zZWxhaC52MS5JZBIUCgxvdXRwdXRfaW5kZXgYAiABKA0SKwoOZW5hYmxlZF9sYXllcnMYAyADKA4yEy5zZWxhaC52MS5MYXllcktpbmQSKgoUdGVtcGxhdGVfb3ZlcnJpZGVfaWQYBCABKAsyDC5zZWxhaC52MS5JZBIbChN0ZW1wbGF0ZV9zdHlsZV9qc29uGAUgASgJEhQKDG1hc2tfZW5hYmxlZBgGIAEoCCJhCgRMb29rEhgKAmlkGAEgASgLMgwuc2VsYWgudjEuSWQSDAoEbmFtZRgCIAEoCRIOCgZob3RrZXkYAyABKAkSIQoFcnVsZXMYBCADKAsyEi5zZWxhaC52MS5Mb29rUnVsZSKHAgoEUHJvcBIYCgJpZBgBIAEoCzIMLnNlbGFoLnYxLklkEgwKBG5hbWUYAiABKAkSDQoFbGFiZWwYAyABKAkSJQoNcG9zaXRpb25fcmVjdBgEIAEoCzIOLnNlbGFoLnYxLlJlY3QSKQoQYmFja2dyb3VuZF9jb2xvchgFIAEoCzIPLnNlbGFoLnYxLkNvbG9yEiMKCnRleHRfY29sb3IYBiABKAsyDy5zZWxhaC52MS5Db2xvchIeCghtZWRpYV9pZBgHIAEoCzIMLnNlbGFoLnYxLklkEhUKDWVsZW1lbnRzX2pzb24YCCABKAkSGgoSYXV0b19jbGVhcl9zZWNvbmRzGAkgASgNIuICCgtMaXZlTWVzc2FnZRIYCgJpZBgBIAEoCzIMLnNlbGFoLnYxLklkEgwKBG5hbWUYAiABKAkSFQoNdGVtcGxhdGVfdGV4dBgDIAEoCRJACg5kZWZhdWx0X3Rva2VucxgEIAMoCzIoLnNlbGFoLnYxLkxpdmVNZXNzYWdlLkRlZmF1bHRUb2tlbnNFbnRyeRIYChBkdXJhdGlvbl9zZWNvbmRzGAUgASgNEh4KCHRpbWVyX2lkGAYgASgLMgwuc2VsYWgudjEuSWQSEgoKc3RhZ2Vfb25seRgHIAEoCBIpChBiYWNrZ3JvdW5kX2NvbG9yGAggASgLMg8uc2VsYWgudjEuQ29sb3ISIwoKdGV4dF9jb2xvchgJIAEoCzIPLnNlbGFoLnYxLkNvbG9yGjQKEkRlZmF1bHRUb2tlbnNFbnRyeRILCgNrZXkYASABKAkSDQoFdmFsdWUYAiABKAk6AjgBIvkBCgVUaW1lchIYCgJpZBgBIAEoCzIMLnNlbGFoLnYxLklkEgwKBG5hbWUYAiABKAkSIQoEa2luZBgDIAEoDjITLnNlbGFoLnYxLlRpbWVyS2luZBITCgtkdXJhdGlvbl9tcxgEIAEoBBIiChp0YXJnZXRfdGltZV9vZl9kYXlfc2Vjb25kcxgFIAEoDRIwCgxvdmVycnVuX21vZGUYBiABKA4yGi5zZWxhaC52MS5UaW1lck92ZXJydW5Nb2RlEiYKEG92ZXJydW5fbWFjcm9faWQYByABKAsyDC5zZWxhaC52MS5JZBISCgpzaG93X2hvdXJzGAggASgIIpwDCgtUaW1lclN0YXR1cxIeCgh0aW1lcl9pZBgBIAEoCzIMLnNlbGFoLnYxLklkEgwKBG5hbWUYAiABKAkSIQoEa2luZBgDIAEoDjITLnNlbGFoLnYxLlRpbWVyS2luZBIwCgxvdmVycnVuX21vZGUYBCABKA4yGi5zZWxhaC52MS5UaW1lck92ZXJydW5Nb2RlEg8KB3J1bm5pbmcYBSABKAgSDwoHb3ZlcnJ1bhgGIAEoCBIUCgxyZW1haW5pbmdfbXMYByABKAMSEgoKZWxhcHNlZF9tcxgIIAEoBBITCgtkdXJhdGlvbl9tcxgJIAEoBBIWCg5mb3JtYXR0ZWRfdGltZRgKIAEoCRIQCghwcm9ncmVzcxgLIAEoAhIaChJzdGFydGVkX2F0X21vbm9fbnMYDCABKAQSHgoWYWNjdW11bGF0ZWRfZWxhcHNlZF9ucxgNIAEoBBImChBvdmVycnVuX21hY3JvX2lkGA4gASgLMgwuc2VsYWgudjEuSWQSGwoTb3ZlcnJ1bl9tYWNyb19maXJlZBgPIAEoCCLQAwoTTGl2ZUF1dG9tYXRpb25TdGF0ZRIkCg5hY3RpdmVfbG9va19pZBgBIAEoCzIMLnNlbGFoLnYxLklkEhgKEGFjdGl2ZV9sb29rX25hbWUYAiABKAkSJAoOYWN0aXZlX3Byb3BfaWQYAyABKAsyDC5zZWxhaC52MS5JZBIYChBhY3RpdmVfcHJvcF9uYW1lGAQgASgJEicKEWFjdGl2ZV9tZXNzYWdlX2lkGAUgASgLMgwuc2VsYWgudjEuSWQSGwoTYWN0aXZlX21lc3NhZ2VfdGV4dBgGIAEoCRIjChthY3RpdmVfbWVzc2FnZV9yZW1haW5pbmdfbXMYByABKAQSFQoNYm9vdGhfbWVzc2FnZRgIIAEoCRIlCgZ0aW1lcnMYCSADKAsyFS5zZWxhaC52MS5UaW1lclN0YXR1cxIsChZhY3RpdmVfc3RhZ2VfbGF5b3V0X2lkGAogASgLMgwuc2VsYWgudjEuSWQSIAoYYWN0aXZlX3N0YWdlX2xheW91dF9uYW1lGAsgASgJEhQKDGJvb3RoX2xvY2tlZBgMIAEoCBIVCg1wcmFjdGljZV9tb2RlGA0gASgIEhMKC3JvbGVfbG9ja2VkGA4gASgIItcBCgtNYWNyb0FjdGlvbhIYCgJpZBgBIAEoCzIMLnNlbGFoLnYxLklkEicKBGtpbmQYAiABKA4yGS5zZWxhaC52MS5NYWNyb0FjdGlvbktpbmQSHwoJdGFyZ2V0X2lkGAMgASgLMgwuc2VsYWgudjEuSWQSJwoKbGF5ZXJfa2luZBgEIAEoDjITLnNlbGFoLnYxLkxheWVyS2luZBISCgp0ZXh0X3BhcmFtGAUgASgJEhMKC2Zsb2F0X3BhcmFtGAYgASgCEhIKCmJvb2xfcGFyYW0YByABKAgihwEKBU1hY3JvEhgKAmlkGAEgASgLMgwuc2VsYWgudjEuSWQSDAoEbmFtZRgCIAEoCRIOCgZob3RrZXkYAyABKAkSHgoFY29sb3IYBCABKAsyDy5zZWxhaC52MS5Db2xvchImCgdhY3Rpb25zGAUgAygLMhUuc2VsYWgudjEuTWFjcm9BY3Rpb24itAEKCkNsZWFyR3JvdXASGAoCaWQYASABKAsyDC5zZWxhaC52MS5JZBIMCgRuYW1lGAIgASgJEg4KBmhvdGtleRgDIAEoCRIsCg9sYXllcnNfdG9fY2xlYXIYBCADKA4yEy5zZWxhaC52MS5MYXllcktpbmQSEgoKc3RvcF9hdWRpbxgFIAEoCBITCgtzdG9wX3RpbWVycxgGIAEoCBIXCg9jbGVhcl9zaG93X2xvZ28YByABKAgiqgEKDFN0YWdlRWxlbWVudBIYCgJpZBgBIAEoCzIMLnNlbGFoLnYxLklkEigKBGtpbmQYAiABKA4yGi5zZWxhaC52MS5TdGFnZUVsZW1lbnRLaW5kEhwKBHJlY3QYAyABKAsyDi5zZWxhaC52MS5SZWN0Eg8KB3Zpc2libGUYBCABKAgSEgoKZm9udF9zY2FsZRgFIAEoAhITCgtzaG93X2Nob3JkcxgGIAEoCCKlAgoLU3RhZ2VMYXlvdXQSGAoCaWQYASABKAsyDC5zZWxhaC52MS5JZBIMCgRuYW1lGAIgASgJEhMKC3Nob3dfY2hvcmRzGAMgASgIEhYKDnNob3dfa2V5X2JhZGdlGAQgASgIEh4KFnNob3dfYXJyYW5nZW1lbnRfc3RyaXAYBSABKAgSEgoKc2hvd19jbG9jaxgGIAEoCBIXCg9zaG93X25leHRfc2xpZGUYByABKAgSEgoKc2hvd190aW1lchgIIAEoCBIaChJzaG93X3NwZWFrZXJfbm90ZXMYCSABKAgSGgoSc2hvd19ib290aF9tZXNzYWdlGAogASgIEigKCGVsZW1lbnRzGAsgAygLMhYuc2VsYWgudjEuU3RhZ2VFbGVtZW50IigKCFNhdmVMb29rEhwKBGxvb2sYASABKAsyDi5zZWxhaC52MS5Mb29rIiYKCkRlbGV0ZUxvb2sSGAoCaWQYASABKAsyDC5zZWxhaC52MS5JZCIjCgdHZXRMb29rEhgKAmlkGAEgASgLMgwuc2VsYWgudjEuSWQiKgoJTGlzdExvb2tzEg0KBWxpbWl0GAEgASgNEg4KBm9mZnNldBgCIAEoDSIpCghMb29rTGlzdBIdCgVsb29rcxgBIAMoCzIOLnNlbGFoLnYxLkxvb2siKAoIU2F2ZVByb3ASHAoEcHJvcBgBIAEoCzIOLnNlbGFoLnYxLlByb3AiJgoKRGVsZXRlUHJvcBIYCgJpZBgBIAEoCzIMLnNlbGFoLnYxLklkIiMKB0dldFByb3ASGAoCaWQYASABKAsyDC5zZWxhaC52MS5JZCIqCglMaXN0UHJvcHMSDQoFbGltaXQYASABKA0SDgoGb2Zmc2V0GAIgASgNIikKCFByb3BMaXN0Eh0KBXByb3BzGAEgAygLMg4uc2VsYWgudjEuUHJvcCI1CgtTYXZlTWVzc2FnZRImCgdtZXNzYWdlGAEgASgLMhUuc2VsYWgudjEuTGl2ZU1lc3NhZ2UiKQoNRGVsZXRlTWVzc2FnZRIYCgJpZBgBIAEoCzIMLnNlbGFoLnYxLklkIiYKCkdldE1lc3NhZ2USGAoCaWQYASABKAsyDC5zZWxhaC52MS5JZCItCgxMaXN0TWVzc2FnZXMSDQoFbGltaXQYASABKA0SDgoGb2Zmc2V0GAIgASgNIjYKC01lc3NhZ2VMaXN0EicKCG1lc3NhZ2VzGAEgAygLMhUuc2VsYWgudjEuTGl2ZU1lc3NhZ2UiKwoJU2F2ZVRpbWVyEh4KBXRpbWVyGAEgASgLMg8uc2VsYWgudjEuVGltZXIiJwoLRGVsZXRlVGltZXISGAoCaWQYASABKAsyDC5zZWxhaC52MS5JZCIkCghHZXRUaW1lchIYCgJpZBgBIAEoCzIMLnNlbGFoLnYxLklkIisKCkxpc3RUaW1lcnMSDQoFbGltaXQYASABKA0SDgoGb2Zmc2V0GAIgASgNIiwKCVRpbWVyTGlzdBIfCgZ0aW1lcnMYASADKAsyDy5zZWxhaC52MS5UaW1lciIrCglTYXZlTWFjcm8SHgoFbWFjcm8YASABKAsyDy5zZWxhaC52MS5NYWNybyInCgtEZWxldGVNYWNybxIYCgJpZBgBIAEoCzIMLnNlbGFoLnYxLklkIiQKCEdldE1hY3JvEhgKAmlkGAEgASgLMgwuc2VsYWgudjEuSWQiKwoKTGlzdE1hY3JvcxINCgVsaW1pdBgBIAEoDRIOCgZvZmZzZXQYAiABKA0iLAoJTWFjcm9MaXN0Eh8KBm1hY3JvcxgBIAMoCzIPLnNlbGFoLnYxLk1hY3JvIjsKDlNhdmVDbGVhckdyb3VwEikKC2NsZWFyX2dyb3VwGAEgASgLMhQuc2VsYWgudjEuQ2xlYXJHcm91cCIsChBEZWxldGVDbGVhckdyb3VwEhgKAmlkGAEgASgLMgwuc2VsYWgudjEuSWQiKQoNR2V0Q2xlYXJHcm91cBIYCgJpZBgBIAEoCzIMLnNlbGFoLnYxLklkIjAKD0xpc3RDbGVhckdyb3VwcxINCgVsaW1pdBgBIAEoDRIOCgZvZmZzZXQYAiABKA0iPAoOQ2xlYXJHcm91cExpc3QSKgoMY2xlYXJfZ3JvdXBzGAEgAygLMhQuc2VsYWgudjEuQ2xlYXJHcm91cCI+Cg9TYXZlU3RhZ2VMYXlvdXQSKwoMc3RhZ2VfbGF5b3V0GAEgASgLMhUuc2VsYWgudjEuU3RhZ2VMYXlvdXQiLQoRRGVsZXRlU3RhZ2VMYXlvdXQSGAoCaWQYASABKAsyDC5zZWxhaC52MS5JZCIqCg5HZXRTdGFnZUxheW91dBIYCgJpZBgBIAEoCzIMLnNlbGFoLnYxLklkIjEKEExpc3RTdGFnZUxheW91dHMSDQoFbGltaXQYASABKA0SDgoGb2Zmc2V0GAIgASgNIj8KD1N0YWdlTGF5b3V0TGlzdBIsCg1zdGFnZV9sYXlvdXRzGAEgAygLMhUuc2VsYWgudjEuU3RhZ2VMYXlvdXQiKAoHU2V0TG9vaxIdCgdsb29rX2lkGAEgASgLMgwuc2VsYWgudjEuSWQiKQoIU2hvd1Byb3ASHQoHcHJvcF9pZBgBIAEoCzIMLnNlbGFoLnYxLklkIikKCEhpZGVQcm9wEh0KB3Byb3BfaWQYASABKAsyDC5zZWxhaC52MS5JZCLkAQoLU2hvd01lc3NhZ2USIAoKbWVzc2FnZV9pZBgBIAEoCzIMLnNlbGFoLnYxLklkEjwKDHRva2VuX3ZhbHVlcxgCIAMoCzImLnNlbGFoLnYxLlNob3dNZXNzYWdlLlRva2VuVmFsdWVzRW50cnkSEwoLY3VzdG9tX3RleHQYAyABKAkSGAoQZHVyYXRpb25fc2Vjb25kcxgEIAEoDRISCgpzdGFnZV9vbmx5GAUgASgIGjIKEFRva2VuVmFsdWVzRW50cnkSCwoDa2V5GAEgASgJEg0KBXZhbHVlGAIgASgJOgI4ASINCgtIaWRlTWVzc2FnZSIsCgpTdGFydFRpbWVyEh4KCHRpbWVyX2lkGAEgASgLMgwuc2VsYWgudjEuSWQiLAoKUGF1c2VUaW1lchIeCgh0aW1lcl9pZBgBIAEoCzIMLnNlbGFoLnYxLklkIiwKClJlc2V0VGltZXISHgoIdGltZXJfaWQYASABKAsyDC5zZWxhaC52MS5JZCI6ChBBZHZhbmNlTGl2ZUNsb2NrEhAKCGRlbHRhX21zGAEgASgEEhQKDHdhbGxfdW5peF9tcxgCIAEoAyIqCghSdW5NYWNybxIeCghtYWNyb19pZBgBIAEoCzIMLnNlbGFoLnYxLklkIjkKEVRyaWdnZXJDbGVhckdyb3VwEiQKDmNsZWFyX2dyb3VwX2lkGAEgASgLMgwuc2VsYWgudjEuSWQiNwoOU2V0U3RhZ2VMYXlvdXQSJQoPc3RhZ2VfbGF5b3V0X2lkGAEgASgLMgwuc2VsYWgudjEuSWQiIAoQU2VuZEJvb3RoTWVzc2FnZRIMCgR0ZXh0GAEgASgJIh4KDFNldEJvb3RoTG9jaxIOCgZsb2NrZWQYASABKAgiKgoLU2V0Um9sZUxvY2sSDgoGbG9ja2VkGAEgASgIEgsKA3BpbhgCIAEoCSp4CglUaW1lcktpbmQSGgoWVElNRVJfS0lORF9VTlNQRUNJRklFRBAAEhgKFFRJTUVSX0tJTkRfQ09VTlRET1dOEAESFwoTVElNRVJfS0lORF9DT1VOVF9VUBACEhwKGFRJTUVSX0tJTkRfQ09VTlRfVE9fVElNRRADKqsBChBUaW1lck92ZXJydW5Nb2RlEiIKHlRJTUVSX09WRVJSVU5fTU9ERV9VTlNQRUNJRklFRBAAEiMKH1RJTUVSX09WRVJSVU5fTU9ERV9TVE9QX0FUX1pFUk8QARIoCiRUSU1FUl9PVkVSUlVOX01PREVfQ09VTlRfVVBfTkVHQVRJVkUQAhIkCiBUSU1FUl9PVkVSUlVOX01PREVfVFJJR0dFUl9NQUNSTxADKsMECg9NYWNyb0FjdGlvbktpbmQSIQodTUFDUk9fQUNUSU9OX0tJTkRfVU5TUEVDSUZJRUQQABIeChpNQUNST19BQ1RJT05fS0lORF9TRVRfTE9PSxABEh8KG01BQ1JPX0FDVElPTl9LSU5EX1NIT1dfUFJPUBACEh8KG01BQ1JPX0FDVElPTl9LSU5EX0hJREVfUFJPUBADEiIKHk1BQ1JPX0FDVElPTl9LSU5EX1NIT1dfTUVTU0FHRRAEEiIKHk1BQ1JPX0FDVElPTl9LSU5EX0hJREVfTUVTU0FHRRAFEiEKHU1BQ1JPX0FDVElPTl9LSU5EX1NUQVJUX1RJTUVSEAYSIQodTUFDUk9fQUNUSU9OX0tJTkRfUEFVU0VfVElNRVIQBxIhCh1NQUNST19BQ1RJT05fS0lORF9SRVNFVF9USU1FUhAIEiEKHU1BQ1JPX0FDVElPTl9LSU5EX0NMRUFSX0xBWUVSEAkSKQolTUFDUk9fQUNUSU9OX0tJTkRfVFJJR0dFUl9DTEVBUl9HUk9VUBAKEh8KG01BQ1JPX0FDVElPTl9LSU5EX0NMRUFSX0FMTBALEh8KG01BQ1JPX0FDVElPTl9LSU5EX1NIT1dfTE9HTxAMEiAKHE1BQ1JPX0FDVElPTl9LSU5EX1BMQVlfQVVESU8QDRIgChxNQUNST19BQ1RJT05fS0lORF9TVE9QX0FVRElPEA4SJgoiTUFDUk9fQUNUSU9OX0tJTkRfU0VUX1NUQUdFX0xBWU9VVBAPKtQCChBTdGFnZUVsZW1lbnRLaW5kEiIKHlNUQUdFX0VMRU1FTlRfS0lORF9VTlNQRUNJRklFRBAAEiEKHVNUQUdFX0VMRU1FTlRfS0lORF9IRUFERVJfQkFSEAESJAogU1RBR0VfRUxFTUVOVF9LSU5EX0NVUlJFTlRfU0xJREUQAhIhCh1TVEFHRV9FTEVNRU5UX0tJTkRfTkVYVF9TTElERRADEhwKGFNUQUdFX0VMRU1FTlRfS0lORF9USU1FUhAEEhwKGFNUQUdFX0VMRU1FTlRfS0lORF9DTE9DSxAFEiQKIFNUQUdFX0VMRU1FTlRfS0lORF9CT09USF9NRVNTQUdFEAYSJAogU1RBR0VfRUxFTUVOVF9LSU5EX1NQRUFLRVJfTk9URVMQBxIoCiRTVEFHRV9FTEVNRU5UX0tJTkRfQVJSQU5HRU1FTlRfU1RSSVAQCEIVqgISU2VsYWguQ29udHJhY3RzLlYxYgZwcm90bzM", [file_selah_v1_common, file_selah_v1_render]);
+  fileDesc("ChNzZWxhaC92MS9saXZlLnByb3RvEghzZWxhaC52MSLGAQoITG9va1J1bGUSGAoCaWQYASABKAsyDC5zZWxhaC52MS5JZBIUCgxvdXRwdXRfaW5kZXgYAiABKA0SKwoOZW5hYmxlZF9sYXllcnMYAyADKA4yEy5zZWxhaC52MS5MYXllcktpbmQSKgoUdGVtcGxhdGVfb3ZlcnJpZGVfaWQYBCABKAsyDC5zZWxhaC52MS5JZBIbChN0ZW1wbGF0ZV9zdHlsZV9qc29uGAUgASgJEhQKDG1hc2tfZW5hYmxlZBgGIAEoCCJhCgRMb29rEhgKAmlkGAEgASgLMgwuc2VsYWgudjEuSWQSDAoEbmFtZRgCIAEoCRIOCgZob3RrZXkYAyABKAkSIQoFcnVsZXMYBCADKAsyEi5zZWxhaC52MS5Mb29rUnVsZSKHAgoEUHJvcBIYCgJpZBgBIAEoCzIMLnNlbGFoLnYxLklkEgwKBG5hbWUYAiABKAkSDQoFbGFiZWwYAyABKAkSJQoNcG9zaXRpb25fcmVjdBgEIAEoCzIOLnNlbGFoLnYxLlJlY3QSKQoQYmFja2dyb3VuZF9jb2xvchgFIAEoCzIPLnNlbGFoLnYxLkNvbG9yEiMKCnRleHRfY29sb3IYBiABKAsyDy5zZWxhaC52MS5Db2xvchIeCghtZWRpYV9pZBgHIAEoCzIMLnNlbGFoLnYxLklkEhUKDWVsZW1lbnRzX2pzb24YCCABKAkSGgoSYXV0b19jbGVhcl9zZWNvbmRzGAkgASgNIuICCgtMaXZlTWVzc2FnZRIYCgJpZBgBIAEoCzIMLnNlbGFoLnYxLklkEgwKBG5hbWUYAiABKAkSFQoNdGVtcGxhdGVfdGV4dBgDIAEoCRJACg5kZWZhdWx0X3Rva2VucxgEIAMoCzIoLnNlbGFoLnYxLkxpdmVNZXNzYWdlLkRlZmF1bHRUb2tlbnNFbnRyeRIYChBkdXJhdGlvbl9zZWNvbmRzGAUgASgNEh4KCHRpbWVyX2lkGAYgASgLMgwuc2VsYWgudjEuSWQSEgoKc3RhZ2Vfb25seRgHIAEoCBIpChBiYWNrZ3JvdW5kX2NvbG9yGAggASgLMg8uc2VsYWgudjEuQ29sb3ISIwoKdGV4dF9jb2xvchgJIAEoCzIPLnNlbGFoLnYxLkNvbG9yGjQKEkRlZmF1bHRUb2tlbnNFbnRyeRILCgNrZXkYASABKAkSDQoFdmFsdWUYAiABKAk6AjgBIvkBCgVUaW1lchIYCgJpZBgBIAEoCzIMLnNlbGFoLnYxLklkEgwKBG5hbWUYAiABKAkSIQoEa2luZBgDIAEoDjITLnNlbGFoLnYxLlRpbWVyS2luZBITCgtkdXJhdGlvbl9tcxgEIAEoBBIiChp0YXJnZXRfdGltZV9vZl9kYXlfc2Vjb25kcxgFIAEoDRIwCgxvdmVycnVuX21vZGUYBiABKA4yGi5zZWxhaC52MS5UaW1lck92ZXJydW5Nb2RlEiYKEG92ZXJydW5fbWFjcm9faWQYByABKAsyDC5zZWxhaC52MS5JZBISCgpzaG93X2hvdXJzGAggASgIIpwDCgtUaW1lclN0YXR1cxIeCgh0aW1lcl9pZBgBIAEoCzIMLnNlbGFoLnYxLklkEgwKBG5hbWUYAiABKAkSIQoEa2luZBgDIAEoDjITLnNlbGFoLnYxLlRpbWVyS2luZBIwCgxvdmVycnVuX21vZGUYBCABKA4yGi5zZWxhaC52MS5UaW1lck92ZXJydW5Nb2RlEg8KB3J1bm5pbmcYBSABKAgSDwoHb3ZlcnJ1bhgGIAEoCBIUCgxyZW1haW5pbmdfbXMYByABKAMSEgoKZWxhcHNlZF9tcxgIIAEoBBITCgtkdXJhdGlvbl9tcxgJIAEoBBIWCg5mb3JtYXR0ZWRfdGltZRgKIAEoCRIQCghwcm9ncmVzcxgLIAEoAhIaChJzdGFydGVkX2F0X21vbm9fbnMYDCABKAQSHgoWYWNjdW11bGF0ZWRfZWxhcHNlZF9ucxgNIAEoBBImChBvdmVycnVuX21hY3JvX2lkGA4gASgLMgwuc2VsYWgudjEuSWQSGwoTb3ZlcnJ1bl9tYWNyb19maXJlZBgPIAEoCCLQAwoTTGl2ZUF1dG9tYXRpb25TdGF0ZRIkCg5hY3RpdmVfbG9va19pZBgBIAEoCzIMLnNlbGFoLnYxLklkEhgKEGFjdGl2ZV9sb29rX25hbWUYAiABKAkSJAoOYWN0aXZlX3Byb3BfaWQYAyABKAsyDC5zZWxhaC52MS5JZBIYChBhY3RpdmVfcHJvcF9uYW1lGAQgASgJEicKEWFjdGl2ZV9tZXNzYWdlX2lkGAUgASgLMgwuc2VsYWgudjEuSWQSGwoTYWN0aXZlX21lc3NhZ2VfdGV4dBgGIAEoCRIjChthY3RpdmVfbWVzc2FnZV9yZW1haW5pbmdfbXMYByABKAQSFQoNYm9vdGhfbWVzc2FnZRgIIAEoCRIlCgZ0aW1lcnMYCSADKAsyFS5zZWxhaC52MS5UaW1lclN0YXR1cxIsChZhY3RpdmVfc3RhZ2VfbGF5b3V0X2lkGAogASgLMgwuc2VsYWgudjEuSWQSIAoYYWN0aXZlX3N0YWdlX2xheW91dF9uYW1lGAsgASgJEhQKDGJvb3RoX2xvY2tlZBgMIAEoCBIVCg1wcmFjdGljZV9tb2RlGA0gASgIEhMKC3JvbGVfbG9ja2VkGA4gASgIItcBCgtNYWNyb0FjdGlvbhIYCgJpZBgBIAEoCzIMLnNlbGFoLnYxLklkEicKBGtpbmQYAiABKA4yGS5zZWxhaC52MS5NYWNyb0FjdGlvbktpbmQSHwoJdGFyZ2V0X2lkGAMgASgLMgwuc2VsYWgudjEuSWQSJwoKbGF5ZXJfa2luZBgEIAEoDjITLnNlbGFoLnYxLkxheWVyS2luZBISCgp0ZXh0X3BhcmFtGAUgASgJEhMKC2Zsb2F0X3BhcmFtGAYgASgCEhIKCmJvb2xfcGFyYW0YByABKAgihwEKBU1hY3JvEhgKAmlkGAEgASgLMgwuc2VsYWgudjEuSWQSDAoEbmFtZRgCIAEoCRIOCgZob3RrZXkYAyABKAkSHgoFY29sb3IYBCABKAsyDy5zZWxhaC52MS5Db2xvchImCgdhY3Rpb25zGAUgAygLMhUuc2VsYWgudjEuTWFjcm9BY3Rpb24itAEKCkNsZWFyR3JvdXASGAoCaWQYASABKAsyDC5zZWxhaC52MS5JZBIMCgRuYW1lGAIgASgJEg4KBmhvdGtleRgDIAEoCRIsCg9sYXllcnNfdG9fY2xlYXIYBCADKA4yEy5zZWxhaC52MS5MYXllcktpbmQSEgoKc3RvcF9hdWRpbxgFIAEoCBITCgtzdG9wX3RpbWVycxgGIAEoCBIXCg9jbGVhcl9zaG93X2xvZ28YByABKAgiqgEKDFN0YWdlRWxlbWVudBIYCgJpZBgBIAEoCzIMLnNlbGFoLnYxLklkEigKBGtpbmQYAiABKA4yGi5zZWxhaC52MS5TdGFnZUVsZW1lbnRLaW5kEhwKBHJlY3QYAyABKAsyDi5zZWxhaC52MS5SZWN0Eg8KB3Zpc2libGUYBCABKAgSEgoKZm9udF9zY2FsZRgFIAEoAhITCgtzaG93X2Nob3JkcxgGIAEoCCKlAgoLU3RhZ2VMYXlvdXQSGAoCaWQYASABKAsyDC5zZWxhaC52MS5JZBIMCgRuYW1lGAIgASgJEhMKC3Nob3dfY2hvcmRzGAMgASgIEhYKDnNob3dfa2V5X2JhZGdlGAQgASgIEh4KFnNob3dfYXJyYW5nZW1lbnRfc3RyaXAYBSABKAgSEgoKc2hvd19jbG9jaxgGIAEoCBIXCg9zaG93X25leHRfc2xpZGUYByABKAgSEgoKc2hvd190aW1lchgIIAEoCBIaChJzaG93X3NwZWFrZXJfbm90ZXMYCSABKAgSGgoSc2hvd19ib290aF9tZXNzYWdlGAogASgIEigKCGVsZW1lbnRzGAsgAygLMhYuc2VsYWgudjEuU3RhZ2VFbGVtZW50Ih0KD1NldFByYWN0aWNlTW9kZRIKCgJvbhgBIAEoCCKeAgoKUmVhZHlDaGVjaxImCgRraW5kGAEgASgOMhguc2VsYWgudjEuUmVhZHlDaGVja0tpbmQSKgoGc3RhdHVzGAIgASgOMhouc2VsYWgudjEuUmVhZHlDaGVja1N0YXR1cxIMCgRjb2RlGAMgASgJEhMKC21lc3NhZ2Vfa2V5GAQgASgJEiwKBGFyZ3MYBSADKAsyHi5zZWxhaC52MS5SZWFkeUNoZWNrLkFyZ3NFbnRyeRIWCg5maXhfYXJ0aWNsZV9pZBgGIAEoCRISCgppdGVtX2luZGV4GAcgASgFEhIKCml0ZW1fdGl0bGUYCCABKAkaKwoJQXJnc0VudHJ5EgsKA2tleRgBIAEoCRINCgV2YWx1ZRgCIAEoCToCOAEiMQoNUnVuUmVhZHlDaGVjaxIgCgpzZXJ2aWNlX2lkGAEgASgLMgwuc2VsYWgudjEuSWQiZAoLUmVhZHlSZXBvcnQSIAoKc2VydmljZV9pZBgBIAEoCzIMLnNlbGFoLnYxLklkEiQKBmNoZWNrcxgCIAMoCzIULnNlbGFoLnYxLlJlYWR5Q2hlY2sSDQoFcmVhZHkYAyABKAgiKAoIU2F2ZUxvb2sSHAoEbG9vaxgBIAEoCzIOLnNlbGFoLnYxLkxvb2siJgoKRGVsZXRlTG9vaxIYCgJpZBgBIAEoCzIMLnNlbGFoLnYxLklkIiMKB0dldExvb2sSGAoCaWQYASABKAsyDC5zZWxhaC52MS5JZCIqCglMaXN0TG9va3MSDQoFbGltaXQYASABKA0SDgoGb2Zmc2V0GAIgASgNIikKCExvb2tMaXN0Eh0KBWxvb2tzGAEgAygLMg4uc2VsYWgudjEuTG9vayIoCghTYXZlUHJvcBIcCgRwcm9wGAEgASgLMg4uc2VsYWgudjEuUHJvcCImCgpEZWxldGVQcm9wEhgKAmlkGAEgASgLMgwuc2VsYWgudjEuSWQiIwoHR2V0UHJvcBIYCgJpZBgBIAEoCzIMLnNlbGFoLnYxLklkIioKCUxpc3RQcm9wcxINCgVsaW1pdBgBIAEoDRIOCgZvZmZzZXQYAiABKA0iKQoIUHJvcExpc3QSHQoFcHJvcHMYASADKAsyDi5zZWxhaC52MS5Qcm9wIjUKC1NhdmVNZXNzYWdlEiYKB21lc3NhZ2UYASABKAsyFS5zZWxhaC52MS5MaXZlTWVzc2FnZSIpCg1EZWxldGVNZXNzYWdlEhgKAmlkGAEgASgLMgwuc2VsYWgudjEuSWQiJgoKR2V0TWVzc2FnZRIYCgJpZBgBIAEoCzIMLnNlbGFoLnYxLklkIi0KDExpc3RNZXNzYWdlcxINCgVsaW1pdBgBIAEoDRIOCgZvZmZzZXQYAiABKA0iNgoLTWVzc2FnZUxpc3QSJwoIbWVzc2FnZXMYASADKAsyFS5zZWxhaC52MS5MaXZlTWVzc2FnZSIrCglTYXZlVGltZXISHgoFdGltZXIYASABKAsyDy5zZWxhaC52MS5UaW1lciInCgtEZWxldGVUaW1lchIYCgJpZBgBIAEoCzIMLnNlbGFoLnYxLklkIiQKCEdldFRpbWVyEhgKAmlkGAEgASgLMgwuc2VsYWgudjEuSWQiKwoKTGlzdFRpbWVycxINCgVsaW1pdBgBIAEoDRIOCgZvZmZzZXQYAiABKA0iLAoJVGltZXJMaXN0Eh8KBnRpbWVycxgBIAMoCzIPLnNlbGFoLnYxLlRpbWVyIisKCVNhdmVNYWNybxIeCgVtYWNybxgBIAEoCzIPLnNlbGFoLnYxLk1hY3JvIicKC0RlbGV0ZU1hY3JvEhgKAmlkGAEgASgLMgwuc2VsYWgudjEuSWQiJAoIR2V0TWFjcm8SGAoCaWQYASABKAsyDC5zZWxhaC52MS5JZCIrCgpMaXN0TWFjcm9zEg0KBWxpbWl0GAEgASgNEg4KBm9mZnNldBgCIAEoDSIsCglNYWNyb0xpc3QSHwoGbWFjcm9zGAEgAygLMg8uc2VsYWgudjEuTWFjcm8iOwoOU2F2ZUNsZWFyR3JvdXASKQoLY2xlYXJfZ3JvdXAYASABKAsyFC5zZWxhaC52MS5DbGVhckdyb3VwIiwKEERlbGV0ZUNsZWFyR3JvdXASGAoCaWQYASABKAsyDC5zZWxhaC52MS5JZCIpCg1HZXRDbGVhckdyb3VwEhgKAmlkGAEgASgLMgwuc2VsYWgudjEuSWQiMAoPTGlzdENsZWFyR3JvdXBzEg0KBWxpbWl0GAEgASgNEg4KBm9mZnNldBgCIAEoDSI8Cg5DbGVhckdyb3VwTGlzdBIqCgxjbGVhcl9ncm91cHMYASADKAsyFC5zZWxhaC52MS5DbGVhckdyb3VwIj4KD1NhdmVTdGFnZUxheW91dBIrCgxzdGFnZV9sYXlvdXQYASABKAsyFS5zZWxhaC52MS5TdGFnZUxheW91dCItChFEZWxldGVTdGFnZUxheW91dBIYCgJpZBgBIAEoCzIMLnNlbGFoLnYxLklkIioKDkdldFN0YWdlTGF5b3V0EhgKAmlkGAEgASgLMgwuc2VsYWgudjEuSWQiMQoQTGlzdFN0YWdlTGF5b3V0cxINCgVsaW1pdBgBIAEoDRIOCgZvZmZzZXQYAiABKA0iPwoPU3RhZ2VMYXlvdXRMaXN0EiwKDXN0YWdlX2xheW91dHMYASADKAsyFS5zZWxhaC52MS5TdGFnZUxheW91dCIoCgdTZXRMb29rEh0KB2xvb2tfaWQYASABKAsyDC5zZWxhaC52MS5JZCIpCghTaG93UHJvcBIdCgdwcm9wX2lkGAEgASgLMgwuc2VsYWgudjEuSWQiKQoISGlkZVByb3ASHQoHcHJvcF9pZBgBIAEoCzIMLnNlbGFoLnYxLklkIuQBCgtTaG93TWVzc2FnZRIgCgptZXNzYWdlX2lkGAEgASgLMgwuc2VsYWgudjEuSWQSPAoMdG9rZW5fdmFsdWVzGAIgAygLMiYuc2VsYWgudjEuU2hvd01lc3NhZ2UuVG9rZW5WYWx1ZXNFbnRyeRITCgtjdXN0b21fdGV4dBgDIAEoCRIYChBkdXJhdGlvbl9zZWNvbmRzGAQgASgNEhIKCnN0YWdlX29ubHkYBSABKAgaMgoQVG9rZW5WYWx1ZXNFbnRyeRILCgNrZXkYASABKAkSDQoFdmFsdWUYAiABKAk6AjgBIg0KC0hpZGVNZXNzYWdlIiwKClN0YXJ0VGltZXISHgoIdGltZXJfaWQYASABKAsyDC5zZWxhaC52MS5JZCIsCgpQYXVzZVRpbWVyEh4KCHRpbWVyX2lkGAEgASgLMgwuc2VsYWgudjEuSWQiLAoKUmVzZXRUaW1lchIeCgh0aW1lcl9pZBgBIAEoCzIMLnNlbGFoLnYxLklkIjoKEEFkdmFuY2VMaXZlQ2xvY2sSEAoIZGVsdGFfbXMYASABKAQSFAoMd2FsbF91bml4X21zGAIgASgDIioKCFJ1bk1hY3JvEh4KCG1hY3JvX2lkGAEgASgLMgwuc2VsYWgudjEuSWQiOQoRVHJpZ2dlckNsZWFyR3JvdXASJAoOY2xlYXJfZ3JvdXBfaWQYASABKAsyDC5zZWxhaC52MS5JZCI3Cg5TZXRTdGFnZUxheW91dBIlCg9zdGFnZV9sYXlvdXRfaWQYASABKAsyDC5zZWxhaC52MS5JZCIgChBTZW5kQm9vdGhNZXNzYWdlEgwKBHRleHQYASABKAkiHgoMU2V0Qm9vdGhMb2NrEg4KBmxvY2tlZBgBIAEoCCIqCgtTZXRSb2xlTG9jaxIOCgZsb2NrZWQYASABKAgSCwoDcGluGAIgASgJKngKCVRpbWVyS2luZBIaChZUSU1FUl9LSU5EX1VOU1BFQ0lGSUVEEAASGAoUVElNRVJfS0lORF9DT1VOVERPV04QARIXChNUSU1FUl9LSU5EX0NPVU5UX1VQEAISHAoYVElNRVJfS0lORF9DT1VOVF9UT19USU1FEAMqqwEKEFRpbWVyT3ZlcnJ1bk1vZGUSIgoeVElNRVJfT1ZFUlJVTl9NT0RFX1VOU1BFQ0lGSUVEEAASIwofVElNRVJfT1ZFUlJVTl9NT0RFX1NUT1BfQVRfWkVSTxABEigKJFRJTUVSX09WRVJSVU5fTU9ERV9DT1VOVF9VUF9ORUdBVElWRRACEiQKIFRJTUVSX09WRVJSVU5fTU9ERV9UUklHR0VSX01BQ1JPEAMqwwQKD01hY3JvQWN0aW9uS2luZBIhCh1NQUNST19BQ1RJT05fS0lORF9VTlNQRUNJRklFRBAAEh4KGk1BQ1JPX0FDVElPTl9LSU5EX1NFVF9MT09LEAESHwobTUFDUk9fQUNUSU9OX0tJTkRfU0hPV19QUk9QEAISHwobTUFDUk9fQUNUSU9OX0tJTkRfSElERV9QUk9QEAMSIgoeTUFDUk9fQUNUSU9OX0tJTkRfU0hPV19NRVNTQUdFEAQSIgoeTUFDUk9fQUNUSU9OX0tJTkRfSElERV9NRVNTQUdFEAUSIQodTUFDUk9fQUNUSU9OX0tJTkRfU1RBUlRfVElNRVIQBhIhCh1NQUNST19BQ1RJT05fS0lORF9QQVVTRV9USU1FUhAHEiEKHU1BQ1JPX0FDVElPTl9LSU5EX1JFU0VUX1RJTUVSEAgSIQodTUFDUk9fQUNUSU9OX0tJTkRfQ0xFQVJfTEFZRVIQCRIpCiVNQUNST19BQ1RJT05fS0lORF9UUklHR0VSX0NMRUFSX0dST1VQEAoSHwobTUFDUk9fQUNUSU9OX0tJTkRfQ0xFQVJfQUxMEAsSHwobTUFDUk9fQUNUSU9OX0tJTkRfU0hPV19MT0dPEAwSIAocTUFDUk9fQUNUSU9OX0tJTkRfUExBWV9BVURJTxANEiAKHE1BQ1JPX0FDVElPTl9LSU5EX1NUT1BfQVVESU8QDhImCiJNQUNST19BQ1RJT05fS0lORF9TRVRfU1RBR0VfTEFZT1VUEA8q1AIKEFN0YWdlRWxlbWVudEtpbmQSIgoeU1RBR0VfRUxFTUVOVF9LSU5EX1VOU1BFQ0lGSUVEEAASIQodU1RBR0VfRUxFTUVOVF9LSU5EX0hFQURFUl9CQVIQARIkCiBTVEFHRV9FTEVNRU5UX0tJTkRfQ1VSUkVOVF9TTElERRACEiEKHVNUQUdFX0VMRU1FTlRfS0lORF9ORVhUX1NMSURFEAMSHAoYU1RBR0VfRUxFTUVOVF9LSU5EX1RJTUVSEAQSHAoYU1RBR0VfRUxFTUVOVF9LSU5EX0NMT0NLEAUSJAogU1RBR0VfRUxFTUVOVF9LSU5EX0JPT1RIX01FU1NBR0UQBhIkCiBTVEFHRV9FTEVNRU5UX0tJTkRfU1BFQUtFUl9OT1RFUxAHEigKJFNUQUdFX0VMRU1FTlRfS0lORF9BUlJBTkdFTUVOVF9TVFJJUBAIKp0CCg5SZWFkeUNoZWNrS2luZBIgChxSRUFEWV9DSEVDS19LSU5EX1VOU1BFQ0lGSUVEEAASGgoWUkVBRFlfQ0hFQ0tfS0lORF9NRURJQRABEhoKFlJFQURZX0NIRUNLX0tJTkRfRk9OVFMQAhIeChpSRUFEWV9DSEVDS19LSU5EX1RFWFRfRklUUxADEh4KGlJFQURZX0NIRUNLX0tJTkRfQ09QWVJJR0hUEAQSHAoYUkVBRFlfQ0hFQ0tfS0lORF9PVVRQVVRTEAUSGwoXUkVBRFlfQ0hFQ0tfS0lORF9CQUNLVVAQBhIaChZSRUFEWV9DSEVDS19LSU5EX0ZMQVNIEAcSGgoWUkVBRFlfQ0hFQ0tfS0lORF9TT1VORBAIKqoBChBSZWFkeUNoZWNrU3RhdHVzEiIKHlJFQURZX0NIRUNLX1NUQVRVU19VTlNQRUNJRklFRBAAEhsKF1JFQURZX0NIRUNLX1NUQVRVU19QQVNTEAESGwoXUkVBRFlfQ0hFQ0tfU1RBVFVTX1dBUk4QAhIbChdSRUFEWV9DSEVDS19TVEFUVVNfRkFJTBADEhsKF1JFQURZX0NIRUNLX1NUQVRVU19JTkZPEARCFaoCElNlbGFoLkNvbnRyYWN0cy5WMWIGcHJvdG8z", [file_selah_v1_common, file_selah_v1_render]);
 
 /**
  * Look rules (screen × layer visibility + per-output template override, M4.3 / M4-A3).
@@ -676,6 +676,130 @@ export const StageLayoutSchema: GenMessage<StageLayout> = /*@__PURE__*/
   messageDesc(file_selah_v1_live, 11);
 
 /**
+ * Practice mode (M4.7): live changes go to the preview window only; the screens keep showing
+ * what they showed when practice began. Leaving practice puts the live state back as it was.
+ *
+ * @generated from message selah.v1.SetPracticeMode
+ */
+export type SetPracticeMode = Message<"selah.v1.SetPracticeMode"> & {
+  /**
+   * @generated from field: bool on = 1;
+   */
+  on: boolean;
+};
+
+/**
+ * Describes the message selah.v1.SetPracticeMode.
+ * Use `create(SetPracticeModeSchema)` to create a new message.
+ */
+export const SetPracticeModeSchema: GenMessage<SetPracticeMode> = /*@__PURE__*/
+  messageDesc(file_selah_v1_live, 12);
+
+/**
+ * @generated from message selah.v1.ReadyCheck
+ */
+export type ReadyCheck = Message<"selah.v1.ReadyCheck"> & {
+  /**
+   * @generated from field: selah.v1.ReadyCheckKind kind = 1;
+   */
+  kind: ReadyCheckKind;
+
+  /**
+   * @generated from field: selah.v1.ReadyCheckStatus status = 2;
+   */
+  status: ReadyCheckStatus;
+
+  /**
+   * SEL-RDY-xxxx (or another catalogue code) when the check doesn't pass.
+   *
+   * @generated from field: string code = 3;
+   */
+  code: string;
+
+  /**
+   * A message id in content/i18n/en/*.ftl, filled in with `args`.
+   *
+   * @generated from field: string message_key = 4;
+   */
+  messageKey: string;
+
+  /**
+   * @generated from field: map<string, string> args = 5;
+   */
+  args: { [key: string]: string };
+
+  /**
+   * @generated from field: string fix_article_id = 6;
+   */
+  fixArticleId: string;
+
+  /**
+   * The service item the check is about, or -1.
+   *
+   * @generated from field: int32 item_index = 7;
+   */
+  itemIndex: number;
+
+  /**
+   * @generated from field: string item_title = 8;
+   */
+  itemTitle: string;
+};
+
+/**
+ * Describes the message selah.v1.ReadyCheck.
+ * Use `create(ReadyCheckSchema)` to create a new message.
+ */
+export const ReadyCheckSchema: GenMessage<ReadyCheck> = /*@__PURE__*/
+  messageDesc(file_selah_v1_live, 13);
+
+/**
+ * @generated from message selah.v1.RunReadyCheck
+ */
+export type RunReadyCheck = Message<"selah.v1.RunReadyCheck"> & {
+  /**
+   * @generated from field: selah.v1.Id service_id = 1;
+   */
+  serviceId?: Id;
+};
+
+/**
+ * Describes the message selah.v1.RunReadyCheck.
+ * Use `create(RunReadyCheckSchema)` to create a new message.
+ */
+export const RunReadyCheckSchema: GenMessage<RunReadyCheck> = /*@__PURE__*/
+  messageDesc(file_selah_v1_live, 14);
+
+/**
+ * @generated from message selah.v1.ReadyReport
+ */
+export type ReadyReport = Message<"selah.v1.ReadyReport"> & {
+  /**
+   * @generated from field: selah.v1.Id service_id = 1;
+   */
+  serviceId?: Id;
+
+  /**
+   * @generated from field: repeated selah.v1.ReadyCheck checks = 2;
+   */
+  checks: ReadyCheck[];
+
+  /**
+   * No check failed (warnings and notes don't stop a service).
+   *
+   * @generated from field: bool ready = 3;
+   */
+  ready: boolean;
+};
+
+/**
+ * Describes the message selah.v1.ReadyReport.
+ * Use `create(ReadyReportSchema)` to create a new message.
+ */
+export const ReadyReportSchema: GenMessage<ReadyReport> = /*@__PURE__*/
+  messageDesc(file_selah_v1_live, 15);
+
+/**
  * Library CRUD messages for M4.3 / M4.6 documents.
  *
  * @generated from message selah.v1.SaveLook
@@ -692,7 +816,7 @@ export type SaveLook = Message<"selah.v1.SaveLook"> & {
  * Use `create(SaveLookSchema)` to create a new message.
  */
 export const SaveLookSchema: GenMessage<SaveLook> = /*@__PURE__*/
-  messageDesc(file_selah_v1_live, 12);
+  messageDesc(file_selah_v1_live, 16);
 
 /**
  * @generated from message selah.v1.DeleteLook
@@ -709,7 +833,7 @@ export type DeleteLook = Message<"selah.v1.DeleteLook"> & {
  * Use `create(DeleteLookSchema)` to create a new message.
  */
 export const DeleteLookSchema: GenMessage<DeleteLook> = /*@__PURE__*/
-  messageDesc(file_selah_v1_live, 13);
+  messageDesc(file_selah_v1_live, 17);
 
 /**
  * @generated from message selah.v1.GetLook
@@ -726,7 +850,7 @@ export type GetLook = Message<"selah.v1.GetLook"> & {
  * Use `create(GetLookSchema)` to create a new message.
  */
 export const GetLookSchema: GenMessage<GetLook> = /*@__PURE__*/
-  messageDesc(file_selah_v1_live, 14);
+  messageDesc(file_selah_v1_live, 18);
 
 /**
  * @generated from message selah.v1.ListLooks
@@ -748,7 +872,7 @@ export type ListLooks = Message<"selah.v1.ListLooks"> & {
  * Use `create(ListLooksSchema)` to create a new message.
  */
 export const ListLooksSchema: GenMessage<ListLooks> = /*@__PURE__*/
-  messageDesc(file_selah_v1_live, 15);
+  messageDesc(file_selah_v1_live, 19);
 
 /**
  * @generated from message selah.v1.LookList
@@ -765,7 +889,7 @@ export type LookList = Message<"selah.v1.LookList"> & {
  * Use `create(LookListSchema)` to create a new message.
  */
 export const LookListSchema: GenMessage<LookList> = /*@__PURE__*/
-  messageDesc(file_selah_v1_live, 16);
+  messageDesc(file_selah_v1_live, 20);
 
 /**
  * @generated from message selah.v1.SaveProp
@@ -782,7 +906,7 @@ export type SaveProp = Message<"selah.v1.SaveProp"> & {
  * Use `create(SavePropSchema)` to create a new message.
  */
 export const SavePropSchema: GenMessage<SaveProp> = /*@__PURE__*/
-  messageDesc(file_selah_v1_live, 17);
+  messageDesc(file_selah_v1_live, 21);
 
 /**
  * @generated from message selah.v1.DeleteProp
@@ -799,7 +923,7 @@ export type DeleteProp = Message<"selah.v1.DeleteProp"> & {
  * Use `create(DeletePropSchema)` to create a new message.
  */
 export const DeletePropSchema: GenMessage<DeleteProp> = /*@__PURE__*/
-  messageDesc(file_selah_v1_live, 18);
+  messageDesc(file_selah_v1_live, 22);
 
 /**
  * @generated from message selah.v1.GetProp
@@ -816,7 +940,7 @@ export type GetProp = Message<"selah.v1.GetProp"> & {
  * Use `create(GetPropSchema)` to create a new message.
  */
 export const GetPropSchema: GenMessage<GetProp> = /*@__PURE__*/
-  messageDesc(file_selah_v1_live, 19);
+  messageDesc(file_selah_v1_live, 23);
 
 /**
  * @generated from message selah.v1.ListProps
@@ -838,7 +962,7 @@ export type ListProps = Message<"selah.v1.ListProps"> & {
  * Use `create(ListPropsSchema)` to create a new message.
  */
 export const ListPropsSchema: GenMessage<ListProps> = /*@__PURE__*/
-  messageDesc(file_selah_v1_live, 20);
+  messageDesc(file_selah_v1_live, 24);
 
 /**
  * @generated from message selah.v1.PropList
@@ -855,7 +979,7 @@ export type PropList = Message<"selah.v1.PropList"> & {
  * Use `create(PropListSchema)` to create a new message.
  */
 export const PropListSchema: GenMessage<PropList> = /*@__PURE__*/
-  messageDesc(file_selah_v1_live, 21);
+  messageDesc(file_selah_v1_live, 25);
 
 /**
  * @generated from message selah.v1.SaveMessage
@@ -872,7 +996,7 @@ export type SaveMessage = Message<"selah.v1.SaveMessage"> & {
  * Use `create(SaveMessageSchema)` to create a new message.
  */
 export const SaveMessageSchema: GenMessage<SaveMessage> = /*@__PURE__*/
-  messageDesc(file_selah_v1_live, 22);
+  messageDesc(file_selah_v1_live, 26);
 
 /**
  * @generated from message selah.v1.DeleteMessage
@@ -889,7 +1013,7 @@ export type DeleteMessage = Message<"selah.v1.DeleteMessage"> & {
  * Use `create(DeleteMessageSchema)` to create a new message.
  */
 export const DeleteMessageSchema: GenMessage<DeleteMessage> = /*@__PURE__*/
-  messageDesc(file_selah_v1_live, 23);
+  messageDesc(file_selah_v1_live, 27);
 
 /**
  * @generated from message selah.v1.GetMessage
@@ -906,7 +1030,7 @@ export type GetMessage = Message<"selah.v1.GetMessage"> & {
  * Use `create(GetMessageSchema)` to create a new message.
  */
 export const GetMessageSchema: GenMessage<GetMessage> = /*@__PURE__*/
-  messageDesc(file_selah_v1_live, 24);
+  messageDesc(file_selah_v1_live, 28);
 
 /**
  * @generated from message selah.v1.ListMessages
@@ -928,7 +1052,7 @@ export type ListMessages = Message<"selah.v1.ListMessages"> & {
  * Use `create(ListMessagesSchema)` to create a new message.
  */
 export const ListMessagesSchema: GenMessage<ListMessages> = /*@__PURE__*/
-  messageDesc(file_selah_v1_live, 25);
+  messageDesc(file_selah_v1_live, 29);
 
 /**
  * @generated from message selah.v1.MessageList
@@ -945,7 +1069,7 @@ export type MessageList = Message<"selah.v1.MessageList"> & {
  * Use `create(MessageListSchema)` to create a new message.
  */
 export const MessageListSchema: GenMessage<MessageList> = /*@__PURE__*/
-  messageDesc(file_selah_v1_live, 26);
+  messageDesc(file_selah_v1_live, 30);
 
 /**
  * @generated from message selah.v1.SaveTimer
@@ -962,7 +1086,7 @@ export type SaveTimer = Message<"selah.v1.SaveTimer"> & {
  * Use `create(SaveTimerSchema)` to create a new message.
  */
 export const SaveTimerSchema: GenMessage<SaveTimer> = /*@__PURE__*/
-  messageDesc(file_selah_v1_live, 27);
+  messageDesc(file_selah_v1_live, 31);
 
 /**
  * @generated from message selah.v1.DeleteTimer
@@ -979,7 +1103,7 @@ export type DeleteTimer = Message<"selah.v1.DeleteTimer"> & {
  * Use `create(DeleteTimerSchema)` to create a new message.
  */
 export const DeleteTimerSchema: GenMessage<DeleteTimer> = /*@__PURE__*/
-  messageDesc(file_selah_v1_live, 28);
+  messageDesc(file_selah_v1_live, 32);
 
 /**
  * @generated from message selah.v1.GetTimer
@@ -996,7 +1120,7 @@ export type GetTimer = Message<"selah.v1.GetTimer"> & {
  * Use `create(GetTimerSchema)` to create a new message.
  */
 export const GetTimerSchema: GenMessage<GetTimer> = /*@__PURE__*/
-  messageDesc(file_selah_v1_live, 29);
+  messageDesc(file_selah_v1_live, 33);
 
 /**
  * @generated from message selah.v1.ListTimers
@@ -1018,7 +1142,7 @@ export type ListTimers = Message<"selah.v1.ListTimers"> & {
  * Use `create(ListTimersSchema)` to create a new message.
  */
 export const ListTimersSchema: GenMessage<ListTimers> = /*@__PURE__*/
-  messageDesc(file_selah_v1_live, 30);
+  messageDesc(file_selah_v1_live, 34);
 
 /**
  * @generated from message selah.v1.TimerList
@@ -1035,7 +1159,7 @@ export type TimerList = Message<"selah.v1.TimerList"> & {
  * Use `create(TimerListSchema)` to create a new message.
  */
 export const TimerListSchema: GenMessage<TimerList> = /*@__PURE__*/
-  messageDesc(file_selah_v1_live, 31);
+  messageDesc(file_selah_v1_live, 35);
 
 /**
  * @generated from message selah.v1.SaveMacro
@@ -1052,7 +1176,7 @@ export type SaveMacro = Message<"selah.v1.SaveMacro"> & {
  * Use `create(SaveMacroSchema)` to create a new message.
  */
 export const SaveMacroSchema: GenMessage<SaveMacro> = /*@__PURE__*/
-  messageDesc(file_selah_v1_live, 32);
+  messageDesc(file_selah_v1_live, 36);
 
 /**
  * @generated from message selah.v1.DeleteMacro
@@ -1069,7 +1193,7 @@ export type DeleteMacro = Message<"selah.v1.DeleteMacro"> & {
  * Use `create(DeleteMacroSchema)` to create a new message.
  */
 export const DeleteMacroSchema: GenMessage<DeleteMacro> = /*@__PURE__*/
-  messageDesc(file_selah_v1_live, 33);
+  messageDesc(file_selah_v1_live, 37);
 
 /**
  * @generated from message selah.v1.GetMacro
@@ -1086,7 +1210,7 @@ export type GetMacro = Message<"selah.v1.GetMacro"> & {
  * Use `create(GetMacroSchema)` to create a new message.
  */
 export const GetMacroSchema: GenMessage<GetMacro> = /*@__PURE__*/
-  messageDesc(file_selah_v1_live, 34);
+  messageDesc(file_selah_v1_live, 38);
 
 /**
  * @generated from message selah.v1.ListMacros
@@ -1108,7 +1232,7 @@ export type ListMacros = Message<"selah.v1.ListMacros"> & {
  * Use `create(ListMacrosSchema)` to create a new message.
  */
 export const ListMacrosSchema: GenMessage<ListMacros> = /*@__PURE__*/
-  messageDesc(file_selah_v1_live, 35);
+  messageDesc(file_selah_v1_live, 39);
 
 /**
  * @generated from message selah.v1.MacroList
@@ -1125,7 +1249,7 @@ export type MacroList = Message<"selah.v1.MacroList"> & {
  * Use `create(MacroListSchema)` to create a new message.
  */
 export const MacroListSchema: GenMessage<MacroList> = /*@__PURE__*/
-  messageDesc(file_selah_v1_live, 36);
+  messageDesc(file_selah_v1_live, 40);
 
 /**
  * @generated from message selah.v1.SaveClearGroup
@@ -1142,7 +1266,7 @@ export type SaveClearGroup = Message<"selah.v1.SaveClearGroup"> & {
  * Use `create(SaveClearGroupSchema)` to create a new message.
  */
 export const SaveClearGroupSchema: GenMessage<SaveClearGroup> = /*@__PURE__*/
-  messageDesc(file_selah_v1_live, 37);
+  messageDesc(file_selah_v1_live, 41);
 
 /**
  * @generated from message selah.v1.DeleteClearGroup
@@ -1159,7 +1283,7 @@ export type DeleteClearGroup = Message<"selah.v1.DeleteClearGroup"> & {
  * Use `create(DeleteClearGroupSchema)` to create a new message.
  */
 export const DeleteClearGroupSchema: GenMessage<DeleteClearGroup> = /*@__PURE__*/
-  messageDesc(file_selah_v1_live, 38);
+  messageDesc(file_selah_v1_live, 42);
 
 /**
  * @generated from message selah.v1.GetClearGroup
@@ -1176,7 +1300,7 @@ export type GetClearGroup = Message<"selah.v1.GetClearGroup"> & {
  * Use `create(GetClearGroupSchema)` to create a new message.
  */
 export const GetClearGroupSchema: GenMessage<GetClearGroup> = /*@__PURE__*/
-  messageDesc(file_selah_v1_live, 39);
+  messageDesc(file_selah_v1_live, 43);
 
 /**
  * @generated from message selah.v1.ListClearGroups
@@ -1198,7 +1322,7 @@ export type ListClearGroups = Message<"selah.v1.ListClearGroups"> & {
  * Use `create(ListClearGroupsSchema)` to create a new message.
  */
 export const ListClearGroupsSchema: GenMessage<ListClearGroups> = /*@__PURE__*/
-  messageDesc(file_selah_v1_live, 40);
+  messageDesc(file_selah_v1_live, 44);
 
 /**
  * @generated from message selah.v1.ClearGroupList
@@ -1215,7 +1339,7 @@ export type ClearGroupList = Message<"selah.v1.ClearGroupList"> & {
  * Use `create(ClearGroupListSchema)` to create a new message.
  */
 export const ClearGroupListSchema: GenMessage<ClearGroupList> = /*@__PURE__*/
-  messageDesc(file_selah_v1_live, 41);
+  messageDesc(file_selah_v1_live, 45);
 
 /**
  * @generated from message selah.v1.SaveStageLayout
@@ -1232,7 +1356,7 @@ export type SaveStageLayout = Message<"selah.v1.SaveStageLayout"> & {
  * Use `create(SaveStageLayoutSchema)` to create a new message.
  */
 export const SaveStageLayoutSchema: GenMessage<SaveStageLayout> = /*@__PURE__*/
-  messageDesc(file_selah_v1_live, 42);
+  messageDesc(file_selah_v1_live, 46);
 
 /**
  * @generated from message selah.v1.DeleteStageLayout
@@ -1249,7 +1373,7 @@ export type DeleteStageLayout = Message<"selah.v1.DeleteStageLayout"> & {
  * Use `create(DeleteStageLayoutSchema)` to create a new message.
  */
 export const DeleteStageLayoutSchema: GenMessage<DeleteStageLayout> = /*@__PURE__*/
-  messageDesc(file_selah_v1_live, 43);
+  messageDesc(file_selah_v1_live, 47);
 
 /**
  * @generated from message selah.v1.GetStageLayout
@@ -1266,7 +1390,7 @@ export type GetStageLayout = Message<"selah.v1.GetStageLayout"> & {
  * Use `create(GetStageLayoutSchema)` to create a new message.
  */
 export const GetStageLayoutSchema: GenMessage<GetStageLayout> = /*@__PURE__*/
-  messageDesc(file_selah_v1_live, 44);
+  messageDesc(file_selah_v1_live, 48);
 
 /**
  * @generated from message selah.v1.ListStageLayouts
@@ -1288,7 +1412,7 @@ export type ListStageLayouts = Message<"selah.v1.ListStageLayouts"> & {
  * Use `create(ListStageLayoutsSchema)` to create a new message.
  */
 export const ListStageLayoutsSchema: GenMessage<ListStageLayouts> = /*@__PURE__*/
-  messageDesc(file_selah_v1_live, 45);
+  messageDesc(file_selah_v1_live, 49);
 
 /**
  * @generated from message selah.v1.StageLayoutList
@@ -1305,7 +1429,7 @@ export type StageLayoutList = Message<"selah.v1.StageLayoutList"> & {
  * Use `create(StageLayoutListSchema)` to create a new message.
  */
 export const StageLayoutListSchema: GenMessage<StageLayoutList> = /*@__PURE__*/
-  messageDesc(file_selah_v1_live, 46);
+  messageDesc(file_selah_v1_live, 50);
 
 /**
  * Live execution commands for M4.3 / M4.4 / M4.5 / M4.6.
@@ -1324,7 +1448,7 @@ export type SetLook = Message<"selah.v1.SetLook"> & {
  * Use `create(SetLookSchema)` to create a new message.
  */
 export const SetLookSchema: GenMessage<SetLook> = /*@__PURE__*/
-  messageDesc(file_selah_v1_live, 47);
+  messageDesc(file_selah_v1_live, 51);
 
 /**
  * @generated from message selah.v1.ShowProp
@@ -1341,7 +1465,7 @@ export type ShowProp = Message<"selah.v1.ShowProp"> & {
  * Use `create(ShowPropSchema)` to create a new message.
  */
 export const ShowPropSchema: GenMessage<ShowProp> = /*@__PURE__*/
-  messageDesc(file_selah_v1_live, 48);
+  messageDesc(file_selah_v1_live, 52);
 
 /**
  * @generated from message selah.v1.HideProp
@@ -1358,7 +1482,7 @@ export type HideProp = Message<"selah.v1.HideProp"> & {
  * Use `create(HidePropSchema)` to create a new message.
  */
 export const HidePropSchema: GenMessage<HideProp> = /*@__PURE__*/
-  messageDesc(file_selah_v1_live, 49);
+  messageDesc(file_selah_v1_live, 53);
 
 /**
  * @generated from message selah.v1.ShowMessage
@@ -1395,7 +1519,7 @@ export type ShowMessage = Message<"selah.v1.ShowMessage"> & {
  * Use `create(ShowMessageSchema)` to create a new message.
  */
 export const ShowMessageSchema: GenMessage<ShowMessage> = /*@__PURE__*/
-  messageDesc(file_selah_v1_live, 50);
+  messageDesc(file_selah_v1_live, 54);
 
 /**
  * @generated from message selah.v1.HideMessage
@@ -1408,7 +1532,7 @@ export type HideMessage = Message<"selah.v1.HideMessage"> & {
  * Use `create(HideMessageSchema)` to create a new message.
  */
 export const HideMessageSchema: GenMessage<HideMessage> = /*@__PURE__*/
-  messageDesc(file_selah_v1_live, 51);
+  messageDesc(file_selah_v1_live, 55);
 
 /**
  * @generated from message selah.v1.StartTimer
@@ -1425,7 +1549,7 @@ export type StartTimer = Message<"selah.v1.StartTimer"> & {
  * Use `create(StartTimerSchema)` to create a new message.
  */
 export const StartTimerSchema: GenMessage<StartTimer> = /*@__PURE__*/
-  messageDesc(file_selah_v1_live, 52);
+  messageDesc(file_selah_v1_live, 56);
 
 /**
  * @generated from message selah.v1.PauseTimer
@@ -1442,7 +1566,7 @@ export type PauseTimer = Message<"selah.v1.PauseTimer"> & {
  * Use `create(PauseTimerSchema)` to create a new message.
  */
 export const PauseTimerSchema: GenMessage<PauseTimer> = /*@__PURE__*/
-  messageDesc(file_selah_v1_live, 53);
+  messageDesc(file_selah_v1_live, 57);
 
 /**
  * @generated from message selah.v1.ResetTimer
@@ -1459,7 +1583,7 @@ export type ResetTimer = Message<"selah.v1.ResetTimer"> & {
  * Use `create(ResetTimerSchema)` to create a new message.
  */
 export const ResetTimerSchema: GenMessage<ResetTimer> = /*@__PURE__*/
-  messageDesc(file_selah_v1_live, 54);
+  messageDesc(file_selah_v1_live, 58);
 
 /**
  * @generated from message selah.v1.AdvanceLiveClock
@@ -1481,7 +1605,7 @@ export type AdvanceLiveClock = Message<"selah.v1.AdvanceLiveClock"> & {
  * Use `create(AdvanceLiveClockSchema)` to create a new message.
  */
 export const AdvanceLiveClockSchema: GenMessage<AdvanceLiveClock> = /*@__PURE__*/
-  messageDesc(file_selah_v1_live, 55);
+  messageDesc(file_selah_v1_live, 59);
 
 /**
  * @generated from message selah.v1.RunMacro
@@ -1498,7 +1622,7 @@ export type RunMacro = Message<"selah.v1.RunMacro"> & {
  * Use `create(RunMacroSchema)` to create a new message.
  */
 export const RunMacroSchema: GenMessage<RunMacro> = /*@__PURE__*/
-  messageDesc(file_selah_v1_live, 56);
+  messageDesc(file_selah_v1_live, 60);
 
 /**
  * @generated from message selah.v1.TriggerClearGroup
@@ -1515,7 +1639,7 @@ export type TriggerClearGroup = Message<"selah.v1.TriggerClearGroup"> & {
  * Use `create(TriggerClearGroupSchema)` to create a new message.
  */
 export const TriggerClearGroupSchema: GenMessage<TriggerClearGroup> = /*@__PURE__*/
-  messageDesc(file_selah_v1_live, 57);
+  messageDesc(file_selah_v1_live, 61);
 
 /**
  * @generated from message selah.v1.SetStageLayout
@@ -1532,7 +1656,7 @@ export type SetStageLayout = Message<"selah.v1.SetStageLayout"> & {
  * Use `create(SetStageLayoutSchema)` to create a new message.
  */
 export const SetStageLayoutSchema: GenMessage<SetStageLayout> = /*@__PURE__*/
-  messageDesc(file_selah_v1_live, 58);
+  messageDesc(file_selah_v1_live, 62);
 
 /**
  * SAFE-01: sends a message only to the producer booth and stage alert, never to audience screens.
@@ -1551,7 +1675,7 @@ export type SendBoothMessage = Message<"selah.v1.SendBoothMessage"> & {
  * Use `create(SendBoothMessageSchema)` to create a new message.
  */
 export const SendBoothMessageSchema: GenMessage<SendBoothMessage> = /*@__PURE__*/
-  messageDesc(file_selah_v1_live, 59);
+  messageDesc(file_selah_v1_live, 63);
 
 /**
  * SAFE-06 / M4-A12: locks the booth UI so only Next, Previous and Clear commands are accepted.
@@ -1570,7 +1694,7 @@ export type SetBoothLock = Message<"selah.v1.SetBoothLock"> & {
  * Use `create(SetBoothLockSchema)` to create a new message.
  */
 export const SetBoothLockSchema: GenMessage<SetBoothLock> = /*@__PURE__*/
-  messageDesc(file_selah_v1_live, 60);
+  messageDesc(file_selah_v1_live, 64);
 
 /**
  * SEC-14 / M4-A6: lock this computer to Simple mode. Core keeps the state and a salted PIN hash
@@ -1595,7 +1719,7 @@ export type SetRoleLock = Message<"selah.v1.SetRoleLock"> & {
  * Use `create(SetRoleLockSchema)` to create a new message.
  */
 export const SetRoleLockSchema: GenMessage<SetRoleLock> = /*@__PURE__*/
-  messageDesc(file_selah_v1_live, 61);
+  messageDesc(file_selah_v1_live, 65);
 
 /**
  * Timers: countdown, count up, count to wall-clock time, with overrun behaviour (M4.3 / M4-A4).
@@ -1811,4 +1935,99 @@ export enum StageElementKind {
  */
 export const StageElementKindSchema: GenEnum<StageElementKind> = /*@__PURE__*/
   enumDesc(file_selah_v1_live, 3);
+
+/**
+ * Ready for Sunday (M4.7): checks to run before a service. Each check that doesn't pass carries
+ * an error code from content/errors/errors.yaml, which names its fix article.
+ *
+ * @generated from enum selah.v1.ReadyCheckKind
+ */
+export enum ReadyCheckKind {
+  /**
+   * @generated from enum value: READY_CHECK_KIND_UNSPECIFIED = 0;
+   */
+  UNSPECIFIED = 0,
+
+  /**
+   * @generated from enum value: READY_CHECK_KIND_MEDIA = 1;
+   */
+  MEDIA = 1,
+
+  /**
+   * @generated from enum value: READY_CHECK_KIND_FONTS = 2;
+   */
+  FONTS = 2,
+
+  /**
+   * @generated from enum value: READY_CHECK_KIND_TEXT_FITS = 3;
+   */
+  TEXT_FITS = 3,
+
+  /**
+   * @generated from enum value: READY_CHECK_KIND_COPYRIGHT = 4;
+   */
+  COPYRIGHT = 4,
+
+  /**
+   * @generated from enum value: READY_CHECK_KIND_OUTPUTS = 5;
+   */
+  OUTPUTS = 5,
+
+  /**
+   * @generated from enum value: READY_CHECK_KIND_BACKUP = 6;
+   */
+  BACKUP = 6,
+
+  /**
+   * @generated from enum value: READY_CHECK_KIND_FLASH = 7;
+   */
+  FLASH = 7,
+
+  /**
+   * @generated from enum value: READY_CHECK_KIND_SOUND = 8;
+   */
+  SOUND = 8,
+}
+
+/**
+ * Describes the enum selah.v1.ReadyCheckKind.
+ */
+export const ReadyCheckKindSchema: GenEnum<ReadyCheckKind> = /*@__PURE__*/
+  enumDesc(file_selah_v1_live, 4);
+
+/**
+ * @generated from enum selah.v1.ReadyCheckStatus
+ */
+export enum ReadyCheckStatus {
+  /**
+   * @generated from enum value: READY_CHECK_STATUS_UNSPECIFIED = 0;
+   */
+  UNSPECIFIED = 0,
+
+  /**
+   * @generated from enum value: READY_CHECK_STATUS_PASS = 1;
+   */
+  PASS = 1,
+
+  /**
+   * @generated from enum value: READY_CHECK_STATUS_WARN = 2;
+   */
+  WARN = 2,
+
+  /**
+   * @generated from enum value: READY_CHECK_STATUS_FAIL = 3;
+   */
+  FAIL = 3,
+
+  /**
+   * @generated from enum value: READY_CHECK_STATUS_INFO = 4;
+   */
+  INFO = 4,
+}
+
+/**
+ * Describes the enum selah.v1.ReadyCheckStatus.
+ */
+export const ReadyCheckStatusSchema: GenEnum<ReadyCheckStatus> = /*@__PURE__*/
+  enumDesc(file_selah_v1_live, 5);
 
