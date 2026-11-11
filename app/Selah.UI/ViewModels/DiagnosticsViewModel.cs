@@ -130,6 +130,9 @@ public sealed partial class DiagnosticsViewModel : ObservableObject
             ("frames", (int)report.VideoFrames),
             ("ms", report.VideoCompositeP99Ms.ToString("0.0", System.Globalization.CultureInfo.CurrentCulture)),
             ("verdict", l[report.VideoPass ? "diagnostics-pass" : "diagnostics-fail"]))));
+        Results.Add(new(l["diagnostics-m3"], l.Get("diagnostics-m3-result",
+            ("ms", report.M3P99Ms.ToString("0.0", System.Globalization.CultureInfo.CurrentCulture)),
+            ("verdict", l[report.M3Pass ? "diagnostics-pass" : "diagnostics-fail"]))));
         ReportPath = report.Path;
     }
 

@@ -61,23 +61,53 @@ def generate(ffmpeg, destination):
 
 
 def committed(ffmpeg, destination):
-    """The small clip committed to the repository for the video correctness test (M1-A7).
+    """Small clips committed to the repository for deterministic CI tests across all OSes.
 
-    macOS has no encoder in its decode-only FFmpeg, so it can't generate clips; this one is
-    committed instead. 1080p60 H.264, 60 frames, a white frame at frame 30, no audio.
+    macOS has no encoder in its decode-only FFmpeg, so it can't generate clips; these are
+    committed instead:
+    - h264-1080p60.mp4: 1080p60 H.264, 60 frames, white flash at frame 30, no audio (M1-A7).
+    - flash-beep-360p60.mp4: 640x360 H.264 + AAC 48 kHz, white flash at frame 30 + 1 kHz beep at
+      0.50-0.52 s (M3-A4 cross-platform A/V sync).
     """
     version = run([str(ffmpeg), "-version"]).stdout.decode("utf-8")
     if "--enable-gpl" in version:
         raise ValueError("fixtures require the pinned LGPL FFmpeg build")
     destination.mkdir(parents=True, exist_ok=True)
     target = destination / "h264-1080p60.mp4"
-    video = ("testsrc2=size=1920x1080:rate=60:duration=1,"
-             "drawbox=x=0:y=0:w=iw:h=ih:color=white:t=fill:enable='eq(n,30)'")
-    run([str(ffmpeg), "-hide_banner", "-loglevel", "error", "-nostdin", "-y", "-f", "lavfi",
-         "-i", video, "-c:v", "libopenh264", "-b:v", "1500k", "-g", "60", "-threads", "1",
-         "-pix_fmt", "yuv420p", "-frames:v", "60", "-an", "-map_metadata", "-1",
-         "-fflags", "+bitexact", "-flags:v", "+bitexact", str(target)])
-    print(f"generated {target.relative_to(ROOT)} ({target.stat().st_size} bytes)")
+    if not target.exists():
+        video = ("testsrc2=size=1920x1080:rate=60:duration=1,"
+                 "drawbox=x=0:y=0:w=iw:h=ih:color=white:t=fill:enable='eq(n,30)'")
+        run([str(ffmpeg), "-hide_banner", "-loglevel", "error", "-nostdin", "-y", "-f", "lavfi",
+             "-i", video, "-c:v", "libopenh264", "-b:v", "1500k", "-g", "60", "-threads", "1",
+             "-pix_fmt", "yuv420p", "-frames:v", "60", "-an", "-map_metadata", "-1",
+             "-fflags", "+bitexact", "-flags:v", "+bitexact", str(target)])
+        print(f"generated {target.relative_to(ROOT)} ({target.stat().st_size} bytes)")
+
+    av_target = destination / "flash-beep-360p60.mp4"
+    if not av_target.exists():
+        av_video = ("testsrc2=size=640x360:rate=60:duration=1,"
+                    "drawbox=x=0:y=0:w=iw:h=ih:color=white:t=fill:enable='eq(n,30)'")
+        av_audio = "aevalsrc=if(between(t\\,0.5\\,0.52)\\,0.7*sin(2*PI*1000*t)\\,0):s=48000:d=1"
+        run([str(ffmpeg), "-hide_banner", "-loglevel", "error", "-nostdin", "-y",
+             "-f", "lavfi", "-i", av_video, "-f", "lavfi", "-i", av_audio,
+             "-map", "0:v", "-map", "1:a", "-c:v", "libopenh264", "-b:v", "400k",
+             "-g", "60", "-threads", "1", "-pix_fmt", "yuv420p",
+             "-c:a", "aac", "-b:a", "96k", "-frames:v", "60", "-t", "1",
+             "-map_metadata", "-1", "-fflags", "+bitexact", "-flags:v", "+bitexact",
+             str(av_target)])
+        print(f"generated {av_target.relative_to(ROOT)} ({av_target.stat().st_size} bytes)")
+
+    strobe_target = destination / "wcag-flash-360p60.mp4"
+    if not strobe_target.exists():
+        strobe_video = ("color=c=black:s=640x360:rate=60:d=1,"
+                        "drawbox=x=0:y=0:w=iw:h=ih:color=white:t=fill:enable='lt(mod(n\\,10)\\,5)'")
+        run([str(ffmpeg), "-hide_banner", "-loglevel", "error", "-nostdin", "-y",
+             "-f", "lavfi", "-i", strobe_video,
+             "-c:v", "libopenh264", "-b:v", "400k", "-g", "60", "-threads", "1",
+             "-pix_fmt", "yuv420p", "-frames:v", "60", "-an",
+             "-map_metadata", "-1", "-fflags", "+bitexact", "-flags:v", "+bitexact",
+             str(strobe_target)])
+        print(f"generated {strobe_target.relative_to(ROOT)} ({strobe_target.stat().st_size} bytes)")
 
 
 def main():

@@ -18,11 +18,15 @@ public sealed partial class MainWindow : Window, IHelpHost
     /// <summary>DESIGN-SYSTEM §4.1: below these effective widths the inspector, then the sidebar, hide.</summary>
     public const double InspectorBreakpoint = 1100;
     public const double SidebarBreakpoint = 900;
+    public const double DualPreviewBreakpoint = 820;
 
     private readonly DispatcherTimer previewTimer = new() { Interval = TimeSpan.FromMilliseconds(100) };
     private PreviewRingReader? preview;
     private ulong lastPreviewFrame;
     private WriteableBitmap? previewBitmap;
+    private PreviewRingReader? stagePreview;
+    private ulong lastStagePreviewFrame;
+    private WriteableBitmap? stagePreviewBitmap;
     private MainViewModel? subscribedModel;
 
     public MainWindow()
@@ -38,6 +42,9 @@ public sealed partial class MainWindow : Window, IHelpHost
         {
             previewTimer.Stop();
             preview?.Dispose();
+            stagePreview?.Dispose();
+            previewBitmap?.Dispose();
+            stagePreviewBitmap?.Dispose();
         };
     }
 
@@ -69,6 +76,20 @@ public sealed partial class MainWindow : Window, IHelpHost
         var showShellInspector = (Model?.IsPreviewMode ?? true) && !(Model?.IsHelpPanelOpen ?? false);
         Inspector.IsVisible = showShellInspector && width >= InspectorBreakpoint;
         Sidebar.IsVisible = width >= SidebarBreakpoint;
+        if (width >= DualPreviewBreakpoint)
+        {
+            PreviewDualGrid.ColumnDefinitions = new ColumnDefinitions("*,*");
+            PreviewDualGrid.RowDefinitions = new RowDefinitions("*");
+            Grid.SetColumn(StagePreviewCard, 1);
+            Grid.SetRow(StagePreviewCard, 0);
+        }
+        else
+        {
+            PreviewDualGrid.ColumnDefinitions = new ColumnDefinitions("*");
+            PreviewDualGrid.RowDefinitions = new RowDefinitions("*,*");
+            Grid.SetColumn(StagePreviewCard, 0);
+            Grid.SetRow(StagePreviewCard, 1);
+        }
     }
 
     /// <summary>Ctrl (Cmd on macOS) shortcuts: + − 0 text size, K command palette, S save song, F12 clear everything.</summary>
@@ -96,6 +117,14 @@ public sealed partial class MainWindow : Window, IHelpHost
             if (Model?.IsSongEditorMode == true)
             {
                 Model.SongEditor.SaveSongCommand.Execute(null);
+            }
+            else if (Model?.IsSlideEditorMode == true)
+            {
+                Model.SlideEditor.SavePresentationCommand.Execute(null);
+            }
+            else if (Model?.IsTemplatesMode == true)
+            {
+                Model.TemplateEditor.SaveTemplateCommand.Execute(null);
             }
         });
     }
@@ -244,6 +273,8 @@ public sealed partial class MainWindow : Window, IHelpHost
             subscribedModel.PropertyChanged -= OnModelPropertyChanged;
             subscribedModel.Library.PropertyChanged -= OnLibraryPropertyChanged;
             subscribedModel.SongEditor.PropertyChanged -= OnEditorPropertyChanged;
+            subscribedModel.SlideEditor.PropertyChanged -= OnSlideEditorPropertyChanged;
+            subscribedModel.TemplateEditor.PropertyChanged -= OnTemplateEditorPropertyChanged;
             subscribedModel.ArticleRequested -= OnArticleRequested;
             subscribedModel.OpenUrlRequested -= OnOpenUrlRequested;
             subscribedModel.ShowFileRequested -= OnShowFileRequested;
@@ -254,6 +285,8 @@ public sealed partial class MainWindow : Window, IHelpHost
             model.PropertyChanged += OnModelPropertyChanged;
             model.Library.PropertyChanged += OnLibraryPropertyChanged;
             model.SongEditor.PropertyChanged += OnEditorPropertyChanged;
+            model.SlideEditor.PropertyChanged += OnSlideEditorPropertyChanged;
+            model.TemplateEditor.PropertyChanged += OnTemplateEditorPropertyChanged;
             model.ArticleRequested += OnArticleRequested;
             model.OpenUrlRequested += OnOpenUrlRequested;
             model.ShowFileRequested += OnShowFileRequested;
@@ -284,6 +317,22 @@ public sealed partial class MainWindow : Window, IHelpHost
     private void OnEditorPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs args)
     {
         if (args.PropertyName is nameof(SongEditorViewModel.CurrentStep) or nameof(SongEditorViewModel.InspectorTab))
+        {
+            ScheduleHelpContextRefresh();
+        }
+    }
+
+    private void OnSlideEditorPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs args)
+    {
+        if (args.PropertyName is nameof(SlideEditorViewModel.SelectedSlide) or nameof(SlideEditorViewModel.SelectedElement))
+        {
+            ScheduleHelpContextRefresh();
+        }
+    }
+
+    private void OnTemplateEditorPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs args)
+    {
+        if (args.PropertyName is nameof(TemplateEditorViewModel.SelectedTemplate) or nameof(TemplateEditorViewModel.SelectedRoleKey))
         {
             ScheduleHelpContextRefresh();
         }
@@ -373,45 +422,72 @@ public sealed partial class MainWindow : Window, IHelpHost
     private void OnSafeModeLearnWhy(object? sender, RoutedEventArgs e) =>
         Model?.OpenArticleCommand.Execute("troubleshooting.selah-started-in-safe-mode");
 
-    /// <summary>Show the newest frame from the engine's preview ring (ADR-004), about 10 times a second.</summary>
+    /// <summary>Show the newest frames from the engine's program and staged preview rings (ADR-004, M3.6).</summary>
     private void RefreshPreview()
+    {
+        var ns = Model?.IpcNamespace ?? IpcEndpoint.ForCurrentUser(IpcService.Engine).Namespace;
+        RefreshRing(
+            Path.Combine(RuntimeDirectory.Path, $"{ns}-preview-0.ring"),
+            ref preview,
+            ref lastPreviewFrame,
+            ref previewBitmap,
+            PreviewImage);
+        if (RefreshRing(
+                Path.Combine(RuntimeDirectory.Path, $"{ns}-stage-0.ring"),
+                ref stagePreview,
+                ref lastStagePreviewFrame,
+                ref stagePreviewBitmap,
+                StagePreviewImage)
+            && Model is { HasStagedPreview: false })
+        {
+            Model.HasStagedPreview = true;
+        }
+    }
+
+    private static bool RefreshRing(
+        string path,
+        ref PreviewRingReader? reader,
+        ref ulong lastFrame,
+        ref WriteableBitmap? bitmap,
+        Image target)
     {
         try
         {
-            if (preview is null)
+            if (reader is null)
             {
-                var ns = IpcEndpoint.ForCurrentUser(IpcService.Engine).Namespace;
-                var path = Path.Combine(RuntimeDirectory.Path, $"{ns}-preview-0.ring");
                 if (!File.Exists(path))
                 {
-                    return;
+                    return false;
                 }
-                preview = PreviewRingReader.Open(path);
+                reader = PreviewRingReader.Open(path);
             }
-            if (preview.Published == lastPreviewFrame || preview.Latest() is not { } frame)
+            if (reader.Published == lastFrame || reader.Latest() is not { } frame)
             {
-                return;
+                return false;
             }
-            lastPreviewFrame = frame.Frame;
-            if (previewBitmap is null || previewBitmap.PixelSize.Width != frame.Width || previewBitmap.PixelSize.Height != frame.Height)
+            lastFrame = frame.Frame;
+            if (bitmap is null || bitmap.PixelSize.Width != frame.Width || bitmap.PixelSize.Height != frame.Height)
             {
-                previewBitmap = new WriteableBitmap(new PixelSize(frame.Width, frame.Height), new Vector(96, 96), PixelFormat.Bgra8888, AlphaFormat.Premul);
+                bitmap?.Dispose();
+                bitmap = new WriteableBitmap(new PixelSize(frame.Width, frame.Height), new Vector(96, 96), PixelFormat.Bgra8888, AlphaFormat.Premul);
             }
-            using (var buffer = previewBitmap.Lock())
+            using (var buffer = bitmap.Lock())
             {
                 for (var row = 0; row < frame.Height; row++)
                 {
                     System.Runtime.InteropServices.Marshal.Copy(frame.Pixels, row * frame.Stride, buffer.Address + (row * buffer.RowBytes), frame.Width * 4);
                 }
             }
-            PreviewImage.Source = null;
-            PreviewImage.Source = previewBitmap;
+            target.Source = null;
+            target.Source = bitmap;
+            return frame.Frame > 0;
         }
         catch (Exception error) when (error is IOException or InvalidDataException or UnauthorizedAccessException)
         {
             // The engine restarted and the ring is being recreated; try again on the next tick.
-            preview?.Dispose();
-            preview = null;
+            reader?.Dispose();
+            reader = null;
+            return false;
         }
     }
 

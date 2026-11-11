@@ -132,12 +132,15 @@ async fn diagnostics_shows_the_engine_and_writes_a_benchmark_report() {
     assert!(path.is_file(), "{path:?}");
     assert!(report.ipc_p99_ms > 0.0);
     assert!(report.video_frames > 0);
+    assert!(report.m3_p99_ms > 0.0);
     assert_eq!(report.video_clip, "h264-1080p60.mp4");
     let saved: serde_json::Value =
         serde_json::from_str(&std::fs::read_to_string(&path).unwrap()).unwrap();
     assert_eq!(saved["report"], "selah-diagnostics");
     assert!(saved["ipc"]["p99_ms"].as_f64().is_some());
     assert!(saved["video"]["frames"].as_u64().is_some());
+    assert!(saved["m3"]["p99_ms"].as_f64().is_some());
+    assert_eq!(saved["m3"]["outputs"].as_u64(), Some(2));
     assert_eq!(saved["context"]["output"], "1920x1080");
     stack.shutdown().await;
 }

@@ -67,6 +67,7 @@ async fn clear_everything_works_with_core_frozen() {
                     width: 1920,
                     height: 1080,
                 }),
+                ..Default::default()
             },
             1920,
             1080,

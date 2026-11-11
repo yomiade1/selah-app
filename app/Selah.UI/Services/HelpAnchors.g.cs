@@ -44,4 +44,12 @@ public static class HelpAnchors
     public const string EditorSlides = "editor.slides";
     /// <summary>Song editor, Song metadata, layout, arrangement, and transpose inspector.</summary>
     public const string EditorInspector = "editor.inspector";
+    /// <summary>Templates, Starter looks, typography, safe area, and preview shape editor.</summary>
+    public const string TemplatesEditor = "templates.editor";
+    /// <summary>Templates, Default song/scripture policy and per-screen assignment.</summary>
+    public const string TemplatesAssignment = "templates.assignment";
+    /// <summary>Slide editor, Custom slide deck, positioned elements, and live canvas preview.</summary>
+    public const string SlidesEditor = "slides.editor";
+    /// <summary>Slide editor, Element properties, background, transition, and effect chain.</summary>
+    public const string SlidesInspector = "slides.inspector";
 }

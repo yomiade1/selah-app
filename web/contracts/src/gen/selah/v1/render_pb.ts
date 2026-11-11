@@ -4,7 +4,7 @@
 
 import type { GenEnum, GenFile, GenMessage } from "@bufbuild/protobuf/codegenv2";
 import { enumDesc, fileDesc, messageDesc } from "@bufbuild/protobuf/codegenv2";
-import type { Resolution } from "./common_pb.js";
+import type { Color, Id, Resolution } from "./common_pb.js";
 import { file_selah_v1_common } from "./common_pb.js";
 import type { Message } from "@bufbuild/protobuf";
 
@@ -12,7 +12,692 @@ import type { Message } from "@bufbuild/protobuf";
  * Describes the file selah/v1/render.proto.
  */
 export const file_selah_v1_render: GenFile = /*@__PURE__*/
-  fileDesc("ChVzZWxhaC92MS9yZW5kZXIucHJvdG8SCHNlbGFoLnYxIo8BCgVTY2VuZRIQCghyZXZpc2lvbhgBIAEoBBIrCgx0ZXN0X3BhdHRlcm4YAiABKA4yFS5zZWxhaC52MS5UZXN0UGF0dGVybhIMCgR0ZXh0GAMgASgJEg8KB2NsZWFyZWQYBCABKAgSKAoKcmVzb2x1dGlvbhgFIAEoCzIULnNlbGFoLnYxLlJlc29sdXRpb24inwEKDVJlbmRlckNvbW1hbmQSJAoJc2V0X3NjZW5lGAEgASgLMg8uc2VsYWgudjEuU2NlbmVIABI1ChBjbGVhcl9ldmVyeXRoaW5nGAIgASgLMhkuc2VsYWgudjEuQ2xlYXJFdmVyeXRoaW5nSAASJwoJc2hvd19sb2dvGAMgASgLMhIuc2VsYWgudjEuU2hvd0xvZ29IAEIICgZhY3Rpb24iEQoPQ2xlYXJFdmVyeXRoaW5nIgoKCFNob3dMb2dvInwKEEVtZXJnZW5jeUNvbW1hbmQSNQoQY2xlYXJfZXZlcnl0aGluZxgBIAEoCzIZLnNlbGFoLnYxLkNsZWFyRXZlcnl0aGluZ0gAEicKCXNob3dfbG9nbxgCIAEoCzISLnNlbGFoLnYxLlNob3dMb2dvSABCCAoGYWN0aW9uIrkBCgpGcmFtZVNob3duEhYKDnNjZW5lX3JldmlzaW9uGAEgASgEEh0KFW1vbm90b25pY19uYW5vc2Vjb25kcxgCIAEoBBIWCg5mcmFtZV9jaGVja3N1bRgDIAEoDBIkChxjb21tYW5kX3JlY2VpdmVkX25hbm9zZWNvbmRzGAQgASgEEhQKDG91dHB1dF9pbmRleBgFIAEoDRIgChhmcmFtZV9wZXJpb2RfbmFub3NlY29uZHMYBiABKAQiXAoQRW1lcmdlbmN5QXBwbGllZBIRCglzaG93X2xvZ28YASABKAgSFgoOc2NlbmVfcmV2aXNpb24YAiABKAQSHQoVbW9ub3RvbmljX25hbm9zZWNvbmRzGAMgASgEKnoKC1Rlc3RQYXR0ZXJuEhwKGFRFU1RfUEFUVEVSTl9VTlNQRUNJRklFRBAAEhsKF1RFU1RfUEFUVEVSTl9TTVBURV9CQVJTEAESFQoRVEVTVF9QQVRURVJOX0dSSUQQAhIZChVURVNUX1BBVFRFUk5fR1JBRElFTlQQA0IVqgISU2VsYWguQ29udHJhY3RzLlYxYgZwcm90bzM", [file_selah_v1_common]);
+  fileDesc("ChVzZWxhaC92MS9yZW5kZXIucHJvdG8SCHNlbGFoLnYxIvkBCgxPdXRwdXRDb25maWcSFAoMb3V0cHV0X2luZGV4GAEgASgNEgwKBG5hbWUYAiABKAkSIgoEcm9sZRgDIAEoDjIULnNlbGFoLnYxLk91dHB1dFJvbGUSKAoKcmVzb2x1dGlvbhgEIAEoCzIULnNlbGFoLnYxLlJlc29sdXRpb24SDwoHZW5hYmxlZBgFIAEoCBIVCg1kaXNwbGF5X2luZGV4GAYgASgFEhIKCmZ1bGxzY3JlZW4YByABKAgSGAoQcmVmcmVzaF9yYXRlX21oehgIIAEoDRIhCgt0ZW1wbGF0ZV9pZBgJIAEoCzIMLnNlbGFoLnYxLklkIjsKEE91dHB1dENvbmZpZ0xpc3QSJwoHb3V0cHV0cxgBIAMoCzIWLnNlbGFoLnYxLk91dHB1dENvbmZpZyI9CglDb2xvclN0b3ASHgoFY29sb3IYASABKAsyDy5zZWxhaC52MS5Db2xvchIQCghwb3NpdGlvbhgCIAEoAiJvCgxHcmFkaWVudFNwZWMSJAoEa2luZBgBIAEoDjIWLnNlbGFoLnYxLkdyYWRpZW50S2luZBIVCg1hbmdsZV9kZWdyZWVzGAIgASgCEiIKBXN0b3BzGAMgAygLMhMuc2VsYWgudjEuQ29sb3JTdG9wImkKCkVmZmVjdFNwZWMSIgoEa2luZBgBIAEoDjIULnNlbGFoLnYxLkVmZmVjdEtpbmQSDwoHZW5hYmxlZBgCIAEoCBIRCglpbnRlbnNpdHkYAyABKAISEwoLcGFyYW1zX2pzb24YBCABKAkiqwEKDlRyYW5zaXRpb25TcGVjEiYKBGtpbmQYASABKA4yGC5zZWxhaC52MS5UcmFuc2l0aW9uS2luZBITCgtkdXJhdGlvbl9tcxgCIAEoDRIwCglkaXJlY3Rpb24YAyABKA4yHS5zZWxhaC52MS5UcmFuc2l0aW9uRGlyZWN0aW9uEioKBmVhc2luZxgEIAEoDjIaLnNlbGFoLnYxLlRyYW5zaXRpb25FYXNpbmciwwEKE1ZpZGVvSW5wdXRMYXllclNwZWMSEQoJc291cmNlX2lkGAEgASgJEicKDmZhbGxiYWNrX2NvbG9yGAIgASgLMg8uc2VsYWgudjEuQ29sb3ISIwoDZml0GAMgASgOMhYuc2VsYWgudjEuTWVkaWFGaXRNb2RlEhMKC3VzZV9vcGFjaXR5GAQgASgIEg8KB29wYWNpdHkYBSABKAISJQoHZWZmZWN0cxgGIAMoCzIULnNlbGFoLnYxLkVmZmVjdFNwZWMirAMKDk1lZGlhTGF5ZXJTcGVjEiQKC3NvbGlkX2NvbG9yGAEgASgLMg8uc2VsYWgudjEuQ29sb3ISKAoIZ3JhZGllbnQYAiABKAsyFi5zZWxhaC52MS5HcmFkaWVudFNwZWMSFAoMY29udGVudF9oYXNoGAMgASgJEhIKCm1lZGlhX2tpbmQYBCABKAkSFwoPbWVkaWFfZXh0ZW5zaW9uGAUgASgJEiMKA2ZpdBgGIAEoDjIWLnNlbGFoLnYxLk1lZGlhRml0TW9kZRITCgtibHVyX3JhZGl1cxgHIAEoAhITCgt1c2Vfb3BhY2l0eRgIIAEoCBIPCgdvcGFjaXR5GAkgASgCEhIKCmxvb3BfbWVkaWEYCiABKAgSDQoFaW5fbXMYCyABKAQSDgoGb3V0X21zGAwgASgEEg0KBXNwZWVkGA0gASgCEg4KBnZvbHVtZRgOIAEoAhINCgVtdXRlZBgPIAEoCBIOCgZwYXVzZWQYECABKAgSDwoHc2Vla19tcxgRIAEoBBIlCgdlZmZlY3RzGBIgAygLMhQuc2VsYWgudjEuRWZmZWN0U3BlYyLRAgoOU2xpZGVMYXllclNwZWMSDAoEdGV4dBgBIAEoCRIVCg1lbGVtZW50c19qc29uGAIgASgJEhIKCnN0eWxlX2pzb24YAyABKAkSKwoMdGVzdF9wYXR0ZXJuGAQgASgOMhUuc2VsYWgudjEuVGVzdFBhdHRlcm4SEwoLdXNlX29wYWNpdHkYBSABKAgSDwoHb3BhY2l0eRgGIAEoAhIlCgdlZmZlY3RzGAcgAygLMhQuc2VsYWgudjEuRWZmZWN0U3BlYxISCgp0aXRsZV90ZXh0GAggASgJEhYKDnJlZmVyZW5jZV90ZXh0GAkgASgJEhMKC2Zvb3Rlcl90ZXh0GAogASgJEhMKC2Nob3Jkc19qc29uGAsgASgJEhgKEHRyYW5zbGF0aW9uX3RleHQYDCABKAkSHAoUdGltZXJfdGFyZ2V0X3VuaXhfbXMYDSABKAMi0wEKDlByb3BzTGF5ZXJTcGVjEg0KBWxhYmVsGAEgASgJEhUKDWVsZW1lbnRzX2pzb24YAiABKAkSKQoQYmFja2dyb3VuZF9jb2xvchgDIAEoCzIPLnNlbGFoLnYxLkNvbG9yEiMKCnRleHRfY29sb3IYBCABKAsyDy5zZWxhaC52MS5Db2xvchITCgt1c2Vfb3BhY2l0eRgFIAEoCBIPCgdvcGFjaXR5GAYgASgCEiUKB2VmZmVjdHMYByADKAsyFC5zZWxhaC52MS5FZmZlY3RTcGVjIs4BChFNZXNzYWdlc0xheWVyU3BlYxIMCgR0ZXh0GAEgASgJEikKEGJhY2tncm91bmRfY29sb3IYAiABKAsyDy5zZWxhaC52MS5Db2xvchIjCgp0ZXh0X2NvbG9yGAMgASgLMg8uc2VsYWgudjEuQ29sb3ISDgoGdGlja2VyGAQgASgIEhMKC3VzZV9vcGFjaXR5GAUgASgIEg8KB29wYWNpdHkYBiABKAISJQoHZWZmZWN0cxgHIAMoCzIULnNlbGFoLnYxLkVmZmVjdFNwZWMirQMKCUxheWVyU3BlYxIhCgRraW5kGAEgASgOMhMuc2VsYWgudjEuTGF5ZXJLaW5kEg8KB2VuYWJsZWQYAiABKAgSEwoLdXNlX29wYWNpdHkYAyABKAgSDwoHb3BhY2l0eRgEIAEoAhIsCgp0cmFuc2l0aW9uGAUgASgLMhguc2VsYWgudjEuVHJhbnNpdGlvblNwZWMSJQoHZWZmZWN0cxgGIAMoCzIULnNlbGFoLnYxLkVmZmVjdFNwZWMSNAoLdmlkZW9faW5wdXQYCiABKAsyHS5zZWxhaC52MS5WaWRlb0lucHV0TGF5ZXJTcGVjSAASKQoFbWVkaWEYCyABKAsyGC5zZWxhaC52MS5NZWRpYUxheWVyU3BlY0gAEikKBXNsaWRlGAwgASgLMhguc2VsYWgudjEuU2xpZGVMYXllclNwZWNIABIpCgVwcm9wcxgNIAEoCzIYLnNlbGFoLnYxLlByb3BzTGF5ZXJTcGVjSAASLwoIbWVzc2FnZXMYDiABKAsyGy5zZWxhaC52MS5NZXNzYWdlc0xheWVyU3BlY0gAQgkKB2NvbnRlbnQivAIKC091dHB1dFNjZW5lEhQKDG91dHB1dF9pbmRleBgBIAEoDRIiCgRyb2xlGAIgASgOMhQuc2VsYWgudjEuT3V0cHV0Um9sZRIoCgpyZXNvbHV0aW9uGAMgASgLMhQuc2VsYWgudjEuUmVzb2x1dGlvbhIPCgdjbGVhcmVkGAQgASgIEhEKCXNob3dfbG9nbxgFIAEoCBIrCgx0ZXN0X3BhdHRlcm4YBiABKA4yFS5zZWxhaC52MS5UZXN0UGF0dGVybhIjCgZsYXllcnMYByADKAsyEy5zZWxhaC52MS5MYXllclNwZWMSLAoKdHJhbnNpdGlvbhgIIAEoCzIYLnNlbGFoLnYxLlRyYW5zaXRpb25TcGVjEiUKB2VmZmVjdHMYCSADKAsyFC5zZWxhaC52MS5FZmZlY3RTcGVjIqcBCgtQcmVsb2FkSGludBILCgNrZXkYASABKAkSFAoMb3V0cHV0X2luZGV4GAIgASgNEigKCnJlc29sdXRpb24YAyABKAsyFC5zZWxhaC52MS5SZXNvbHV0aW9uEgwKBHRleHQYBCABKAkSEgoKc3R5bGVfanNvbhgFIAEoCRIVCg1lbGVtZW50c19qc29uGAYgASgJEhIKCm1lZGlhX2hhc2gYByABKAki+QEKBVNjZW5lEhAKCHJldmlzaW9uGAEgASgEEisKDHRlc3RfcGF0dGVybhgCIAEoDjIVLnNlbGFoLnYxLlRlc3RQYXR0ZXJuEgwKBHRleHQYAyABKAkSDwoHY2xlYXJlZBgEIAEoCBIoCgpyZXNvbHV0aW9uGAUgASgLMhQuc2VsYWgudjEuUmVzb2x1dGlvbhImCgdvdXRwdXRzGAYgAygLMhUuc2VsYWgudjEuT3V0cHV0U2NlbmUSEgoKaXNfcHJldmlldxgHIAEoCBIsCg1wcmVsb2FkX2l0ZW1zGAggAygLMhUuc2VsYWgudjEuUHJlbG9hZEhpbnQiMQoPU2V0UHJldmlld1NjZW5lEh4KBXNjZW5lGAEgASgLMg8uc2VsYWgudjEuU2NlbmUiNAoMUHJlbG9hZEl0ZW1zEiQKBWl0ZW1zGAEgAygLMhUuc2VsYWgudjEuUHJlbG9hZEhpbnQiOwoQU2V0T3V0cHV0Q29uZmlncxInCgdvdXRwdXRzGAEgAygLMhYuc2VsYWgudjEuT3V0cHV0Q29uZmlnIhIKEEdldE91dHB1dENvbmZpZ3MiqAEKEU91dHB1dEZyYW1lU3RhdHVzEhQKDG91dHB1dF9pbmRleBgBIAEoDRIWCg5zY2VuZV9yZXZpc2lvbhgCIAEoBBIWCg5mcmFtZV9jaGVja3N1bRgDIAEoDBIoCgpyZXNvbHV0aW9uGAQgASgLMhQuc2VsYWgudjEuUmVzb2x1dGlvbhIMCgRsaXZlGAUgASgIEhUKDWZsYXNoX3dhcm5pbmcYBiABKAgiwgIKDVJlbmRlckNvbW1hbmQSJAoJc2V0X3NjZW5lGAEgASgLMg8uc2VsYWgudjEuU2NlbmVIABI1ChBjbGVhcl9ldmVyeXRoaW5nGAIgASgLMhkuc2VsYWgudjEuQ2xlYXJFdmVyeXRoaW5nSAASJwoJc2hvd19sb2dvGAMgASgLMhIuc2VsYWgudjEuU2hvd0xvZ29IABI2ChFzZXRfcHJldmlld19zY2VuZRgEIAEoCzIZLnNlbGFoLnYxLlNldFByZXZpZXdTY2VuZUgAEi8KDXByZWxvYWRfaXRlbXMYBSABKAsyFi5zZWxhaC52MS5QcmVsb2FkSXRlbXNIABI4ChJzZXRfb3V0cHV0X2NvbmZpZ3MYBiABKAsyGi5zZWxhaC52MS5TZXRPdXRwdXRDb25maWdzSABCCAoGYWN0aW9uIhEKD0NsZWFyRXZlcnl0aGluZyIKCghTaG93TG9nbyJ8ChBFbWVyZ2VuY3lDb21tYW5kEjUKEGNsZWFyX2V2ZXJ5dGhpbmcYASABKAsyGS5zZWxhaC52MS5DbGVhckV2ZXJ5dGhpbmdIABInCglzaG93X2xvZ28YAiABKAsyEi5zZWxhaC52MS5TaG93TG9nb0gAQggKBmFjdGlvbiKOAgoKRnJhbWVTaG93bhIWCg5zY2VuZV9yZXZpc2lvbhgBIAEoBBIdChVtb25vdG9uaWNfbmFub3NlY29uZHMYAiABKAQSFgoOZnJhbWVfY2hlY2tzdW0YAyABKAwSJAocY29tbWFuZF9yZWNlaXZlZF9uYW5vc2Vjb25kcxgEIAEoBBIUCgxvdXRwdXRfaW5kZXgYBSABKA0SIAoYZnJhbWVfcGVyaW9kX25hbm9zZWNvbmRzGAYgASgEEigKCnJlc29sdXRpb24YByABKAsyFC5zZWxhaC52MS5SZXNvbHV0aW9uEhIKCmlzX3ByZXZpZXcYCCABKAgSFQoNZmxhc2hfd2FybmluZxgJIAEoCCLkAQoQQW5hbHl6ZUZsYXNoUmlzaxIsCgp0cmFuc2l0aW9uGAEgASgLMhguc2VsYWgudjEuVHJhbnNpdGlvblNwZWMSGQoRcmVwZWF0X2NhZGVuY2VfbXMYAiABKA0SIwoKZnJvbV9zY2VuZRgDIAEoCzIPLnNlbGFoLnYxLlNjZW5lEiEKCHRvX3NjZW5lGAQgASgLMg8uc2VsYWgudjEuU2NlbmUSHgoIbWVkaWFfaWQYBSABKAsyDC5zZWxhaC52MS5JZBIfChdmbGFzaGVzX3Blcl9zZWNvbmRfaGludBgGIAEoAiKHAQoPRmxhc2hSaXNrUmVwb3J0EhUKDWZsYXNoX3dhcm5pbmcYASABKAgSGgoSZmxhc2hlc19wZXJfc2Vjb25kGAIgASgCEhoKEnNhdHVyYXRlZF9yZWRfcmlzaxgDIAEoCBIOCgZyZWFzb24YBCABKAkSFQoNd2FybmluZ19jb2RlcxgFIAMoCSJcChBFbWVyZ2VuY3lBcHBsaWVkEhEKCXNob3dfbG9nbxgBIAEoCBIWCg5zY2VuZV9yZXZpc2lvbhgCIAEoBBIdChVtb25vdG9uaWNfbmFub3NlY29uZHMYAyABKAQicwoUUmVuZGVyU2NlbmVUaHVtYm5haWwSHgoFc2NlbmUYASABKAsyDy5zZWxhaC52MS5TY2VuZRIUCgxvdXRwdXRfaW5kZXgYAiABKA0SEQoJbWF4X3dpZHRoGAMgASgNEhIKCm1heF9oZWlnaHQYBCABKA0ibAoOU2NlbmVUaHVtYm5haWwSEQoJcG5nX2J5dGVzGAEgASgMEg0KBXdpZHRoGAIgASgNEg4KBmhlaWdodBgDIAEoDRIRCgljYWNoZV9rZXkYBCABKAkSFQoNZmxhc2hfd2FybmluZxgFIAEoCCp6CgtUZXN0UGF0dGVybhIcChhURVNUX1BBVFRFUk5fVU5TUEVDSUZJRUQQABIbChdURVNUX1BBVFRFUk5fU01QVEVfQkFSUxABEhUKEVRFU1RfUEFUVEVSTl9HUklEEAISGQoVVEVTVF9QQVRURVJOX0dSQURJRU5UEAMqhQEKCk91dHB1dFJvbGUSGwoXT1VUUFVUX1JPTEVfVU5TUEVDSUZJRUQQABIUChBPVVRQVVRfUk9MRV9NQUlOEAESFQoRT1VUUFVUX1JPTEVfU1RBR0UQAhIWChJPVVRQVVRfUk9MRV9TVFJFQU0QAxIVChFPVVRQVVRfUk9MRV9MT0JCWRAEKp4BCglMYXllcktpbmQSGgoWTEFZRVJfS0lORF9VTlNQRUNJRklFRBAAEhoKFkxBWUVSX0tJTkRfVklERU9fSU5QVVQQARIUChBMQVlFUl9LSU5EX01FRElBEAISFAoQTEFZRVJfS0lORF9TTElERRADEhQKEExBWUVSX0tJTkRfUFJPUFMQBBIXChNMQVlFUl9LSU5EX01FU1NBR0VTEAUqewoMTWVkaWFGaXRNb2RlEh4KGk1FRElBX0ZJVF9NT0RFX1VOU1BFQ0lGSUVEEAASFgoSTUVESUFfRklUX01PREVfRklUEAESFwoTTUVESUFfRklUX01PREVfRklMTBACEhoKFk1FRElBX0ZJVF9NT0RFX1NUUkVUQ0gQAyphCgxHcmFkaWVudEtpbmQSHQoZR1JBRElFTlRfS0lORF9VTlNQRUNJRklFRBAAEhgKFEdSQURJRU5UX0tJTkRfTElORUFSEAESGAoUR1JBRElFTlRfS0lORF9SQURJQUwQAirLAQoKRWZmZWN0S2luZBIbChdFRkZFQ1RfS0lORF9VTlNQRUNJRklFRBAAEhQKEEVGRkVDVF9LSU5EX0JMVVIQARIdChlFRkZFQ1RfS0lORF9DT0xPVVJfQURKVVNUEAISGAoURUZGRUNUX0tJTkRfVklHTkVUVEUQAxIfChtFRkZFQ1RfS0lORF9CQUNLR1JPVU5EX0JMVVIQBBIaChZFRkZFQ1RfS0lORF9DT0xPVVJfS0VZEAUSFAoQRUZGRUNUX0tJTkRfTUFTSxAGKpMCCg5UcmFuc2l0aW9uS2luZBIfChtUUkFOU0lUSU9OX0tJTkRfVU5TUEVDSUZJRUQQABIXChNUUkFOU0lUSU9OX0tJTkRfQ1VUEAESGAoUVFJBTlNJVElPTl9LSU5EX0ZBREUQAhIcChhUUkFOU0lUSU9OX0tJTkRfRElTU09MVkUQAxImCiJUUkFOU0lUSU9OX0tJTkRfRkFERV9USFJPVUdIX0JMQUNLEAQSGAoUVFJBTlNJVElPTl9LSU5EX1BVU0gQBRIYChRUUkFOU0lUSU9OX0tJTkRfV0lQRRAGEhgKFFRSQU5TSVRJT05fS0lORF9aT09NEAcSGQoVVFJBTlNJVElPTl9LSU5EX1NMSURFEAgqtgEKE1RyYW5zaXRpb25EaXJlY3Rpb24SJAogVFJBTlNJVElPTl9ESVJFQ1RJT05fVU5TUEVDSUZJRUQQABIdChlUUkFOU0lUSU9OX0RJUkVDVElPTl9MRUZUEAESHgoaVFJBTlNJVElPTl9ESVJFQ1RJT05fUklHSFQQAhIbChdUUkFOU0lUSU9OX0RJUkVDVElPTl9VUBADEh0KGVRSQU5TSVRJT05fRElSRUNUSU9OX0RPV04QBCq1AQoQVHJhbnNpdGlvbkVhc2luZxIhCh1UUkFOU0lUSU9OX0VBU0lOR19VTlNQRUNJRklFRBAAEhwKGFRSQU5TSVRJT05fRUFTSU5HX0xJTkVBUhABEh0KGVRSQU5TSVRJT05fRUFTSU5HX0VBU0VfSU4QAhIeChpUUkFOU0lUSU9OX0VBU0lOR19FQVNFX09VVBADEiEKHVRSQU5TSVRJT05fRUFTSU5HX0VBU0VfSU5fT1VUEARCFaoCElNlbGFoLkNvbnRyYWN0cy5WMWIGcHJvdG8z", [file_selah_v1_common]);
+
+/**
+ * @generated from message selah.v1.OutputConfig
+ */
+export type OutputConfig = Message<"selah.v1.OutputConfig"> & {
+  /**
+   * @generated from field: uint32 output_index = 1;
+   */
+  outputIndex: number;
+
+  /**
+   * @generated from field: string name = 2;
+   */
+  name: string;
+
+  /**
+   * @generated from field: selah.v1.OutputRole role = 3;
+   */
+  role: OutputRole;
+
+  /**
+   * @generated from field: selah.v1.Resolution resolution = 4;
+   */
+  resolution?: Resolution;
+
+  /**
+   * @generated from field: bool enabled = 5;
+   */
+  enabled: boolean;
+
+  /**
+   * @generated from field: int32 display_index = 6;
+   */
+  displayIndex: number;
+
+  /**
+   * @generated from field: bool fullscreen = 7;
+   */
+  fullscreen: boolean;
+
+  /**
+   * @generated from field: uint32 refresh_rate_mhz = 8;
+   */
+  refreshRateMhz: number;
+
+  /**
+   * @generated from field: selah.v1.Id template_id = 9;
+   */
+  templateId?: Id;
+};
+
+/**
+ * Describes the message selah.v1.OutputConfig.
+ * Use `create(OutputConfigSchema)` to create a new message.
+ */
+export const OutputConfigSchema: GenMessage<OutputConfig> = /*@__PURE__*/
+  messageDesc(file_selah_v1_render, 0);
+
+/**
+ * @generated from message selah.v1.OutputConfigList
+ */
+export type OutputConfigList = Message<"selah.v1.OutputConfigList"> & {
+  /**
+   * @generated from field: repeated selah.v1.OutputConfig outputs = 1;
+   */
+  outputs: OutputConfig[];
+};
+
+/**
+ * Describes the message selah.v1.OutputConfigList.
+ * Use `create(OutputConfigListSchema)` to create a new message.
+ */
+export const OutputConfigListSchema: GenMessage<OutputConfigList> = /*@__PURE__*/
+  messageDesc(file_selah_v1_render, 1);
+
+/**
+ * @generated from message selah.v1.ColorStop
+ */
+export type ColorStop = Message<"selah.v1.ColorStop"> & {
+  /**
+   * @generated from field: selah.v1.Color color = 1;
+   */
+  color?: Color;
+
+  /**
+   * @generated from field: float position = 2;
+   */
+  position: number;
+};
+
+/**
+ * Describes the message selah.v1.ColorStop.
+ * Use `create(ColorStopSchema)` to create a new message.
+ */
+export const ColorStopSchema: GenMessage<ColorStop> = /*@__PURE__*/
+  messageDesc(file_selah_v1_render, 2);
+
+/**
+ * @generated from message selah.v1.GradientSpec
+ */
+export type GradientSpec = Message<"selah.v1.GradientSpec"> & {
+  /**
+   * @generated from field: selah.v1.GradientKind kind = 1;
+   */
+  kind: GradientKind;
+
+  /**
+   * @generated from field: float angle_degrees = 2;
+   */
+  angleDegrees: number;
+
+  /**
+   * @generated from field: repeated selah.v1.ColorStop stops = 3;
+   */
+  stops: ColorStop[];
+};
+
+/**
+ * Describes the message selah.v1.GradientSpec.
+ * Use `create(GradientSpecSchema)` to create a new message.
+ */
+export const GradientSpecSchema: GenMessage<GradientSpec> = /*@__PURE__*/
+  messageDesc(file_selah_v1_render, 3);
+
+/**
+ * @generated from message selah.v1.EffectSpec
+ */
+export type EffectSpec = Message<"selah.v1.EffectSpec"> & {
+  /**
+   * @generated from field: selah.v1.EffectKind kind = 1;
+   */
+  kind: EffectKind;
+
+  /**
+   * @generated from field: bool enabled = 2;
+   */
+  enabled: boolean;
+
+  /**
+   * @generated from field: float intensity = 3;
+   */
+  intensity: number;
+
+  /**
+   * JSON parameters specific to the effect.
+   *
+   * @generated from field: string params_json = 4;
+   */
+  paramsJson: string;
+};
+
+/**
+ * Describes the message selah.v1.EffectSpec.
+ * Use `create(EffectSpecSchema)` to create a new message.
+ */
+export const EffectSpecSchema: GenMessage<EffectSpec> = /*@__PURE__*/
+  messageDesc(file_selah_v1_render, 4);
+
+/**
+ * @generated from message selah.v1.TransitionSpec
+ */
+export type TransitionSpec = Message<"selah.v1.TransitionSpec"> & {
+  /**
+   * @generated from field: selah.v1.TransitionKind kind = 1;
+   */
+  kind: TransitionKind;
+
+  /**
+   * @generated from field: uint32 duration_ms = 2;
+   */
+  durationMs: number;
+
+  /**
+   * @generated from field: selah.v1.TransitionDirection direction = 3;
+   */
+  direction: TransitionDirection;
+
+  /**
+   * @generated from field: selah.v1.TransitionEasing easing = 4;
+   */
+  easing: TransitionEasing;
+};
+
+/**
+ * Describes the message selah.v1.TransitionSpec.
+ * Use `create(TransitionSpecSchema)` to create a new message.
+ */
+export const TransitionSpecSchema: GenMessage<TransitionSpec> = /*@__PURE__*/
+  messageDesc(file_selah_v1_render, 5);
+
+/**
+ * @generated from message selah.v1.VideoInputLayerSpec
+ */
+export type VideoInputLayerSpec = Message<"selah.v1.VideoInputLayerSpec"> & {
+  /**
+   * @generated from field: string source_id = 1;
+   */
+  sourceId: string;
+
+  /**
+   * @generated from field: selah.v1.Color fallback_color = 2;
+   */
+  fallbackColor?: Color;
+
+  /**
+   * @generated from field: selah.v1.MediaFitMode fit = 3;
+   */
+  fit: MediaFitMode;
+
+  /**
+   * @generated from field: bool use_opacity = 4;
+   */
+  useOpacity: boolean;
+
+  /**
+   * @generated from field: float opacity = 5;
+   */
+  opacity: number;
+
+  /**
+   * @generated from field: repeated selah.v1.EffectSpec effects = 6;
+   */
+  effects: EffectSpec[];
+};
+
+/**
+ * Describes the message selah.v1.VideoInputLayerSpec.
+ * Use `create(VideoInputLayerSpecSchema)` to create a new message.
+ */
+export const VideoInputLayerSpecSchema: GenMessage<VideoInputLayerSpec> = /*@__PURE__*/
+  messageDesc(file_selah_v1_render, 6);
+
+/**
+ * @generated from message selah.v1.MediaLayerSpec
+ */
+export type MediaLayerSpec = Message<"selah.v1.MediaLayerSpec"> & {
+  /**
+   * @generated from field: selah.v1.Color solid_color = 1;
+   */
+  solidColor?: Color;
+
+  /**
+   * @generated from field: selah.v1.GradientSpec gradient = 2;
+   */
+  gradient?: GradientSpec;
+
+  /**
+   * @generated from field: string content_hash = 3;
+   */
+  contentHash: string;
+
+  /**
+   * @generated from field: string media_kind = 4;
+   */
+  mediaKind: string;
+
+  /**
+   * @generated from field: string media_extension = 5;
+   */
+  mediaExtension: string;
+
+  /**
+   * @generated from field: selah.v1.MediaFitMode fit = 6;
+   */
+  fit: MediaFitMode;
+
+  /**
+   * @generated from field: float blur_radius = 7;
+   */
+  blurRadius: number;
+
+  /**
+   * @generated from field: bool use_opacity = 8;
+   */
+  useOpacity: boolean;
+
+  /**
+   * @generated from field: float opacity = 9;
+   */
+  opacity: number;
+
+  /**
+   * @generated from field: bool loop_media = 10;
+   */
+  loopMedia: boolean;
+
+  /**
+   * @generated from field: uint64 in_ms = 11;
+   */
+  inMs: bigint;
+
+  /**
+   * @generated from field: uint64 out_ms = 12;
+   */
+  outMs: bigint;
+
+  /**
+   * @generated from field: float speed = 13;
+   */
+  speed: number;
+
+  /**
+   * @generated from field: float volume = 14;
+   */
+  volume: number;
+
+  /**
+   * @generated from field: bool muted = 15;
+   */
+  muted: boolean;
+
+  /**
+   * @generated from field: bool paused = 16;
+   */
+  paused: boolean;
+
+  /**
+   * @generated from field: uint64 seek_ms = 17;
+   */
+  seekMs: bigint;
+
+  /**
+   * @generated from field: repeated selah.v1.EffectSpec effects = 18;
+   */
+  effects: EffectSpec[];
+};
+
+/**
+ * Describes the message selah.v1.MediaLayerSpec.
+ * Use `create(MediaLayerSpecSchema)` to create a new message.
+ */
+export const MediaLayerSpecSchema: GenMessage<MediaLayerSpec> = /*@__PURE__*/
+  messageDesc(file_selah_v1_render, 7);
+
+/**
+ * @generated from message selah.v1.SlideLayerSpec
+ */
+export type SlideLayerSpec = Message<"selah.v1.SlideLayerSpec"> & {
+  /**
+   * @generated from field: string text = 1;
+   */
+  text: string;
+
+  /**
+   * @generated from field: string elements_json = 2;
+   */
+  elementsJson: string;
+
+  /**
+   * @generated from field: string style_json = 3;
+   */
+  styleJson: string;
+
+  /**
+   * @generated from field: selah.v1.TestPattern test_pattern = 4;
+   */
+  testPattern: TestPattern;
+
+  /**
+   * @generated from field: bool use_opacity = 5;
+   */
+  useOpacity: boolean;
+
+  /**
+   * @generated from field: float opacity = 6;
+   */
+  opacity: number;
+
+  /**
+   * @generated from field: repeated selah.v1.EffectSpec effects = 7;
+   */
+  effects: EffectSpec[];
+
+  /**
+   * @generated from field: string title_text = 8;
+   */
+  titleText: string;
+
+  /**
+   * @generated from field: string reference_text = 9;
+   */
+  referenceText: string;
+
+  /**
+   * @generated from field: string footer_text = 10;
+   */
+  footerText: string;
+
+  /**
+   * @generated from field: string chords_json = 11;
+   */
+  chordsJson: string;
+
+  /**
+   * @generated from field: string translation_text = 12;
+   */
+  translationText: string;
+
+  /**
+   * @generated from field: int64 timer_target_unix_ms = 13;
+   */
+  timerTargetUnixMs: bigint;
+};
+
+/**
+ * Describes the message selah.v1.SlideLayerSpec.
+ * Use `create(SlideLayerSpecSchema)` to create a new message.
+ */
+export const SlideLayerSpecSchema: GenMessage<SlideLayerSpec> = /*@__PURE__*/
+  messageDesc(file_selah_v1_render, 8);
+
+/**
+ * @generated from message selah.v1.PropsLayerSpec
+ */
+export type PropsLayerSpec = Message<"selah.v1.PropsLayerSpec"> & {
+  /**
+   * @generated from field: string label = 1;
+   */
+  label: string;
+
+  /**
+   * @generated from field: string elements_json = 2;
+   */
+  elementsJson: string;
+
+  /**
+   * @generated from field: selah.v1.Color background_color = 3;
+   */
+  backgroundColor?: Color;
+
+  /**
+   * @generated from field: selah.v1.Color text_color = 4;
+   */
+  textColor?: Color;
+
+  /**
+   * @generated from field: bool use_opacity = 5;
+   */
+  useOpacity: boolean;
+
+  /**
+   * @generated from field: float opacity = 6;
+   */
+  opacity: number;
+
+  /**
+   * @generated from field: repeated selah.v1.EffectSpec effects = 7;
+   */
+  effects: EffectSpec[];
+};
+
+/**
+ * Describes the message selah.v1.PropsLayerSpec.
+ * Use `create(PropsLayerSpecSchema)` to create a new message.
+ */
+export const PropsLayerSpecSchema: GenMessage<PropsLayerSpec> = /*@__PURE__*/
+  messageDesc(file_selah_v1_render, 9);
+
+/**
+ * @generated from message selah.v1.MessagesLayerSpec
+ */
+export type MessagesLayerSpec = Message<"selah.v1.MessagesLayerSpec"> & {
+  /**
+   * @generated from field: string text = 1;
+   */
+  text: string;
+
+  /**
+   * @generated from field: selah.v1.Color background_color = 2;
+   */
+  backgroundColor?: Color;
+
+  /**
+   * @generated from field: selah.v1.Color text_color = 3;
+   */
+  textColor?: Color;
+
+  /**
+   * @generated from field: bool ticker = 4;
+   */
+  ticker: boolean;
+
+  /**
+   * @generated from field: bool use_opacity = 5;
+   */
+  useOpacity: boolean;
+
+  /**
+   * @generated from field: float opacity = 6;
+   */
+  opacity: number;
+
+  /**
+   * @generated from field: repeated selah.v1.EffectSpec effects = 7;
+   */
+  effects: EffectSpec[];
+};
+
+/**
+ * Describes the message selah.v1.MessagesLayerSpec.
+ * Use `create(MessagesLayerSpecSchema)` to create a new message.
+ */
+export const MessagesLayerSpecSchema: GenMessage<MessagesLayerSpec> = /*@__PURE__*/
+  messageDesc(file_selah_v1_render, 10);
+
+/**
+ * @generated from message selah.v1.LayerSpec
+ */
+export type LayerSpec = Message<"selah.v1.LayerSpec"> & {
+  /**
+   * @generated from field: selah.v1.LayerKind kind = 1;
+   */
+  kind: LayerKind;
+
+  /**
+   * @generated from field: bool enabled = 2;
+   */
+  enabled: boolean;
+
+  /**
+   * @generated from field: bool use_opacity = 3;
+   */
+  useOpacity: boolean;
+
+  /**
+   * @generated from field: float opacity = 4;
+   */
+  opacity: number;
+
+  /**
+   * @generated from field: selah.v1.TransitionSpec transition = 5;
+   */
+  transition?: TransitionSpec;
+
+  /**
+   * @generated from field: repeated selah.v1.EffectSpec effects = 6;
+   */
+  effects: EffectSpec[];
+
+  /**
+   * @generated from oneof selah.v1.LayerSpec.content
+   */
+  content: {
+    /**
+     * @generated from field: selah.v1.VideoInputLayerSpec video_input = 10;
+     */
+    value: VideoInputLayerSpec;
+    case: "videoInput";
+  } | {
+    /**
+     * @generated from field: selah.v1.MediaLayerSpec media = 11;
+     */
+    value: MediaLayerSpec;
+    case: "media";
+  } | {
+    /**
+     * @generated from field: selah.v1.SlideLayerSpec slide = 12;
+     */
+    value: SlideLayerSpec;
+    case: "slide";
+  } | {
+    /**
+     * @generated from field: selah.v1.PropsLayerSpec props = 13;
+     */
+    value: PropsLayerSpec;
+    case: "props";
+  } | {
+    /**
+     * @generated from field: selah.v1.MessagesLayerSpec messages = 14;
+     */
+    value: MessagesLayerSpec;
+    case: "messages";
+  } | { case: undefined; value?: undefined };
+};
+
+/**
+ * Describes the message selah.v1.LayerSpec.
+ * Use `create(LayerSpecSchema)` to create a new message.
+ */
+export const LayerSpecSchema: GenMessage<LayerSpec> = /*@__PURE__*/
+  messageDesc(file_selah_v1_render, 11);
+
+/**
+ * @generated from message selah.v1.OutputScene
+ */
+export type OutputScene = Message<"selah.v1.OutputScene"> & {
+  /**
+   * @generated from field: uint32 output_index = 1;
+   */
+  outputIndex: number;
+
+  /**
+   * @generated from field: selah.v1.OutputRole role = 2;
+   */
+  role: OutputRole;
+
+  /**
+   * @generated from field: selah.v1.Resolution resolution = 3;
+   */
+  resolution?: Resolution;
+
+  /**
+   * @generated from field: bool cleared = 4;
+   */
+  cleared: boolean;
+
+  /**
+   * @generated from field: bool show_logo = 5;
+   */
+  showLogo: boolean;
+
+  /**
+   * @generated from field: selah.v1.TestPattern test_pattern = 6;
+   */
+  testPattern: TestPattern;
+
+  /**
+   * @generated from field: repeated selah.v1.LayerSpec layers = 7;
+   */
+  layers: LayerSpec[];
+
+  /**
+   * @generated from field: selah.v1.TransitionSpec transition = 8;
+   */
+  transition?: TransitionSpec;
+
+  /**
+   * @generated from field: repeated selah.v1.EffectSpec effects = 9;
+   */
+  effects: EffectSpec[];
+};
+
+/**
+ * Describes the message selah.v1.OutputScene.
+ * Use `create(OutputSceneSchema)` to create a new message.
+ */
+export const OutputSceneSchema: GenMessage<OutputScene> = /*@__PURE__*/
+  messageDesc(file_selah_v1_render, 12);
+
+/**
+ * @generated from message selah.v1.PreloadHint
+ */
+export type PreloadHint = Message<"selah.v1.PreloadHint"> & {
+  /**
+   * @generated from field: string key = 1;
+   */
+  key: string;
+
+  /**
+   * @generated from field: uint32 output_index = 2;
+   */
+  outputIndex: number;
+
+  /**
+   * @generated from field: selah.v1.Resolution resolution = 3;
+   */
+  resolution?: Resolution;
+
+  /**
+   * @generated from field: string text = 4;
+   */
+  text: string;
+
+  /**
+   * @generated from field: string style_json = 5;
+   */
+  styleJson: string;
+
+  /**
+   * @generated from field: string elements_json = 6;
+   */
+  elementsJson: string;
+
+  /**
+   * @generated from field: string media_hash = 7;
+   */
+  mediaHash: string;
+};
+
+/**
+ * Describes the message selah.v1.PreloadHint.
+ * Use `create(PreloadHintSchema)` to create a new message.
+ */
+export const PreloadHintSchema: GenMessage<PreloadHint> = /*@__PURE__*/
+  messageDesc(file_selah_v1_render, 13);
 
 /**
  * @generated from message selah.v1.Scene
@@ -42,6 +727,21 @@ export type Scene = Message<"selah.v1.Scene"> & {
    * @generated from field: selah.v1.Resolution resolution = 5;
    */
   resolution?: Resolution;
+
+  /**
+   * @generated from field: repeated selah.v1.OutputScene outputs = 6;
+   */
+  outputs: OutputScene[];
+
+  /**
+   * @generated from field: bool is_preview = 7;
+   */
+  isPreview: boolean;
+
+  /**
+   * @generated from field: repeated selah.v1.PreloadHint preload_items = 8;
+   */
+  preloadItems: PreloadHint[];
 };
 
 /**
@@ -49,7 +749,113 @@ export type Scene = Message<"selah.v1.Scene"> & {
  * Use `create(SceneSchema)` to create a new message.
  */
 export const SceneSchema: GenMessage<Scene> = /*@__PURE__*/
-  messageDesc(file_selah_v1_render, 0);
+  messageDesc(file_selah_v1_render, 14);
+
+/**
+ * @generated from message selah.v1.SetPreviewScene
+ */
+export type SetPreviewScene = Message<"selah.v1.SetPreviewScene"> & {
+  /**
+   * @generated from field: selah.v1.Scene scene = 1;
+   */
+  scene?: Scene;
+};
+
+/**
+ * Describes the message selah.v1.SetPreviewScene.
+ * Use `create(SetPreviewSceneSchema)` to create a new message.
+ */
+export const SetPreviewSceneSchema: GenMessage<SetPreviewScene> = /*@__PURE__*/
+  messageDesc(file_selah_v1_render, 15);
+
+/**
+ * @generated from message selah.v1.PreloadItems
+ */
+export type PreloadItems = Message<"selah.v1.PreloadItems"> & {
+  /**
+   * @generated from field: repeated selah.v1.PreloadHint items = 1;
+   */
+  items: PreloadHint[];
+};
+
+/**
+ * Describes the message selah.v1.PreloadItems.
+ * Use `create(PreloadItemsSchema)` to create a new message.
+ */
+export const PreloadItemsSchema: GenMessage<PreloadItems> = /*@__PURE__*/
+  messageDesc(file_selah_v1_render, 16);
+
+/**
+ * @generated from message selah.v1.SetOutputConfigs
+ */
+export type SetOutputConfigs = Message<"selah.v1.SetOutputConfigs"> & {
+  /**
+   * @generated from field: repeated selah.v1.OutputConfig outputs = 1;
+   */
+  outputs: OutputConfig[];
+};
+
+/**
+ * Describes the message selah.v1.SetOutputConfigs.
+ * Use `create(SetOutputConfigsSchema)` to create a new message.
+ */
+export const SetOutputConfigsSchema: GenMessage<SetOutputConfigs> = /*@__PURE__*/
+  messageDesc(file_selah_v1_render, 17);
+
+/**
+ * @generated from message selah.v1.GetOutputConfigs
+ */
+export type GetOutputConfigs = Message<"selah.v1.GetOutputConfigs"> & {
+};
+
+/**
+ * Describes the message selah.v1.GetOutputConfigs.
+ * Use `create(GetOutputConfigsSchema)` to create a new message.
+ */
+export const GetOutputConfigsSchema: GenMessage<GetOutputConfigs> = /*@__PURE__*/
+  messageDesc(file_selah_v1_render, 18);
+
+/**
+ * @generated from message selah.v1.OutputFrameStatus
+ */
+export type OutputFrameStatus = Message<"selah.v1.OutputFrameStatus"> & {
+  /**
+   * @generated from field: uint32 output_index = 1;
+   */
+  outputIndex: number;
+
+  /**
+   * @generated from field: uint64 scene_revision = 2;
+   */
+  sceneRevision: bigint;
+
+  /**
+   * @generated from field: bytes frame_checksum = 3;
+   */
+  frameChecksum: Uint8Array;
+
+  /**
+   * @generated from field: selah.v1.Resolution resolution = 4;
+   */
+  resolution?: Resolution;
+
+  /**
+   * @generated from field: bool live = 5;
+   */
+  live: boolean;
+
+  /**
+   * @generated from field: bool flash_warning = 6;
+   */
+  flashWarning: boolean;
+};
+
+/**
+ * Describes the message selah.v1.OutputFrameStatus.
+ * Use `create(OutputFrameStatusSchema)` to create a new message.
+ */
+export const OutputFrameStatusSchema: GenMessage<OutputFrameStatus> = /*@__PURE__*/
+  messageDesc(file_selah_v1_render, 19);
 
 /**
  * @generated from message selah.v1.RenderCommand
@@ -76,6 +882,24 @@ export type RenderCommand = Message<"selah.v1.RenderCommand"> & {
      */
     value: ShowLogo;
     case: "showLogo";
+  } | {
+    /**
+     * @generated from field: selah.v1.SetPreviewScene set_preview_scene = 4;
+     */
+    value: SetPreviewScene;
+    case: "setPreviewScene";
+  } | {
+    /**
+     * @generated from field: selah.v1.PreloadItems preload_items = 5;
+     */
+    value: PreloadItems;
+    case: "preloadItems";
+  } | {
+    /**
+     * @generated from field: selah.v1.SetOutputConfigs set_output_configs = 6;
+     */
+    value: SetOutputConfigs;
+    case: "setOutputConfigs";
   } | { case: undefined; value?: undefined };
 };
 
@@ -84,7 +908,7 @@ export type RenderCommand = Message<"selah.v1.RenderCommand"> & {
  * Use `create(RenderCommandSchema)` to create a new message.
  */
 export const RenderCommandSchema: GenMessage<RenderCommand> = /*@__PURE__*/
-  messageDesc(file_selah_v1_render, 1);
+  messageDesc(file_selah_v1_render, 20);
 
 /**
  * @generated from message selah.v1.ClearEverything
@@ -97,7 +921,7 @@ export type ClearEverything = Message<"selah.v1.ClearEverything"> & {
  * Use `create(ClearEverythingSchema)` to create a new message.
  */
 export const ClearEverythingSchema: GenMessage<ClearEverything> = /*@__PURE__*/
-  messageDesc(file_selah_v1_render, 2);
+  messageDesc(file_selah_v1_render, 21);
 
 /**
  * @generated from message selah.v1.ShowLogo
@@ -110,7 +934,7 @@ export type ShowLogo = Message<"selah.v1.ShowLogo"> & {
  * Use `create(ShowLogoSchema)` to create a new message.
  */
 export const ShowLogoSchema: GenMessage<ShowLogo> = /*@__PURE__*/
-  messageDesc(file_selah_v1_render, 3);
+  messageDesc(file_selah_v1_render, 22);
 
 /**
  * The emergency endpoint accepts only these actions, never normal commands.
@@ -141,7 +965,7 @@ export type EmergencyCommand = Message<"selah.v1.EmergencyCommand"> & {
  * Use `create(EmergencyCommandSchema)` to create a new message.
  */
 export const EmergencyCommandSchema: GenMessage<EmergencyCommand> = /*@__PURE__*/
-  messageDesc(file_selah_v1_render, 4);
+  messageDesc(file_selah_v1_render, 23);
 
 /**
  * @generated from message selah.v1.FrameShown
@@ -184,6 +1008,21 @@ export type FrameShown = Message<"selah.v1.FrameShown"> & {
    * @generated from field: uint64 frame_period_nanoseconds = 6;
    */
   framePeriodNanoseconds: bigint;
+
+  /**
+   * @generated from field: selah.v1.Resolution resolution = 7;
+   */
+  resolution?: Resolution;
+
+  /**
+   * @generated from field: bool is_preview = 8;
+   */
+  isPreview: boolean;
+
+  /**
+   * @generated from field: bool flash_warning = 9;
+   */
+  flashWarning: boolean;
 };
 
 /**
@@ -191,7 +1030,86 @@ export type FrameShown = Message<"selah.v1.FrameShown"> & {
  * Use `create(FrameShownSchema)` to create a new message.
  */
 export const FrameShownSchema: GenMessage<FrameShown> = /*@__PURE__*/
-  messageDesc(file_selah_v1_render, 5);
+  messageDesc(file_selah_v1_render, 24);
+
+/**
+ * @generated from message selah.v1.AnalyzeFlashRisk
+ */
+export type AnalyzeFlashRisk = Message<"selah.v1.AnalyzeFlashRisk"> & {
+  /**
+   * @generated from field: selah.v1.TransitionSpec transition = 1;
+   */
+  transition?: TransitionSpec;
+
+  /**
+   * @generated from field: uint32 repeat_cadence_ms = 2;
+   */
+  repeatCadenceMs: number;
+
+  /**
+   * @generated from field: selah.v1.Scene from_scene = 3;
+   */
+  fromScene?: Scene;
+
+  /**
+   * @generated from field: selah.v1.Scene to_scene = 4;
+   */
+  toScene?: Scene;
+
+  /**
+   * @generated from field: selah.v1.Id media_id = 5;
+   */
+  mediaId?: Id;
+
+  /**
+   * @generated from field: float flashes_per_second_hint = 6;
+   */
+  flashesPerSecondHint: number;
+};
+
+/**
+ * Describes the message selah.v1.AnalyzeFlashRisk.
+ * Use `create(AnalyzeFlashRiskSchema)` to create a new message.
+ */
+export const AnalyzeFlashRiskSchema: GenMessage<AnalyzeFlashRisk> = /*@__PURE__*/
+  messageDesc(file_selah_v1_render, 25);
+
+/**
+ * @generated from message selah.v1.FlashRiskReport
+ */
+export type FlashRiskReport = Message<"selah.v1.FlashRiskReport"> & {
+  /**
+   * @generated from field: bool flash_warning = 1;
+   */
+  flashWarning: boolean;
+
+  /**
+   * @generated from field: float flashes_per_second = 2;
+   */
+  flashesPerSecond: number;
+
+  /**
+   * @generated from field: bool saturated_red_risk = 3;
+   */
+  saturatedRedRisk: boolean;
+
+  /**
+   * @generated from field: string reason = 4;
+   */
+  reason: string;
+
+  /**
+   * @generated from field: repeated string warning_codes = 5;
+   */
+  warningCodes: string[];
+};
+
+/**
+ * Describes the message selah.v1.FlashRiskReport.
+ * Use `create(FlashRiskReportSchema)` to create a new message.
+ */
+export const FlashRiskReportSchema: GenMessage<FlashRiskReport> = /*@__PURE__*/
+  messageDesc(file_selah_v1_render, 26);
 
 /**
  * Engine → core after the emergency lane cleared the screens or showed the logo (SAFE-03).
@@ -222,7 +1140,76 @@ export type EmergencyApplied = Message<"selah.v1.EmergencyApplied"> & {
  * Use `create(EmergencyAppliedSchema)` to create a new message.
  */
 export const EmergencyAppliedSchema: GenMessage<EmergencyApplied> = /*@__PURE__*/
-  messageDesc(file_selah_v1_render, 6);
+  messageDesc(file_selah_v1_render, 27);
+
+/**
+ * @generated from message selah.v1.RenderSceneThumbnail
+ */
+export type RenderSceneThumbnail = Message<"selah.v1.RenderSceneThumbnail"> & {
+  /**
+   * @generated from field: selah.v1.Scene scene = 1;
+   */
+  scene?: Scene;
+
+  /**
+   * @generated from field: uint32 output_index = 2;
+   */
+  outputIndex: number;
+
+  /**
+   * @generated from field: uint32 max_width = 3;
+   */
+  maxWidth: number;
+
+  /**
+   * @generated from field: uint32 max_height = 4;
+   */
+  maxHeight: number;
+};
+
+/**
+ * Describes the message selah.v1.RenderSceneThumbnail.
+ * Use `create(RenderSceneThumbnailSchema)` to create a new message.
+ */
+export const RenderSceneThumbnailSchema: GenMessage<RenderSceneThumbnail> = /*@__PURE__*/
+  messageDesc(file_selah_v1_render, 28);
+
+/**
+ * @generated from message selah.v1.SceneThumbnail
+ */
+export type SceneThumbnail = Message<"selah.v1.SceneThumbnail"> & {
+  /**
+   * @generated from field: bytes png_bytes = 1;
+   */
+  pngBytes: Uint8Array;
+
+  /**
+   * @generated from field: uint32 width = 2;
+   */
+  width: number;
+
+  /**
+   * @generated from field: uint32 height = 3;
+   */
+  height: number;
+
+  /**
+   * @generated from field: string cache_key = 4;
+   */
+  cacheKey: string;
+
+  /**
+   * @generated from field: bool flash_warning = 5;
+   */
+  flashWarning: boolean;
+};
+
+/**
+ * Describes the message selah.v1.SceneThumbnail.
+ * Use `create(SceneThumbnailSchema)` to create a new message.
+ */
+export const SceneThumbnailSchema: GenMessage<SceneThumbnail> = /*@__PURE__*/
+  messageDesc(file_selah_v1_render, 29);
 
 /**
  * @generated from enum selah.v1.TestPattern
@@ -254,4 +1241,312 @@ export enum TestPattern {
  */
 export const TestPatternSchema: GenEnum<TestPattern> = /*@__PURE__*/
   enumDesc(file_selah_v1_render, 0);
+
+/**
+ * @generated from enum selah.v1.OutputRole
+ */
+export enum OutputRole {
+  /**
+   * @generated from enum value: OUTPUT_ROLE_UNSPECIFIED = 0;
+   */
+  UNSPECIFIED = 0,
+
+  /**
+   * @generated from enum value: OUTPUT_ROLE_MAIN = 1;
+   */
+  MAIN = 1,
+
+  /**
+   * @generated from enum value: OUTPUT_ROLE_STAGE = 2;
+   */
+  STAGE = 2,
+
+  /**
+   * @generated from enum value: OUTPUT_ROLE_STREAM = 3;
+   */
+  STREAM = 3,
+
+  /**
+   * @generated from enum value: OUTPUT_ROLE_LOBBY = 4;
+   */
+  LOBBY = 4,
+}
+
+/**
+ * Describes the enum selah.v1.OutputRole.
+ */
+export const OutputRoleSchema: GenEnum<OutputRole> = /*@__PURE__*/
+  enumDesc(file_selah_v1_render, 1);
+
+/**
+ * @generated from enum selah.v1.LayerKind
+ */
+export enum LayerKind {
+  /**
+   * @generated from enum value: LAYER_KIND_UNSPECIFIED = 0;
+   */
+  UNSPECIFIED = 0,
+
+  /**
+   * @generated from enum value: LAYER_KIND_VIDEO_INPUT = 1;
+   */
+  VIDEO_INPUT = 1,
+
+  /**
+   * @generated from enum value: LAYER_KIND_MEDIA = 2;
+   */
+  MEDIA = 2,
+
+  /**
+   * @generated from enum value: LAYER_KIND_SLIDE = 3;
+   */
+  SLIDE = 3,
+
+  /**
+   * @generated from enum value: LAYER_KIND_PROPS = 4;
+   */
+  PROPS = 4,
+
+  /**
+   * @generated from enum value: LAYER_KIND_MESSAGES = 5;
+   */
+  MESSAGES = 5,
+}
+
+/**
+ * Describes the enum selah.v1.LayerKind.
+ */
+export const LayerKindSchema: GenEnum<LayerKind> = /*@__PURE__*/
+  enumDesc(file_selah_v1_render, 2);
+
+/**
+ * @generated from enum selah.v1.MediaFitMode
+ */
+export enum MediaFitMode {
+  /**
+   * @generated from enum value: MEDIA_FIT_MODE_UNSPECIFIED = 0;
+   */
+  UNSPECIFIED = 0,
+
+  /**
+   * @generated from enum value: MEDIA_FIT_MODE_FIT = 1;
+   */
+  FIT = 1,
+
+  /**
+   * @generated from enum value: MEDIA_FIT_MODE_FILL = 2;
+   */
+  FILL = 2,
+
+  /**
+   * @generated from enum value: MEDIA_FIT_MODE_STRETCH = 3;
+   */
+  STRETCH = 3,
+}
+
+/**
+ * Describes the enum selah.v1.MediaFitMode.
+ */
+export const MediaFitModeSchema: GenEnum<MediaFitMode> = /*@__PURE__*/
+  enumDesc(file_selah_v1_render, 3);
+
+/**
+ * @generated from enum selah.v1.GradientKind
+ */
+export enum GradientKind {
+  /**
+   * @generated from enum value: GRADIENT_KIND_UNSPECIFIED = 0;
+   */
+  UNSPECIFIED = 0,
+
+  /**
+   * @generated from enum value: GRADIENT_KIND_LINEAR = 1;
+   */
+  LINEAR = 1,
+
+  /**
+   * @generated from enum value: GRADIENT_KIND_RADIAL = 2;
+   */
+  RADIAL = 2,
+}
+
+/**
+ * Describes the enum selah.v1.GradientKind.
+ */
+export const GradientKindSchema: GenEnum<GradientKind> = /*@__PURE__*/
+  enumDesc(file_selah_v1_render, 4);
+
+/**
+ * @generated from enum selah.v1.EffectKind
+ */
+export enum EffectKind {
+  /**
+   * @generated from enum value: EFFECT_KIND_UNSPECIFIED = 0;
+   */
+  UNSPECIFIED = 0,
+
+  /**
+   * @generated from enum value: EFFECT_KIND_BLUR = 1;
+   */
+  BLUR = 1,
+
+  /**
+   * @generated from enum value: EFFECT_KIND_COLOUR_ADJUST = 2;
+   */
+  COLOUR_ADJUST = 2,
+
+  /**
+   * @generated from enum value: EFFECT_KIND_VIGNETTE = 3;
+   */
+  VIGNETTE = 3,
+
+  /**
+   * @generated from enum value: EFFECT_KIND_BACKGROUND_BLUR = 4;
+   */
+  BACKGROUND_BLUR = 4,
+
+  /**
+   * @generated from enum value: EFFECT_KIND_COLOUR_KEY = 5;
+   */
+  COLOUR_KEY = 5,
+
+  /**
+   * @generated from enum value: EFFECT_KIND_MASK = 6;
+   */
+  MASK = 6,
+}
+
+/**
+ * Describes the enum selah.v1.EffectKind.
+ */
+export const EffectKindSchema: GenEnum<EffectKind> = /*@__PURE__*/
+  enumDesc(file_selah_v1_render, 5);
+
+/**
+ * @generated from enum selah.v1.TransitionKind
+ */
+export enum TransitionKind {
+  /**
+   * @generated from enum value: TRANSITION_KIND_UNSPECIFIED = 0;
+   */
+  UNSPECIFIED = 0,
+
+  /**
+   * @generated from enum value: TRANSITION_KIND_CUT = 1;
+   */
+  CUT = 1,
+
+  /**
+   * @generated from enum value: TRANSITION_KIND_FADE = 2;
+   */
+  FADE = 2,
+
+  /**
+   * @generated from enum value: TRANSITION_KIND_DISSOLVE = 3;
+   */
+  DISSOLVE = 3,
+
+  /**
+   * @generated from enum value: TRANSITION_KIND_FADE_THROUGH_BLACK = 4;
+   */
+  FADE_THROUGH_BLACK = 4,
+
+  /**
+   * @generated from enum value: TRANSITION_KIND_PUSH = 5;
+   */
+  PUSH = 5,
+
+  /**
+   * @generated from enum value: TRANSITION_KIND_WIPE = 6;
+   */
+  WIPE = 6,
+
+  /**
+   * @generated from enum value: TRANSITION_KIND_ZOOM = 7;
+   */
+  ZOOM = 7,
+
+  /**
+   * @generated from enum value: TRANSITION_KIND_SLIDE = 8;
+   */
+  SLIDE = 8,
+}
+
+/**
+ * Describes the enum selah.v1.TransitionKind.
+ */
+export const TransitionKindSchema: GenEnum<TransitionKind> = /*@__PURE__*/
+  enumDesc(file_selah_v1_render, 6);
+
+/**
+ * @generated from enum selah.v1.TransitionDirection
+ */
+export enum TransitionDirection {
+  /**
+   * @generated from enum value: TRANSITION_DIRECTION_UNSPECIFIED = 0;
+   */
+  UNSPECIFIED = 0,
+
+  /**
+   * @generated from enum value: TRANSITION_DIRECTION_LEFT = 1;
+   */
+  LEFT = 1,
+
+  /**
+   * @generated from enum value: TRANSITION_DIRECTION_RIGHT = 2;
+   */
+  RIGHT = 2,
+
+  /**
+   * @generated from enum value: TRANSITION_DIRECTION_UP = 3;
+   */
+  UP = 3,
+
+  /**
+   * @generated from enum value: TRANSITION_DIRECTION_DOWN = 4;
+   */
+  DOWN = 4,
+}
+
+/**
+ * Describes the enum selah.v1.TransitionDirection.
+ */
+export const TransitionDirectionSchema: GenEnum<TransitionDirection> = /*@__PURE__*/
+  enumDesc(file_selah_v1_render, 7);
+
+/**
+ * @generated from enum selah.v1.TransitionEasing
+ */
+export enum TransitionEasing {
+  /**
+   * @generated from enum value: TRANSITION_EASING_UNSPECIFIED = 0;
+   */
+  UNSPECIFIED = 0,
+
+  /**
+   * @generated from enum value: TRANSITION_EASING_LINEAR = 1;
+   */
+  LINEAR = 1,
+
+  /**
+   * @generated from enum value: TRANSITION_EASING_EASE_IN = 2;
+   */
+  EASE_IN = 2,
+
+  /**
+   * @generated from enum value: TRANSITION_EASING_EASE_OUT = 3;
+   */
+  EASE_OUT = 3,
+
+  /**
+   * @generated from enum value: TRANSITION_EASING_EASE_IN_OUT = 4;
+   */
+  EASE_IN_OUT = 4,
+}
+
+/**
+ * Describes the enum selah.v1.TransitionEasing.
+ */
+export const TransitionEasingSchema: GenEnum<TransitionEasing> = /*@__PURE__*/
+  enumDesc(file_selah_v1_render, 8);
 

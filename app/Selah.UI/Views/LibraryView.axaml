@@ -106,7 +106,24 @@
                   <TextBlock Name="SelectedSongTitle" Classes="title-3" Text="{Binding SelectedSong.Title}" />
                   <TextBlock Classes="hint" Text="{Binding SelectedSongAuthorText}"
                              IsVisible="{Binding SelectedSongAuthorText, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
-                  <TextBlock Classes="caption" Text="{Binding SelectedSongSlidesLabel}" />
+                  <WrapPanel ItemSpacing="10" LineSpacing="6" VerticalAlignment="Center">
+                    <TextBlock Classes="caption" VerticalAlignment="Center" Text="{Binding SelectedSongSlidesLabel}" />
+                    <TextBlock Classes="caption" VerticalAlignment="Center"
+                               Text="{Binding [editor-template-label], Source={x:Static s:Localizer.Instance}}" />
+                    <ComboBox Name="LibrarySongTemplateCombo" MinWidth="160"
+                              ItemsSource="{Binding AvailableTemplates}" SelectedItem="{Binding SelectedSongTemplate}">
+                      <ComboBox.ItemTemplate>
+                        <DataTemplate x:DataType="pb:Template">
+                          <TextBlock Text="{Binding Name}" />
+                        </DataTemplate>
+                      </ComboBox.ItemTemplate>
+                    </ComboBox>
+                    <Border Name="LibrarySongFitBadge" Background="{DynamicResource Brush.SuccessBg}"
+                            IsVisible="{Binding HasSongFitBadge}" CornerRadius="4" Padding="6,2">
+                      <TextBlock Classes="caption" Foreground="{DynamicResource Brush.SuccessText}"
+                                 Text="{Binding SongFitSummaryText}" />
+                    </Border>
+                  </WrapPanel>
                   <ItemsControl Name="LibrarySongSlides" ItemsSource="{Binding SongPreviewSlides}">
                     <ItemsControl.ItemsPanel>
                       <ItemsPanelTemplate>
@@ -124,8 +141,15 @@
                               <TextBlock DockPanel.Dock="Right" Classes="caption" Text="{Binding Number}" />
                               <TextBlock Classes="label" Text="{Binding Header}" />
                             </DockPanel>
-                            <TextBlock Text="{Binding Body}" TextWrapping="Wrap" />
-                            <TextBlock Classes="caption" Text="{Binding Footer}" IsVisible="{Binding HasFooter}" />
+                            <Border Height="108" Background="{DynamicResource Brush.PreviewBg}" CornerRadius="{DynamicResource Radius.Input}" ClipToBounds="True">
+                              <Panel>
+                                <Image Source="{Binding Thumbnail}" Stretch="Uniform" IsVisible="{Binding HasThumbnail}" />
+                                <StackPanel Spacing="2" Margin="6" IsVisible="{Binding !HasThumbnail}">
+                                  <TextBlock Foreground="#FFFFFF" Text="{Binding Body}" TextWrapping="Wrap" />
+                                  <TextBlock Foreground="#D1D1D6" Classes="caption" Text="{Binding Footer}" IsVisible="{Binding HasFooter}" />
+                                </StackPanel>
+                              </Panel>
+                            </Border>
                           </StackPanel>
                         </Border>
                       </DataTemplate>
@@ -301,6 +325,17 @@
                           Content="{Binding [bible-title-slide-label], Source={x:Static s:Localizer.Instance}}" />
                 <CheckBox Name="ScriptureBlankEndCheck" IsChecked="{Binding ScriptureBlankSlideAtEnd}"
                           Content="{Binding [bible-blank-end-label], Source={x:Static s:Localizer.Instance}}" />
+                <StackPanel Spacing="2">
+                  <TextBlock Classes="caption" Text="{Binding [bible-template-label], Source={x:Static s:Localizer.Instance}}" />
+                  <ComboBox Name="LibraryScriptureTemplateCombo" MinWidth="160"
+                            ItemsSource="{Binding AvailableTemplates}" SelectedItem="{Binding SelectedScriptureTemplate}">
+                    <ComboBox.ItemTemplate>
+                      <DataTemplate x:DataType="pb:Template">
+                        <TextBlock Text="{Binding Name}" />
+                      </DataTemplate>
+                    </ComboBox.ItemTemplate>
+                  </ComboBox>
+                </StackPanel>
               </WrapPanel>
             </StackPanel>
           </Border>
@@ -344,20 +379,34 @@
 
             <Border Name="ScriptureSlidesPane" Grid.Column="1" Grid.Row="0" Classes="card">
               <StackPanel Spacing="{DynamicResource Space.2}">
-                <TextBlock Classes="label" Text="{Binding [bible-slides-heading], Source={x:Static s:Localizer.Instance}}" />
+                <WrapPanel ItemSpacing="8" VerticalAlignment="Center">
+                  <TextBlock Classes="label" VerticalAlignment="Center" Text="{Binding [bible-slides-heading], Source={x:Static s:Localizer.Instance}}" />
+                  <Border Name="LibraryScriptureFitBadge" Background="{DynamicResource Brush.SuccessBg}"
+                          IsVisible="{Binding HasScriptureFitBadge}" CornerRadius="4" Padding="6,2">
+                    <TextBlock Classes="caption" Foreground="{DynamicResource Brush.SuccessText}"
+                               Text="{Binding ScriptureFitSummaryText}" />
+                  </Border>
+                </WrapPanel>
                 <ItemsControl Name="ScriptureSlidesList" ItemsSource="{Binding ScripturePreviewSlides}">
                   <ItemsControl.ItemTemplate>
                     <DataTemplate x:DataType="vm:SlidePreviewCard">
                       <Border Background="{DynamicResource Brush.Surface2}"
                               BorderBrush="{DynamicResource Brush.Primary}" BorderThickness="4,1,1,1"
                               CornerRadius="{DynamicResource Radius.Button}" Padding="{DynamicResource Space.Text.Small}" Margin="0,4">
-                        <StackPanel Spacing="4">
+                        <StackPanel Spacing="6">
                           <DockPanel>
                             <TextBlock DockPanel.Dock="Right" Classes="caption" Text="{Binding Number}" />
                             <TextBlock Classes="label" Text="{Binding Header}" />
                           </DockPanel>
-                          <TextBlock Text="{Binding Body}" TextWrapping="Wrap" />
-                          <TextBlock Classes="caption" Text="{Binding Footer}" IsVisible="{Binding HasFooter}" />
+                          <Border Height="108" Background="{DynamicResource Brush.PreviewBg}" CornerRadius="{DynamicResource Radius.Input}" ClipToBounds="True">
+                            <Panel>
+                              <Image Source="{Binding Thumbnail}" Stretch="Uniform" IsVisible="{Binding HasThumbnail}" />
+                              <StackPanel Spacing="2" Margin="6" IsVisible="{Binding !HasThumbnail}">
+                                <TextBlock Foreground="#FFFFFF" Text="{Binding Body}" TextWrapping="Wrap" />
+                                <TextBlock Foreground="#D1D1D6" Classes="caption" Text="{Binding Footer}" IsVisible="{Binding HasFooter}" />
+                              </StackPanel>
+                            </Panel>
+                          </Border>
                         </StackPanel>
                       </Border>
                     </DataTemplate>

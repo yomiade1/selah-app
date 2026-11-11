@@ -20,7 +20,7 @@ pub use reference::{
 pub use split::{
     DEFAULT_SCRIPTURE_LINE_CHARS, DEFAULT_SCRIPTURE_MAX_LINES, MAX_SCRIPTURE_LINE_CHARS,
     MAX_SCRIPTURE_SLIDE_LINES, MAX_VERSES_PER_SLIDE, MIN_SCRIPTURE_LINE_CHARS,
-    split_scripture_slides,
+    split_scripture_slides, split_scripture_slides_with_fit,
 };
 pub use store::{
     KJV_TSV_GZ_SHA256, MAX_PASSAGE_VERSES, WEB_TSV_GZ_SHA256, delete_bible, ensure_bundled_bibles,

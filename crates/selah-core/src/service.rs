@@ -2,9 +2,10 @@
 use prost::Message;
 use selah_proto::v1::{
     Actor, ActorOrigin, BibleFormat, Command, CopyrightPlacement, Envelope, Event,
-    GetPolicySettingReply, LibraryChanged, MediaItemList, MediaKind, ParsePastedSongReply,
-    ParseScriptureReferenceReply, PolicySetting, PresentationList, RenderCommand, Reply, Scene,
-    SearchScope, Song, SongList, SongPasteFormat, Status, TagList, TemplateList, TestPattern,
+    GetPolicySettingReply, LibraryChanged, MediaItemList, MediaKind, OutputConfig,
+    OutputConfigList, OutputFrameStatus, ParsePastedSongReply, ParseScriptureReferenceReply,
+    PolicySetting, PresentationList, RenderCommand, Reply, Scene, SearchScope, SetOutputConfigs,
+    SetPreviewScene, Song, SongList, SongPasteFormat, Status, TagList, TemplateList, TestPattern,
     UndoStateChanged, command, envelope, event, query, render_command, reply,
 };
 
@@ -78,12 +79,49 @@ fn validate_song_preview(song: &Song) -> anyhow::Result<()> {
 /// Help results are capped (help.proto SearchHelp).
 const HELP_LIMIT: usize = 10;
 
+fn valid_resolution(res: selah_proto::v1::Resolution) -> bool {
+    (16..=7680).contains(&res.width) && (16..=4320).contains(&res.height)
+}
+
+fn validate_output_configs(outputs: &[OutputConfig]) -> bool {
+    if outputs.is_empty() || !outputs.iter().any(|o| o.enabled) {
+        return false;
+    }
+    let mut seen = std::collections::HashSet::with_capacity(outputs.len());
+    for out in outputs {
+        if !seen.insert(out.output_index) {
+            return false;
+        }
+        if let Some(res) = out.resolution
+            && !valid_resolution(res)
+        {
+            return false;
+        }
+    }
+    true
+}
+
+fn validate_scene_resolutions(scene: &Scene) -> bool {
+    if let Some(res) = scene.resolution
+        && !valid_resolution(res)
+    {
+        return false;
+    }
+    scene
+        .outputs
+        .iter()
+        .all(|out| out.resolution.is_none_or(valid_resolution))
+}
+
 /// What core knows about the engine.
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
 pub struct EngineView {
     pub connected: bool,
     pub scene_revision: u64,
     pub frame_checksum: Vec<u8>,
+    pub output_statuses: Vec<OutputFrameStatus>,
+    pub preview_scene_revision: u64,
+    pub flash_warning: bool,
 }
 
 /// Slow work the host runs away from the request path (network, disk). When it's done, the host
@@ -121,6 +159,7 @@ pub struct CoreService {
     live: LiveState,
     library: Library,
     pub engine: EngineView,
+    preview_scene: Option<Scene>,
     safe_mode: bool,
     actor: Actor,
     /// kb.db, when it was found (KNOWLEDGE-BASE §6.4). Help queries answer empty without it.
@@ -185,6 +224,7 @@ impl CoreService {
             live: LiveState::open(config_dir),
             library,
             engine: EngineView::default(),
+            preview_scene: None,
             safe_mode,
             help: None,
             available_update: None,
@@ -260,6 +300,12 @@ impl CoreService {
             frame_checksum: self.engine.frame_checksum.clone(),
             version: selah_runtime::VERSION.into(),
             live: is_live(self.live.scene()),
+            output_statuses: self.engine.output_statuses.clone(),
+            preview_scene_revision: self
+                .preview_scene
+                .as_ref()
+                .map_or(self.engine.preview_scene_revision, |s| s.revision),
+            flash_warning: self.engine.flash_warning,
             ..Status::default()
         }
     }
@@ -279,6 +325,27 @@ impl CoreService {
         RenderCommand {
             action: Some(render_command::Action::SetScene(self.live.scene().clone())),
         }
+    }
+
+    /// All commands that bring a (re)connected engine up to date (output configs, program, preview).
+    pub fn resync_commands(&self) -> Vec<RenderCommand> {
+        let mut out = Vec::new();
+        if self.live.has_explicit_output_configs() {
+            out.push(RenderCommand {
+                action: Some(render_command::Action::SetOutputConfigs(SetOutputConfigs {
+                    outputs: self.live.output_configs().to_vec(),
+                })),
+            });
+        }
+        out.push(self.resync_command());
+        if let Some(preview) = &self.preview_scene {
+            out.push(RenderCommand {
+                action: Some(render_command::Action::SetPreviewScene(SetPreviewScene {
+                    scene: Some(preview.clone()),
+                })),
+            });
+        }
+        out
     }
 
     fn reply(&self, request: &Envelope, result: reply::Result) -> Envelope {
@@ -445,6 +512,8 @@ impl CoreService {
                     scene.cleared = false;
                     scene.test_pattern = pattern as i32;
                     scene.text.clear();
+                    scene.outputs.clear();
+                    scene.preload_items.clear();
                 });
                 Outcome {
                     reply: ack(self),
@@ -454,11 +523,140 @@ impl CoreService {
                 }
             }
             command::Action::ClearOutputs(_) => {
-                self.live.change(|scene| scene.cleared = true);
+                self.live.change(|scene| {
+                    scene.cleared = true;
+                    scene.test_pattern = TestPattern::Unspecified as i32;
+                    scene.text.clear();
+                    scene.outputs.clear();
+                    scene.preload_items.clear();
+                });
                 Outcome {
                     reply: ack(self),
                     to_engine: Some(self.resync_command()),
                     broadcast: vec![self.status_event()],
+                    ..Outcome::default()
+                }
+            }
+            command::Action::SetOutputConfigs(cmd) => {
+                if !validate_output_configs(&cmd.outputs) {
+                    return Outcome {
+                        reply: Some(self.error(request, codes::INVALID, "error-invalid-request")),
+                        ..Outcome::default()
+                    };
+                }
+                self.live.set_output_configs(cmd.outputs.clone());
+                let enabled: Vec<u32> = cmd
+                    .outputs
+                    .iter()
+                    .filter(|o| o.enabled)
+                    .map(|o| o.output_index)
+                    .collect();
+                self.engine
+                    .output_statuses
+                    .retain(|s| enabled.contains(&s.output_index));
+                Outcome {
+                    reply: ack(self),
+                    to_engine: Some(RenderCommand {
+                        action: Some(render_command::Action::SetOutputConfigs(cmd.clone())),
+                    }),
+                    broadcast: vec![self.status_event()],
+                    ..Outcome::default()
+                }
+            }
+            command::Action::PresentScene(cmd) => {
+                let Some(mut scene) = cmd.scene.clone() else {
+                    return Outcome {
+                        reply: Some(self.error(request, codes::INVALID, "error-invalid-request")),
+                        ..Outcome::default()
+                    };
+                };
+                if !validate_scene_resolutions(&scene) {
+                    return Outcome {
+                        reply: Some(self.error(request, codes::INVALID, "error-invalid-request")),
+                        ..Outcome::default()
+                    };
+                }
+                if let Err(err) = selah_render::effects::validate_scene_shader_chains(&scene) {
+                    tracing::warn!(%err, "refused PresentScene with invalid or custom shader chain");
+                    return Outcome {
+                        reply: Some(self.error(request, codes::INVALID, "error-invalid-request")),
+                        ..Outcome::default()
+                    };
+                }
+                if let Err(err) = selah_render::scene::validate_scene_elements(&scene) {
+                    tracing::warn!(%err, "refused PresentScene with invalid slide elements");
+                    return Outcome {
+                        reply: Some(self.error(request, codes::INVALID, "error-invalid-request")),
+                        ..Outcome::default()
+                    };
+                }
+                scene.is_preview = false;
+                self.live.change(|live| {
+                    let prev = live.revision;
+                    *live = scene;
+                    live.revision = prev;
+                });
+                Outcome {
+                    reply: ack(self),
+                    to_engine: Some(self.resync_command()),
+                    broadcast: vec![self.status_event()],
+                    ..Outcome::default()
+                }
+            }
+            command::Action::StagePreviewScene(cmd) => {
+                let Some(mut scene) = cmd.scene.clone() else {
+                    return Outcome {
+                        reply: Some(self.error(request, codes::INVALID, "error-invalid-request")),
+                        ..Outcome::default()
+                    };
+                };
+                if !validate_scene_resolutions(&scene) {
+                    return Outcome {
+                        reply: Some(self.error(request, codes::INVALID, "error-invalid-request")),
+                        ..Outcome::default()
+                    };
+                }
+                if let Err(err) = selah_render::effects::validate_scene_shader_chains(&scene) {
+                    tracing::warn!(%err, "refused StagePreviewScene with invalid or custom shader chain");
+                    return Outcome {
+                        reply: Some(self.error(request, codes::INVALID, "error-invalid-request")),
+                        ..Outcome::default()
+                    };
+                }
+                if let Err(err) = selah_render::scene::validate_scene_elements(&scene) {
+                    tracing::warn!(%err, "refused StagePreviewScene with invalid slide elements");
+                    return Outcome {
+                        reply: Some(self.error(request, codes::INVALID, "error-invalid-request")),
+                        ..Outcome::default()
+                    };
+                }
+                let next_rev = self.preview_scene.as_ref().map_or(1, |s| s.revision + 1);
+                scene.is_preview = true;
+                scene.revision = next_rev;
+                self.preview_scene = Some(scene.clone());
+                Outcome {
+                    reply: ack(self),
+                    to_engine: Some(RenderCommand {
+                        action: Some(render_command::Action::SetPreviewScene(SetPreviewScene {
+                            scene: Some(scene),
+                        })),
+                    }),
+                    broadcast: vec![self.status_event()],
+                    ..Outcome::default()
+                }
+            }
+            command::Action::PreloadItems(cmd) => {
+                if cmd.items.is_empty() {
+                    return Outcome {
+                        reply: ack(self),
+                        ..Outcome::default()
+                    };
+                }
+                Outcome {
+                    reply: ack(self),
+                    to_engine: Some(RenderCommand {
+                        action: Some(render_command::Action::PreloadItems(cmd.clone())),
+                    }),
                     ..Outcome::default()
                 }
             }
@@ -1036,6 +1234,17 @@ impl CoreService {
                         };
                     }
                 };
+                let flash_risk = match self
+                    .analyze_split_flash_risk(q.transition.as_ref(), q.media_id.as_ref())
+                {
+                    Ok(risk) => risk,
+                    Err(err) => {
+                        return Outcome {
+                            reply: Some(self.bus_error(request, &err)),
+                            ..Outcome::default()
+                        };
+                    }
+                };
                 let options = crate::songs::SplitOptions {
                     arrangement_id: q.arrangement_id.clone(),
                     max_lines: q.max_lines,
@@ -1045,10 +1254,34 @@ impl CoreService {
                     translation_language: (!q.translation_language.trim().is_empty())
                         .then(|| q.translation_language.clone()),
                 };
-                match validate_song_preview(song)
-                    .and_then(|()| crate::songs::generate_slides(song, &options))
-                {
-                    Ok(slides) => self.reply(request, reply::Result::GeneratedSongSlides(slides)),
+                let policy_template_id = self.default_policy_template_id("templates.default.song");
+                let needs_fit = q.shrink_to_fit
+                    || !q.style_json.trim().is_empty()
+                    || q.template_id.is_some()
+                    || !q.target_outputs.is_empty()
+                    || policy_template_id.is_some();
+                let split_res = validate_song_preview(song).and_then(|()| {
+                    if !needs_fit {
+                        crate::songs::generate_slides(song, &options)
+                    } else {
+                        match self.resolve_fit_targets(
+                            &q.style_json,
+                            q.template_id.as_ref(),
+                            &q.target_outputs,
+                            policy_template_id.as_ref(),
+                        ) {
+                            Ok(targets) => {
+                                crate::songs::generate_slides_with_fit(song, &options, &targets)
+                            }
+                            Err(err) => Err(anyhow::anyhow!("{err}")),
+                        }
+                    }
+                });
+                match split_res {
+                    Ok(mut slides) => {
+                        apply_flash_warning_to_fit_reports(&mut slides.fit_reports, &flash_risk);
+                        self.reply(request, reply::Result::GeneratedSongSlides(slides))
+                    }
                     Err(error) => {
                         self.bus_error(request, &CommandBusError::Invalid(error.to_string()))
                     }
@@ -1088,8 +1321,42 @@ impl CoreService {
                 }
             }
             Some(query::Request::SplitScriptureSlides(q)) => {
-                match crate::scripture::split_scripture_slides(q) {
-                    Ok(slides) => {
+                let flash_risk = match self
+                    .analyze_split_flash_risk(q.transition.as_ref(), q.media_id.as_ref())
+                {
+                    Ok(risk) => risk,
+                    Err(err) => {
+                        return Outcome {
+                            reply: Some(self.bus_error(request, &err)),
+                            ..Outcome::default()
+                        };
+                    }
+                };
+                let policy_template_id =
+                    self.default_policy_template_id("templates.default.scripture");
+                let needs_fit = q.shrink_to_fit
+                    || !q.style_json.trim().is_empty()
+                    || q.template_id.is_some()
+                    || !q.target_outputs.is_empty()
+                    || policy_template_id.is_some();
+                let split_res = if !needs_fit {
+                    crate::scripture::split_scripture_slides(q)
+                } else {
+                    match self.resolve_fit_targets(
+                        &q.style_json,
+                        q.template_id.as_ref(),
+                        &q.target_outputs,
+                        policy_template_id.as_ref(),
+                    ) {
+                        Ok(targets) => {
+                            crate::scripture::split_scripture_slides_with_fit(q, &targets)
+                        }
+                        Err(err) => Err(anyhow::anyhow!("{err}")),
+                    }
+                };
+                match split_res {
+                    Ok(mut slides) => {
+                        apply_flash_warning_to_fit_reports(&mut slides.fit_reports, &flash_risk);
                         self.reply(request, reply::Result::GeneratedScriptureSlides(slides))
                     }
                     Err(error) => {
@@ -1100,6 +1367,73 @@ impl CoreService {
             Some(query::Request::GetMediaThumbnail(q)) => {
                 match self.library.get_media_thumbnail(q) {
                     Ok(thumb) => self.reply(request, reply::Result::MediaThumbnail(thumb)),
+                    Err(error) => self.bus_error(request, &error),
+                }
+            }
+            Some(query::Request::GetOutputConfigs(_)) => self.reply(
+                request,
+                reply::Result::OutputConfigList(OutputConfigList {
+                    outputs: self.live.output_configs().to_vec(),
+                }),
+            ),
+            Some(query::Request::AnalyzeFlashRisk(q)) => {
+                let media_flash_warning =
+                    if let Some(media_id) = q.media_id.as_ref() {
+                        if let Err(error) = validate_id(media_id) {
+                            return Outcome {
+                                reply: Some(self.bus_error(
+                                    request,
+                                    &CommandBusError::Invalid(error.to_string()),
+                                )),
+                                ..Outcome::default()
+                            };
+                        }
+                        match self.library.get::<selah_proto::v1::MediaItem>(media_id) {
+                            Ok(Some(item)) => item.flash_warning,
+                            Ok(None) => {
+                                return Outcome {
+                                    reply: Some(self.bus_error(
+                                        request,
+                                        &CommandBusError::NotFound("media item not found".into()),
+                                    )),
+                                    ..Outcome::default()
+                                };
+                            }
+                            Err(error) => {
+                                return Outcome {
+                                    reply: Some(self.bus_error(
+                                        request,
+                                        &CommandBusError::Invalid(error.to_string()),
+                                    )),
+                                    ..Outcome::default()
+                                };
+                            }
+                        }
+                    } else {
+                        false
+                    };
+                let report = selah_render::flash::analyze_transition_risk(
+                    q.transition.as_ref(),
+                    q.repeat_cadence_ms,
+                    q.from_scene.as_ref(),
+                    q.to_scene.as_ref(),
+                    q.flashes_per_second_hint,
+                    media_flash_warning,
+                );
+                self.reply(
+                    request,
+                    reply::Result::FlashRiskReport(selah_proto::v1::FlashRiskReport {
+                        flash_warning: report.flash_warning,
+                        flashes_per_second: report.flashes_per_second,
+                        saturated_red_risk: report.saturated_red_risk,
+                        reason: report.reason,
+                        warning_codes: report.warning_codes,
+                    }),
+                )
+            }
+            Some(query::Request::RenderSceneThumbnail(q)) => {
+                match crate::thumbnails::render_scene_thumbnail(&self.library, &self.live, q) {
+                    Ok(thumb) => self.reply(request, reply::Result::SceneThumbnail(thumb)),
                     Err(error) => self.bus_error(request, &error),
                 }
             }
@@ -1146,6 +1480,191 @@ impl CoreService {
             Ok(items) => self.reply(request, wrap(items)),
             Err(error) => self.bus_error(request, &CommandBusError::Invalid(error.to_string())),
         }
+    }
+
+    fn default_policy_template_id(&self, key: &str) -> Option<selah_proto::v1::Id> {
+        let effective = self.library.setting(key).ok().flatten()?;
+        let hex = match effective.value {
+            serde_json::Value::String(s) => s,
+            serde_json::Value::Object(map) => map
+                .get("template_id")
+                .or_else(|| map.get("id"))
+                .and_then(|v| v.as_str())
+                .map(str::to_owned)?,
+            _ => return None,
+        };
+        let trimmed = hex.trim();
+        if trimmed.len() != 32 || !trimmed.bytes().all(|b| b.is_ascii_hexdigit()) {
+            return None;
+        }
+        let mut bytes = Vec::with_capacity(16);
+        for chunk in trimmed.as_bytes().chunks_exact(2) {
+            let s = std::str::from_utf8(chunk).ok()?;
+            bytes.push(u8::from_str_radix(s, 16).ok()?);
+        }
+        let id = selah_proto::v1::Id { value: bytes };
+        validate_id(&id).ok()?;
+        Some(id)
+    }
+
+    fn load_template_style(
+        &self,
+        id: &selah_proto::v1::Id,
+    ) -> Result<selah_render::template::TemplateStyle, String> {
+        validate_id(id).map_err(|e| format!("invalid template_id: {e}"))?;
+        let doc = self
+            .library
+            .get::<selah_proto::v1::Template>(id)
+            .map_err(|e| format!("failed to load template: {e}"))?
+            .ok_or_else(|| "template not found".to_owned())?;
+        selah_render::template::TemplateStyle::from_proto_template(&doc)
+            .map_err(|e| format!("invalid template style: {e}"))
+    }
+
+    fn resolve_fit_targets(
+        &self,
+        style_json: &str,
+        template_id: Option<&selah_proto::v1::Id>,
+        target_outputs: &[selah_proto::v1::FitTargetOutput],
+        policy_template_id: Option<&selah_proto::v1::Id>,
+    ) -> Result<Vec<selah_render::fit::FitTarget>, String> {
+        if target_outputs.len() > selah_render::template::MAX_VARIANTS {
+            return Err(format!(
+                "too many target outputs (max {})",
+                selah_render::template::MAX_VARIANTS
+            ));
+        }
+
+        let req_style = if !style_json.trim().is_empty() {
+            Some(
+                selah_render::template::TemplateStyle::from_json(style_json)
+                    .map_err(|e| format!("invalid style_json: {e}"))?,
+            )
+        } else if let Some(tid) = template_id {
+            Some(self.load_template_style(tid)?)
+        } else {
+            None
+        };
+
+        let policy_style = policy_template_id.and_then(|tid| self.load_template_style(tid).ok());
+
+        if !target_outputs.is_empty() {
+            let mut out = Vec::with_capacity(target_outputs.len());
+            for (idx, t) in target_outputs.iter().enumerate() {
+                if let Some(res) = t.resolution
+                    && !valid_resolution(res)
+                {
+                    return Err("invalid fit target resolution".to_owned());
+                }
+                let style = if !t.style_json.trim().is_empty() {
+                    selah_render::template::TemplateStyle::from_json(&t.style_json)
+                        .map_err(|e| format!("invalid target style_json: {e}"))?
+                } else if let Some(tid) = t.template_id.as_ref() {
+                    self.load_template_style(tid)?
+                } else if let Some(rs) = &req_style {
+                    rs.clone()
+                } else if let Some(cfg_tid) = self
+                    .live
+                    .output_configs()
+                    .iter()
+                    .find(|c| c.output_index == t.output_index)
+                    .and_then(|c| c.template_id.as_ref())
+                {
+                    self.load_template_style(cfg_tid)
+                        .ok()
+                        .or_else(|| policy_style.clone())
+                        .unwrap_or_default()
+                } else {
+                    policy_style.clone().unwrap_or_default()
+                };
+                let res = t.resolution.unwrap_or(selah_proto::v1::Resolution {
+                    width: 1920,
+                    height: 1080,
+                });
+                out.push(selah_render::fit::FitTarget {
+                    output_index: t.output_index,
+                    output_name: if t.name.trim().is_empty() {
+                        format!("Output {}", idx + 1)
+                    } else {
+                        t.name.clone()
+                    },
+                    width: res.width,
+                    height: res.height,
+                    style,
+                    max_lines_override: (t.max_lines_override > 0).then_some(t.max_lines_override),
+                });
+            }
+            return Ok(out);
+        }
+
+        let mut out = Vec::new();
+        for cfg in self.live.output_configs().iter().filter(|c| c.enabled) {
+            let res = cfg.resolution.unwrap_or(selah_proto::v1::Resolution {
+                width: 1920,
+                height: 1080,
+            });
+            let style = if let Some(rs) = &req_style {
+                rs.clone()
+            } else if let Some(cfg_tid) = cfg.template_id.as_ref() {
+                self.load_template_style(cfg_tid)
+                    .ok()
+                    .or_else(|| policy_style.clone())
+                    .unwrap_or_default()
+            } else {
+                policy_style.clone().unwrap_or_default()
+            };
+            out.push(selah_render::fit::FitTarget {
+                output_index: cfg.output_index,
+                output_name: if cfg.name.trim().is_empty() {
+                    format!("Output {}", cfg.output_index + 1)
+                } else {
+                    cfg.name.clone()
+                },
+                width: res.width.max(1),
+                height: res.height.max(1),
+                style,
+                max_lines_override: None,
+            });
+        }
+        if out.is_empty() {
+            out.push(selah_render::fit::FitTarget {
+                output_index: 0,
+                output_name: "Main Output".into(),
+                width: 1920,
+                height: 1080,
+                style: req_style.or(policy_style).unwrap_or_default(),
+                max_lines_override: None,
+            });
+        }
+        Ok(out)
+    }
+
+    fn analyze_split_flash_risk(
+        &self,
+        transition: Option<&selah_proto::v1::TransitionSpec>,
+        media_id: Option<&selah_proto::v1::Id>,
+    ) -> Result<selah_render::flash::FlashAnalysis, CommandBusError> {
+        let media_flash_warning = if let Some(id) = media_id {
+            validate_id(id).map_err(|e| CommandBusError::Invalid(e.to_string()))?;
+            match self
+                .library
+                .get::<selah_proto::v1::MediaItem>(id)
+                .map_err(|e| CommandBusError::Invalid(e.to_string()))?
+            {
+                Some(item) => item.flash_warning,
+                None => return Err(CommandBusError::NotFound("media item not found".into())),
+            }
+        } else {
+            false
+        };
+        Ok(selah_render::flash::analyze_transition_risk(
+            transition,
+            0,
+            None,
+            None,
+            0.0,
+            media_flash_warning,
+        ))
     }
 
     fn update_error(&self, request: &Envelope, error: &UpdateError) -> Outcome {
@@ -1282,6 +1801,8 @@ impl CoreService {
                     video_dropped: summary.video_dropped,
                     video_composite_p99_ms: summary.video_composite_p99_ms,
                     video_pass: summary.video_pass,
+                    m3_p99_ms: summary.m3_p99_ms,
+                    m3_pass: summary.m3_pass,
                 }),
             ),
             Err(error) => {
@@ -1330,12 +1851,60 @@ impl CoreService {
     fn on_engine_event_inner(&mut self, event: &Event) -> Vec<Event> {
         match event.notification.as_ref() {
             Some(event::Notification::FrameShown(frame)) => {
-                let changed = self.engine.frame_checksum != frame.frame_checksum
-                    || self.engine.scene_revision != frame.scene_revision;
-                self.engine.scene_revision = frame.scene_revision;
-                self.engine.frame_checksum = frame.frame_checksum.clone();
+                if frame.is_preview {
+                    self.engine.preview_scene_revision = frame.scene_revision;
+                    return vec![event.clone()];
+                }
+                let output_live = if self.live.scene().outputs.is_empty() {
+                    is_live(self.live.scene())
+                } else {
+                    !self.live.scene().cleared
+                        && self
+                            .live
+                            .scene()
+                            .outputs
+                            .iter()
+                            .find(|o| o.output_index == frame.output_index)
+                            .is_some_and(selah_render::scene::output_scene_is_live)
+                };
+                let status_entry = OutputFrameStatus {
+                    output_index: frame.output_index,
+                    scene_revision: frame.scene_revision,
+                    frame_checksum: frame.frame_checksum.clone(),
+                    resolution: frame.resolution,
+                    live: output_live,
+                    flash_warning: frame.flash_warning,
+                };
+                let prev_entry = self
+                    .engine
+                    .output_statuses
+                    .iter()
+                    .find(|s| s.output_index == frame.output_index)
+                    .cloned();
+                let entry_changed = prev_entry.as_ref() != Some(&status_entry);
+                if let Some(slot) = self
+                    .engine
+                    .output_statuses
+                    .iter_mut()
+                    .find(|s| s.output_index == frame.output_index)
+                {
+                    *slot = status_entry;
+                } else {
+                    self.engine.output_statuses.push(status_entry);
+                    self.engine.output_statuses.sort_by_key(|s| s.output_index);
+                }
+                let prev_flash = self.engine.flash_warning;
+                self.engine.flash_warning =
+                    self.engine.output_statuses.iter().any(|s| s.flash_warning);
+                let mut primary_changed = false;
+                if frame.output_index == 0 {
+                    primary_changed = self.engine.frame_checksum != frame.frame_checksum
+                        || self.engine.scene_revision != frame.scene_revision;
+                    self.engine.scene_revision = frame.scene_revision;
+                    self.engine.frame_checksum = frame.frame_checksum.clone();
+                }
                 let mut out = vec![event.clone()];
-                if changed {
+                if primary_changed || entry_changed || prev_flash != self.engine.flash_warning {
                     out.push(self.status_event());
                 }
                 out
@@ -1352,15 +1921,68 @@ impl CoreService {
                 self.live.change(|scene| {
                     scene.cleared = true;
                     scene.test_pattern = TestPattern::Unspecified as i32;
+                    scene.outputs.clear();
+                    scene.preload_items.clear();
                     scene.text = if show_logo {
                         "logo".into()
                     } else {
                         String::new()
                     };
                 });
+                for status in &mut self.engine.output_statuses {
+                    status.live = false;
+                    status.flash_warning = false;
+                }
+                self.engine.flash_warning = false;
                 vec![event.clone(), self.status_event()]
             }
             _ => Vec::new(),
+        }
+    }
+}
+
+fn apply_flash_warning_to_fit_reports(
+    fit_reports: &mut Vec<selah_proto::v1::OutputFitReport>,
+    risk: &selah_render::flash::FlashAnalysis,
+) {
+    if !risk.flash_warning {
+        return;
+    }
+    if fit_reports.is_empty() {
+        fit_reports.push(selah_proto::v1::OutputFitReport {
+            output_index: 0,
+            output_name: "Main Output".into(),
+            fits: true,
+            flash_warning: true,
+            warning_codes: {
+                let mut codes = vec!["FLASH_WARNING".to_owned()];
+                for code in &risk.warning_codes {
+                    if !codes.iter().any(|c| c == code) {
+                        codes.push(code.clone());
+                    }
+                }
+                codes
+            },
+            summary: risk.reason.clone(),
+            ..Default::default()
+        });
+        return;
+    }
+    for rep in fit_reports {
+        rep.flash_warning = true;
+        if !rep.warning_codes.iter().any(|c| c == "FLASH_WARNING") {
+            rep.warning_codes.push("FLASH_WARNING".to_owned());
+        }
+        for code in &risk.warning_codes {
+            if !rep.warning_codes.iter().any(|c| c == code) {
+                rep.warning_codes.push(code.clone());
+            }
+        }
+        if !risk.reason.is_empty() {
+            if !rep.summary.is_empty() {
+                rep.summary.push_str("; ");
+            }
+            rep.summary.push_str(&risk.reason);
         }
     }
 }
@@ -2298,6 +2920,7 @@ Was [Em]blind, but [D]now I [G]see.
                         title_slide: false,
                         blank_slide_at_end: true,
                         translation_language: String::new(),
+                        ..Default::default()
                     },
                 )),
             }),
@@ -2441,6 +3064,7 @@ Was [Em]blind, but [D]now I [G]see.
                             as i32,
                         title_slide: true,
                         blank_slide_at_end: true,
+                        ..Default::default()
                     },
                 )),
             }),
@@ -2501,6 +3125,338 @@ Was [Em]blind, but [D]now I [G]see.
                     command_with_group(action.clone(), None),
                 ));
                 assert_eq!(error_code(&denied), DENIED_CODE);
+            }
+        }
+    }
+
+    #[test]
+    fn multi_output_commands_queries_preview_resync_and_permissions() {
+        // sec: SEC-14; safe: SAFE-06
+        use selah_proto::v1::{
+            FrameShown, GetOutputConfigs, LayerKind, LayerSpec, OutputConfig, OutputRole,
+            OutputScene, PreloadHint, PreloadItems, PresentScene, Resolution, SlideLayerSpec,
+            StagePreviewScene, layer_spec,
+        };
+
+        let dir = tempfile::tempdir().unwrap();
+        let mut core = CoreService::new(dir.path(), false);
+
+        // Initial GetOutputConfigs returns default 1920x1080 single output.
+        let initial_cfg = core.handle(&request_with_id(
+            801,
+            ActorOrigin::Ui,
+            envelope::Body::Query(Query {
+                request: Some(query::Request::GetOutputConfigs(GetOutputConfigs {})),
+            }),
+        ));
+        assert!(matches!(
+            initial_cfg.reply.and_then(|r| r.body),
+            Some(envelope::Body::Reply(Reply {
+                result: Some(reply::Result::OutputConfigList(list))
+            })) if list.outputs.len() == 1
+                && list.outputs[0].resolution == Some(Resolution { width: 1920, height: 1080 })
+        ));
+
+        // Invalid SetOutputConfigs payloads are rejected without mutating state.
+        let bad_configs = [
+            Vec::new(),
+            vec![OutputConfig {
+                output_index: 0,
+                enabled: false,
+                ..Default::default()
+            }],
+            vec![
+                OutputConfig {
+                    output_index: 0,
+                    enabled: true,
+                    ..Default::default()
+                },
+                OutputConfig {
+                    output_index: 0,
+                    enabled: true,
+                    ..Default::default()
+                },
+            ],
+            vec![OutputConfig {
+                output_index: 0,
+                enabled: true,
+                resolution: Some(Resolution {
+                    width: 8,
+                    height: 1080,
+                }),
+                ..Default::default()
+            }],
+        ];
+        for (i, outputs) in bad_configs.into_iter().enumerate() {
+            let err = core.handle(&request_with_id(
+                810 + i as u64,
+                ActorOrigin::Ui,
+                command(command::Action::SetOutputConfigs(SetOutputConfigs {
+                    outputs,
+                })),
+            ));
+            assert_eq!(error_code(&err), codes::INVALID);
+            assert!(err.to_engine.is_none());
+        }
+
+        // Valid multi-output configuration persists and appears in resync_commands.
+        let valid_configs = vec![
+            OutputConfig {
+                output_index: 0,
+                name: "Main Hall".into(),
+                role: OutputRole::Main as i32,
+                resolution: Some(Resolution {
+                    width: 1920,
+                    height: 1080,
+                }),
+                enabled: true,
+                ..Default::default()
+            },
+            OutputConfig {
+                output_index: 1,
+                name: "Wide LED".into(),
+                role: OutputRole::Main as i32,
+                resolution: Some(Resolution {
+                    width: 3840,
+                    height: 1080,
+                }),
+                enabled: true,
+                ..Default::default()
+            },
+        ];
+        let set_cfg = core.handle(&request_with_id(
+            820,
+            ActorOrigin::Ui,
+            command(command::Action::SetOutputConfigs(SetOutputConfigs {
+                outputs: valid_configs.clone(),
+            })),
+        ));
+        assert!(matches!(
+            set_cfg.to_engine.and_then(|c| c.action),
+            Some(render_command::Action::SetOutputConfigs(c)) if c.outputs.len() == 2
+        ));
+
+        // Invalid resolution in StagePreviewScene / PresentScene is refused cleanly.
+        let bad_scene = Scene {
+            resolution: Some(Resolution {
+                width: 9000,
+                height: 1080,
+            }),
+            ..Default::default()
+        };
+        assert_eq!(
+            error_code(&core.handle(&request_with_id(
+                821,
+                ActorOrigin::Ui,
+                command(command::Action::StagePreviewScene(StagePreviewScene {
+                    scene: Some(bad_scene.clone()),
+                })),
+            ))),
+            codes::INVALID
+        );
+        assert_eq!(
+            error_code(&core.handle(&request_with_id(
+                822,
+                ActorOrigin::Ui,
+                command(command::Action::PresentScene(PresentScene {
+                    scene: Some(bad_scene),
+                })),
+            ))),
+            codes::INVALID
+        );
+
+        // Staged preview notifies engine via SetPreviewScene, bumps preview_scene_revision, never sets live.
+        let preview = core.handle(&request_with_id(
+            823,
+            ActorOrigin::Ui,
+            command(command::Action::StagePreviewScene(StagePreviewScene {
+                scene: Some(Scene {
+                    outputs: vec![OutputScene {
+                        output_index: 0,
+                        layers: vec![LayerSpec {
+                            kind: LayerKind::Slide as i32,
+                            enabled: true,
+                            content: Some(layer_spec::Content::Slide(SlideLayerSpec {
+                                text: "Preview".into(),
+                                ..Default::default()
+                            })),
+                            ..Default::default()
+                        }],
+                        ..Default::default()
+                    }],
+                    ..Default::default()
+                }),
+            })),
+        ));
+        assert!(matches!(
+            preview.to_engine.and_then(|c| c.action),
+            Some(render_command::Action::SetPreviewScene(p))
+                if p.scene.as_ref().is_some_and(|s| s.is_preview && s.revision == 1)
+        ));
+        assert!(!core.status().live);
+        assert_eq!(core.status().preview_scene_revision, 1);
+
+        // PreloadItems forwards non-empty hints without toggling live.
+        assert!(
+            core.handle(&request_with_id(
+                824,
+                ActorOrigin::Ui,
+                command(command::Action::PreloadItems(PreloadItems {
+                    items: Vec::new(),
+                })),
+            ))
+            .to_engine
+            .is_none()
+        );
+        let preload = core.handle(&request_with_id(
+            825,
+            ActorOrigin::Ui,
+            command(command::Action::PreloadItems(PreloadItems {
+                items: vec![PreloadHint {
+                    key: "k1".into(),
+                    output_index: 0,
+                    text: "Next".into(),
+                    ..Default::default()
+                }],
+            })),
+        ));
+        assert!(matches!(
+            preload.to_engine.and_then(|c| c.action),
+            Some(render_command::Action::PreloadItems(p)) if p.items.len() == 1
+        ));
+        assert!(!core.status().live);
+
+        // PresentScene updates live state and tracks per-output FrameShown status independently.
+        let live_scene = Scene {
+            outputs: vec![
+                OutputScene {
+                    output_index: 0,
+                    layers: vec![LayerSpec {
+                        kind: LayerKind::Slide as i32,
+                        enabled: true,
+                        content: Some(layer_spec::Content::Slide(SlideLayerSpec {
+                            text: "Hall".into(),
+                            ..Default::default()
+                        })),
+                        ..Default::default()
+                    }],
+                    ..Default::default()
+                },
+                OutputScene {
+                    output_index: 1,
+                    layers: vec![LayerSpec {
+                        kind: LayerKind::Slide as i32,
+                        enabled: true,
+                        content: Some(layer_spec::Content::Slide(SlideLayerSpec {
+                            text: "LED".into(),
+                            ..Default::default()
+                        })),
+                        ..Default::default()
+                    }],
+                    ..Default::default()
+                },
+            ],
+            ..Default::default()
+        };
+        let presented = core.handle(&request_with_id(
+            826,
+            ActorOrigin::Ui,
+            command(command::Action::PresentScene(PresentScene {
+                scene: Some(live_scene.clone()),
+            })),
+        ));
+        assert!(matches!(
+            presented.to_engine.and_then(|c| c.action),
+            Some(render_command::Action::SetScene(s)) if !s.is_preview && s.outputs.len() == 2
+        ));
+        assert!(core.status().live);
+
+        // Secondary output FrameShown updates output_statuses without clobbering primary checksum.
+        let rev = core.status().scene_revision;
+        core.on_engine_event(&Event {
+            notification: Some(event::Notification::FrameShown(FrameShown {
+                output_index: 1,
+                scene_revision: rev,
+                frame_checksum: vec![9, 9, 9],
+                resolution: Some(Resolution {
+                    width: 3840,
+                    height: 1080,
+                }),
+                ..Default::default()
+            })),
+        });
+        assert!(core.status().frame_checksum.is_empty());
+        core.on_engine_event(&Event {
+            notification: Some(event::Notification::FrameShown(FrameShown {
+                output_index: 0,
+                scene_revision: rev,
+                frame_checksum: vec![1, 2, 3],
+                resolution: Some(Resolution {
+                    width: 1920,
+                    height: 1080,
+                }),
+                ..Default::default()
+            })),
+        });
+        assert_eq!(core.status().frame_checksum, vec![1, 2, 3]);
+        assert_eq!(core.status().output_statuses.len(), 2);
+
+        // Preview FrameShown does not alter live output statuses.
+        core.on_engine_event(&Event {
+            notification: Some(event::Notification::FrameShown(FrameShown {
+                output_index: 0,
+                scene_revision: 5,
+                is_preview: true,
+                frame_checksum: vec![7, 7, 7],
+                ..Default::default()
+            })),
+        });
+        assert_eq!(core.status().frame_checksum, vec![1, 2, 3]);
+
+        // resync_commands returns SetOutputConfigs + SetScene + SetPreviewScene.
+        let resync = core.resync_commands();
+        assert_eq!(resync.len(), 3);
+        assert!(matches!(
+            resync[0].action,
+            Some(render_command::Action::SetOutputConfigs(_))
+        ));
+        assert!(matches!(
+            resync[1].action,
+            Some(render_command::Action::SetScene(_))
+        ));
+        assert!(matches!(
+            resync[2].action,
+            Some(render_command::Action::SetPreviewScene(_))
+        ));
+
+        // SEC-14: Non-UI origins are refused on all 4 M3.1 commands without changing state.
+        let actions = [
+            command::Action::SetOutputConfigs(SetOutputConfigs {
+                outputs: valid_configs,
+            }),
+            command::Action::PresentScene(PresentScene {
+                scene: Some(live_scene.clone()),
+            }),
+            command::Action::StagePreviewScene(StagePreviewScene {
+                scene: Some(live_scene),
+            }),
+            command::Action::PreloadItems(PreloadItems {
+                items: vec![PreloadHint {
+                    key: "denied".into(),
+                    ..Default::default()
+                }],
+            }),
+        ];
+        for action in actions {
+            for origin in [
+                ActorOrigin::Api,
+                ActorOrigin::Midi,
+                ActorOrigin::Sync,
+                ActorOrigin::Engine,
+            ] {
+                let refused = core.handle(&request_with_id(850, origin, command(action.clone())));
+                assert_eq!(error_code(&refused), DENIED_CODE);
+                assert!(refused.to_engine.is_none());
             }
         }
     }

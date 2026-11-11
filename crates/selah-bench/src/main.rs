@@ -6,6 +6,8 @@
 //! selah-bench search [--songs N] [--iterations N] [--check] [--json PATH]
 //! selah-bench video --clip PATH [--decode auto|software] [--loops N] [--gpu auto|software]
 //!                   [--check] [--json PATH]
+//! selah-bench m3 [--clip PATH] [--decode auto|software] [--gpu auto|software]
+//!                [--iterations N] [--check] [--json PATH]
 //! ```
 //! `ipc` starts a child process that serves the core endpoint, then times request/reply round
 //! trips across the real transport (named pipes on Windows, Unix sockets elsewhere).
@@ -26,6 +28,7 @@ const IPC_P99_BUDGET_MS: f64 = 2.0;
 /// ARCHITECTURE §12: output frame time p99 ≤ 8 ms.
 const OUTPUT_P99_BUDGET_MS: f64 = 8.0;
 
+mod m3;
 mod search;
 mod video;
 
@@ -277,6 +280,70 @@ async fn main() -> Result<()> {
             }
             Ok(())
         }
+        Some("m3") => {
+            let mut options = m3::Options {
+                clip: None,
+                mode: selah_media::DecodeMode::Auto,
+                gpu: selah_render::gpu::AdapterChoice::from_env(),
+                iterations: 60,
+            };
+            let mut iterations_override = None;
+            let (mut check, mut json) = (false, None);
+            while let Some(arg) = args.next() {
+                match arg.as_str() {
+                    "--clip" => {
+                        options.clip = Some(PathBuf::from(args.next().context("--clip PATH")?))
+                    }
+                    "--decode" => {
+                        options.mode = match args.next().as_deref() {
+                            Some("auto") => selah_media::DecodeMode::Auto,
+                            Some("software") => selah_media::DecodeMode::Software,
+                            _ => bail!("--decode auto|software"),
+                        }
+                    }
+                    "--gpu" => {
+                        options.gpu = match args.next().as_deref() {
+                            Some("auto") => selah_render::gpu::AdapterChoice::Auto,
+                            Some("software") => selah_render::gpu::AdapterChoice::Software,
+                            _ => bail!("--gpu auto|software"),
+                        }
+                    }
+                    "--iterations" => {
+                        iterations_override = Some(args.next().context("--iterations N")?.parse()?);
+                    }
+                    "--check" => check = true,
+                    "--json" => json = Some(PathBuf::from(args.next().context("--json PATH")?)),
+                    other => bail!("unknown option {other}"),
+                }
+            }
+            options.iterations = iterations_override.unwrap_or(match options.gpu {
+                selah_render::gpu::AdapterChoice::Software => 10,
+                selah_render::gpu::AdapterChoice::Auto => 60,
+            });
+            if options.iterations == 0 {
+                bail!("--iterations must be at least 1");
+            }
+            if options.clip.is_none() {
+                options.clip = m3::default_4k_clip_in_repo();
+            }
+            let report = tokio::task::spawn_blocking(move || m3::run(&options)).await??;
+            let text = serde_json::to_string_pretty(&report)?;
+            println!("{text}");
+            if let Some(path) = json {
+                if let Some(parent) = path.parent() {
+                    std::fs::create_dir_all(parent)?;
+                }
+                std::fs::write(&path, text + "\n")?;
+            }
+            if check && !report.pass {
+                bail!(
+                    "m3 benchmark p99 {:.2} ms exceeds {:.1} ms budget",
+                    report.p99_ms,
+                    report.budget_p99_ms
+                );
+            }
+            Ok(())
+        }
         _ => {
             eprintln!("usage: selah-bench ipc [--iterations N] [--check] [--json PATH]");
             eprintln!(
@@ -284,6 +351,9 @@ async fn main() -> Result<()> {
             );
             eprintln!(
                 "       selah-bench video --clip PATH [--decode auto|software] [--loops N] [--gpu auto|software] [--check] [--json PATH]"
+            );
+            eprintln!(
+                "       selah-bench m3 [--clip PATH] [--decode auto|software] [--gpu auto|software] [--iterations N] [--check] [--json PATH]"
             );
             std::process::exit(2);
         }

@@ -21,7 +21,9 @@ use ffmpeg::util::color;
 use ffmpeg_next as ffmpeg;
 use serde::{Deserialize, Serialize};
 
+pub mod audio;
 mod hw;
+pub mod player;
 
 /// FFmpeg demuxers a file item may use. Names as FFmpeg reports them.
 pub const DEMUXERS: &[&str] = &[
@@ -106,6 +108,7 @@ pub struct MediaProbeResult {
     pub thumbnail_width: u32,
     pub thumbnail_height: u32,
     pub thumbnail_png: Vec<u8>,
+    pub flash_warning: bool,
 }
 
 /// How to decode.
@@ -170,7 +173,7 @@ impl VideoFrame {
     }
 }
 
-fn init() {
+pub(crate) fn init() {
     static INIT: Once = Once::new();
     INIT.call_once(|| {
         if let Err(error) = ffmpeg::init() {
@@ -215,13 +218,13 @@ pub fn check_local_path(path: &Path) -> Result<PathBuf> {
 
 /// FFmpeg's name for a local path: `file:` forces the file protocol, so nothing in the name
 /// can select another one. `canonicalize` on Windows returns `\\?\C:\…`; FFmpeg wants `C:\…`.
-fn ffmpeg_url(path: &Path) -> String {
+pub(crate) fn ffmpeg_url(path: &Path) -> String {
     let text = path.to_string_lossy();
     let text = text.strip_prefix(r"\\?\").unwrap_or(&text);
     format!("file:{text}")
 }
 
-fn open_options() -> ffmpeg::Dictionary<'static> {
+pub(crate) fn open_options() -> ffmpeg::Dictionary<'static> {
     let mut options = ffmpeg::Dictionary::new();
     options.set("protocol_whitelist", FILE_PROTOCOLS);
     options.set("format_whitelist", &DEMUXERS.join(","));
@@ -234,7 +237,7 @@ fn open_options() -> ffmpeg::Dictionary<'static> {
     options
 }
 
-fn check_demuxer(input: &ffmpeg::format::context::Input) -> Result<String> {
+pub(crate) fn check_demuxer(input: &ffmpeg::format::context::Input) -> Result<String> {
     let demuxer_name = input.format().name().to_owned();
     if !demuxer_name.split(',').any(|name| DEMUXERS.contains(&name)) {
         return Err(MediaError::Open(ffmpeg::Error::DemuxerNotFound));
@@ -242,7 +245,7 @@ fn check_demuxer(input: &ffmpeg::format::context::Input) -> Result<String> {
     Ok(demuxer_name)
 }
 
-fn duration_milliseconds(
+pub(crate) fn duration_milliseconds(
     input: &ffmpeg::format::context::Input,
     stream: &ffmpeg::Stream<'_>,
 ) -> u64 {
@@ -275,6 +278,7 @@ pub struct VideoDecoder {
     hardware: Option<hw::Device>,
     eof_sent: bool,
     next_index: u64,
+    skip_until_seconds: f64,
     decoder_name: String,
     demuxer_name: String,
 }
@@ -341,6 +345,7 @@ impl VideoDecoder {
             hardware,
             eof_sent: false,
             next_index: 0,
+            skip_until_seconds: 0.0,
             decoder_name,
             demuxer_name,
         })
@@ -377,12 +382,39 @@ impl VideoDecoder {
         self.hardware.as_ref().map(hw::Device::name)
     }
 
+    /// Seek to `position_ms` on the container and skip catchup frames earlier than `position_ms`.
+    pub fn seek_ms(&mut self, position_ms: u64) -> Result<()> {
+        if position_ms == 0 && self.next_index == 0 && !self.eof_sent {
+            self.skip_until_seconds = 0.0;
+            return Ok(());
+        }
+        let target_us = (position_ms as i64).saturating_mul(1000);
+        let _ = self.input.seek(target_us, ..target_us.saturating_add(1));
+        self.decoder.flush();
+        self.eof_sent = false;
+        self.skip_until_seconds = if position_ms == 0 {
+            0.0
+        } else {
+            (position_ms as f64 / 1000.0) - 0.000_5
+        };
+        Ok(())
+    }
+
     /// The next frame in presentation order, or `None` at the end of the stream.
     pub fn next_frame(&mut self) -> Result<Option<VideoFrame>> {
         let mut decoded = ffmpeg::frame::Video::empty();
         loop {
             match self.decoder.receive_frame(&mut decoded) {
-                Ok(()) => return self.convert(decoded).map(Some),
+                Ok(()) => {
+                    if self.skip_until_seconds > 0.0 {
+                        let pts = decoded.timestamp().or(decoded.pts()).unwrap_or(0);
+                        let seconds = (pts - self.start.unwrap_or(0)) as f64 * self.time_base;
+                        if seconds < self.skip_until_seconds {
+                            continue;
+                        }
+                    }
+                    return self.convert(decoded).map(Some);
+                }
                 Err(ffmpeg::Error::Eof) => return Ok(None),
                 Err(ffmpeg::Error::Other { errno }) if errno == ffmpeg::error::EAGAIN => {}
                 Err(error) => return Err(MediaError::Decode(error)),
@@ -470,12 +502,25 @@ impl VideoDecoder {
 }
 
 /// Probe a local media file (image, video, or audio) and optionally render a bounded PNG
-/// thumbnail (`max_width > 0 && max_height > 0`) using software decoding and Skia (SEC-04).
+/// thumbnail (`max_width > 0 && max_height > 0`) using software decoding and Skia (SEC-04),
+/// including a bounded WCAG 2.3.1 video flash scan.
 pub fn probe_and_thumbnail(
     path: &Path,
     kind_hint: Option<MediaProbeKind>,
     max_width: u32,
     max_height: u32,
+) -> Result<MediaProbeResult> {
+    probe_and_thumbnail_with_options(path, kind_hint, max_width, max_height, true)
+}
+
+/// Variant of [`probe_and_thumbnail`] that allows skipping the full-stream WCAG flash scan
+/// (e.g. when regenerating a cached thumbnail).
+pub fn probe_and_thumbnail_with_options(
+    path: &Path,
+    kind_hint: Option<MediaProbeKind>,
+    max_width: u32,
+    max_height: u32,
+    scan_flash: bool,
 ) -> Result<MediaProbeResult> {
     let canonical = check_local_path(path)?;
     let ext = canonical
@@ -492,7 +537,7 @@ pub fn probe_and_thumbnail(
 
     match kind {
         MediaProbeKind::Image => probe_image(&canonical, &ext, max_width, max_height),
-        MediaProbeKind::Video => match probe_video(&canonical, max_width, max_height) {
+        MediaProbeKind::Video => match probe_video(&canonical, max_width, max_height, scan_flash) {
             Ok(result) => Ok(result),
             Err(MediaError::NoVideo) if kind_hint.is_none() => probe_audio(&canonical),
             Err(err) => Err(err),
@@ -536,6 +581,7 @@ fn probe_image(
             thumbnail_width: thumb.width,
             thumbnail_height: thumb.height,
             thumbnail_png: thumb.png_bytes,
+            flash_warning: false,
         })
     } else {
         let (width, height) = selah_render::png::probe_image_dimensions(&bytes)
@@ -550,6 +596,7 @@ fn probe_image(
             thumbnail_width: 0,
             thumbnail_height: 0,
             thumbnail_png: Vec::new(),
+            flash_warning: false,
         })
     }
 }
@@ -566,7 +613,15 @@ fn fit_stage_size(src_w: u32, src_h: u32, max_w: u32, max_h: u32) -> (u32, u32) 
     (w, h)
 }
 
-fn probe_video(canonical: &Path, max_width: u32, max_height: u32) -> Result<MediaProbeResult> {
+const MAX_FLASH_SCAN_FRAMES: usize = 1800;
+const FLASH_SCAN_BUDGET: std::time::Duration = std::time::Duration::from_secs(10);
+
+fn probe_video(
+    canonical: &Path,
+    max_width: u32,
+    max_height: u32,
+    scan_flash: bool,
+) -> Result<MediaProbeResult> {
     let mut decoder = VideoDecoder::open(canonical, DecodeMode::Software)?;
     let width = decoder.width();
     let height = decoder.height();
@@ -575,15 +630,49 @@ fn probe_video(canonical: &Path, max_width: u32, max_height: u32) -> Result<Medi
     let container = decoder.demuxer_name().to_owned();
 
     let first_frame = decoder.next_frame()?.ok_or(MediaError::NoVideo)?;
+    let first_seconds = first_frame.seconds;
+    let first_nv12 = first_frame.into_nv12();
     let (thumbnail_width, thumbnail_height, thumbnail_png) = if max_width > 0 && max_height > 0 {
-        let nv12 = first_frame.into_nv12();
-        let (stage_w, stage_h) = fit_stage_size(nv12.width, nv12.height, max_width, max_height);
+        let (stage_w, stage_h) =
+            fit_stage_size(first_nv12.width, first_nv12.height, max_width, max_height);
         let mut frame = selah_render::Frame::new(stage_w, stage_h);
-        selah_render::video::draw_cpu(&mut frame, &nv12);
+        selah_render::video::draw_cpu(&mut frame, &first_nv12);
         selah_render::png::encode_rgba_thumbnail(&frame, max_width, max_height)
             .map_err(|e| MediaError::Image(e.to_string()))?
     } else {
         (0, 0, Vec::new())
+    };
+
+    let flash_warning = if scan_flash {
+        let mut analyzer = selah_render::flash::FlashAnalyzer::new();
+        let first_pts = (first_seconds.max(0.0) * 1_000_000_000.0).round() as u64;
+        analyzer.push_nv12(&first_nv12, first_pts);
+        let mut last_ts_ns = first_pts;
+        let deadline = std::time::Instant::now() + FLASH_SCAN_BUDGET;
+        let mut scanned = 1_usize;
+        while scanned < MAX_FLASH_SCAN_FRAMES && std::time::Instant::now() < deadline {
+            match decoder.next_frame() {
+                Ok(Some(vf)) => {
+                    let pts_ns = (vf.seconds.max(0.0) * 1_000_000_000.0).round() as u64;
+                    let ts_ns = if pts_ns > last_ts_ns {
+                        pts_ns
+                    } else {
+                        last_ts_ns.saturating_add(16_666_667)
+                    };
+                    last_ts_ns = ts_ns;
+                    let nv12 = vf.into_nv12();
+                    analyzer.push_nv12(&nv12, ts_ns);
+                    scanned += 1;
+                    if analyzer.ever_triggered() {
+                        break;
+                    }
+                }
+                Ok(None) | Err(_) => break,
+            }
+        }
+        analyzer.ever_triggered() || analyzer.current_summary().flash_warning
+    } else {
+        false
     };
 
     Ok(MediaProbeResult {
@@ -596,6 +685,7 @@ fn probe_video(canonical: &Path, max_width: u32, max_height: u32) -> Result<Medi
         thumbnail_width,
         thumbnail_height,
         thumbnail_png,
+        flash_warning,
     })
 }
 
@@ -659,6 +749,7 @@ fn probe_audio(canonical: &Path) -> Result<MediaProbeResult> {
         thumbnail_width: 0,
         thumbnail_height: 0,
         thumbnail_png: Vec::new(),
+        flash_warning: false,
     })
 }
 
@@ -854,6 +945,30 @@ mod tests {
         let err = probe_and_thumbnail(&path, Some(MediaProbeKind::Image), 320, 180)
             .expect_err("9000x9000 PNG must be refused");
         assert!(err.to_string().contains("8192"), "{err}");
+    }
+
+    #[test]
+    fn probes_wcag_flash_clip_flags_warning_while_safe_clips_clear() {
+        let fixtures =
+            Path::new(env!("CARGO_MANIFEST_DIR")).join("../../tests/fixtures/media/committed");
+        let strobe = probe_and_thumbnail(&fixtures.join("wcag-flash-360p60.mp4"), None, 160, 90)
+            .expect("probe strobe fixture");
+        assert!(
+            strobe.flash_warning,
+            "6 Hz strobe fixture must trigger flash_warning"
+        );
+
+        let single_flash =
+            probe_and_thumbnail(&fixtures.join("flash-beep-360p60.mp4"), None, 160, 90)
+                .expect("probe flash-beep fixture");
+        assert!(
+            !single_flash.flash_warning,
+            "single-frame flash at frame 30 (0.5 flashes/s <= 3 Hz) must stay safe"
+        );
+
+        let bar_flash = probe_and_thumbnail(&fixtures.join("h264-1080p60.mp4"), None, 160, 90)
+            .expect("probe h264 fixture");
+        assert!(!bar_flash.flash_warning);
     }
 
     #[cfg(unix)]

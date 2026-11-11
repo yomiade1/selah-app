@@ -31,27 +31,29 @@ const MAX_PIXELS: u64 = 67_108_864;
 const MAX_IMAGE_FILE_BYTES: u64 = 128 * 1024 * 1024;
 const MAX_MANIFEST_BYTES: usize = 16 * 1024 * 1024;
 const MAX_BUNDLE_ENTITIES: usize = 4096;
-const MAX_THUMBNAIL_BYTES: u64 = 16 * 1024 * 1024;
+pub(crate) const MAX_THUMBNAIL_BYTES: u64 = 16 * 1024 * 1024;
 const MAX_WORKER_STDIO_BYTES: u64 = 256 * 1024;
 const WORKER_TIMEOUT: Duration = Duration::from_secs(30);
-const DEFAULT_THUMB_W: u32 = 320;
-const DEFAULT_THUMB_H: u32 = 180;
+pub(crate) const DEFAULT_THUMB_W: u32 = 320;
+pub(crate) const DEFAULT_THUMB_H: u32 = 180;
 const BUNDLED_MARKER_FILE: &str = ".bundled-bibles.json";
 const BACKUP_BUNDLED_MARKER_ENTRY: &str = "meta/bundled-bibles.json";
 
 #[derive(Deserialize)]
-struct WorkerReport {
-    kind: String,
-    width: u32,
-    height: u32,
-    duration_ms: u64,
+pub(crate) struct WorkerReport {
+    pub(crate) kind: String,
+    pub(crate) width: u32,
+    pub(crate) height: u32,
+    pub(crate) duration_ms: u64,
     #[allow(dead_code)]
-    codec: String,
+    pub(crate) codec: String,
     #[allow(dead_code)]
-    container: String,
-    thumbnail_width: u32,
-    thumbnail_height: u32,
-    thumbnail_written: bool,
+    pub(crate) container: String,
+    pub(crate) thumbnail_width: u32,
+    pub(crate) thumbnail_height: u32,
+    pub(crate) thumbnail_written: bool,
+    #[serde(default)]
+    pub(crate) flash_warning: bool,
 }
 
 fn check_no_url_or_protocol(raw: &str) -> Result<(), CommandBusError> {
@@ -149,7 +151,10 @@ fn validate_output_file_path(raw: &str) -> Result<PathBuf, CommandBusError> {
     Ok(canon_parent.join(file_name))
 }
 
-fn write_atomic_file_checked(target: &Path, bytes: &[u8]) -> Result<(), CommandBusError> {
+pub(crate) fn write_atomic_file_checked(
+    target: &Path,
+    bytes: &[u8],
+) -> Result<(), CommandBusError> {
     let parent = target
         .parent()
         .ok_or_else(|| CommandBusError::Invalid("target has no parent".into()))?;
@@ -191,7 +196,7 @@ fn check_dimensions(width: u32, height: u32) -> anyhow::Result<(u32, u32)> {
     Ok((width, height))
 }
 
-fn parse_png_ihdr(bytes: &[u8]) -> anyhow::Result<Option<(u32, u32)>> {
+pub(crate) fn parse_png_ihdr(bytes: &[u8]) -> anyhow::Result<Option<(u32, u32)>> {
     const SIG: &[u8; 8] = b"\x89PNG\r\n\x1a\n";
     if !bytes.starts_with(SIG) {
         return Ok(None);
@@ -363,12 +368,13 @@ fn read_bounded_pipe(mut pipe: impl Read + Send + 'static) -> std::thread::JoinH
     })
 }
 
-fn run_media_worker(
+pub(crate) fn run_media_worker(
     input_path: &Path,
     kind_hint: Option<&str>,
     max_width: u32,
     max_height: u32,
     thumb_out: Option<&Path>,
+    scan_flash: bool,
 ) -> Result<WorkerReport, CommandBusError> {
     let worker = find_media_worker()?;
     let mut cmd = Command::new(&worker);
@@ -382,6 +388,9 @@ fn run_media_worker(
         .arg(max_height.to_string());
     if let Some(out) = thumb_out {
         cmd.arg("--thumb-out").arg(out);
+    }
+    if !scan_flash {
+        cmd.arg("--no-flash-scan");
     }
     cmd.stdin(Stdio::null())
         .stdout(Stdio::piped())
@@ -461,7 +470,7 @@ fn run_media_worker(
     Ok(report)
 }
 
-fn ensure_thumbnails_dir(root: &Path) -> Result<PathBuf, CommandBusError> {
+pub(crate) fn ensure_thumbnails_dir(root: &Path) -> Result<PathBuf, CommandBusError> {
     let dir = root.join("thumbnails");
     match std::fs::symlink_metadata(&dir) {
         Ok(meta) => {
@@ -487,7 +496,7 @@ fn ensure_thumbnails_dir(root: &Path) -> Result<PathBuf, CommandBusError> {
     Ok(canon)
 }
 
-fn read_validated_png(
+pub(crate) fn read_validated_png(
     path: &Path,
     max_w: u32,
     max_h: u32,
@@ -1071,6 +1080,7 @@ fn bundle_to_media(b: &BundleMediaItem) -> anyhow::Result<MediaItem> {
             height: r.height,
         }),
         duration_milliseconds: b.duration_milliseconds,
+        flash_warning: b.tags.iter().any(|t| t.eq_ignore_ascii_case("flashing")),
         tags: b.tags.clone(),
     };
     ensure!(
@@ -1581,6 +1591,7 @@ impl Library {
             DEFAULT_THUMB_W,
             DEFAULT_THUMB_H,
             Some(&probe_thumb_path),
+            true,
         )?;
 
         let thumb_bytes = if report.thumbnail_written {
@@ -1607,6 +1618,15 @@ impl Library {
             }
         }
 
+        if report.flash_warning
+            && !clean_tags
+                .iter()
+                .any(|t| t.eq_ignore_ascii_case("flashing"))
+            && clean_tags.len() < super::MAX_CHILDREN
+        {
+            clean_tags.push("Flashing".to_owned());
+        }
+
         let item = MediaItem {
             id: Some(new_id()),
             name: display_name,
@@ -1628,6 +1648,7 @@ impl Library {
                 height: report.height,
             }),
             duration_milliseconds: report.duration_ms,
+            flash_warning: report.flash_warning,
             tags: clean_tags,
         };
 
@@ -1722,6 +1743,7 @@ impl Library {
             max_w,
             max_h,
             Some(&probe_thumb_path),
+            false,
         )?;
         if !report.thumbnail_written {
             return Err(CommandBusError::Invalid(

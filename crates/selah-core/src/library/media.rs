@@ -19,7 +19,7 @@ pub struct MediaStore {
     root: PathBuf,
 }
 
-pub(super) fn validate_address(hash: &str, extension: &str) -> anyhow::Result<()> {
+pub(crate) fn validate_address(hash: &str, extension: &str) -> anyhow::Result<()> {
     ensure!(
         hash.len() == 64
             && hash
@@ -190,6 +190,23 @@ impl MediaStore {
             "media blob is a symlink or not a regular file"
         );
         self.verify(hash, extension, expected_size)?;
+        Ok(path)
+    }
+
+    pub(crate) fn verified_blob_path_by_hash(
+        &self,
+        hash: &str,
+        extension: &str,
+    ) -> anyhow::Result<PathBuf> {
+        let path = self.path(hash, extension)?;
+        let meta = std::fs::symlink_metadata(&path)?;
+        ensure!(
+            !meta.file_type().is_symlink() && meta.is_file(),
+            "media blob is a symlink or not a regular file"
+        );
+        let size = meta.len();
+        ensure!(size <= MAX_MEDIA_BYTES, "media is too large");
+        self.verify(hash, extension, size)?;
         Ok(path)
     }
 }

@@ -1,13 +1,22 @@
 #![forbid(unsafe_code)]
 //! The compositor interface (ADR-005) and the frame type the engine presents.
 pub mod blit;
+pub mod blur;
 pub mod cpu;
+pub mod effects;
+pub mod fit;
+pub mod flash;
 pub mod gpu;
+pub mod media_bg;
 pub mod png;
+pub mod scene;
+pub mod slide_elements;
+pub mod template;
 pub mod text;
+pub mod transitions;
 pub mod video;
 
-use selah_proto::v1::Scene;
+use selah_proto::v1::{PreloadHint, Scene};
 
 /// One rendered output frame: tightly packed RGBA8, premultiplied alpha.
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -48,9 +57,60 @@ pub trait Compositor {
     fn name(&self) -> &str;
     fn render(&mut self, scene: &Scene, width: u32, height: u32) -> anyhow::Result<Frame>;
 
+    /// Render the normalized layer stack for `output_index` at (`width`, `height`).
+    fn render_output(
+        &mut self,
+        scene: &Scene,
+        output_index: u32,
+        width: u32,
+        height: u32,
+    ) -> anyhow::Result<Frame> {
+        let _ = output_index;
+        self.render(scene, width, height)
+    }
+
+    /// Render `output_index` with active output/layer transitions (`plan`).
+    fn render_output_with_plan(
+        &mut self,
+        scene: &Scene,
+        output_index: u32,
+        width: u32,
+        height: u32,
+        plan: &transitions::RenderTransitionPlan,
+    ) -> anyhow::Result<Frame> {
+        let _ = plan;
+        self.render_output(scene, output_index, width, height)
+    }
+
+    /// Warm text and overlay caches for upcoming slides without affecting active outputs.
+    fn prerasterise_hints(&mut self, _hints: &[PreloadHint]) -> anyhow::Result<usize> {
+        Ok(0)
+    }
+
+    /// Cumulative `(hits, misses)` across text and overlay raster caches.
+    fn cache_stats(&self) -> (u64, u64) {
+        (0, 0)
+    }
+
     /// The video frame drawn under the text on the next renders (`None` removes it). The video
     /// layer replaces the test pattern; a cleared scene shows no video.
     fn set_video(&mut self, frame: Option<video::Nv12Frame>) -> anyhow::Result<()>;
+
+    /// Configure the content-addressed media directory used by background image layers.
+    fn set_media_root(&mut self, _root: Option<std::path::PathBuf>) {}
+
+    /// Supply (or clear) a live NV12 video frame keyed by its 64-char BLAKE3 content hash.
+    fn set_video_for_hash(
+        &mut self,
+        _hash: &str,
+        _frame: Option<video::Nv12Frame>,
+    ) -> anyhow::Result<()> {
+        Ok(())
+    }
+
+    /// Override the wall-clock Unix epoch milliseconds used by `{clock}` and `{timer}` elements
+    /// (`None` reads the current system clock). Used for deterministic tests and thumbnails.
+    fn set_clock_unix_ms(&mut self, _unix_ms: Option<i64>) {}
 
     /// The GPU compositor, when this is one (windows can only present GPU output).
     fn as_gpu(&mut self) -> Option<&mut gpu::GpuCompositor> {

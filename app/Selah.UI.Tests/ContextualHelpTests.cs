@@ -290,6 +290,9 @@ public sealed class ContextualHelpTests : IDisposable
         public Task DeleteMediaItemAsync(Id id) => Task.CompletedTask;
         public Task<MediaThumbnail> GetMediaThumbnailAsync(Id mediaId, uint maxWidth = 320, uint maxHeight = 180) =>
             Task.FromResult(new MediaThumbnail());
+        public Task<SceneThumbnail> RenderSceneThumbnailAsync(Scene scene, uint outputIndex = 0, uint maxWidth = 320, uint maxHeight = 180) =>
+            Task.FromResult(new SceneThumbnail());
+        public Task StagePreviewSceneAsync(Scene scene) => Task.CompletedTask;
         public Task<ExportedSelahBundle> ExportSelahBundleAsync(ExportSelahBundle request) =>
             Task.FromResult(new ExportedSelahBundle());
         public Task<ImportedSelahBundle> ImportSelahBundleAsync(ImportSelahBundle request) =>
@@ -303,6 +306,26 @@ public sealed class ContextualHelpTests : IDisposable
         public Task SaveTagAsync(Tag tag) => Task.CompletedTask;
         public Task<LibrarySearchResults> SearchLibraryAsync(string query, SearchScope scope = SearchScope.All, string translation = "", uint limit = 20) =>
             Task.FromResult(new LibrarySearchResults());
+        public Task<IReadOnlyList<Template>> ListTemplatesAsync(uint limit = 200, uint offset = 0) =>
+            Task.FromResult<IReadOnlyList<Template>>([]);
+        public Task<Template?> GetTemplateAsync(Id id) => Task.FromResult<Template?>(null);
+        public Task SaveTemplateAsync(Template template, Id? undoGroup = null) => Task.CompletedTask;
+        public Task DeleteTemplateAsync(Id id, Id? undoGroup = null) => Task.CompletedTask;
+        public Task<IReadOnlyList<Presentation>> ListPresentationsAsync(uint limit = 200, uint offset = 0) =>
+            Task.FromResult<IReadOnlyList<Presentation>>([]);
+        public Task<Presentation?> GetPresentationAsync(Id id) => Task.FromResult<Presentation?>(null);
+        public Task SavePresentationAsync(Presentation presentation, Id? undoGroup = null) => Task.CompletedTask;
+        public Task DeletePresentationAsync(Id id, Id? undoGroup = null) => Task.CompletedTask;
+        public Task<IReadOnlyList<OutputConfig>> GetOutputConfigsAsync() =>
+            Task.FromResult<IReadOnlyList<OutputConfig>>([]);
+        public Task SetOutputConfigsAsync(IEnumerable<OutputConfig> outputs) => Task.CompletedTask;
+        public Task<GetPolicySettingReply> GetPolicySettingAsync(string key) =>
+            Task.FromResult(new GetPolicySettingReply());
+        public Task SetPolicySettingAsync(string key, string valueJson, PolicyLevel level = PolicyLevel.User, bool locked = false) =>
+            Task.CompletedTask;
+        public Task<FlashRiskReport> AnalyzeFlashRiskAsync(AnalyzeFlashRisk request) =>
+            Task.FromResult(new FlashRiskReport());
+        public Task PresentSceneAsync(Scene scene) => Task.CompletedTask;
     }
 
     [AvaloniaTheory]

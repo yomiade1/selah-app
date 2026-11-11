@@ -27,6 +27,7 @@ fn scene(text: &str) -> Scene {
         text: text.into(),
         cleared: false,
         resolution: None,
+        ..Default::default()
     }
 }
 

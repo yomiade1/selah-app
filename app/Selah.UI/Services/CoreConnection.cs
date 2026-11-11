@@ -17,7 +17,14 @@ public sealed class CoreException(string code, string messageKey, string fixArti
 }
 
 /// <summary>A snapshot of what the UI knows about core and the screens.</summary>
-public sealed record ConnectionSnapshot(bool Connected, bool EngineConnected, bool SafeMode, bool Live, ulong Generation);
+public sealed record ConnectionSnapshot(
+    bool Connected,
+    bool EngineConnected,
+    bool SafeMode,
+    bool Live,
+    ulong Generation,
+    ulong PreviewSceneRevision = 0,
+    bool FlashWarning = false);
 
 /// <summary>
 /// The UI's links to the other processes (ADR-001, ADR-004):
@@ -49,12 +56,16 @@ public sealed class CoreConnection : IAsyncDisposable, Selah.UI.ViewModels.IHelp
     {
         var actor = new Actor { UserId = "local-owner", DeviceId = "ui", Origin = ActorOrigin.Ui };
         var coreEndpoint = ns is null ? IpcEndpoint.ForCurrentUser(IpcService.Core) : IpcEndpoint.Create(ns, IpcService.Core);
+        Namespace = coreEndpoint.Namespace;
         core = new IpcClient(coreEndpoint, actor);
         watchdog = new IpcClient(coreEndpoint.Sibling(IpcService.Watchdog), actor);
         emergency = new IpcClient(coreEndpoint.Sibling(IpcService.Emergency), actor);
         core.StateChanged += OnCoreStateChanged;
         core.EnvelopeReceived += OnCoreEnvelope;
     }
+
+    /// <summary>The IPC / shared-memory namespace for this connection.</summary>
+    public string Namespace { get; }
 
     /// <summary>Raised (on a thread-pool thread) whenever the snapshot changes.</summary>
     public event EventHandler<ConnectionSnapshot>? Changed;
@@ -558,6 +569,32 @@ public sealed class CoreConnection : IAsyncDisposable, Selah.UI.ViewModels.IHelp
         return reply.Reply?.MediaThumbnail ?? new MediaThumbnail();
     }
 
+    public async Task<SceneThumbnail> RenderSceneThumbnailAsync(Scene scene, uint outputIndex = 0, uint maxWidth = 320, uint maxHeight = 180)
+    {
+        var reply = await RequestAsync(new Envelope
+        {
+            Query = new Query
+            {
+                RenderSceneThumbnail = new RenderSceneThumbnail
+                {
+                    Scene = scene,
+                    OutputIndex = outputIndex,
+                    MaxWidth = maxWidth,
+                    MaxHeight = maxHeight,
+                },
+            },
+        }, TimeSpan.FromSeconds(10)).ConfigureAwait(false);
+        return reply.Reply?.SceneThumbnail ?? new SceneThumbnail();
+    }
+
+    public async Task StagePreviewSceneAsync(Scene scene)
+    {
+        await RequestAsync(new Envelope
+        {
+            Command = new Command { StagePreviewScene = new StagePreviewScene { Scene = scene } },
+        }).ConfigureAwait(false);
+    }
+
     public async Task<ExportedSelahBundle> ExportSelahBundleAsync(ExportSelahBundle request)
     {
         var reply = await RequestAsync(new Envelope { Command = new Command { ExportSelahBundle = request } }, SlowRequestTimeout)
@@ -627,6 +664,149 @@ public sealed class CoreConnection : IAsyncDisposable, Selah.UI.ViewModels.IHelp
             },
         }).ConfigureAwait(false);
         return reply.Reply?.LibrarySearchResults ?? new LibrarySearchResults();
+    }
+
+    public async Task<IReadOnlyList<Template>> ListTemplatesAsync(uint limit = 200, uint offset = 0)
+    {
+        var reply = await RequestAsync(new Envelope { Query = new Query { ListTemplates = new ListTemplates { Limit = limit, Offset = offset } } })
+            .ConfigureAwait(false);
+        return reply.Reply?.TemplateList?.Templates.ToList() ?? [];
+    }
+
+    public async Task<Template?> GetTemplateAsync(Id id)
+    {
+        var reply = await RequestAsync(new Envelope { Query = new Query { GetTemplate = new GetTemplate { Id = id } } })
+            .ConfigureAwait(false);
+        return reply.Reply?.Template;
+    }
+
+    public async Task SaveTemplateAsync(Template template, Id? undoGroup = null)
+    {
+        if (template.Id is null || template.Id.Value.IsEmpty)
+        {
+            template.Id = LibraryIds.NewId();
+        }
+        foreach (var variant in template.Variants)
+        {
+            if (variant.Id is null || variant.Id.Value.IsEmpty)
+            {
+                variant.Id = LibraryIds.NewId();
+            }
+        }
+        var command = new Command { SaveTemplate = new SaveTemplate { Template = template } };
+        if (undoGroup is not null)
+        {
+            command.UndoGroup = undoGroup;
+        }
+        await RequestAsync(new Envelope { Command = command }).ConfigureAwait(false);
+    }
+
+    public async Task DeleteTemplateAsync(Id id, Id? undoGroup = null)
+    {
+        var command = new Command { DeleteTemplate = new DeleteTemplate { Id = id } };
+        if (undoGroup is not null)
+        {
+            command.UndoGroup = undoGroup;
+        }
+        await RequestAsync(new Envelope { Command = command }).ConfigureAwait(false);
+    }
+
+    public async Task<IReadOnlyList<Presentation>> ListPresentationsAsync(uint limit = 200, uint offset = 0)
+    {
+        var reply = await RequestAsync(new Envelope { Query = new Query { ListPresentations = new ListPresentations { Limit = limit, Offset = offset } } })
+            .ConfigureAwait(false);
+        return reply.Reply?.PresentationList?.Presentations.ToList() ?? [];
+    }
+
+    public async Task<Presentation?> GetPresentationAsync(Id id)
+    {
+        var reply = await RequestAsync(new Envelope { Query = new Query { GetPresentation = new GetPresentation { Id = id } } })
+            .ConfigureAwait(false);
+        return reply.Reply?.Presentation;
+    }
+
+    public async Task SavePresentationAsync(Presentation presentation, Id? undoGroup = null)
+    {
+        if (presentation.Id is null || presentation.Id.Value.IsEmpty)
+        {
+            presentation.Id = LibraryIds.NewId();
+        }
+        foreach (var slide in presentation.Slides)
+        {
+            if (slide.Id is null || slide.Id.Value.IsEmpty)
+            {
+                slide.Id = LibraryIds.NewId();
+            }
+        }
+        var command = new Command { SavePresentation = new SavePresentation { Presentation = presentation } };
+        if (undoGroup is not null)
+        {
+            command.UndoGroup = undoGroup;
+        }
+        await RequestAsync(new Envelope { Command = command }).ConfigureAwait(false);
+    }
+
+    public async Task DeletePresentationAsync(Id id, Id? undoGroup = null)
+    {
+        var command = new Command { DeletePresentation = new DeletePresentation { Id = id } };
+        if (undoGroup is not null)
+        {
+            command.UndoGroup = undoGroup;
+        }
+        await RequestAsync(new Envelope { Command = command }).ConfigureAwait(false);
+    }
+
+    public async Task<IReadOnlyList<OutputConfig>> GetOutputConfigsAsync()
+    {
+        var reply = await RequestAsync(new Envelope { Query = new Query { GetOutputConfigs = new GetOutputConfigs() } })
+            .ConfigureAwait(false);
+        return reply.Reply?.OutputConfigList?.Outputs.ToList() ?? [];
+    }
+
+    public async Task SetOutputConfigsAsync(IEnumerable<OutputConfig> outputs)
+    {
+        var cmd = new SetOutputConfigs();
+        cmd.Outputs.AddRange(outputs);
+        await RequestAsync(new Envelope { Command = new Command { SetOutputConfigs = cmd } }).ConfigureAwait(false);
+    }
+
+    public async Task<GetPolicySettingReply> GetPolicySettingAsync(string key)
+    {
+        var reply = await RequestAsync(new Envelope { Query = new Query { GetPolicySetting = new GetPolicySetting { Key = key } } })
+            .ConfigureAwait(false);
+        return reply.Reply?.PolicySetting ?? new GetPolicySettingReply();
+    }
+
+    public async Task SetPolicySettingAsync(string key, string valueJson, PolicyLevel level = PolicyLevel.User, bool locked = false)
+    {
+        await RequestAsync(new Envelope
+        {
+            Command = new Command
+            {
+                SetPolicySetting = new SetPolicySetting
+                {
+                    Key = key,
+                    ValueJson = valueJson,
+                    Level = level,
+                    Locked = locked,
+                },
+            },
+        }).ConfigureAwait(false);
+    }
+
+    public async Task<FlashRiskReport> AnalyzeFlashRiskAsync(AnalyzeFlashRisk request)
+    {
+        var reply = await RequestAsync(new Envelope { Query = new Query { AnalyzeFlashRisk = request } })
+            .ConfigureAwait(false);
+        return reply.Reply?.FlashRiskReport ?? new FlashRiskReport();
+    }
+
+    public async Task PresentSceneAsync(Scene scene)
+    {
+        await RequestAsync(new Envelope
+        {
+            Command = new Command { PresentScene = new PresentScene { Scene = scene } },
+        }).ConfigureAwait(false);
     }
 
     private Task<Envelope> RequestAsync(Envelope message) => RequestAsync(message, RequestTimeout);
@@ -699,7 +879,14 @@ public sealed class CoreConnection : IAsyncDisposable, Selah.UI.ViewModels.IHelp
         lock (gate)
         {
             status = current;
-            next = new ConnectionSnapshot(connected, connected && current.EngineConnected, current.SafeMode, connected && current.Live, generation);
+            next = new ConnectionSnapshot(
+                connected,
+                connected && current.EngineConnected,
+                current.SafeMode,
+                connected && current.Live,
+                generation,
+                current.PreviewSceneRevision,
+                connected && current.FlashWarning);
             if (next == snapshot)
             {
                 return;

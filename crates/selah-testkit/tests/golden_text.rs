@@ -32,6 +32,7 @@ fn scene(text: &str) -> Scene {
             width: 1920,
             height: 1080,
         }),
+        ..Default::default()
     }
 }
 

@@ -143,6 +143,10 @@ impl Stack {
             // Software rendering is deterministic and works on machines without a GPU.
             .env("SELAH_GPU", "software")
             .env(
+                "SELAH_AUDIO",
+                std::env::var("SELAH_AUDIO").unwrap_or_else(|_| "null".into()),
+            )
+            .env(
                 "SELAH_LOG",
                 std::env::var("SELAH_LOG").unwrap_or_else(|_| "info".into()),
             )

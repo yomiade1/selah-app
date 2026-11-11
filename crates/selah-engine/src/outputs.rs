@@ -108,7 +108,7 @@ pub fn apply_output_message(
 impl OutputSurface {
     /// Blit the composited output to this window and present it. False if nothing was shown.
     pub fn present(&mut self, gpu: &GpuCompositor) -> bool {
-        let Some(source) = gpu.output_view() else {
+        let Some(source) = gpu.output_view_for(self.id) else {
             return false;
         };
         let texture = match self.surface.get_current_texture() {
@@ -148,20 +148,20 @@ impl OutputSurface {
 pub const PREVIEW_WIDTH: u32 = 480;
 pub const PREVIEW_HEIGHT: u32 = 270;
 
-/// Writes downscaled copies of output 0 to the shared-memory ring for the UI (ADR-004).
+/// Writes downscaled copies of an output or staged preview to a shared-memory ring for the UI (ADR-004).
 pub struct PreviewWriter {
     ring: Option<selah_ipc::shm::RingWriter>,
 }
 
 impl PreviewWriter {
-    /// `<runtime>/<namespace>-preview-0.ring`. Previews are optional: a failure is logged.
-    pub fn open() -> Self {
+    /// `<runtime>/<namespace>-<suffix>`. Previews are optional: a failure is logged.
+    pub fn open_named(suffix: &str) -> Self {
         let ring = selah_ipc::runtime_dir().and_then(|dir| {
             let namespace = selah_ipc::Endpoint::for_current_user(selah_ipc::Service::Engine)
                 .namespace()
                 .to_owned();
             selah_ipc::shm::RingWriter::create(
-                &dir.join(format!("{namespace}-preview-0.ring")),
+                &dir.join(format!("{namespace}-{suffix}")),
                 3,
                 u64::from(PREVIEW_WIDTH * PREVIEW_HEIGHT * 4),
             )
@@ -169,10 +169,20 @@ impl PreviewWriter {
         match ring {
             Ok(ring) => Self { ring: Some(ring) },
             Err(error) => {
-                tracing::warn!(%error, "preview ring unavailable; the UI will show no preview");
+                tracing::warn!(%error, suffix, "preview ring unavailable; the UI will show no preview");
                 Self { ring: None }
             }
         }
+    }
+
+    /// `<runtime>/<namespace>-preview-0.ring` (program output 0).
+    pub fn open() -> Self {
+        Self::open_named("preview-0.ring")
+    }
+
+    /// `<runtime>/<namespace>-stage-0.ring` (isolated staged preview; SAFE-06).
+    pub fn open_stage() -> Self {
+        Self::open_named("stage-0.ring")
     }
 
     pub fn publish(&mut self, frame: &Frame, at: Duration) {

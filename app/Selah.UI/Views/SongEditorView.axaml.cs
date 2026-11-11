@@ -92,4 +92,12 @@ public sealed partial class SongEditorView : UserControl
             Model?.RemoveArrangementTokenCommand.Execute(token);
         }
     }
+
+    private void OnStageSlideClick(object? sender, RoutedEventArgs e)
+    {
+        if (sender is Control { DataContext: SlidePreviewCard slide })
+        {
+            Model?.StageSlideCommand.Execute(slide);
+        }
+    }
 }

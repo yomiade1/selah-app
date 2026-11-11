@@ -1,6 +1,7 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="using:Selah.UI.ViewModels"
+             xmlns:pb="using:Selah.Contracts.V1"
              xmlns:views="using:Selah.UI.Views"
              xmlns:s="using:Selah.UI.Services"
              x:Class="Selah.UI.Views.SongEditorView"
@@ -201,6 +202,12 @@
                 <TextBlock Classes="caption" Text="{Binding [editor-generated-eyebrow], Source={x:Static s:Localizer.Instance}}" />
                 <WrapPanel ItemSpacing="{DynamicResource Space.2}" VerticalAlignment="Center">
                   <TextBlock Name="SlidesSummaryText" Classes="title-2" VerticalAlignment="Center" Text="{Binding SlidesSummaryText}" />
+                  <Border Name="SongFitBadge" Background="{DynamicResource Brush.SuccessBg}"
+                          IsVisible="{Binding HasFitBadge}" CornerRadius="4" Padding="6,2">
+                    <TextBlock Name="SongFitBadgeText" Classes="caption"
+                               Foreground="{DynamicResource Brush.SuccessText}"
+                               Text="{Binding FitSummaryText}" />
+                  </Border>
                   <views:InfoButton Name="EditorSlidesInfoButton" Anchor="editor.slides" />
                 </WrapPanel>
               </StackPanel>
@@ -222,8 +229,22 @@
               </WrapPanel>
             </WrapPanel>
 
-            <CheckBox Name="ShowChordsCheckBox" IsChecked="{Binding ShowChords}"
-                      Content="{Binding [editor-show-chords], Source={x:Static s:Localizer.Instance}}" />
+            <WrapPanel ItemSpacing="12" LineSpacing="8" VerticalAlignment="Center">
+              <CheckBox Name="ShowChordsCheckBox" IsChecked="{Binding ShowChords}"
+                        Content="{Binding [editor-show-chords], Source={x:Static s:Localizer.Instance}}" />
+              <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                <TextBlock Classes="caption" VerticalAlignment="Center"
+                           Text="{Binding [editor-template-label], Source={x:Static s:Localizer.Instance}}" />
+                <ComboBox Name="SongEditorTemplateCombo" MinWidth="170"
+                          ItemsSource="{Binding AvailableTemplates}" SelectedItem="{Binding SelectedTemplate}">
+                  <ComboBox.ItemTemplate>
+                    <DataTemplate x:DataType="pb:Template">
+                      <TextBlock Text="{Binding Name}" />
+                    </DataTemplate>
+                  </ComboBox.ItemTemplate>
+                </ComboBox>
+              </StackPanel>
+            </WrapPanel>
 
             <ItemsControl Name="GeneratedSlidesGrid" ItemsSource="{Binding GeneratedSlides}">
               <ItemsControl.ItemsPanel>
@@ -243,18 +264,31 @@
                         <TextBlock Classes="label" Text="{Binding Header}" />
                       </DockPanel>
                       <Border Background="{DynamicResource Brush.PreviewBg}" CornerRadius="{DynamicResource Radius.Input}"
-                              Padding="8" MinHeight="88">
-                        <StackPanel Spacing="4">
-                          <TextBlock Foreground="{DynamicResource Brush.Warning}" Classes="caption"
-                                     IsVisible="{Binding HasChords}" Text="{Binding ChordsLine}" />
-                          <TextBlock Foreground="#FFFFFF" Text="{Binding Body}" TextWrapping="Wrap" />
-                          <TextBlock Foreground="#D1D1D6" Classes="caption" IsVisible="{Binding HasFooter}" Text="{Binding Footer}" />
-                        </StackPanel>
+                              Padding="4" MinHeight="104" ClipToBounds="True">
+                        <Panel>
+                          <Image Source="{Binding Thumbnail}" Stretch="Uniform" IsVisible="{Binding HasThumbnail}" />
+                          <StackPanel Spacing="4" Margin="4" IsVisible="{Binding !HasThumbnail}">
+                            <TextBlock Foreground="{DynamicResource Brush.Warning}" Classes="caption"
+                                       IsVisible="{Binding HasChords}" Text="{Binding ChordsLine}" />
+                            <TextBlock Foreground="#FFFFFF" Text="{Binding Body}" TextWrapping="Wrap" />
+                            <TextBlock Foreground="#D1D1D6" Classes="caption" IsVisible="{Binding HasFooter}" Text="{Binding Footer}" />
+                          </StackPanel>
+                        </Panel>
                       </Border>
-                      <Border Background="{DynamicResource Brush.SuccessBg}" CornerRadius="4" Padding="6,2" HorizontalAlignment="Left">
-                        <TextBlock Classes="caption" Foreground="{DynamicResource Brush.SuccessText}"
-                                   Text="{Binding [editor-fits-badge], Source={x:Static s:Localizer.Instance}}" />
-                      </Border>
+                      <WrapPanel ItemSpacing="6" LineSpacing="6" VerticalAlignment="Center">
+                        <Border Background="{DynamicResource Brush.SuccessBg}" CornerRadius="4" Padding="6,2">
+                          <TextBlock Classes="caption" Foreground="{DynamicResource Brush.SuccessText}"
+                                     Text="{Binding [editor-fits-badge], Source={x:Static s:Localizer.Instance}}" />
+                        </Border>
+                        <Border Background="{DynamicResource Brush.WarningBg}" CornerRadius="4" Padding="6,2"
+                                IsVisible="{Binding HasFlashWarning}">
+                          <TextBlock Classes="caption" Foreground="{DynamicResource Brush.Text}"
+                                     Text="{Binding [editor-flash-badge], Source={x:Static s:Localizer.Instance}}" />
+                        </Border>
+                        <Button Classes="quiet" Padding="8,2" MinHeight="24" Click="OnStageSlideClick">
+                          <TextBlock Classes="caption" Text="{Binding [editor-stage-slide], Source={x:Static s:Localizer.Instance}}" />
+                        </Button>
+                      </WrapPanel>
                     </StackPanel>
                   </Border>
                 </DataTemplate>

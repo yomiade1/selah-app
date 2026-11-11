@@ -560,4 +560,461 @@ public sealed class ContractTests
         };
         Assert.Equal(restoreReply, Envelope.Parser.ParseFrom(restoreReply.ToByteArray()));
     }
+
+    [Fact]
+    public void M3MultiOutputAndLayerMessagesRoundTrip()
+    {
+        var cfgCmd = new Envelope
+        {
+            Id = 4001,
+            Command = new Command
+            {
+                SetOutputConfigs = new SetOutputConfigs
+                {
+                    Outputs =
+                    {
+                        new OutputConfig
+                        {
+                            OutputIndex = 0,
+                            Name = "Main Hall",
+                            Role = OutputRole.Main,
+                            Resolution = new Resolution { Width = 1920, Height = 1080 },
+                            Enabled = true,
+                            RefreshRateMhz = 60000,
+                        },
+                        new OutputConfig
+                        {
+                            OutputIndex = 1,
+                            Name = "LED Wall",
+                            Role = OutputRole.Main,
+                            Resolution = new Resolution { Width = 3840, Height = 1080 },
+                            Enabled = true,
+                            RefreshRateMhz = 60000,
+                        },
+                    },
+                },
+            },
+        };
+        Assert.Equal(cfgCmd, Envelope.Parser.ParseFrom(cfgCmd.ToByteArray()));
+
+        var presentCmd = new Envelope
+        {
+            Id = 4002,
+            Command = new Command
+            {
+                PresentScene = new PresentScene
+                {
+                    Scene = new Scene
+                    {
+                        Revision = 12,
+                        Outputs =
+                        {
+                            new OutputScene
+                            {
+                                OutputIndex = 0,
+                                Role = OutputRole.Main,
+                                Resolution = new Resolution { Width = 1920, Height = 1080 },
+                                Transition = new TransitionSpec
+                                {
+                                    Kind = TransitionKind.Fade,
+                                    DurationMs = 400,
+                                    Easing = TransitionEasing.EaseInOut,
+                                },
+                                Layers =
+                                {
+                                    new LayerSpec
+                                    {
+                                        Kind = LayerKind.Media,
+                                        Enabled = true,
+                                        Media = new MediaLayerSpec
+                                        {
+                                            Gradient = new GradientSpec
+                                            {
+                                                Kind = GradientKind.Linear,
+                                                AngleDegrees = 45,
+                                                Stops =
+                                                {
+                                                    new ColorStop
+                                                    {
+                                                        Color = new Color { Red = 0.1f, Green = 0.2f, Blue = 0.5f, Alpha = 1.0f },
+                                                        Position = 0.0f,
+                                                    },
+                                                    new ColorStop
+                                                    {
+                                                        Color = new Color { Red = 0.0f, Green = 0.0f, Blue = 0.1f, Alpha = 1.0f },
+                                                        Position = 1.0f,
+                                                    },
+                                                },
+                                            },
+                                            Fit = MediaFitMode.Fill,
+                                        },
+                                    },
+                                    new LayerSpec
+                                    {
+                                        Kind = LayerKind.Slide,
+                                        Enabled = true,
+                                        Slide = new SlideLayerSpec
+                                        {
+                                            Text = "Great is Thy faithfulness",
+                                            TitleText = "Hymn",
+                                        },
+                                    },
+                                    new LayerSpec
+                                    {
+                                        Kind = LayerKind.Props,
+                                        Enabled = true,
+                                        Props = new PropsLayerSpec { Label = "LIVE" },
+                                    },
+                                    new LayerSpec
+                                    {
+                                        Kind = LayerKind.Messages,
+                                        Enabled = true,
+                                        Messages = new MessagesLayerSpec { Text = "Nursery 4", Ticker = false },
+                                    },
+                                },
+                            },
+                        },
+                        PreloadItems =
+                        {
+                            new PreloadHint
+                            {
+                                Key = "slide-2",
+                                OutputIndex = 0,
+                                Resolution = new Resolution { Width = 1920, Height = 1080 },
+                                Text = "Morning by morning",
+                            },
+                        },
+                    },
+                },
+            },
+        };
+        Assert.Equal(presentCmd, Envelope.Parser.ParseFrom(presentCmd.ToByteArray()));
+
+        var statusReply = new Envelope
+        {
+            Id = 4003,
+            CorrelationId = 4002,
+            Reply = new Reply
+            {
+                Status = new Status
+                {
+                    Connected = true,
+                    Live = true,
+                    SceneRevision = 12,
+                    PreviewSceneRevision = 4,
+                    OutputStatuses =
+                    {
+                        new OutputFrameStatus
+                        {
+                            OutputIndex = 0,
+                            SceneRevision = 12,
+                            Resolution = new Resolution { Width = 1920, Height = 1080 },
+                            Live = true,
+                        },
+                    },
+                },
+            },
+        };
+        Assert.Equal(statusReply, Envelope.Parser.ParseFrom(statusReply.ToByteArray()));
+    }
+
+    [Fact]
+    public void M3MetricFitMessagesRoundTrip()
+    {
+        var tmplId = ByteString.CopyFrom(new byte[]
+        {
+            0x01, 0x92, 0x70, 0x00, 0x00, 0x00, 0x70, 0x00,
+            0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x11,
+        });
+
+        var splitSongQuery = new Envelope
+        {
+            Id = 4101,
+            Query = new Query
+            {
+                SplitSongSlides = new SplitSongSlides
+                {
+                    Song = new Song { Id = new Id { Value = tmplId }, Title = "Grace" },
+                    MaxLines = 4,
+                    ShrinkToFit = true,
+                    TemplateId = new Id { Value = tmplId },
+                    StyleJson = "{\"name\":\"Sanctuary\"}",
+                    TargetOutputs =
+                    {
+                        new FitTargetOutput
+                        {
+                            OutputIndex = 0,
+                            Name = "Main",
+                            Role = OutputRole.Main,
+                            Resolution = new Resolution { Width = 1920, Height = 1080 },
+                            MaxLinesOverride = 4,
+                        },
+                        new FitTargetOutput
+                        {
+                            OutputIndex = 1,
+                            Name = "LED",
+                            Role = OutputRole.Main,
+                            Resolution = new Resolution { Width = 3840, Height = 1080 },
+                            MaxLinesOverride = 2,
+                        },
+                    },
+                },
+            },
+        };
+        Assert.Equal(splitSongQuery, Envelope.Parser.ParseFrom(splitSongQuery.ToByteArray()));
+
+        var splitSongReply = new Envelope
+        {
+            Id = 4102,
+            CorrelationId = 4101,
+            Reply = new Reply
+            {
+                GeneratedSongSlides = new GeneratedSongSlides
+                {
+                    CopyrightLine = "Grace",
+                    Slides =
+                    {
+                        new GeneratedSlide
+                        {
+                            SectionLabel = "Verse 1",
+                            PartIndex = 1,
+                            PartCount = 1,
+                            AppliedSize = 64.0f,
+                            Lines = { new LyricLine { Text = "Amazing grace" } },
+                        },
+                    },
+                    FitReports =
+                    {
+                        new OutputFitReport
+                        {
+                            OutputIndex = 0,
+                            OutputName = "Main",
+                            Resolution = new Resolution { Width = 1920, Height = 1080 },
+                            MatchedVariant = "16:9",
+                            Fits = true,
+                            AppliedSize = 64.0f,
+                            MinSize = 32.0f,
+                            OriginalSlideCount = 1,
+                            FinalSlideCount = 1,
+                            ExtraSplits = 0,
+                            OverflowsSafeArea = false,
+                            Summary = "Fits",
+                        },
+                    },
+                    PerOutputSlides =
+                    {
+                        new OutputFittedSongSlides
+                        {
+                            OutputIndex = 0,
+                            Slides =
+                            {
+                                new GeneratedSlide { SectionLabel = "Verse 1", AppliedSize = 64.0f },
+                            },
+                        },
+                    },
+                },
+            },
+        };
+        Assert.Equal(splitSongReply, Envelope.Parser.ParseFrom(splitSongReply.ToByteArray()));
+
+        var splitScriptureReply = new Envelope
+        {
+            Id = 4103,
+            CorrelationId = 4101,
+            Reply = new Reply
+            {
+                GeneratedScriptureSlides = new GeneratedScriptureSlides
+                {
+                    Translation = "KJV",
+                    Slides =
+                    {
+                        new GeneratedScriptureSlide
+                        {
+                            Reference = "John 3:16 (KJV)",
+                            PartIndex = 1,
+                            PartCount = 1,
+                            AppliedSize = 56.0f,
+                            Lines = { "For God so loved the world" },
+                        },
+                    },
+                    FitReports =
+                    {
+                        new OutputFitReport
+                        {
+                            OutputIndex = 0,
+                            OutputName = "Main",
+                            Resolution = new Resolution { Width = 1920, Height = 1080 },
+                            Fits = true,
+                            AppliedSize = 56.0f,
+                            MinSize = 28.0f,
+                            OriginalSlideCount = 1,
+                            FinalSlideCount = 1,
+                            WarningCodes = { "SHRUNK_TO_FIT" },
+                            Summary = "Shrunk to fit",
+                        },
+                    },
+                    PerOutputSlides =
+                    {
+                        new OutputFittedScriptureSlides
+                        {
+                            OutputIndex = 0,
+                            Slides = { new GeneratedScriptureSlide { AppliedSize = 56.0f } },
+                        },
+                    },
+                },
+            },
+        };
+        Assert.Equal(splitScriptureReply, Envelope.Parser.ParseFrom(splitScriptureReply.ToByteArray()));
+    }
+
+    [Fact]
+    public void M35FlashWarningAndTransitionsEffectsRoundTrip()
+    {
+        var flashQuery = new Envelope
+        {
+            Id = 5101,
+            Query = new Query
+            {
+                AnalyzeFlashRisk = new AnalyzeFlashRisk
+                {
+                    Transition = new TransitionSpec
+                    {
+                        Kind = TransitionKind.FadeThroughBlack,
+                        DurationMs = 200,
+                        Direction = TransitionDirection.Left,
+                        Easing = TransitionEasing.EaseInOut,
+                    },
+                    RepeatCadenceMs = 150,
+                    FlashesPerSecondHint = 5.0f,
+                },
+            },
+        };
+        Assert.Equal(flashQuery, Envelope.Parser.ParseFrom(flashQuery.ToByteArray()));
+
+        var flashReply = new Envelope
+        {
+            Id = 5102,
+            CorrelationId = 5101,
+            Reply = new Reply
+            {
+                FlashRiskReport = new FlashRiskReport
+                {
+                    FlashWarning = true,
+                    FlashesPerSecond = 5.0f,
+                    SaturatedRedRisk = false,
+                    Reason = "Exceeds 3 flashes per second",
+                    WarningCodes = { "FLASH_WARNING" },
+                },
+            },
+        };
+        Assert.Equal(flashReply, Envelope.Parser.ParseFrom(flashReply.ToByteArray()));
+
+        var statusWithFlash = new Envelope
+        {
+            Id = 5103,
+            Event = new Event
+            {
+                Status = new Status
+                {
+                    Connected = true,
+                    Live = true,
+                    FlashWarning = true,
+                    OutputStatuses =
+                    {
+                        new OutputFrameStatus
+                        {
+                            OutputIndex = 0,
+                            SceneRevision = 9,
+                            Live = true,
+                            FlashWarning = true,
+                        },
+                    },
+                },
+            },
+        };
+        Assert.Equal(statusWithFlash, Envelope.Parser.ParseFrom(statusWithFlash.ToByteArray()));
+    }
+
+    [Fact]
+    public void M36SceneThumbnailRoundTrip()
+    {
+        var thumbQuery = new Envelope
+        {
+            Id = 6101,
+            Query = new Query
+            {
+                RenderSceneThumbnail = new RenderSceneThumbnail
+                {
+                    OutputIndex = 0,
+                    MaxWidth = 320,
+                    MaxHeight = 180,
+                    Scene = new Scene
+                    {
+                        Revision = 3,
+                        Outputs =
+                        {
+                            new OutputScene
+                            {
+                                OutputIndex = 0,
+                                Role = OutputRole.Main,
+                                Resolution = new Resolution { Width = 1920, Height = 1080 },
+                                Layers =
+                                {
+                                    new LayerSpec
+                                    {
+                                        Kind = LayerKind.Slide,
+                                        Enabled = true,
+                                        Slide = new SlideLayerSpec { Text = "Blessed Assurance" },
+                                    },
+                                },
+                            },
+                        },
+                    },
+                },
+            },
+        };
+        Assert.Equal(thumbQuery, Envelope.Parser.ParseFrom(thumbQuery.ToByteArray()));
+
+        var thumbReply = new Envelope
+        {
+            Id = 6102,
+            CorrelationId = 6101,
+            Reply = new Reply
+            {
+                SceneThumbnail = new SceneThumbnail
+                {
+                    PngBytes = ByteString.CopyFrom(new byte[] { 0x89, 0x50, 0x4E, 0x47 }),
+                    Width = 320,
+                    Height = 180,
+                    CacheKey = "abc123",
+                    FlashWarning = true,
+                },
+            },
+        };
+        Assert.Equal(thumbReply, Envelope.Parser.ParseFrom(thumbReply.ToByteArray()));
+
+        var diagReply = new Envelope
+        {
+            Id = 6103,
+            CorrelationId = 6101,
+            Reply = new Reply
+            {
+                DiagnosticsReport = new DiagnosticsReport
+                {
+                    Path = "C:/support/selah-diagnostics.json",
+                    IpcP99Ms = 0.096,
+                    IpcPass = true,
+                    VideoClip = "hevc-2160p60.mp4",
+                    VideoDecode = "d3d11va",
+                    VideoFrames = 60,
+                    VideoDropped = 0,
+                    VideoCompositeP99Ms = 13.5,
+                    VideoPass = false,
+                    M3P99Ms = 14.8,
+                    M3Pass = false,
+                },
+            },
+        };
+        Assert.Equal(diagReply, Envelope.Parser.ParseFrom(diagReply.ToByteArray()));
+    }
 }

@@ -7,6 +7,16 @@ import {
     ActorOrigin,
 } from "../dist/gen/selah/v1/envelope_pb.js";
 import {
+    EffectKind,
+    GradientKind,
+    LayerKind,
+    MediaFitMode,
+    OutputRole,
+    TransitionDirection,
+    TransitionEasing,
+    TransitionKind,
+} from "../dist/gen/selah/v1/render_pb.js";
+import {
     AccidentalSpelling,
     BibleFormat,
     CopyrightPlacement,
@@ -636,5 +646,378 @@ test("M2 media and library exchange messages round-trip", () => {
     assert.deepEqual(
         fromBinary(EnvelopeSchema, toBinary(EnvelopeSchema, restoreCmd)),
         restoreCmd,
+    );
+});
+
+test("M3 multi-output and 5-layer scene messages round-trip", () => {
+    const setOutputsCmd = create(EnvelopeSchema, {
+        id: 4001n,
+        body: {
+            case: "command",
+            value: {
+                action: {
+                    case: "setOutputConfigs",
+                    value: {
+                        outputs: [
+                            {
+                                outputIndex: 0,
+                                name: "Main Hall",
+                                role: OutputRole.MAIN,
+                                resolution: { width: 1920, height: 1080 },
+                                enabled: true,
+                                refreshRateMhz: 60000,
+                            },
+                            {
+                                outputIndex: 1,
+                                name: "LED Wall",
+                                role: OutputRole.MAIN,
+                                resolution: { width: 3840, height: 1080 },
+                                enabled: true,
+                                refreshRateMhz: 60000,
+                            },
+                        ],
+                    },
+                },
+            },
+        },
+    });
+    assert.deepEqual(
+        fromBinary(EnvelopeSchema, toBinary(EnvelopeSchema, setOutputsCmd)),
+        setOutputsCmd,
+    );
+
+    const presentCmd = create(EnvelopeSchema, {
+        id: 4002n,
+        body: {
+            case: "command",
+            value: {
+                action: {
+                    case: "presentScene",
+                    value: {
+                        scene: {
+                            revision: 8n,
+                            outputs: [
+                                {
+                                    outputIndex: 0,
+                                    role: OutputRole.MAIN,
+                                    resolution: { width: 1920, height: 1080 },
+                                    transition: {
+                                        kind: TransitionKind.FADE,
+                                        durationMs: 350,
+                                        easing: TransitionEasing.EASE_IN_OUT,
+                                    },
+                                    layers: [
+                                        {
+                                            kind: LayerKind.MEDIA,
+                                            enabled: true,
+                                            content: {
+                                                case: "media",
+                                                value: {
+                                                    fit: MediaFitMode.FILL,
+                                                    gradient: {
+                                                        kind: GradientKind.LINEAR,
+                                                        angleDegrees: 90,
+                                                        stops: [
+                                                            {
+                                                                color: {
+                                                                    red: 0.125,
+                                                                    green: 0.25,
+                                                                    blue: 0.75,
+                                                                    alpha: 1,
+                                                                },
+                                                                position: 0,
+                                                            },
+                                                        ],
+                                                    },
+                                                },
+                                            },
+                                        },
+                                        {
+                                            kind: LayerKind.SLIDE,
+                                            enabled: true,
+                                            content: {
+                                                case: "slide",
+                                                value: {
+                                                    text: "How great Thou art",
+                                                },
+                                            },
+                                        },
+                                    ],
+                                },
+                            ],
+                        },
+                    },
+                },
+            },
+        },
+    });
+    assert.deepEqual(
+        fromBinary(EnvelopeSchema, toBinary(EnvelopeSchema, presentCmd)),
+        presentCmd,
+    );
+});
+
+test("M3 metric fit request and fit reports round-trip", () => {
+    const splitQuery = create(EnvelopeSchema, {
+        id: 4101n,
+        body: {
+            case: "query",
+            value: {
+                request: {
+                    case: "splitSongSlides",
+                    value: {
+                        maxLines: 4,
+                        shrinkToFit: true,
+                        styleJson: '{"name":"Sanctuary"}',
+                        targetOutputs: [
+                            {
+                                outputIndex: 0,
+                                name: "Main",
+                                role: OutputRole.MAIN,
+                                resolution: { width: 1920, height: 1080 },
+                                maxLinesOverride: 4,
+                            },
+                            {
+                                outputIndex: 1,
+                                name: "LED",
+                                role: OutputRole.MAIN,
+                                resolution: { width: 3840, height: 1080 },
+                                maxLinesOverride: 2,
+                            },
+                        ],
+                    },
+                },
+            },
+        },
+    });
+    assert.deepEqual(
+        fromBinary(EnvelopeSchema, toBinary(EnvelopeSchema, splitQuery)),
+        splitQuery,
+    );
+
+    const fitReply = create(EnvelopeSchema, {
+        id: 4102n,
+        correlationId: 4101n,
+        body: {
+            case: "reply",
+            value: {
+                result: {
+                    case: "generatedSongSlides",
+                    value: {
+                        copyrightLine: "Grace",
+                        fitReports: [
+                            {
+                                outputIndex: 0,
+                                outputName: "Main",
+                                resolution: { width: 1920, height: 1080 },
+                                matchedVariant: "16:9",
+                                fits: true,
+                                appliedSize: 64,
+                                minSize: 32,
+                                originalSlideCount: 1,
+                                finalSlideCount: 2,
+                                extraSplits: 1,
+                                overflowsSafeArea: false,
+                                warningCodes: ["EXTRA_SPLIT"],
+                                summary: "Split cleanly",
+                            },
+                        ],
+                    },
+                },
+            },
+        },
+    });
+    assert.deepEqual(
+        fromBinary(EnvelopeSchema, toBinary(EnvelopeSchema, fitReply)),
+        fitReply,
+    );
+});
+
+test("M3.5 flash warning, transitions and effects round trip", () => {
+    const query = create(EnvelopeSchema, {
+        id: 5101n,
+        body: {
+            case: "query",
+            value: {
+                request: {
+                    case: "analyzeFlashRisk",
+                    value: {
+                        transition: {
+                            kind: TransitionKind.WIPE,
+                            durationMs: 250,
+                            direction: TransitionDirection.RIGHT,
+                            easing: TransitionEasing.EASE_OUT,
+                        },
+                        repeatCadenceMs: 120,
+                        flashesPerSecondHint: 4.5,
+                    },
+                },
+            },
+        },
+    });
+    assert.deepEqual(
+        fromBinary(EnvelopeSchema, toBinary(EnvelopeSchema, query)),
+        query,
+    );
+
+    const status = create(EnvelopeSchema, {
+        id: 5102n,
+        body: {
+            case: "event",
+            value: {
+                notification: {
+                    case: "status",
+                    value: {
+                        connected: true,
+                        live: true,
+                        flashWarning: true,
+                        outputStatuses: [
+                            {
+                                outputIndex: 0,
+                                sceneRevision: 5n,
+                                live: true,
+                                flashWarning: true,
+                            },
+                        ],
+                    },
+                },
+            },
+        },
+    });
+    assert.deepEqual(
+        fromBinary(EnvelopeSchema, toBinary(EnvelopeSchema, status)),
+        status,
+    );
+
+    const sceneCmd = create(EnvelopeSchema, {
+        id: 5103n,
+        body: {
+            case: "command",
+            value: {
+                action: {
+                    case: "presentScene",
+                    value: {
+                        scene: {
+                            outputs: [
+                                {
+                                    outputIndex: 0,
+                                    effects: [
+                                        {
+                                            kind: EffectKind.VIGNETTE,
+                                            enabled: true,
+                                            intensity: 0.75,
+                                            paramsJson: '{"softness":0.4}',
+                                        },
+                                    ],
+                                },
+                            ],
+                        },
+                    },
+                },
+            },
+        },
+    });
+    assert.deepEqual(
+        fromBinary(EnvelopeSchema, toBinary(EnvelopeSchema, sceneCmd)),
+        sceneCmd,
+    );
+});
+
+test("M3.6 scene thumbnail query and reply round trip", () => {
+    const query = create(EnvelopeSchema, {
+        id: 6101n,
+        body: {
+            case: "query",
+            value: {
+                request: {
+                    case: "renderSceneThumbnail",
+                    value: {
+                        outputIndex: 0,
+                        maxWidth: 320,
+                        maxHeight: 180,
+                        scene: {
+                            revision: 3n,
+                            outputs: [
+                                {
+                                    outputIndex: 0,
+                                    role: OutputRole.MAIN,
+                                    resolution: { width: 1920, height: 1080 },
+                                    layers: [
+                                        {
+                                            kind: LayerKind.SLIDE,
+                                            enabled: true,
+                                            content: {
+                                                case: "slide",
+                                                value: {
+                                                    text: "Blessed Assurance",
+                                                },
+                                            },
+                                        },
+                                    ],
+                                },
+                            ],
+                        },
+                    },
+                },
+            },
+        },
+    });
+    assert.deepEqual(
+        fromBinary(EnvelopeSchema, toBinary(EnvelopeSchema, query)),
+        query,
+    );
+
+    const reply = create(EnvelopeSchema, {
+        id: 6102n,
+        correlationId: 6101n,
+        body: {
+            case: "reply",
+            value: {
+                result: {
+                    case: "sceneThumbnail",
+                    value: {
+                        pngBytes: new Uint8Array([0x89, 0x50, 0x4e, 0x47]),
+                        width: 320,
+                        height: 180,
+                        cacheKey: "abc123",
+                        flashWarning: true,
+                    },
+                },
+            },
+        },
+    });
+    assert.deepEqual(
+        fromBinary(EnvelopeSchema, toBinary(EnvelopeSchema, reply)),
+        reply,
+    );
+
+    const diagnosticsReply = create(EnvelopeSchema, {
+        id: 6103n,
+        correlationId: 6101n,
+        body: {
+            case: "reply",
+            value: {
+                result: {
+                    case: "diagnosticsReport",
+                    value: {
+                        path: "C:/support/selah-diagnostics.json",
+                        ipcP99Ms: 0.096,
+                        ipcPass: true,
+                        videoClip: "hevc-2160p60.mp4",
+                        videoDecode: "d3d11va",
+                        videoFrames: 60n,
+                        videoDropped: 0n,
+                        videoCompositeP99Ms: 13.5,
+                        videoPass: false,
+                        m3P99Ms: 14.8,
+                        m3Pass: false,
+                    },
+                },
+            },
+        },
+    });
+    assert.deepEqual(
+        fromBinary(EnvelopeSchema, toBinary(EnvelopeSchema, diagnosticsReply)),
+        diagnosticsReply,
     );
 });

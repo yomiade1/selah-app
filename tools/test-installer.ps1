@@ -63,7 +63,7 @@ try {
     if ($install.ExitCode -ne 0) { Fail "Setup.exe exited with $($install.ExitCode)." }
 
     $current = Join-Path $root 'current'
-    foreach ($file in 'selah.exe', 'selah-watchdog.exe', 'selah-core.exe', 'selah-engine.exe', 'selah-bench.exe', 'selah-media-worker.exe', 'kb.db', 'ui/Selah.exe', 'vcruntime140.dll', 'fonts/notosans/NotoSans[wdth,wght].ttf', 'bench/h264-1080p60.mp4') {
+    foreach ($file in 'selah.exe', 'selah-watchdog.exe', 'selah-core.exe', 'selah-engine.exe', 'selah-bench.exe', 'selah-media-worker.exe', 'kb.db', 'ui/Selah.exe', 'vcruntime140.dll', 'fonts/notosans/NotoSans[wdth,wght].ttf', 'fonts/inter/Inter[opsz,wght].ttf', 'fonts/manrope/Manrope[wght].ttf', 'bench/h264-1080p60.mp4') {
         if (-not (Test-Path -LiteralPath (Join-Path $current $file))) { Fail "The installed copy has no $file." }
     }
 

@@ -297,8 +297,10 @@ async fn follow_engine(shared: Arc<Shared>) {
                 let updates = shared.service.lock().await.on_engine_connection(current.connected);
                 if current.connected && current.generation != seen_generation {
                     seen_generation = current.generation;
-                    let resync = shared.service.lock().await.resync_command();
-                    shared.send_to_engine(resync).await;
+                    let commands = shared.service.lock().await.resync_commands();
+                    for resync in commands {
+                        shared.send_to_engine(resync).await;
+                    }
                     tracing::info!(generation = current.generation, "engine connected; scene re-sent");
                 }
                 shared.broadcast(updates).await;

@@ -1,4 +1,4 @@
-# Command bus (M1, extended in M2.2–M2.6)
+# Command bus (M1, extended in M2.2–M2.6 and M3.1–M3.7)
 
 How Selah's processes talk: the envelope, the commands, queries and events, how errors come back, and how the IPC behaves. Contracts: `proto/selah/v1/` (ADR-003).
 Transport and security: [foundations.md](foundations.md) §IPC (SEC-02, SEC-03).
@@ -10,11 +10,11 @@ Each user has one namespace (`Endpoint::for_current_user`); tests use their own.
 | Endpoint | Server | Clients | Accepts |
 |---|---|---|---|
 | core | `selah-core` | UI, `selah-bench`, tests | Commands and queries below; `Subscribe` for events |
-| engine | `selah-engine` | core | `RenderCommand`s; `GetStatus`; `Subscribe` for `FrameShown` |
+| engine | `selah-engine` | core | `RenderCommand`s (`SetScene`, `ClearEverything`, `ShowLogo`, `SetPreviewScene`, `PreloadItems`, `SetOutputConfigs`); `GetStatus`; `Subscribe` for `FrameShown` |
 | emergency | `selah-engine` | UI | Only `Render{ClearEverything}` and `Render{ShowLogo}` from a UI actor; anything else closes the connection (SAFE-03) |
 | watchdog | `selah-watchdog` | every process | `Heartbeat` events (250 ms), `GetWatchdogStatus`, `RestartNormally` from the UI |
 
-Shared memory: the engine writes preview frames to `<namespace>-preview-0.ring` (ADR-004).
+Shared memory: the engine writes per-output Program preview frames to `<namespace>-preview-{n}.ring` (480×270 BGRA) and Staged Next preview frames to `<namespace>-stage-0.ring` (`M3.6`, ADR-004).
 
 ## Envelope
 
@@ -29,16 +29,20 @@ Envelope { id, correlation_id, actor: Actor { user_id, device_id, origin }, body
 
 ## Commands (UI → core)
 
-Every command passes `permissions::authorize` first. In M1 the local owner (origins `UI` and
-`Tour`) may run every command except `Render`; internal and not-yet-built origins (API, MIDI,
-macro, timeline, sync) are refused with `SEL-SEC-0001`. A new command must be added to
-`CommandKind`; the exhaustive match makes forgetting it a compile error, and the matrix test
-covers every origin × command.
+Every command passes `permissions::authorize` first. In M1–M3 the local owner (origins `UI` and
+`Tour`) may run every command except `Render` (38 commands in `CommandKind` as of M3); internal and
+not-yet-built origins (API, MIDI, macro, timeline, sync) are refused with `SEL-SEC-0001`. A new
+command must be added to `CommandKind`; the exhaustive match makes forgetting it a compile error,
+and the matrix test covers every origin × command.
 
 | Command | Changes the screens | Reply | Notes |
 |---|---|---|---|
 | `ShowTestPattern { pattern }` | yes | `acknowledged` | Live state changes, the scene goes to the engine, status is broadcast |
 | `ClearOutputs {}` | yes | `acknowledged` | The normal-path clear (the emergency lane is separate) |
+| `SetOutputConfigs { outputs }` | no (reconfigures engine outputs) | `acknowledged` / `SEL-OUT-*` | Updates per-output role/resolution/display/template configuration and forwards to `selah-engine` (`M3.1`) |
+| `PresentScene { scene }` | yes | `acknowledged` / `SEL-SEC-0001`, `SEL-IPC-0002` | Validates layers/effects/media bounds (`SEC-03`, `SEC-04`) and presents a multi-output scene directly on Program outputs (`M3.1`–`M3.7`) |
+| `StagePreviewScene { scene }` | no (stages next preview) | `acknowledged` / `SEL-IPC-0002` | Sends a preview scene (`is_preview = true`) to the engine's isolated `<ns>-stage-0.ring` without mutating live outputs (`M3.6`) |
+| `PreloadItems { items }` | no | `acknowledged` | Warms Skia text/element overlay caches and upcoming media hints on the engine before a transition (`M3.1`) |
 | `SetAppearance { appearance }` | no | `acknowledged` / `SEL-SET-0001` | Text size steps 90–200 % (ADR-009) |
 | `RecordFeedback` | no | `acknowledged` | Stored in `help_feedback` from M2.2 |
 | `SaveSong`, `DeleteSong`, `SaveTemplate`, `DeleteTemplate`, `SaveMediaItem`, `DeleteMediaItem`, `SavePresentation`, `DeletePresentation`, `SaveTag`, `DeleteTag` | no | `acknowledged` / `SEL-LIB-*` | Transactional library mutations with op log (`ops`), undo/redo inverses (`undo_entries`), idempotence (`command_idempotency`), and optional `undo_group` (`Command.undo_group`, field 100). Emits `LibraryChanged` + `UndoStateChanged` |
@@ -46,14 +50,14 @@ covers every origin × command.
 | `SaveEditorBuffer`, `DiscardEditorBuffer` | no | `acknowledged` / `SEL-LIB-0002` | Crash-safe autosave buffer (`editor_buffers`), not added to undo stack |
 | `SetPolicySetting`, `RemovePolicySetting` | no | `acknowledged` / `SEL-LIB-0003` | Policy settings (`User`, `Machine`, `Organisation`); refuses user overrides on locked keys |
 | `ImportBible`, `DeleteBible` | no | `BibleTranslation` / `acknowledged` | Bounded OSIS/USFM/Zefania Bible import or removal in `library/bibles/` (`M2.5`) |
-| `ImportMedia` | no | `MediaItem` / `SEL-LIB-0002` | Probes local file via `selah-media-worker`, verifies BLAKE3 blob, caches PNG thumbnail, saves undoable `MediaItem` (`M2.6`) |
+| `ImportMedia` | no | `MediaItem` / `SEL-LIB-0002` | Probes local file via `selah-media-worker`, runs bounded WCAG 2.3.1 flash scan (`Flashing` tag / `flash_warning`), verifies BLAKE3 blob, caches PNG thumbnail, saves undoable `MediaItem` (`M2.6`, `M3.5`) |
 | `ExportSelahBundle`, `ImportSelahBundle` | no | `ExportedSelahBundle` / `ImportedSelahBundle` | Exports or imports canonical timestamp-free `.selah` bundles; bundle imports run in one transaction + `undo_group` (`M2.6`) |
 | `CreateLibraryBackup`, `RestoreLibraryBackup` | no | `LibraryBackupInfo` / `RestoreLibraryBackupResult` | Creates verified full library backups (DB, media, Bibles) or restores with staging validation and rollback (`M2.6`) |
 | `SetUpdateSettings { update_feed_url, allow_update_check }` | no | `acknowledged` / `SEL-SET-0001` | Sets the network policy (SEC-13) |
 | `CheckForUpdate {}` | no | `UpdateCheck` / `SEL-UPD-*` | Slow work |
 | `InstallUpdate { version }` | no | `acknowledged` / `SEL-UPD-*` | Refused while live; slow work |
 | `CreateSupportBundle {}` | no | `SupportBundle { path, report_url }` / `SEL-SUP-0001` | Slow work |
-| `RunDiagnostics { quick }` | no | `DiagnosticsReport` / `SEL-DIAG-*` | Refused while live; slow work |
+| `RunDiagnostics { quick }` | no | `DiagnosticsReport { ..., m3_p99_ms, m3_pass }` / `SEL-DIAG-*` | Refused while live; slow work (`M1.13`, `M3-A6`) |
 | `RestartNormally {}` | no | `SEL-IPC-0001` from core | Sent to the watchdog, which restarts core and the UI without safe mode |
 | `Render` | — | `SEL-SEC-0001` | Only core produces render commands |
 
@@ -61,19 +65,22 @@ covers every origin × command.
 
 | Query | Reply |
 |---|---|
-| `GetStatus` | `Status { connected, safe_mode, scene_revision, engine_connected, engine_scene_revision, frame_checksum, version, live }` (the engine adds `renderer` and `output_resolution`) |
+| `GetStatus` | `Status { connected, safe_mode, scene_revision, engine_connected, engine_scene_revision, frame_checksum, version, live, output_statuses, preview_scene_revision, flash_warning }` (the engine adds `renderer` and `output_resolution`) |
 | `GetSettings` | `Settings` |
 | `Subscribe` | `Status`; then the connection receives events |
 | `SearchHelp`, `HelpForContext`, `GetArticle` | `HelpResults` / `Article` / `SEL-HELP-0001` |
 | `GetDiagnostics` | `Diagnostics` (core asks the engine for its part) |
+| `GetOutputConfigs` | `OutputConfigList` (per-output resolutions, roles, and assigned `template_id`, `M3.1`) |
+| `AnalyzeFlashRisk` | `FlashRiskReport { flash_warning, flashes_per_second, saturated_red_risk, reason, warning_codes }` (`SAFE-04`, `M3.5`) |
+| `RenderSceneThumbnail` | `SceneThumbnail { png_bytes, width, height, cache_key, flash_warning }` (content-addressed cached offscreen render, `M3.6`) |
 | `GetSong`, `ListSongs`, `GetTemplate`, `ListTemplates`, `GetMediaItem`, `ListMediaItems`, `GetPresentation`, `ListPresentations`, `GetTag`, `ListTags` | Typed document or list (`1..=200` per page) / `SEL-LIB-0001`, `SEL-LIB-0002` |
 | `GetUndoState` | `UndoState { can_undo, can_redo, undo_depth, redo_depth }` |
 | `GetEditorBuffer`, `ListEditorBuffers` | `EditorBufferReply` / `EditorBufferList` |
 | `ListOps` | `OpList` paginated strictly by `seq > after_seq` (optional `doc_id` filter) |
 | `GetPolicySetting` | `GetPolicySettingReply { found, setting }` (effective value, winning policy level, lock flag) |
 | `SearchSongs`, `SearchMedia`, `SearchScripture`, `SearchLibrary` | `SongSearchResults` / `MediaSearchResults` / `ScriptureSearchResults` / `LibrarySearchResults` (bounded `1..=200` per page, synonyms, trigram typo tolerance, `SEL-LIB-0001`/`0002` on invalid args or missing Bible translation) |
-| `ParsePastedSong`, `TransposeSong`, `SplitSongSlides` | `ParsePastedSongReply` / `Song` / `GeneratedSongSlides` (read-only song parsing across 4 formats, transposition, and slide splitting, `M2.4`) |
-| `ListBibles`, `ParseScriptureReference`, `GetScripturePassages`, `SplitScriptureSlides` | `BibleList` / `ParseScriptureReferenceReply` / `ScripturePassages` / `GeneratedScriptureSlides` (`M2.5`) |
+| `ParsePastedSong`, `TransposeSong`, `SplitSongSlides` | `ParsePastedSongReply` / `Song` / `GeneratedSongSlides` (read-only song parsing across 4 formats, transposition, and per-output Skia metric slide fitting, `M2.4` + `M3.3`) |
+| `ListBibles`, `ParseScriptureReference`, `GetScripturePassages`, `SplitScriptureSlides` | `BibleList` / `ParseScriptureReferenceReply` / `ScripturePassages` / `GeneratedScriptureSlides` (`M2.5` + `M3.3` per-output metric fitting) |
 | `GetMediaThumbnail` | `MediaThumbnail { media_id, width, height, png_bytes }` (reads cached thumbnail or regenerates from verified blob via worker, `M2.6`) |
 | `GetWatchdogStatus` | `WatchdogStatus` (watchdog only; core answers `SEL-IPC-0001`) |
 
@@ -84,7 +91,7 @@ covers every origin × command.
 | `Status` | core | On any change to what the UI shows |
 | `LibraryChanged { doc_type, doc_id, change, op_seq, undo_group, from_undo_redo }` | core | On every committed or undone/redone library mutation (never on idempotent replay) |
 | `UndoStateChanged { global, doc_id, document }` | core | After any mutation or undo/redo that updates undo/redo depth |
-| `FrameShown { scene_revision, monotonic_nanoseconds, frame_checksum, command_received_nanoseconds, output_index, frame_period_nanoseconds }` | engine (forwarded by core) | Every presented frame of a new scene |
+| `FrameShown { scene_revision, monotonic_nanoseconds, frame_checksum, command_received_nanoseconds, output_index, frame_period_nanoseconds, resolution, is_preview, flash_warning }` | engine (forwarded by core) | Every presented Program or Staged Preview frame |
 | `EmergencyApplied { show_logo, scene_revision }` | engine | After the emergency lane acted; core raises its revision above the engine's floor so a stale scene can't come back |
 | `Heartbeat` | every process → watchdog | Every 250 ms |
 

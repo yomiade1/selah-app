@@ -1,7 +1,9 @@
 use anyhow::ensure;
 use selah_proto::v1::{
-    CopyrightPlacement, GeneratedSlide, GeneratedSongSlides, Id, LyricLine, SectionKind, Song,
+    CopyrightPlacement, GeneratedSlide, GeneratedSongSlides, Id, LyricLine, OutputFittedSongSlides,
+    SectionKind, Song,
 };
+use selah_render::fit::{FitTarget, SongFitInput, SongSectionInput, fit_song_slides};
 
 use super::sections::{resolve_arrangement_sections, section_color};
 
@@ -103,6 +105,7 @@ pub fn generate_slides(song: &Song, options: &SplitOptions) -> anyhow::Result<Ge
             footer_copyright: String::new(),
             is_title: true,
             is_blank: false,
+            applied_size: 0.0,
         });
     }
 
@@ -127,6 +130,7 @@ pub fn generate_slides(song: &Song, options: &SplitOptions) -> anyhow::Result<Ge
                 footer_copyright: String::new(),
                 is_title: false,
                 is_blank: false,
+                applied_size: 0.0,
             });
             continue;
         }
@@ -155,6 +159,7 @@ pub fn generate_slides(song: &Song, options: &SplitOptions) -> anyhow::Result<Ge
                 footer_copyright: String::new(),
                 is_title: false,
                 is_blank: false,
+                applied_size: 0.0,
             });
         }
     }
@@ -198,12 +203,106 @@ pub fn generate_slides(song: &Song, options: &SplitOptions) -> anyhow::Result<Ge
             footer_copyright: String::new(),
             is_title: false,
             is_blank: true,
+            applied_size: 0.0,
         });
     }
 
     Ok(GeneratedSongSlides {
         slides,
         copyright_line,
+        fit_reports: Vec::new(),
+        per_output_slides: Vec::new(),
+    })
+}
+
+/// Skia metric-fit slide generator (M3.3 / M3-A2): starts from rule splitting, shrinks font sizes
+/// down to each template variant's `min_size`, cleanly re-splits across extra slides when needed,
+/// and returns per-output fit reports + per-output slide decks.
+pub fn generate_slides_with_fit(
+    song: &Song,
+    options: &SplitOptions,
+    targets: &[FitTarget],
+) -> anyhow::Result<GeneratedSongSlides> {
+    let max_lines = if options.max_lines == 0 {
+        DEFAULT_MAX_LINES
+    } else {
+        options.max_lines
+    };
+    ensure!(
+        (1..=MAX_SLIDE_LINES).contains(&max_lines),
+        "max_lines must be between 1 and {MAX_SLIDE_LINES}"
+    );
+
+    let trans_lang = options
+        .translation_language
+        .as_deref()
+        .map(str::trim)
+        .filter(|s| !s.is_empty());
+
+    let resolved_sections = resolve_arrangement_sections(song, options.arrangement_id.as_ref())?;
+    let mut fit_sections = Vec::with_capacity(resolved_sections.len());
+    for section in resolved_sections {
+        let kind = SectionKind::try_from(section.kind).unwrap_or(SectionKind::Other);
+        let color = section.color.unwrap_or_else(|| section_color(kind));
+        let trans_lines = trans_lang
+            .and_then(|lang| section.translations.get(lang))
+            .map(|t| t.lines.clone())
+            .unwrap_or_default();
+        fit_sections.push(SongSectionInput {
+            section_id: section.id.clone(),
+            section_label: section.label.clone(),
+            section_kind: kind as i32,
+            section_color: Some(color),
+            section_hotkey: section.hotkey.clone(),
+            lines: section.lines.clone(),
+            translation_lines: trans_lines,
+        });
+    }
+
+    let title_lines = options.title_slide.then(|| {
+        let mut lines = vec![song.title.trim().to_owned()];
+        let authors = song
+            .authors
+            .iter()
+            .map(String::as_str)
+            .map(str::trim)
+            .filter(|s| !s.is_empty())
+            .collect::<Vec<_>>()
+            .join(", ");
+        if !authors.is_empty() {
+            lines.push(authors);
+        }
+        lines
+    });
+
+    let copyright_line = format_copyright_line(song);
+    let fitted = fit_song_slides(
+        &SongFitInput {
+            sections: fit_sections,
+            title_lines,
+            copyright_line: copyright_line.clone(),
+            copyright_placement: options.copyright_placement,
+            blank_slide_at_end: options.blank_slide_at_end,
+            max_lines: options.max_lines,
+        },
+        targets,
+    )?;
+
+    let fit_reports = fitted.per_output.iter().map(|(r, _)| r.clone()).collect();
+    let per_output_slides = fitted
+        .per_output
+        .into_iter()
+        .map(|(r, s)| OutputFittedSongSlides {
+            output_index: r.output_index,
+            slides: s,
+        })
+        .collect();
+
+    Ok(GeneratedSongSlides {
+        slides: fitted.primary_slides,
+        copyright_line,
+        fit_reports,
+        per_output_slides,
     })
 }
 

@@ -631,6 +631,7 @@ fn scripture_slide_splitter_wraps_packs_and_places_references() {
         reference_placement: ReferencePlacement::SlideFooter as i32,
         title_slide: true,
         blank_slide_at_end: true,
+        ..Default::default()
     })
     .unwrap();
 
@@ -667,6 +668,7 @@ fn scripture_slide_splitter_wraps_packs_and_places_references() {
         reference_placement: ReferencePlacement::SlideHeader as i32,
         title_slide: false,
         blank_slide_at_end: false,
+        ..Default::default()
     })
     .unwrap();
     assert!(!rom_slides.slides.is_empty());
@@ -722,6 +724,7 @@ fn scripture_slide_splitter_wraps_packs_and_places_references() {
         reference_placement: ReferencePlacement::SlideFooter as i32,
         title_slide: false,
         blank_slide_at_end: false,
+        ..Default::default()
     })
     .unwrap();
     assert!(korean_long.slides.len() >= 2);

@@ -41,3 +41,11 @@ anchors:
     description: Song editor, Generated slide preview grid.
   - id: editor.inspector
     description: Song editor, Song metadata, layout, arrangement, and transpose inspector.
+  - id: templates.editor
+    description: Templates, Starter looks, typography, safe area, and preview shape editor.
+  - id: templates.assignment
+    description: Templates, Default song/scripture policy and per-screen assignment.
+  - id: slides.editor
+    description: Slide editor, Custom slide deck, positioned elements, and live canvas preview.
+  - id: slides.inspector
+    description: Slide editor, Element properties, background, transition, and effect chain.

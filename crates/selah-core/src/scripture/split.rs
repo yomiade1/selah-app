@@ -1,9 +1,10 @@
-//! Rule-based scripture verse-to-slide splitter (M2.5 / ARCHITECTURE §4.3).
+//! Rule-based & Skia metric-fit scripture verse-to-slide splitter (M2.5 / M3.3 / ARCHITECTURE §4.3).
 use anyhow::ensure;
 use selah_proto::v1::{
-    GeneratedScriptureSlide, GeneratedScriptureSlides, ReferencePlacement, ScriptureVerse,
-    SplitScriptureSlides,
+    GeneratedScriptureSlide, GeneratedScriptureSlides, OutputFittedScriptureSlides,
+    ReferencePlacement, ScriptureVerse, SplitScriptureSlides,
 };
+use selah_render::fit::{FitTarget, ScriptureFitInput, fit_scripture_slides};
 
 use super::reference::format_span;
 use super::store::MAX_PASSAGE_VERSES;
@@ -133,9 +134,18 @@ fn attach_reference_slot(placement: ReferencePlacement, slide_ref: &str) -> (Str
     }
 }
 
-pub fn split_scripture_slides(
+struct ValidatedScriptureInputs {
+    max_lines: u32,
+    max_chars: u32,
+    placement: ReferencePlacement,
+    translation_code: String,
+    translation_name: String,
+    passage_label: String,
+}
+
+fn validate_scripture_inputs(
     req: &SplitScriptureSlides,
-) -> anyhow::Result<GeneratedScriptureSlides> {
+) -> anyhow::Result<ValidatedScriptureInputs> {
     ensure!(
         !req.translation.contains('\0')
             && !req.translation_name.contains('\0')
@@ -196,6 +206,27 @@ pub fn split_scripture_slides(
     } else {
         format!("{base_ref} ({translation_code})")
     };
+
+    Ok(ValidatedScriptureInputs {
+        max_lines,
+        max_chars,
+        placement,
+        translation_code,
+        translation_name,
+        passage_label,
+    })
+}
+
+pub fn split_scripture_slides(
+    req: &SplitScriptureSlides,
+) -> anyhow::Result<GeneratedScriptureSlides> {
+    let v = validate_scripture_inputs(req)?;
+    let max_lines = v.max_lines;
+    let max_chars = v.max_chars;
+    let placement = v.placement;
+    let translation_code = v.translation_code;
+    let translation_name = v.translation_name;
+    let passage_label = v.passage_label;
 
     let verse_cap = if req.one_verse_per_slide {
         Some(1usize)
@@ -289,6 +320,7 @@ pub fn split_scripture_slides(
             footer_reference: String::new(),
             is_title: true,
             is_blank: false,
+            applied_size: 0.0,
         });
     }
 
@@ -305,6 +337,7 @@ pub fn split_scripture_slides(
             footer_reference,
             is_title: false,
             is_blank: false,
+            applied_size: 0.0,
         });
     }
 
@@ -318,6 +351,7 @@ pub fn split_scripture_slides(
             footer_reference: String::new(),
             is_title: false,
             is_blank: true,
+            applied_size: 0.0,
         });
     }
 
@@ -326,5 +360,58 @@ pub fn split_scripture_slides(
         translation_name,
         reference_label: passage_label,
         slides,
+        fit_reports: Vec::new(),
+        per_output_slides: Vec::new(),
+    })
+}
+
+/// Skia metric-fit scripture splitter (M3.3 / M3-A2).
+pub fn split_scripture_slides_with_fit(
+    req: &SplitScriptureSlides,
+    targets: &[FitTarget],
+) -> anyhow::Result<GeneratedScriptureSlides> {
+    let v = validate_scripture_inputs(req)?;
+    let verse_cap = if req.one_verse_per_slide {
+        Some(1usize)
+    } else if req.verses_per_slide > 0 {
+        Some(req.verses_per_slide as usize)
+    } else {
+        None
+    };
+    let fitted = fit_scripture_slides(
+        &ScriptureFitInput {
+            translation_code: v.translation_code.clone(),
+            translation_name: v.translation_name.clone(),
+            passage_label: v.passage_label.clone(),
+            verses: req.verses.clone(),
+            show_verse_numbers: req.show_verse_numbers,
+            verses_per_slide: verse_cap,
+            one_verse_per_slide: req.one_verse_per_slide,
+            reference_placement: v.placement,
+            title_slide: req.title_slide,
+            blank_slide_at_end: req.blank_slide_at_end,
+            max_lines: req.max_lines,
+            baseline_chars_per_line: v.max_chars as usize,
+        },
+        targets,
+    )?;
+
+    let fit_reports = fitted.per_output.iter().map(|(r, _)| r.clone()).collect();
+    let per_output_slides = fitted
+        .per_output
+        .into_iter()
+        .map(|(r, s)| OutputFittedScriptureSlides {
+            output_index: r.output_index,
+            slides: s,
+        })
+        .collect();
+
+    Ok(GeneratedScriptureSlides {
+        translation: v.translation_code,
+        translation_name: v.translation_name,
+        reference_label: v.passage_label,
+        slides: fitted.primary_slides,
+        fit_reports,
+        per_output_slides,
     })
 }

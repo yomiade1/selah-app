@@ -12,7 +12,7 @@ import type { Article, GetArticle, HelpForContext, HelpResults, RecordFeedback, 
 import { file_selah_v1_help } from "./help_pb.js";
 import type { BibleList, BibleTranslation, CreateLibraryBackup, DeleteBible, DeleteMediaItem, DeletePresentation, DeleteSong, DeleteTag, DeleteTemplate, DiscardEditorBuffer, EditorBufferList, EditorBufferReply, ExportedSelahBundle, ExportSelahBundle, GeneratedScriptureSlides, GeneratedSongSlides, GetEditorBuffer, GetMediaItem, GetMediaThumbnail, GetPresentation, GetScripturePassages, GetSong, GetTag, GetTemplate, GetUndoState, ImportBible, ImportedSelahBundle, ImportMedia, ImportSelahBundle, LibraryBackupInfo, LibraryChanged, LibrarySearchResults, ListBibles, ListEditorBuffers, ListMediaItems, ListOps, ListPresentations, ListSongs, ListTags, ListTemplates, MediaItem, MediaItemList, MediaSearchResults, MediaThumbnail, OpList, ParsePastedSong, ParsePastedSongReply, ParseScriptureReference, ParseScriptureReferenceReply, Presentation, PresentationList, Redo, RestoreLibraryBackup, RestoreLibraryBackupResult, SaveEditorBuffer, SaveMediaItem, SavePresentation, SaveSong, SaveTag, SaveTemplate, ScripturePassages, ScriptureSearchResults, SearchLibrary, SearchMedia, SearchScripture, SearchSongs, Song, SongList, SongSearchResults, SplitScriptureSlides, SplitSongSlides, Tag, TagList, Template, TemplateList, TransposeSong, Undo, UndoState, UndoStateChanged } from "./library_pb.js";
 import { file_selah_v1_library } from "./library_pb.js";
-import type { EmergencyApplied, FrameShown, RenderCommand, TestPattern } from "./render_pb.js";
+import type { AnalyzeFlashRisk, EmergencyApplied, FlashRiskReport, FrameShown, GetOutputConfigs, OutputConfigList, OutputFrameStatus, PreloadItems, RenderCommand, RenderSceneThumbnail, Scene, SceneThumbnail, SetOutputConfigs, TestPattern } from "./render_pb.js";
 import { file_selah_v1_render } from "./render_pb.js";
 import type { CheckForUpdate, GetPolicySetting, GetPolicySettingReply, GetSettings, InstallUpdate, RemovePolicySetting, SetAppearance, SetPolicySetting, Settings, SetUpdateSettings, UpdateCheck } from "./settings_pb.js";
 import { file_selah_v1_settings } from "./settings_pb.js";
@@ -22,7 +22,7 @@ import type { Message } from "@bufbuild/protobuf";
  * Describes the file selah/v1/envelope.proto.
  */
 export const file_selah_v1_envelope: GenFile = /*@__PURE__*/
-  fileDesc("ChdzZWxhaC92MS9lbnZlbG9wZS5wcm90bxIIc2VsYWgudjEiUgoFQWN0b3ISDwoHdXNlcl9pZBgBIAEoCRIRCglkZXZpY2VfaWQYAiABKAkSJQoGb3JpZ2luGAMgASgOMhUuc2VsYWgudjEuQWN0b3JPcmlnaW4ihAIKCEVudmVsb3BlEgoKAmlkGAEgASgEEhYKDmNvcnJlbGF0aW9uX2lkGAIgASgEEh4KBWFjdG9yGAMgASgLMg8uc2VsYWgudjEuQWN0b3ISJAoHY29tbWFuZBgKIAEoCzIRLnNlbGFoLnYxLkNvbW1hbmRIABIgCgVxdWVyeRgLIAEoCzIPLnNlbGFoLnYxLlF1ZXJ5SAASIAoFZXZlbnQYDCABKAsyDy5zZWxhaC52MS5FdmVudEgAEiAKBXJlcGx5GA0gASgLMg8uc2VsYWgudjEuUmVwbHlIABIgCgVlcnJvchgOIAEoCzIPLnNlbGFoLnYxLkVycm9ySABCBgoEYm9keSKtDgoHQ29tbWFuZBIpCgZyZW5kZXIYASABKAsyFy5zZWxhaC52MS5SZW5kZXJDb21tYW5kSAASMQoOc2V0X2FwcGVhcmFuY2UYAiABKAsyFy5zZWxhaC52MS5TZXRBcHBlYXJhbmNlSAASMwoPcmVjb3JkX2ZlZWRiYWNrGAMgASgLMhguc2VsYWgudjEuUmVjb3JkRmVlZGJhY2tIABI2ChFzaG93X3Rlc3RfcGF0dGVybhgEIAEoCzIZLnNlbGFoLnYxLlNob3dUZXN0UGF0dGVybkgAEi8KDWNsZWFyX291dHB1dHMYBSABKAsyFi5zZWxhaC52MS5DbGVhck91dHB1dHNIABI0ChBjaGVja19mb3JfdXBkYXRlGAYgASgLMhguc2VsYWgudjEuQ2hlY2tGb3JVcGRhdGVIABIxCg5pbnN0YWxsX3VwZGF0ZRgHIAEoCzIXLnNlbGFoLnYxLkluc3RhbGxVcGRhdGVIABI6ChNzZXRfdXBkYXRlX3NldHRpbmdzGAggASgLMhsuc2VsYWgudjEuU2V0VXBkYXRlU2V0dGluZ3NIABI1ChByZXN0YXJ0X25vcm1hbGx5GAkgASgLMhkuc2VsYWgudjEuUmVzdGFydE5vcm1hbGx5SAASPgoVY3JlYXRlX3N1cHBvcnRfYnVuZGxlGAogASgLMh0uc2VsYWgudjEuQ3JlYXRlU3VwcG9ydEJ1bmRsZUgAEjMKD3J1bl9kaWFnbm9zdGljcxgLIAEoCzIYLnNlbGFoLnYxLlJ1bkRpYWdub3N0aWNzSAASJwoJc2F2ZV9zb25nGAwgASgLMhIuc2VsYWgudjEuU2F2ZVNvbmdIABIrCgtkZWxldGVfc29uZxgNIAEoCzIULnNlbGFoLnYxLkRlbGV0ZVNvbmdIABIvCg1zYXZlX3RlbXBsYXRlGA4gASgLMhYuc2VsYWgudjEuU2F2ZVRlbXBsYXRlSAASMwoPZGVsZXRlX3RlbXBsYXRlGA8gASgLMhguc2VsYWgudjEuRGVsZXRlVGVtcGxhdGVIABIyCg9zYXZlX21lZGlhX2l0ZW0YECABKAsyFy5zZWxhaC52MS5TYXZlTWVkaWFJdGVtSAASNgoRZGVsZXRlX21lZGlhX2l0ZW0YESABKAsyGS5zZWxhaC52MS5EZWxldGVNZWRpYUl0ZW1IABI3ChFzYXZlX3ByZXNlbnRhdGlvbhgSIAEoCzIaLnNlbGFoLnYxLlNhdmVQcmVzZW50YXRpb25IABI7ChNkZWxldGVfcHJlc2VudGF0aW9uGBMgASgLMhwuc2VsYWgudjEuRGVsZXRlUHJlc2VudGF0aW9uSAASJQoIc2F2ZV90YWcYFCABKAsyES5zZWxhaC52MS5TYXZlVGFnSAASKQoKZGVsZXRlX3RhZxgVIAEoCzITLnNlbGFoLnYxLkRlbGV0ZVRhZ0gAEh4KBHVuZG8YFiABKAsyDi5zZWxhaC52MS5VbmRvSAASHgoEcmVkbxgXIAEoCzIOLnNlbGFoLnYxLlJlZG9IABI4ChJzYXZlX2VkaXRvcl9idWZmZXIYGCABKAsyGi5zZWxhaC52MS5TYXZlRWRpdG9yQnVmZmVySAASPgoVZGlzY2FyZF9lZGl0b3JfYnVmZmVyGBkgASgLMh0uc2VsYWgudjEuRGlzY2FyZEVkaXRvckJ1ZmZlckgAEjgKEnNldF9wb2xpY3lfc2V0dGluZxgaIAEoCzIaLnNlbGFoLnYxLlNldFBvbGljeVNldHRpbmdIABI+ChVyZW1vdmVfcG9saWN5X3NldHRpbmcYGyABKAsyHS5zZWxhaC52MS5SZW1vdmVQb2xpY3lTZXR0aW5nSAASLQoMaW1wb3J0X2JpYmxlGBwgASgLMhUuc2VsYWgudjEuSW1wb3J0QmlibGVIABItCgxkZWxldGVfYmlibGUYHSABKAsyFS5zZWxhaC52MS5EZWxldGVCaWJsZUgAEi0KDGltcG9ydF9tZWRpYRgeIAEoCzIVLnNlbGFoLnYxLkltcG9ydE1lZGlhSAASOgoTZXhwb3J0X3NlbGFoX2J1bmRsZRgfIAEoCzIbLnNlbGFoLnYxLkV4cG9ydFNlbGFoQnVuZGxlSAASOgoTaW1wb3J0X3NlbGFoX2J1bmRsZRggIAEoCzIbLnNlbGFoLnYxLkltcG9ydFNlbGFoQnVuZGxlSAASPgoVY3JlYXRlX2xpYnJhcnlfYmFja3VwGCEgASgLMh0uc2VsYWgudjEuQ3JlYXRlTGlicmFyeUJhY2t1cEgAEkAKFnJlc3RvcmVfbGlicmFyeV9iYWNrdXAYIiABKAsyHi5zZWxhaC52MS5SZXN0b3JlTGlicmFyeUJhY2t1cEgAEiAKCnVuZG9fZ3JvdXAYZCABKAsyDC5zZWxhaC52MS5JZEIICgZhY3Rpb24iEQoPUmVzdGFydE5vcm1hbGx5IjkKD1Nob3dUZXN0UGF0dGVybhImCgdwYXR0ZXJuGAEgASgOMhUuc2VsYWgudjEuVGVzdFBhdHRlcm4iDgoMQ2xlYXJPdXRwdXRzIpoOCgVRdWVyeRIpCgpnZXRfc3RhdHVzGAEgASgLMhMuc2VsYWgudjEuR2V0U3RhdHVzSAASLQoMZ2V0X3NldHRpbmdzGAIgASgLMhUuc2VsYWgudjEuR2V0U2V0dGluZ3NIABIrCgtzZWFyY2hfaGVscBgDIAEoCzIULnNlbGFoLnYxLlNlYXJjaEhlbHBIABIrCgtnZXRfYXJ0aWNsZRgEIAEoCzIULnNlbGFoLnYxLkdldEFydGljbGVIABI0ChBoZWxwX2Zvcl9jb250ZXh0GAUgASgLMhguc2VsYWgudjEuSGVscEZvckNvbnRleHRIABIoCglzdWJzY3JpYmUYBiABKAsyEy5zZWxhaC52MS5TdWJzY3JpYmVIABI6ChNnZXRfd2F0Y2hkb2dfc3RhdHVzGAcgASgLMhsuc2VsYWgudjEuR2V0V2F0Y2hkb2dTdGF0dXNIABIzCg9nZXRfZGlhZ25vc3RpY3MYCCABKAsyGC5zZWxhaC52MS5HZXREaWFnbm9zdGljc0gAEiUKCGdldF9zb25nGAkgASgLMhEuc2VsYWgudjEuR2V0U29uZ0gAEikKCmxpc3Rfc29uZ3MYCiABKAsyEy5zZWxhaC52MS5MaXN0U29uZ3NIABItCgxnZXRfdGVtcGxhdGUYCyABKAsyFS5zZWxhaC52MS5HZXRUZW1wbGF0ZUgAEjEKDmxpc3RfdGVtcGxhdGVzGAwgASgLMhcuc2VsYWgudjEuTGlzdFRlbXBsYXRlc0gAEjAKDmdldF9tZWRpYV9pdGVtGA0gASgLMhYuc2VsYWgudjEuR2V0TWVkaWFJdGVtSAASNAoQbGlzdF9tZWRpYV9pdGVtcxgOIAEoCzIYLnNlbGFoLnYxLkxpc3RNZWRpYUl0ZW1zSAASNQoQZ2V0X3ByZXNlbnRhdGlvbhgPIAEoCzIZLnNlbGFoLnYxLkdldFByZXNlbnRhdGlvbkgAEjkKEmxpc3RfcHJlc2VudGF0aW9ucxgQIAEoCzIbLnNlbGFoLnYxLkxpc3RQcmVzZW50YXRpb25zSAASIwoHZ2V0X3RhZxgRIAEoCzIQLnNlbGFoLnYxLkdldFRhZ0gAEicKCWxpc3RfdGFncxgSIAEoCzISLnNlbGFoLnYxLkxpc3RUYWdzSAASMAoOZ2V0X3VuZG9fc3RhdGUYEyABKAsyFi5zZWxhaC52MS5HZXRVbmRvU3RhdGVIABI2ChFnZXRfZWRpdG9yX2J1ZmZlchgUIAEoCzIZLnNlbGFoLnYxLkdldEVkaXRvckJ1ZmZlckgAEjoKE2xpc3RfZWRpdG9yX2J1ZmZlcnMYFSABKAsyGy5zZWxhaC52MS5MaXN0RWRpdG9yQnVmZmVyc0gAEiUKCGxpc3Rfb3BzGBYgASgLMhEuc2VsYWgudjEuTGlzdE9wc0gAEjgKEmdldF9wb2xpY3lfc2V0dGluZxgXIAEoCzIaLnNlbGFoLnYxLkdldFBvbGljeVNldHRpbmdIABItCgxzZWFyY2hfc29uZ3MYGCABKAsyFS5zZWxhaC52MS5TZWFyY2hTb25nc0gAEi0KDHNlYXJjaF9tZWRpYRgZIAEoCzIVLnNlbGFoLnYxLlNlYXJjaE1lZGlhSAASNQoQc2VhcmNoX3NjcmlwdHVyZRgaIAEoCzIZLnNlbGFoLnYxLlNlYXJjaFNjcmlwdHVyZUgAEjEKDnNlYXJjaF9saWJyYXJ5GBsgASgLMhcuc2VsYWgudjEuU2VhcmNoTGlicmFyeUgAEjYKEXBhcnNlX3Bhc3RlZF9zb25nGBwgASgLMhkuc2VsYWgudjEuUGFyc2VQYXN0ZWRTb25nSAASMQoOdHJhbnNwb3NlX3NvbmcYHSABKAsyFy5zZWxhaC52MS5UcmFuc3Bvc2VTb25nSAASNgoRc3BsaXRfc29uZ19zbGlkZXMYHiABKAsyGS5zZWxhaC52MS5TcGxpdFNvbmdTbGlkZXNIABIrCgtsaXN0X2JpYmxlcxgfIAEoCzIULnNlbGFoLnYxLkxpc3RCaWJsZXNIABJGChlwYXJzZV9zY3JpcHR1cmVfcmVmZXJlbmNlGCAgASgLMiEuc2VsYWgudjEuUGFyc2VTY3JpcHR1cmVSZWZlcmVuY2VIABJAChZnZXRfc2NyaXB0dXJlX3Bhc3NhZ2VzGCEgASgLMh4uc2VsYWgudjEuR2V0U2NyaXB0dXJlUGFzc2FnZXNIABJAChZzcGxpdF9zY3JpcHR1cmVfc2xpZGVzGCIgASgLMh4uc2VsYWgudjEuU3BsaXRTY3JpcHR1cmVTbGlkZXNIABI6ChNnZXRfbWVkaWFfdGh1bWJuYWlsGCMgASgLMhsuc2VsYWgudjEuR2V0TWVkaWFUaHVtYm5haWxIAEIJCgdyZXF1ZXN0IgsKCUdldFN0YXR1cyL5AQoGU3RhdHVzEhEKCWNvbm5lY3RlZBgBIAEoCBIRCglzYWZlX21vZGUYAiABKAgSFgoOc2NlbmVfcmV2aXNpb24YAyABKAQSGAoQZW5naW5lX2Nvbm5lY3RlZBgEIAEoCBIdChVlbmdpbmVfc2NlbmVfcmV2aXNpb24YBSABKAQSFgoOZnJhbWVfY2hlY2tzdW0YBiABKAwSDwoHdmVyc2lvbhgHIAEoCRIMCgRsaXZlGAggASgIEhAKCHJlbmRlcmVyGAkgASgJEi8KEW91dHB1dF9yZXNvbHV0aW9uGAogASgLMhQuc2VsYWgudjEuUmVzb2x1dGlvbiITChFHZXRXYXRjaGRvZ1N0YXR1cyJLCgtQcm9jZXNzSW5mbxIMCgRyb2xlGAEgASgJEgsKA3BpZBgCIAEoDRIQCghyZXN0YXJ0cxgDIAEoDRIPCgdydW5uaW5nGAQgASgIImcKDldhdGNoZG9nU3RhdHVzEigKCXByb2Nlc3NlcxgBIAMoCzIVLnNlbGFoLnYxLlByb2Nlc3NJbmZvEhEKCXNhZmVfbW9kZRgCIAEoCBIYChBzYWZlX21vZGVfcmVhc29uGAMgASgJIiAKCVN1YnNjcmliZRITCgtldmVudF9uYW1lcxgBIAMoCSIqCglIZWFydGJlYXQSHQoVbW9ub3RvbmljX25hbm9zZWNvbmRzGAEgASgEIroCCgVFdmVudBIrCgtmcmFtZV9zaG93bhgBIAEoCzIULnNlbGFoLnYxLkZyYW1lU2hvd25IABIiCgZzdGF0dXMYAiABKAsyEC5zZWxhaC52MS5TdGF0dXNIABIoCgloZWFydGJlYXQYAyABKAsyEy5zZWxhaC52MS5IZWFydGJlYXRIABI3ChFlbWVyZ2VuY3lfYXBwbGllZBgEIAEoCzIaLnNlbGFoLnYxLkVtZXJnZW5jeUFwcGxpZWRIABIzCg9saWJyYXJ5X2NoYW5nZWQYBSABKAsyGC5zZWxhaC52MS5MaWJyYXJ5Q2hhbmdlZEgAEjgKEnVuZG9fc3RhdGVfY2hhbmdlZBgGIAEoCzIaLnNlbGFoLnYxLlVuZG9TdGF0ZUNoYW5nZWRIAEIOCgxub3RpZmljYXRpb24i5BAKBVJlcGx5EiIKBnN0YXR1cxgBIAEoCzIQLnNlbGFoLnYxLlN0YXR1c0gAEiYKCHNldHRpbmdzGAIgASgLMhIuc2VsYWgudjEuU2V0dGluZ3NIABItCgxoZWxwX3Jlc3VsdHMYAyABKAsyFS5zZWxhaC52MS5IZWxwUmVzdWx0c0gAEiQKB2FydGljbGUYBCABKAsyES5zZWxhaC52MS5BcnRpY2xlSAASFgoMYWNrbm93bGVkZ2VkGAUgASgISAASMwoPd2F0Y2hkb2dfc3RhdHVzGAYgASgLMhguc2VsYWgudjEuV2F0Y2hkb2dTdGF0dXNIABItCgx1cGRhdGVfY2hlY2sYByABKAsyFS5zZWxhaC52MS5VcGRhdGVDaGVja0gAEjEKDnN1cHBvcnRfYnVuZGxlGAggASgLMhcuc2VsYWgudjEuU3VwcG9ydEJ1bmRsZUgAEiwKC2RpYWdub3N0aWNzGAkgASgLMhUuc2VsYWgudjEuRGlhZ25vc3RpY3NIABI5ChJkaWFnbm9zdGljc19yZXBvcnQYCiABKAsyGy5zZWxhaC52MS5EaWFnbm9zdGljc1JlcG9ydEgAEh4KBHNvbmcYCyABKAsyDi5zZWxhaC52MS5Tb25nSAASJwoJc29uZ19saXN0GAwgASgLMhIuc2VsYWgudjEuU29uZ0xpc3RIABImCgh0ZW1wbGF0ZRgNIAEoCzISLnNlbGFoLnYxLlRlbXBsYXRlSAASLwoNdGVtcGxhdGVfbGlzdBgOIAEoCzIWLnNlbGFoLnYxLlRlbXBsYXRlTGlzdEgAEikKCm1lZGlhX2l0ZW0YDyABKAsyEy5zZWxhaC52MS5NZWRpYUl0ZW1IABIyCg9tZWRpYV9pdGVtX2xpc3QYECABKAsyFy5zZWxhaC52MS5NZWRpYUl0ZW1MaXN0SAASLgoMcHJlc2VudGF0aW9uGBEgASgLMhYuc2VsYWgudjEuUHJlc2VudGF0aW9uSAASNwoRcHJlc2VudGF0aW9uX2xpc3QYEiABKAsyGi5zZWxhaC52MS5QcmVzZW50YXRpb25MaXN0SAASHAoDdGFnGBMgASgLMg0uc2VsYWgudjEuVGFnSAASJQoIdGFnX2xpc3QYFCABKAsyES5zZWxhaC52MS5UYWdMaXN0SAASKQoKdW5kb19zdGF0ZRgVIAEoCzITLnNlbGFoLnYxLlVuZG9TdGF0ZUgAEjQKDWVkaXRvcl9idWZmZXIYFiABKAsyGy5zZWxhaC52MS5FZGl0b3JCdWZmZXJSZXBseUgAEjgKEmVkaXRvcl9idWZmZXJfbGlzdBgXIAEoCzIaLnNlbGFoLnYxLkVkaXRvckJ1ZmZlckxpc3RIABIjCgdvcF9saXN0GBggASgLMhAuc2VsYWgudjEuT3BMaXN0SAASOQoOcG9saWN5X3NldHRpbmcYGSABKAsyHy5zZWxhaC52MS5HZXRQb2xpY3lTZXR0aW5nUmVwbHlIABI6ChNzb25nX3NlYXJjaF9yZXN1bHRzGBogASgLMhsuc2VsYWgudjEuU29uZ1NlYXJjaFJlc3VsdHNIABI8ChRtZWRpYV9zZWFyY2hfcmVzdWx0cxgbIAEoCzIcLnNlbGFoLnYxLk1lZGlhU2VhcmNoUmVzdWx0c0gAEkQKGHNjcmlwdHVyZV9zZWFyY2hfcmVzdWx0cxgcIAEoCzIgLnNlbGFoLnYxLlNjcmlwdHVyZVNlYXJjaFJlc3VsdHNIABJAChZsaWJyYXJ5X3NlYXJjaF9yZXN1bHRzGB0gASgLMh4uc2VsYWgudjEuTGlicmFyeVNlYXJjaFJlc3VsdHNIABI1CgtwYXJzZWRfc29uZxgeIAEoCzIeLnNlbGFoLnYxLlBhcnNlUGFzdGVkU29uZ1JlcGx5SAASPgoVZ2VuZXJhdGVkX3Nvbmdfc2xpZGVzGB8gASgLMh0uc2VsYWgudjEuR2VuZXJhdGVkU29uZ1NsaWRlc0gAEjcKEWJpYmxlX3RyYW5zbGF0aW9uGCAgASgLMhouc2VsYWgudjEuQmlibGVUcmFuc2xhdGlvbkgAEikKCmJpYmxlX2xpc3QYISABKAsyEy5zZWxhaC52MS5CaWJsZUxpc3RIABJMChpwYXJzZWRfc2NyaXB0dXJlX3JlZmVyZW5jZRgiIAEoCzImLnNlbGFoLnYxLlBhcnNlU2NyaXB0dXJlUmVmZXJlbmNlUmVwbHlIABI5ChJzY3JpcHR1cmVfcGFzc2FnZXMYIyABKAsyGy5zZWxhaC52MS5TY3JpcHR1cmVQYXNzYWdlc0gAEkgKGmdlbmVyYXRlZF9zY3JpcHR1cmVfc2xpZGVzGCQgASgLMiIuc2VsYWgudjEuR2VuZXJhdGVkU2NyaXB0dXJlU2xpZGVzSAASMwoPbWVkaWFfdGh1bWJuYWlsGCUgASgLMhguc2VsYWgudjEuTWVkaWFUaHVtYm5haWxIABI+ChVleHBvcnRlZF9zZWxhaF9idW5kbGUYJiABKAsyHS5zZWxhaC52MS5FeHBvcnRlZFNlbGFoQnVuZGxlSAASPgoVaW1wb3J0ZWRfc2VsYWhfYnVuZGxlGCcgASgLMh0uc2VsYWgudjEuSW1wb3J0ZWRTZWxhaEJ1bmRsZUgAEjoKE2xpYnJhcnlfYmFja3VwX2luZm8YKCABKAsyGy5zZWxhaC52MS5MaWJyYXJ5QmFja3VwSW5mb0gAEk0KHXJlc3RvcmVfbGlicmFyeV9iYWNrdXBfcmVzdWx0GCkgASgLMiQuc2VsYWgudjEuUmVzdG9yZUxpYnJhcnlCYWNrdXBSZXN1bHRIAEIICgZyZXN1bHQiFQoTQ3JlYXRlU3VwcG9ydEJ1bmRsZSIxCg1TdXBwb3J0QnVuZGxlEgwKBHBhdGgYASABKAkSEgoKcmVwb3J0X3VybBgCIAEoCSIQCg5HZXREaWFnbm9zdGljcyKoAQoLRGlhZ25vc3RpY3MSDwoHdmVyc2lvbhgBIAEoCRIKCgJvcxgCIAEoCRIMCgRhcmNoGAMgASgJEhEKCXNhZmVfbW9kZRgEIAEoCBIYChBlbmdpbmVfY29ubmVjdGVkGAUgASgIEhAKCHJlbmRlcmVyGAYgASgJEi8KEW91dHB1dF9yZXNvbHV0aW9uGAcgASgLMhQuc2VsYWgudjEuUmVzb2x1dGlvbiIfCg5SdW5EaWFnbm9zdGljcxINCgVxdWljaxgBIAEoCCLSAQoRRGlhZ25vc3RpY3NSZXBvcnQSDAoEcGF0aBgBIAEoCRISCgppcGNfcDk5X21zGAIgASgBEhAKCGlwY19wYXNzGAMgASgIEhIKCnZpZGVvX2NsaXAYBCABKAkSFAoMdmlkZW9fZGVjb2RlGAUgASgJEhQKDHZpZGVvX2ZyYW1lcxgGIAEoBBIVCg12aWRlb19kcm9wcGVkGAcgASgEEh4KFnZpZGVvX2NvbXBvc2l0ZV9wOTlfbXMYCCABKAESEgoKdmlkZW9fcGFzcxgJIAEoCCqZAgoLQWN0b3JPcmlnaW4SHAoYQUNUT1JfT1JJR0lOX1VOU1BFQ0lGSUVEEAASEwoPQUNUT1JfT1JJR0lOX1VJEAESFAoQQUNUT1JfT1JJR0lOX0FQSRACEhUKEUFDVE9SX09SSUdJTl9NSURJEAMSFgoSQUNUT1JfT1JJR0lOX01BQ1JPEAQSGQoVQUNUT1JfT1JJR0lOX1RJTUVMSU5FEAUSFQoRQUNUT1JfT1JJR0lOX1NZTkMQBhIVChFBQ1RPUl9PUklHSU5fVE9VUhAHEhUKEUFDVE9SX09SSUdJTl9DT1JFEAgSFwoTQUNUT1JfT1JJR0lOX0VOR0lORRAJEhkKFUFDVE9SX09SSUdJTl9XQVRDSERPRxAKQhWqAhJTZWxhaC5Db250cmFjdHMuVjFiBnByb3RvMw", [file_selah_v1_common, file_selah_v1_errors, file_selah_v1_help, file_selah_v1_library, file_selah_v1_render, file_selah_v1_settings]);
+  fileDesc("ChdzZWxhaC92MS9lbnZlbG9wZS5wcm90bxIIc2VsYWgudjEiUgoFQWN0b3ISDwoHdXNlcl9pZBgBIAEoCRIRCglkZXZpY2VfaWQYAiABKAkSJQoGb3JpZ2luGAMgASgOMhUuc2VsYWgudjEuQWN0b3JPcmlnaW4ihAIKCEVudmVsb3BlEgoKAmlkGAEgASgEEhYKDmNvcnJlbGF0aW9uX2lkGAIgASgEEh4KBWFjdG9yGAMgASgLMg8uc2VsYWgudjEuQWN0b3ISJAoHY29tbWFuZBgKIAEoCzIRLnNlbGFoLnYxLkNvbW1hbmRIABIgCgVxdWVyeRgLIAEoCzIPLnNlbGFoLnYxLlF1ZXJ5SAASIAoFZXZlbnQYDCABKAsyDy5zZWxhaC52MS5FdmVudEgAEiAKBXJlcGx5GA0gASgLMg8uc2VsYWgudjEuUmVwbHlIABIgCgVlcnJvchgOIAEoCzIPLnNlbGFoLnYxLkVycm9ySABCBgoEYm9keSKFEAoHQ29tbWFuZBIpCgZyZW5kZXIYASABKAsyFy5zZWxhaC52MS5SZW5kZXJDb21tYW5kSAASMQoOc2V0X2FwcGVhcmFuY2UYAiABKAsyFy5zZWxhaC52MS5TZXRBcHBlYXJhbmNlSAASMwoPcmVjb3JkX2ZlZWRiYWNrGAMgASgLMhguc2VsYWgudjEuUmVjb3JkRmVlZGJhY2tIABI2ChFzaG93X3Rlc3RfcGF0dGVybhgEIAEoCzIZLnNlbGFoLnYxLlNob3dUZXN0UGF0dGVybkgAEi8KDWNsZWFyX291dHB1dHMYBSABKAsyFi5zZWxhaC52MS5DbGVhck91dHB1dHNIABI0ChBjaGVja19mb3JfdXBkYXRlGAYgASgLMhguc2VsYWgudjEuQ2hlY2tGb3JVcGRhdGVIABIxCg5pbnN0YWxsX3VwZGF0ZRgHIAEoCzIXLnNlbGFoLnYxLkluc3RhbGxVcGRhdGVIABI6ChNzZXRfdXBkYXRlX3NldHRpbmdzGAggASgLMhsuc2VsYWgudjEuU2V0VXBkYXRlU2V0dGluZ3NIABI1ChByZXN0YXJ0X25vcm1hbGx5GAkgASgLMhkuc2VsYWgudjEuUmVzdGFydE5vcm1hbGx5SAASPgoVY3JlYXRlX3N1cHBvcnRfYnVuZGxlGAogASgLMh0uc2VsYWgudjEuQ3JlYXRlU3VwcG9ydEJ1bmRsZUgAEjMKD3J1bl9kaWFnbm9zdGljcxgLIAEoCzIYLnNlbGFoLnYxLlJ1bkRpYWdub3N0aWNzSAASJwoJc2F2ZV9zb25nGAwgASgLMhIuc2VsYWgudjEuU2F2ZVNvbmdIABIrCgtkZWxldGVfc29uZxgNIAEoCzIULnNlbGFoLnYxLkRlbGV0ZVNvbmdIABIvCg1zYXZlX3RlbXBsYXRlGA4gASgLMhYuc2VsYWgudjEuU2F2ZVRlbXBsYXRlSAASMwoPZGVsZXRlX3RlbXBsYXRlGA8gASgLMhguc2VsYWgudjEuRGVsZXRlVGVtcGxhdGVIABIyCg9zYXZlX21lZGlhX2l0ZW0YECABKAsyFy5zZWxhaC52MS5TYXZlTWVkaWFJdGVtSAASNgoRZGVsZXRlX21lZGlhX2l0ZW0YESABKAsyGS5zZWxhaC52MS5EZWxldGVNZWRpYUl0ZW1IABI3ChFzYXZlX3ByZXNlbnRhdGlvbhgSIAEoCzIaLnNlbGFoLnYxLlNhdmVQcmVzZW50YXRpb25IABI7ChNkZWxldGVfcHJlc2VudGF0aW9uGBMgASgLMhwuc2VsYWgudjEuRGVsZXRlUHJlc2VudGF0aW9uSAASJQoIc2F2ZV90YWcYFCABKAsyES5zZWxhaC52MS5TYXZlVGFnSAASKQoKZGVsZXRlX3RhZxgVIAEoCzITLnNlbGFoLnYxLkRlbGV0ZVRhZ0gAEh4KBHVuZG8YFiABKAsyDi5zZWxhaC52MS5VbmRvSAASHgoEcmVkbxgXIAEoCzIOLnNlbGFoLnYxLlJlZG9IABI4ChJzYXZlX2VkaXRvcl9idWZmZXIYGCABKAsyGi5zZWxhaC52MS5TYXZlRWRpdG9yQnVmZmVySAASPgoVZGlzY2FyZF9lZGl0b3JfYnVmZmVyGBkgASgLMh0uc2VsYWgudjEuRGlzY2FyZEVkaXRvckJ1ZmZlckgAEjgKEnNldF9wb2xpY3lfc2V0dGluZxgaIAEoCzIaLnNlbGFoLnYxLlNldFBvbGljeVNldHRpbmdIABI+ChVyZW1vdmVfcG9saWN5X3NldHRpbmcYGyABKAsyHS5zZWxhaC52MS5SZW1vdmVQb2xpY3lTZXR0aW5nSAASLQoMaW1wb3J0X2JpYmxlGBwgASgLMhUuc2VsYWgudjEuSW1wb3J0QmlibGVIABItCgxkZWxldGVfYmlibGUYHSABKAsyFS5zZWxhaC52MS5EZWxldGVCaWJsZUgAEi0KDGltcG9ydF9tZWRpYRgeIAEoCzIVLnNlbGFoLnYxLkltcG9ydE1lZGlhSAASOgoTZXhwb3J0X3NlbGFoX2J1bmRsZRgfIAEoCzIbLnNlbGFoLnYxLkV4cG9ydFNlbGFoQnVuZGxlSAASOgoTaW1wb3J0X3NlbGFoX2J1bmRsZRggIAEoCzIbLnNlbGFoLnYxLkltcG9ydFNlbGFoQnVuZGxlSAASPgoVY3JlYXRlX2xpYnJhcnlfYmFja3VwGCEgASgLMh0uc2VsYWgudjEuQ3JlYXRlTGlicmFyeUJhY2t1cEgAEkAKFnJlc3RvcmVfbGlicmFyeV9iYWNrdXAYIiABKAsyHi5zZWxhaC52MS5SZXN0b3JlTGlicmFyeUJhY2t1cEgAEjgKEnNldF9vdXRwdXRfY29uZmlncxgjIAEoCzIaLnNlbGFoLnYxLlNldE91dHB1dENvbmZpZ3NIABIvCg1wcmVzZW50X3NjZW5lGCQgASgLMhYuc2VsYWgudjEuUHJlc2VudFNjZW5lSAASOgoTc3RhZ2VfcHJldmlld19zY2VuZRglIAEoCzIbLnNlbGFoLnYxLlN0YWdlUHJldmlld1NjZW5lSAASLwoNcHJlbG9hZF9pdGVtcxgmIAEoCzIWLnNlbGFoLnYxLlByZWxvYWRJdGVtc0gAEiAKCnVuZG9fZ3JvdXAYZCABKAsyDC5zZWxhaC52MS5JZEIICgZhY3Rpb24iLgoMUHJlc2VudFNjZW5lEh4KBXNjZW5lGAEgASgLMg8uc2VsYWgudjEuU2NlbmUiMwoRU3RhZ2VQcmV2aWV3U2NlbmUSHgoFc2NlbmUYASABKAsyDy5zZWxhaC52MS5TY2VuZSIRCg9SZXN0YXJ0Tm9ybWFsbHkiOQoPU2hvd1Rlc3RQYXR0ZXJuEiYKB3BhdHRlcm4YASABKA4yFS5zZWxhaC52MS5UZXN0UGF0dGVybiIOCgxDbGVhck91dHB1dHMi0A8KBVF1ZXJ5EikKCmdldF9zdGF0dXMYASABKAsyEy5zZWxhaC52MS5HZXRTdGF0dXNIABItCgxnZXRfc2V0dGluZ3MYAiABKAsyFS5zZWxhaC52MS5HZXRTZXR0aW5nc0gAEisKC3NlYXJjaF9oZWxwGAMgASgLMhQuc2VsYWgudjEuU2VhcmNoSGVscEgAEisKC2dldF9hcnRpY2xlGAQgASgLMhQuc2VsYWgudjEuR2V0QXJ0aWNsZUgAEjQKEGhlbHBfZm9yX2NvbnRleHQYBSABKAsyGC5zZWxhaC52MS5IZWxwRm9yQ29udGV4dEgAEigKCXN1YnNjcmliZRgGIAEoCzITLnNlbGFoLnYxLlN1YnNjcmliZUgAEjoKE2dldF93YXRjaGRvZ19zdGF0dXMYByABKAsyGy5zZWxhaC52MS5HZXRXYXRjaGRvZ1N0YXR1c0gAEjMKD2dldF9kaWFnbm9zdGljcxgIIAEoCzIYLnNlbGFoLnYxLkdldERpYWdub3N0aWNzSAASJQoIZ2V0X3NvbmcYCSABKAsyES5zZWxhaC52MS5HZXRTb25nSAASKQoKbGlzdF9zb25ncxgKIAEoCzITLnNlbGFoLnYxLkxpc3RTb25nc0gAEi0KDGdldF90ZW1wbGF0ZRgLIAEoCzIVLnNlbGFoLnYxLkdldFRlbXBsYXRlSAASMQoObGlzdF90ZW1wbGF0ZXMYDCABKAsyFy5zZWxhaC52MS5MaXN0VGVtcGxhdGVzSAASMAoOZ2V0X21lZGlhX2l0ZW0YDSABKAsyFi5zZWxhaC52MS5HZXRNZWRpYUl0ZW1IABI0ChBsaXN0X21lZGlhX2l0ZW1zGA4gASgLMhguc2VsYWgudjEuTGlzdE1lZGlhSXRlbXNIABI1ChBnZXRfcHJlc2VudGF0aW9uGA8gASgLMhkuc2VsYWgudjEuR2V0UHJlc2VudGF0aW9uSAASOQoSbGlzdF9wcmVzZW50YXRpb25zGBAgASgLMhsuc2VsYWgudjEuTGlzdFByZXNlbnRhdGlvbnNIABIjCgdnZXRfdGFnGBEgASgLMhAuc2VsYWgudjEuR2V0VGFnSAASJwoJbGlzdF90YWdzGBIgASgLMhIuc2VsYWgudjEuTGlzdFRhZ3NIABIwCg5nZXRfdW5kb19zdGF0ZRgTIAEoCzIWLnNlbGFoLnYxLkdldFVuZG9TdGF0ZUgAEjYKEWdldF9lZGl0b3JfYnVmZmVyGBQgASgLMhkuc2VsYWgudjEuR2V0RWRpdG9yQnVmZmVySAASOgoTbGlzdF9lZGl0b3JfYnVmZmVycxgVIAEoCzIbLnNlbGFoLnYxLkxpc3RFZGl0b3JCdWZmZXJzSAASJQoIbGlzdF9vcHMYFiABKAsyES5zZWxhaC52MS5MaXN0T3BzSAASOAoSZ2V0X3BvbGljeV9zZXR0aW5nGBcgASgLMhouc2VsYWgudjEuR2V0UG9saWN5U2V0dGluZ0gAEi0KDHNlYXJjaF9zb25ncxgYIAEoCzIVLnNlbGFoLnYxLlNlYXJjaFNvbmdzSAASLQoMc2VhcmNoX21lZGlhGBkgASgLMhUuc2VsYWgudjEuU2VhcmNoTWVkaWFIABI1ChBzZWFyY2hfc2NyaXB0dXJlGBogASgLMhkuc2VsYWgudjEuU2VhcmNoU2NyaXB0dXJlSAASMQoOc2VhcmNoX2xpYnJhcnkYGyABKAsyFy5zZWxhaC52MS5TZWFyY2hMaWJyYXJ5SAASNgoRcGFyc2VfcGFzdGVkX3NvbmcYHCABKAsyGS5zZWxhaC52MS5QYXJzZVBhc3RlZFNvbmdIABIxCg50cmFuc3Bvc2Vfc29uZxgdIAEoCzIXLnNlbGFoLnYxLlRyYW5zcG9zZVNvbmdIABI2ChFzcGxpdF9zb25nX3NsaWRlcxgeIAEoCzIZLnNlbGFoLnYxLlNwbGl0U29uZ1NsaWRlc0gAEisKC2xpc3RfYmlibGVzGB8gASgLMhQuc2VsYWgudjEuTGlzdEJpYmxlc0gAEkYKGXBhcnNlX3NjcmlwdHVyZV9yZWZlcmVuY2UYICABKAsyIS5zZWxhaC52MS5QYXJzZVNjcmlwdHVyZVJlZmVyZW5jZUgAEkAKFmdldF9zY3JpcHR1cmVfcGFzc2FnZXMYISABKAsyHi5zZWxhaC52MS5HZXRTY3JpcHR1cmVQYXNzYWdlc0gAEkAKFnNwbGl0X3NjcmlwdHVyZV9zbGlkZXMYIiABKAsyHi5zZWxhaC52MS5TcGxpdFNjcmlwdHVyZVNsaWRlc0gAEjoKE2dldF9tZWRpYV90aHVtYm5haWwYIyABKAsyGy5zZWxhaC52MS5HZXRNZWRpYVRodW1ibmFpbEgAEjgKEmdldF9vdXRwdXRfY29uZmlncxgkIAEoCzIaLnNlbGFoLnYxLkdldE91dHB1dENvbmZpZ3NIABI4ChJhbmFseXplX2ZsYXNoX3Jpc2sYJSABKAsyGi5zZWxhaC52MS5BbmFseXplRmxhc2hSaXNrSAASQAoWcmVuZGVyX3NjZW5lX3RodW1ibmFpbBgmIAEoCzIeLnNlbGFoLnYxLlJlbmRlclNjZW5lVGh1bWJuYWlsSABCCQoHcmVxdWVzdCILCglHZXRTdGF0dXMi5gIKBlN0YXR1cxIRCgljb25uZWN0ZWQYASABKAgSEQoJc2FmZV9tb2RlGAIgASgIEhYKDnNjZW5lX3JldmlzaW9uGAMgASgEEhgKEGVuZ2luZV9jb25uZWN0ZWQYBCABKAgSHQoVZW5naW5lX3NjZW5lX3JldmlzaW9uGAUgASgEEhYKDmZyYW1lX2NoZWNrc3VtGAYgASgMEg8KB3ZlcnNpb24YByABKAkSDAoEbGl2ZRgIIAEoCBIQCghyZW5kZXJlchgJIAEoCRIvChFvdXRwdXRfcmVzb2x1dGlvbhgKIAEoCzIULnNlbGFoLnYxLlJlc29sdXRpb24SNAoPb3V0cHV0X3N0YXR1c2VzGAsgAygLMhsuc2VsYWgudjEuT3V0cHV0RnJhbWVTdGF0dXMSHgoWcHJldmlld19zY2VuZV9yZXZpc2lvbhgMIAEoBBIVCg1mbGFzaF93YXJuaW5nGA0gASgIIhMKEUdldFdhdGNoZG9nU3RhdHVzIksKC1Byb2Nlc3NJbmZvEgwKBHJvbGUYASABKAkSCwoDcGlkGAIgASgNEhAKCHJlc3RhcnRzGAMgASgNEg8KB3J1bm5pbmcYBCABKAgiZwoOV2F0Y2hkb2dTdGF0dXMSKAoJcHJvY2Vzc2VzGAEgAygLMhUuc2VsYWgudjEuUHJvY2Vzc0luZm8SEQoJc2FmZV9tb2RlGAIgASgIEhgKEHNhZmVfbW9kZV9yZWFzb24YAyABKAkiIAoJU3Vic2NyaWJlEhMKC2V2ZW50X25hbWVzGAEgAygJIioKCUhlYXJ0YmVhdBIdChVtb25vdG9uaWNfbmFub3NlY29uZHMYASABKAQiugIKBUV2ZW50EisKC2ZyYW1lX3Nob3duGAEgASgLMhQuc2VsYWgudjEuRnJhbWVTaG93bkgAEiIKBnN0YXR1cxgCIAEoCzIQLnNlbGFoLnYxLlN0YXR1c0gAEigKCWhlYXJ0YmVhdBgDIAEoCzITLnNlbGFoLnYxLkhlYXJ0YmVhdEgAEjcKEWVtZXJnZW5jeV9hcHBsaWVkGAQgASgLMhouc2VsYWgudjEuRW1lcmdlbmN5QXBwbGllZEgAEjMKD2xpYnJhcnlfY2hhbmdlZBgFIAEoCzIYLnNlbGFoLnYxLkxpYnJhcnlDaGFuZ2VkSAASOAoSdW5kb19zdGF0ZV9jaGFuZ2VkGAYgASgLMhouc2VsYWgudjEuVW5kb1N0YXRlQ2hhbmdlZEgAQg4KDG5vdGlmaWNhdGlvbiKLEgoFUmVwbHkSIgoGc3RhdHVzGAEgASgLMhAuc2VsYWgudjEuU3RhdHVzSAASJgoIc2V0dGluZ3MYAiABKAsyEi5zZWxhaC52MS5TZXR0aW5nc0gAEi0KDGhlbHBfcmVzdWx0cxgDIAEoCzIVLnNlbGFoLnYxLkhlbHBSZXN1bHRzSAASJAoHYXJ0aWNsZRgEIAEoCzIRLnNlbGFoLnYxLkFydGljbGVIABIWCgxhY2tub3dsZWRnZWQYBSABKAhIABIzCg93YXRjaGRvZ19zdGF0dXMYBiABKAsyGC5zZWxhaC52MS5XYXRjaGRvZ1N0YXR1c0gAEi0KDHVwZGF0ZV9jaGVjaxgHIAEoCzIVLnNlbGFoLnYxLlVwZGF0ZUNoZWNrSAASMQoOc3VwcG9ydF9idW5kbGUYCCABKAsyFy5zZWxhaC52MS5TdXBwb3J0QnVuZGxlSAASLAoLZGlhZ25vc3RpY3MYCSABKAsyFS5zZWxhaC52MS5EaWFnbm9zdGljc0gAEjkKEmRpYWdub3N0aWNzX3JlcG9ydBgKIAEoCzIbLnNlbGFoLnYxLkRpYWdub3N0aWNzUmVwb3J0SAASHgoEc29uZxgLIAEoCzIOLnNlbGFoLnYxLlNvbmdIABInCglzb25nX2xpc3QYDCABKAsyEi5zZWxhaC52MS5Tb25nTGlzdEgAEiYKCHRlbXBsYXRlGA0gASgLMhIuc2VsYWgudjEuVGVtcGxhdGVIABIvCg10ZW1wbGF0ZV9saXN0GA4gASgLMhYuc2VsYWgudjEuVGVtcGxhdGVMaXN0SAASKQoKbWVkaWFfaXRlbRgPIAEoCzITLnNlbGFoLnYxLk1lZGlhSXRlbUgAEjIKD21lZGlhX2l0ZW1fbGlzdBgQIAEoCzIXLnNlbGFoLnYxLk1lZGlhSXRlbUxpc3RIABIuCgxwcmVzZW50YXRpb24YESABKAsyFi5zZWxhaC52MS5QcmVzZW50YXRpb25IABI3ChFwcmVzZW50YXRpb25fbGlzdBgSIAEoCzIaLnNlbGFoLnYxLlByZXNlbnRhdGlvbkxpc3RIABIcCgN0YWcYEyABKAsyDS5zZWxhaC52MS5UYWdIABIlCgh0YWdfbGlzdBgUIAEoCzIRLnNlbGFoLnYxLlRhZ0xpc3RIABIpCgp1bmRvX3N0YXRlGBUgASgLMhMuc2VsYWgudjEuVW5kb1N0YXRlSAASNAoNZWRpdG9yX2J1ZmZlchgWIAEoCzIbLnNlbGFoLnYxLkVkaXRvckJ1ZmZlclJlcGx5SAASOAoSZWRpdG9yX2J1ZmZlcl9saXN0GBcgASgLMhouc2VsYWgudjEuRWRpdG9yQnVmZmVyTGlzdEgAEiMKB29wX2xpc3QYGCABKAsyEC5zZWxhaC52MS5PcExpc3RIABI5Cg5wb2xpY3lfc2V0dGluZxgZIAEoCzIfLnNlbGFoLnYxLkdldFBvbGljeVNldHRpbmdSZXBseUgAEjoKE3Nvbmdfc2VhcmNoX3Jlc3VsdHMYGiABKAsyGy5zZWxhaC52MS5Tb25nU2VhcmNoUmVzdWx0c0gAEjwKFG1lZGlhX3NlYXJjaF9yZXN1bHRzGBsgASgLMhwuc2VsYWgudjEuTWVkaWFTZWFyY2hSZXN1bHRzSAASRAoYc2NyaXB0dXJlX3NlYXJjaF9yZXN1bHRzGBwgASgLMiAuc2VsYWgudjEuU2NyaXB0dXJlU2VhcmNoUmVzdWx0c0gAEkAKFmxpYnJhcnlfc2VhcmNoX3Jlc3VsdHMYHSABKAsyHi5zZWxhaC52MS5MaWJyYXJ5U2VhcmNoUmVzdWx0c0gAEjUKC3BhcnNlZF9zb25nGB4gASgLMh4uc2VsYWgudjEuUGFyc2VQYXN0ZWRTb25nUmVwbHlIABI+ChVnZW5lcmF0ZWRfc29uZ19zbGlkZXMYHyABKAsyHS5zZWxhaC52MS5HZW5lcmF0ZWRTb25nU2xpZGVzSAASNwoRYmlibGVfdHJhbnNsYXRpb24YICABKAsyGi5zZWxhaC52MS5CaWJsZVRyYW5zbGF0aW9uSAASKQoKYmlibGVfbGlzdBghIAEoCzITLnNlbGFoLnYxLkJpYmxlTGlzdEgAEkwKGnBhcnNlZF9zY3JpcHR1cmVfcmVmZXJlbmNlGCIgASgLMiYuc2VsYWgudjEuUGFyc2VTY3JpcHR1cmVSZWZlcmVuY2VSZXBseUgAEjkKEnNjcmlwdHVyZV9wYXNzYWdlcxgjIAEoCzIbLnNlbGFoLnYxLlNjcmlwdHVyZVBhc3NhZ2VzSAASSAoaZ2VuZXJhdGVkX3NjcmlwdHVyZV9zbGlkZXMYJCABKAsyIi5zZWxhaC52MS5HZW5lcmF0ZWRTY3JpcHR1cmVTbGlkZXNIABIzCg9tZWRpYV90aHVtYm5haWwYJSABKAsyGC5zZWxhaC52MS5NZWRpYVRodW1ibmFpbEgAEj4KFWV4cG9ydGVkX3NlbGFoX2J1bmRsZRgmIAEoCzIdLnNlbGFoLnYxLkV4cG9ydGVkU2VsYWhCdW5kbGVIABI+ChVpbXBvcnRlZF9zZWxhaF9idW5kbGUYJyABKAsyHS5zZWxhaC52MS5JbXBvcnRlZFNlbGFoQnVuZGxlSAASOgoTbGlicmFyeV9iYWNrdXBfaW5mbxgoIAEoCzIbLnNlbGFoLnYxLkxpYnJhcnlCYWNrdXBJbmZvSAASTQodcmVzdG9yZV9saWJyYXJ5X2JhY2t1cF9yZXN1bHQYKSABKAsyJC5zZWxhaC52MS5SZXN0b3JlTGlicmFyeUJhY2t1cFJlc3VsdEgAEjgKEm91dHB1dF9jb25maWdfbGlzdBgqIAEoCzIaLnNlbGFoLnYxLk91dHB1dENvbmZpZ0xpc3RIABI2ChFmbGFzaF9yaXNrX3JlcG9ydBgrIAEoCzIZLnNlbGFoLnYxLkZsYXNoUmlza1JlcG9ydEgAEjMKD3NjZW5lX3RodW1ibmFpbBgsIAEoCzIYLnNlbGFoLnYxLlNjZW5lVGh1bWJuYWlsSABCCAoGcmVzdWx0IhUKE0NyZWF0ZVN1cHBvcnRCdW5kbGUiMQoNU3VwcG9ydEJ1bmRsZRIMCgRwYXRoGAEgASgJEhIKCnJlcG9ydF91cmwYAiABKAkiEAoOR2V0RGlhZ25vc3RpY3MiqAEKC0RpYWdub3N0aWNzEg8KB3ZlcnNpb24YASABKAkSCgoCb3MYAiABKAkSDAoEYXJjaBgDIAEoCRIRCglzYWZlX21vZGUYBCABKAgSGAoQZW5naW5lX2Nvbm5lY3RlZBgFIAEoCBIQCghyZW5kZXJlchgGIAEoCRIvChFvdXRwdXRfcmVzb2x1dGlvbhgHIAEoCzIULnNlbGFoLnYxLlJlc29sdXRpb24iHwoOUnVuRGlhZ25vc3RpY3MSDQoFcXVpY2sYASABKAgi9gEKEURpYWdub3N0aWNzUmVwb3J0EgwKBHBhdGgYASABKAkSEgoKaXBjX3A5OV9tcxgCIAEoARIQCghpcGNfcGFzcxgDIAEoCBISCgp2aWRlb19jbGlwGAQgASgJEhQKDHZpZGVvX2RlY29kZRgFIAEoCRIUCgx2aWRlb19mcmFtZXMYBiABKAQSFQoNdmlkZW9fZHJvcHBlZBgHIAEoBBIeChZ2aWRlb19jb21wb3NpdGVfcDk5X21zGAggASgBEhIKCnZpZGVvX3Bhc3MYCSABKAgSEQoJbTNfcDk5X21zGAogASgBEg8KB20zX3Bhc3MYCyABKAgqmQIKC0FjdG9yT3JpZ2luEhwKGEFDVE9SX09SSUdJTl9VTlNQRUNJRklFRBAAEhMKD0FDVE9SX09SSUdJTl9VSRABEhQKEEFDVE9SX09SSUdJTl9BUEkQAhIVChFBQ1RPUl9PUklHSU5fTUlESRADEhYKEkFDVE9SX09SSUdJTl9NQUNSTxAEEhkKFUFDVE9SX09SSUdJTl9USU1FTElORRAFEhUKEUFDVE9SX09SSUdJTl9TWU5DEAYSFQoRQUNUT1JfT1JJR0lOX1RPVVIQBxIVChFBQ1RPUl9PUklHSU5fQ09SRRAIEhcKE0FDVE9SX09SSUdJTl9FTkdJTkUQCRIZChVBQ1RPUl9PUklHSU5fV0FUQ0hET0cQCkIVqgISU2VsYWguQ29udHJhY3RzLlYxYgZwcm90bzM", [file_selah_v1_common, file_selah_v1_errors, file_selah_v1_help, file_selah_v1_library, file_selah_v1_render, file_selah_v1_settings]);
 
 /**
  * This is attribution, not proof of identity. The receiver must authenticate
@@ -327,6 +327,30 @@ export type Command = Message<"selah.v1.Command"> & {
      */
     value: RestoreLibraryBackup;
     case: "restoreLibraryBackup";
+  } | {
+    /**
+     * @generated from field: selah.v1.SetOutputConfigs set_output_configs = 35;
+     */
+    value: SetOutputConfigs;
+    case: "setOutputConfigs";
+  } | {
+    /**
+     * @generated from field: selah.v1.PresentScene present_scene = 36;
+     */
+    value: PresentScene;
+    case: "presentScene";
+  } | {
+    /**
+     * @generated from field: selah.v1.StagePreviewScene stage_preview_scene = 37;
+     */
+    value: StagePreviewScene;
+    case: "stagePreviewScene";
+  } | {
+    /**
+     * @generated from field: selah.v1.PreloadItems preload_items = 38;
+     */
+    value: PreloadItems;
+    case: "preloadItems";
   } | { case: undefined; value?: undefined };
 
   /**
@@ -345,6 +369,40 @@ export const CommandSchema: GenMessage<Command> = /*@__PURE__*/
   messageDesc(file_selah_v1_envelope, 2);
 
 /**
+ * @generated from message selah.v1.PresentScene
+ */
+export type PresentScene = Message<"selah.v1.PresentScene"> & {
+  /**
+   * @generated from field: selah.v1.Scene scene = 1;
+   */
+  scene?: Scene;
+};
+
+/**
+ * Describes the message selah.v1.PresentScene.
+ * Use `create(PresentSceneSchema)` to create a new message.
+ */
+export const PresentSceneSchema: GenMessage<PresentScene> = /*@__PURE__*/
+  messageDesc(file_selah_v1_envelope, 3);
+
+/**
+ * @generated from message selah.v1.StagePreviewScene
+ */
+export type StagePreviewScene = Message<"selah.v1.StagePreviewScene"> & {
+  /**
+   * @generated from field: selah.v1.Scene scene = 1;
+   */
+  scene?: Scene;
+};
+
+/**
+ * Describes the message selah.v1.StagePreviewScene.
+ * Use `create(StagePreviewSceneSchema)` to create a new message.
+ */
+export const StagePreviewSceneSchema: GenMessage<StagePreviewScene> = /*@__PURE__*/
+  messageDesc(file_selah_v1_envelope, 4);
+
+/**
  * UI → watchdog: leave safe mode (SAFE-07, "Restart normally"). The watchdog restarts core and
  * the UI without safe mode; the engine keeps the screens as they are. Core refuses it.
  *
@@ -358,7 +416,7 @@ export type RestartNormally = Message<"selah.v1.RestartNormally"> & {
  * Use `create(RestartNormallySchema)` to create a new message.
  */
 export const RestartNormallySchema: GenMessage<RestartNormally> = /*@__PURE__*/
-  messageDesc(file_selah_v1_envelope, 3);
+  messageDesc(file_selah_v1_envelope, 5);
 
 /**
  * UI → core: put a test pattern on every output (M1.8 "Show test pattern").
@@ -377,7 +435,7 @@ export type ShowTestPattern = Message<"selah.v1.ShowTestPattern"> & {
  * Use `create(ShowTestPatternSchema)` to create a new message.
  */
 export const ShowTestPatternSchema: GenMessage<ShowTestPattern> = /*@__PURE__*/
-  messageDesc(file_selah_v1_envelope, 4);
+  messageDesc(file_selah_v1_envelope, 6);
 
 /**
  * UI → core: clear every output through the normal path. The emergency lane is separate.
@@ -392,7 +450,7 @@ export type ClearOutputs = Message<"selah.v1.ClearOutputs"> & {
  * Use `create(ClearOutputsSchema)` to create a new message.
  */
 export const ClearOutputsSchema: GenMessage<ClearOutputs> = /*@__PURE__*/
-  messageDesc(file_selah_v1_envelope, 5);
+  messageDesc(file_selah_v1_envelope, 7);
 
 /**
  * @generated from message selah.v1.Query
@@ -611,6 +669,24 @@ export type Query = Message<"selah.v1.Query"> & {
      */
     value: GetMediaThumbnail;
     case: "getMediaThumbnail";
+  } | {
+    /**
+     * @generated from field: selah.v1.GetOutputConfigs get_output_configs = 36;
+     */
+    value: GetOutputConfigs;
+    case: "getOutputConfigs";
+  } | {
+    /**
+     * @generated from field: selah.v1.AnalyzeFlashRisk analyze_flash_risk = 37;
+     */
+    value: AnalyzeFlashRisk;
+    case: "analyzeFlashRisk";
+  } | {
+    /**
+     * @generated from field: selah.v1.RenderSceneThumbnail render_scene_thumbnail = 38;
+     */
+    value: RenderSceneThumbnail;
+    case: "renderSceneThumbnail";
   } | { case: undefined; value?: undefined };
 };
 
@@ -619,7 +695,7 @@ export type Query = Message<"selah.v1.Query"> & {
  * Use `create(QuerySchema)` to create a new message.
  */
 export const QuerySchema: GenMessage<Query> = /*@__PURE__*/
-  messageDesc(file_selah_v1_envelope, 6);
+  messageDesc(file_selah_v1_envelope, 8);
 
 /**
  * @generated from message selah.v1.GetStatus
@@ -632,7 +708,7 @@ export type GetStatus = Message<"selah.v1.GetStatus"> & {
  * Use `create(GetStatusSchema)` to create a new message.
  */
 export const GetStatusSchema: GenMessage<GetStatus> = /*@__PURE__*/
-  messageDesc(file_selah_v1_envelope, 7);
+  messageDesc(file_selah_v1_envelope, 9);
 
 /**
  * @generated from message selah.v1.Status
@@ -697,6 +773,21 @@ export type Status = Message<"selah.v1.Status"> & {
    * @generated from field: selah.v1.Resolution output_resolution = 10;
    */
   outputResolution?: Resolution;
+
+  /**
+   * @generated from field: repeated selah.v1.OutputFrameStatus output_statuses = 11;
+   */
+  outputStatuses: OutputFrameStatus[];
+
+  /**
+   * @generated from field: uint64 preview_scene_revision = 12;
+   */
+  previewSceneRevision: bigint;
+
+  /**
+   * @generated from field: bool flash_warning = 13;
+   */
+  flashWarning: boolean;
 };
 
 /**
@@ -704,7 +795,7 @@ export type Status = Message<"selah.v1.Status"> & {
  * Use `create(StatusSchema)` to create a new message.
  */
 export const StatusSchema: GenMessage<Status> = /*@__PURE__*/
-  messageDesc(file_selah_v1_envelope, 8);
+  messageDesc(file_selah_v1_envelope, 10);
 
 /**
  * @generated from message selah.v1.GetWatchdogStatus
@@ -717,7 +808,7 @@ export type GetWatchdogStatus = Message<"selah.v1.GetWatchdogStatus"> & {
  * Use `create(GetWatchdogStatusSchema)` to create a new message.
  */
 export const GetWatchdogStatusSchema: GenMessage<GetWatchdogStatus> = /*@__PURE__*/
-  messageDesc(file_selah_v1_envelope, 9);
+  messageDesc(file_selah_v1_envelope, 11);
 
 /**
  * @generated from message selah.v1.ProcessInfo
@@ -749,7 +840,7 @@ export type ProcessInfo = Message<"selah.v1.ProcessInfo"> & {
  * Use `create(ProcessInfoSchema)` to create a new message.
  */
 export const ProcessInfoSchema: GenMessage<ProcessInfo> = /*@__PURE__*/
-  messageDesc(file_selah_v1_envelope, 10);
+  messageDesc(file_selah_v1_envelope, 12);
 
 /**
  * @generated from message selah.v1.WatchdogStatus
@@ -776,7 +867,7 @@ export type WatchdogStatus = Message<"selah.v1.WatchdogStatus"> & {
  * Use `create(WatchdogStatusSchema)` to create a new message.
  */
 export const WatchdogStatusSchema: GenMessage<WatchdogStatus> = /*@__PURE__*/
-  messageDesc(file_selah_v1_envelope, 11);
+  messageDesc(file_selah_v1_envelope, 13);
 
 /**
  * @generated from message selah.v1.Subscribe
@@ -793,7 +884,7 @@ export type Subscribe = Message<"selah.v1.Subscribe"> & {
  * Use `create(SubscribeSchema)` to create a new message.
  */
 export const SubscribeSchema: GenMessage<Subscribe> = /*@__PURE__*/
-  messageDesc(file_selah_v1_envelope, 12);
+  messageDesc(file_selah_v1_envelope, 14);
 
 /**
  * @generated from message selah.v1.Heartbeat
@@ -810,7 +901,7 @@ export type Heartbeat = Message<"selah.v1.Heartbeat"> & {
  * Use `create(HeartbeatSchema)` to create a new message.
  */
 export const HeartbeatSchema: GenMessage<Heartbeat> = /*@__PURE__*/
-  messageDesc(file_selah_v1_envelope, 13);
+  messageDesc(file_selah_v1_envelope, 15);
 
 /**
  * @generated from message selah.v1.Event
@@ -863,7 +954,7 @@ export type Event = Message<"selah.v1.Event"> & {
  * Use `create(EventSchema)` to create a new message.
  */
 export const EventSchema: GenMessage<Event> = /*@__PURE__*/
-  messageDesc(file_selah_v1_envelope, 14);
+  messageDesc(file_selah_v1_envelope, 16);
 
 /**
  * @generated from message selah.v1.Reply
@@ -1118,6 +1209,24 @@ export type Reply = Message<"selah.v1.Reply"> & {
      */
     value: RestoreLibraryBackupResult;
     case: "restoreLibraryBackupResult";
+  } | {
+    /**
+     * @generated from field: selah.v1.OutputConfigList output_config_list = 42;
+     */
+    value: OutputConfigList;
+    case: "outputConfigList";
+  } | {
+    /**
+     * @generated from field: selah.v1.FlashRiskReport flash_risk_report = 43;
+     */
+    value: FlashRiskReport;
+    case: "flashRiskReport";
+  } | {
+    /**
+     * @generated from field: selah.v1.SceneThumbnail scene_thumbnail = 44;
+     */
+    value: SceneThumbnail;
+    case: "sceneThumbnail";
   } | { case: undefined; value?: undefined };
 };
 
@@ -1126,7 +1235,7 @@ export type Reply = Message<"selah.v1.Reply"> & {
  * Use `create(ReplySchema)` to create a new message.
  */
 export const ReplySchema: GenMessage<Reply> = /*@__PURE__*/
-  messageDesc(file_selah_v1_envelope, 15);
+  messageDesc(file_selah_v1_envelope, 17);
 
 /**
  * UI → core: Help ▸ Report a problem (M1.13). Core saves a redacted support bundle (SEC-06).
@@ -1141,7 +1250,7 @@ export type CreateSupportBundle = Message<"selah.v1.CreateSupportBundle"> & {
  * Use `create(CreateSupportBundleSchema)` to create a new message.
  */
 export const CreateSupportBundleSchema: GenMessage<CreateSupportBundle> = /*@__PURE__*/
-  messageDesc(file_selah_v1_envelope, 16);
+  messageDesc(file_selah_v1_envelope, 18);
 
 /**
  * @generated from message selah.v1.SupportBundle
@@ -1167,7 +1276,7 @@ export type SupportBundle = Message<"selah.v1.SupportBundle"> & {
  * Use `create(SupportBundleSchema)` to create a new message.
  */
 export const SupportBundleSchema: GenMessage<SupportBundle> = /*@__PURE__*/
-  messageDesc(file_selah_v1_envelope, 17);
+  messageDesc(file_selah_v1_envelope, 19);
 
 /**
  * UI → core: Help ▸ Diagnostics.
@@ -1182,7 +1291,7 @@ export type GetDiagnostics = Message<"selah.v1.GetDiagnostics"> & {
  * Use `create(GetDiagnosticsSchema)` to create a new message.
  */
 export const GetDiagnosticsSchema: GenMessage<GetDiagnostics> = /*@__PURE__*/
-  messageDesc(file_selah_v1_envelope, 18);
+  messageDesc(file_selah_v1_envelope, 20);
 
 /**
  * @generated from message selah.v1.Diagnostics
@@ -1229,7 +1338,7 @@ export type Diagnostics = Message<"selah.v1.Diagnostics"> & {
  * Use `create(DiagnosticsSchema)` to create a new message.
  */
 export const DiagnosticsSchema: GenMessage<Diagnostics> = /*@__PURE__*/
-  messageDesc(file_selah_v1_envelope, 19);
+  messageDesc(file_selah_v1_envelope, 21);
 
 /**
  * UI → core: Help ▸ Diagnostics ▸ Run benchmark. Refused while anything is live.
@@ -1250,7 +1359,7 @@ export type RunDiagnostics = Message<"selah.v1.RunDiagnostics"> & {
  * Use `create(RunDiagnosticsSchema)` to create a new message.
  */
 export const RunDiagnosticsSchema: GenMessage<RunDiagnostics> = /*@__PURE__*/
-  messageDesc(file_selah_v1_envelope, 20);
+  messageDesc(file_selah_v1_envelope, 22);
 
 /**
  * @generated from message selah.v1.DiagnosticsReport
@@ -1302,6 +1411,16 @@ export type DiagnosticsReport = Message<"selah.v1.DiagnosticsReport"> & {
    * @generated from field: bool video_pass = 9;
    */
   videoPass: boolean;
+
+  /**
+   * @generated from field: double m3_p99_ms = 10;
+   */
+  m3P99Ms: number;
+
+  /**
+   * @generated from field: bool m3_pass = 11;
+   */
+  m3Pass: boolean;
 };
 
 /**
@@ -1309,7 +1428,7 @@ export type DiagnosticsReport = Message<"selah.v1.DiagnosticsReport"> & {
  * Use `create(DiagnosticsReportSchema)` to create a new message.
  */
 export const DiagnosticsReportSchema: GenMessage<DiagnosticsReport> = /*@__PURE__*/
-  messageDesc(file_selah_v1_envelope, 21);
+  messageDesc(file_selah_v1_envelope, 23);
 
 /**
  * @generated from enum selah.v1.ActorOrigin

@@ -303,6 +303,10 @@ document!(
     Template,
     Template,
     |value: &Template| {
+        ensure!(
+            value.variants.len() <= selah_render::template::MAX_VARIANTS,
+            "too many template variants"
+        );
         unique_ids(value.variants.iter().map(|v| &v.id))?;
         for variant in &value.variants {
             ensure!((1..=100).contains(&variant.max_lines), "invalid line limit");
@@ -314,6 +318,7 @@ document!(
                 size.width > 0 && size.height > 0 && size.width <= 16384 && size.height <= 16384,
                 "invalid template resolution"
             );
+            selah_render::template::TemplateStyle::from_json(&variant.style_json)?;
         }
         Ok(())
     },
@@ -343,6 +348,11 @@ document!(
         unique_ids(value.slides.iter().map(|s| &s.id))?;
         for slide in &value.slides {
             optional_id(&slide.media_id)?;
+            if !slide.elements_json.trim().is_empty() {
+                selah_render::slide_elements::SlideElementsDocument::from_json_strict(
+                    &slide.elements_json,
+                )?;
+            }
         }
         Ok(())
     },
@@ -505,6 +515,22 @@ impl Library {
         }
         tx.commit()?;
         Ok(())
+    }
+
+    pub(crate) fn media_flash_warning_by_hash(&self, content_hash: &str) -> anyhow::Result<bool> {
+        let mut stmt = self
+            .db
+            .prepare("SELECT data FROM media_items WHERE content_hash = ?1")?;
+        let mut rows = stmt.query([content_hash])?;
+        while let Some(row) = rows.next()? {
+            let data: Vec<u8> = row.get(0)?;
+            if let Ok(item) = MediaItem::decode(data.as_slice())
+                && item.flash_warning
+            {
+                return Ok(true);
+            }
+        }
+        Ok(false)
     }
 }
 

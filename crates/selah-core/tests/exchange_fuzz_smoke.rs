@@ -116,6 +116,7 @@ fn build_seed_bundles() -> Vec<Vec<u8>> {
         }),
         duration_milliseconds: 0,
         tags: vec!["backdrop".into()],
+        ..Default::default()
     };
     assert_ok(core.handle(&ui_cmd(
         3,

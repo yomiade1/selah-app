@@ -43,6 +43,8 @@ public sealed class DiagnosticsTests : IDisposable
                 VideoDropped = 9,
                 VideoCompositeP99Ms = 16,
                 VideoPass = false,
+                M3P99Ms = 14.9,
+                M3Pass = false,
             });
 
         public Task<SupportBundle> CreateSupportBundleAsync() => Failure is { } failure
@@ -101,6 +103,9 @@ public sealed class DiagnosticsTests : IDisposable
         Assert.True(diagnostics.HasReport);
         Assert.Equal(Localizer.Instance["diagnostics-saved"], diagnostics.Message);
         Assert.Contains(diagnostics.Results, row => row.Value.Contains("9 of 180 frames dropped", StringComparison.Ordinal));
+        Assert.Contains(diagnostics.Results, row =>
+            row.Label == Localizer.Instance["diagnostics-m3"]
+            && row.Value.Contains(14.9.ToString("0.0", System.Globalization.CultureInfo.CurrentCulture), StringComparison.Ordinal));
         var shown = new List<string>();
         diagnostics.ShowFileRequested += (_, path) => shown.Add(path);
         diagnostics.ShowReportCommand.Execute(null);

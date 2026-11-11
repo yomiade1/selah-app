@@ -82,9 +82,21 @@ message Command {
     ImportSelahBundle import_selah_bundle = 32;
     CreateLibraryBackup create_library_backup = 33;
     RestoreLibraryBackup restore_library_backup = 34;
+    SetOutputConfigs set_output_configs = 35;
+    PresentScene present_scene = 36;
+    StagePreviewScene stage_preview_scene = 37;
+    PreloadItems preload_items = 38;
   }
   // Optional client-supplied UUIDv7 grouping multiple mutations into one undo/redo step.
   Id undo_group = 100;
+}
+
+message PresentScene {
+  Scene scene = 1;
+}
+
+message StagePreviewScene {
+  Scene scene = 1;
 }
 
 // UI → watchdog: leave safe mode (SAFE-07, "Restart normally"). The watchdog restarts core and
@@ -136,6 +148,9 @@ message Query {
     GetScripturePassages get_scripture_passages = 33;
     SplitScriptureSlides split_scripture_slides = 34;
     GetMediaThumbnail get_media_thumbnail = 35;
+    GetOutputConfigs get_output_configs = 36;
+    AnalyzeFlashRisk analyze_flash_risk = 37;
+    RenderSceneThumbnail render_scene_thumbnail = 38;
   }
 }
 
@@ -157,6 +172,9 @@ message Status {
   string renderer = 9;
   // Engine only: the size of the output frames.
   Resolution output_resolution = 10;
+  repeated OutputFrameStatus output_statuses = 11;
+  uint64 preview_scene_revision = 12;
+  bool flash_warning = 13;
 }
 
 message GetWatchdogStatus {}
@@ -236,6 +254,9 @@ message Reply {
     ImportedSelahBundle imported_selah_bundle = 39;
     LibraryBackupInfo library_backup_info = 40;
     RestoreLibraryBackupResult restore_library_backup_result = 41;
+    OutputConfigList output_config_list = 42;
+    FlashRiskReport flash_risk_report = 43;
+    SceneThumbnail scene_thumbnail = 44;
   }
 }
 
@@ -279,4 +300,6 @@ message DiagnosticsReport {
   uint64 video_dropped = 7;
   double video_composite_p99_ms = 8;
   bool video_pass = 9;
+  double m3_p99_ms = 10;
+  bool m3_pass = 11;
 }

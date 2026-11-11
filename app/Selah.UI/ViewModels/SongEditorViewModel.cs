@@ -1,6 +1,7 @@
 using System.Collections.ObjectModel;
 using System.Globalization;
 using System.Text;
+using System.Text.Json;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -231,8 +232,12 @@ public enum SongPreviewTarget
 /// </summary>
 public sealed partial class SongEditorViewModel : ObservableObject
 {
+    private const string ChordsEnabledStyleJson =
+        """{"roles":{"chords":{"font_family":"JetBrains Mono","size":36,"min_size":18,"weight":700,"color":"#FFBE2E","align_h":"left","align_v":"top","visible":true}}}""";
+
     private readonly ILibraryService? library;
     private bool suppressCallbacks;
+    private int slideThumbGeneration;
 
     public SongEditorViewModel(ILibraryService? library)
     {
@@ -400,18 +405,34 @@ public sealed partial class SongEditorViewModel : ObservableObject
 
     public bool ShowChordsInSlides => ShowChords || IsPreviewStage;
 
-    // ----- Sections, Arrangements, Generated slides -----
+    // ----- Sections, Arrangements, Templates, Generated slides -----
     public ObservableCollection<SongSectionItemViewModel> Sections { get; } = [];
 
     public ObservableCollection<ArrangementItemViewModel> Arrangements { get; } = [];
 
+    public ObservableCollection<Template> AvailableTemplates { get; } = [];
+
     public ObservableCollection<SlidePreviewCard> GeneratedSlides { get; } = [];
+
+    public IReadOnlyList<OutputFitReport> LastFitReports { get; private set; } = [];
 
     [ObservableProperty]
     private SongSectionItemViewModel? selectedSection;
 
     [ObservableProperty]
     private ArrangementItemViewModel? selectedArrangement;
+
+    [ObservableProperty]
+    private Template? selectedTemplate;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasFitBadge))]
+    private string fitSummaryText = string.Empty;
+
+    [ObservableProperty]
+    private bool hasFitWarning;
+
+    public bool HasFitBadge => !string.IsNullOrWhiteSpace(FitSummaryText);
 
     [ObservableProperty]
     private bool preferFlats;
@@ -456,6 +477,8 @@ public sealed partial class SongEditorViewModel : ObservableObject
 
     public event EventHandler<Song>? SongSaved;
 
+    public event EventHandler? SceneStaged;
+
     partial void OnTitleChanged(string value) => OnModelMutated();
 
     partial void OnAuthorsTextChanged(string value) => OnModelMutated();
@@ -483,6 +506,62 @@ public sealed partial class SongEditorViewModel : ObservableObject
     partial void OnPreviewTargetChanged(SongPreviewTarget value) => _ = RefreshSlidesAsync();
 
     partial void OnSelectedArrangementChanged(ArrangementItemViewModel? value) => _ = RefreshSlidesAsync();
+
+    partial void OnSelectedTemplateChanged(Template? value)
+    {
+        if (!suppressCallbacks)
+        {
+            _ = RefreshSlidesAsync();
+        }
+    }
+
+    public async Task LoadTemplatesAsync()
+    {
+        if (library is null)
+        {
+            return;
+        }
+        try
+        {
+            var selectedHex = SelectedTemplate?.Id is { Value.IsEmpty: false } sid ? LibraryIds.Hex(sid) : string.Empty;
+            var list = await library.ListTemplatesAsync();
+            var defaultHex = string.Empty;
+            if (string.IsNullOrEmpty(selectedHex))
+            {
+                var policy = await library.GetPolicySettingAsync("templates.default.song");
+                if (policy.Found && !string.IsNullOrWhiteSpace(policy.Setting?.ValueJson))
+                {
+                    defaultHex = policy.Setting.ValueJson.Trim().Trim('"');
+                }
+            }
+            suppressCallbacks = true;
+            try
+            {
+                AvailableTemplates.Clear();
+                foreach (var t in list)
+                {
+                    AvailableTemplates.Add(t);
+                }
+                if (!string.IsNullOrEmpty(selectedHex))
+                {
+                    SelectedTemplate = AvailableTemplates.FirstOrDefault(t =>
+                        string.Equals(LibraryIds.Hex(t.Id), selectedHex, StringComparison.OrdinalIgnoreCase));
+                }
+                else if (!string.IsNullOrEmpty(defaultHex))
+                {
+                    SelectedTemplate = AvailableTemplates.FirstOrDefault(t =>
+                        string.Equals(LibraryIds.Hex(t.Id), defaultHex, StringComparison.OrdinalIgnoreCase));
+                }
+            }
+            finally
+            {
+                suppressCallbacks = false;
+            }
+        }
+        catch (Exception)
+        {
+        }
+    }
 
     public void StartNewSong(bool startOnPaste = true)
     {
@@ -1023,14 +1102,44 @@ public sealed partial class SongEditorViewModel : ObservableObject
         return song;
     }
 
+    [RelayCommand]
+    public async Task StageSlideAsync(SlidePreviewCard? slide)
+    {
+        if (library is null || slide?.PreviewScene is not { } scene)
+        {
+            return;
+        }
+        ErrorMessage = null;
+        try
+        {
+            await library.StagePreviewSceneAsync(scene);
+            StatusMessage = Localizer.Instance["editor-staged-status"];
+            SceneStaged?.Invoke(this, EventArgs.Empty);
+        }
+        catch (CoreException error)
+        {
+            ErrorMessage = Localizer.Instance[error.MessageKey];
+            ErrorFixArticleId = string.IsNullOrWhiteSpace(error.FixArticleId) ? null : error.FixArticleId;
+        }
+        catch (Exception error) when (error is TimeoutException or IOException or InvalidOperationException)
+        {
+            ErrorMessage = Localizer.Instance["error-not-connected"];
+        }
+    }
+
     public async Task RefreshSlidesAsync()
     {
         if (library is null)
         {
             return;
         }
+        var generation = Interlocked.Increment(ref slideThumbGeneration);
         try
         {
+            if (AvailableTemplates.Count == 0)
+            {
+                await LoadTemplatesAsync();
+            }
             var placement = CopyrightPlacementIndex switch
             {
                 0 => CopyrightPlacement.None,
@@ -1038,6 +1147,15 @@ public sealed partial class SongEditorViewModel : ObservableObject
                 2 => CopyrightPlacement.Last,
                 4 => CopyrightPlacement.All,
                 _ => CopyrightPlacement.FirstAndLast,
+            };
+            var (targetW, targetH) = PreviewTarget == SongPreviewTarget.Led32x9
+                ? (3840u, 1080u)
+                : (1920u, 1080u);
+            var targetRole = PreviewTarget switch
+            {
+                SongPreviewTarget.Stage => OutputRole.Stage,
+                SongPreviewTarget.Stream => OutputRole.Stream,
+                _ => OutputRole.Main,
             };
             var request = new SplitSongSlides
             {
@@ -1047,15 +1165,50 @@ public sealed partial class SongEditorViewModel : ObservableObject
                 TitleSlide = TitleSlide,
                 BlankSlideAtEnd = BlankSlideAtEnd,
                 TranslationLanguage = TranslationLanguage.Trim(),
+                ShrinkToFit = true,
             };
+            request.TargetOutputs.Add(new FitTargetOutput
+            {
+                OutputIndex = 0,
+                Name = PreviewTarget.ToString(),
+                Role = targetRole,
+                Resolution = new Resolution { Width = targetW, Height = targetH },
+            });
             if (SelectedArrangement is { } arr)
             {
                 request.ArrangementId = arr.Id;
             }
+            if (SelectedTemplate?.Id is { Value.IsEmpty: false } tmplId)
+            {
+                request.TemplateId = tmplId;
+            }
             var reply = await library.SplitSongSlidesAsync(request);
+            if (Volatile.Read(ref slideThumbGeneration) != generation)
+            {
+                return;
+            }
+            LastFitReports = reply.FitReports.ToList();
+            var primaryReport = LastFitReports.FirstOrDefault();
+            if (primaryReport is not null && primaryReport.AppliedSize > 0)
+            {
+                HasFitWarning = primaryReport.OverflowsSafeArea || !primaryReport.Fits || primaryReport.ExtraSplits > 0 || primaryReport.FlashWarning;
+                var sizePt = (int)Math.Round(primaryReport.AppliedSize);
+                FitSummaryText = primaryReport.ExtraSplits > 0
+                    ? Localizer.Instance.Get("editor-fit-split-badge", ("size", sizePt), ("splits", (int)primaryReport.ExtraSplits))
+                    : Localizer.Instance.Get("editor-fit-ok-badge", ("size", sizePt));
+            }
+            else
+            {
+                HasFitWarning = false;
+                FitSummaryText = string.Empty;
+            }
+            var fittedSlides = reply.PerOutputSlides.FirstOrDefault(p => p.OutputIndex == 0)?.Slides is { Count: > 0 } perOut
+                ? perOut
+                : reply.Slides;
             GeneratedSlides.Clear();
+            var cards = new List<SlidePreviewCard>(fittedSlides.Count);
             var idx = 1;
-            foreach (var slide in reply.Slides)
+            foreach (var slide in fittedSlides)
             {
                 var header = slide.PartCount > 1
                     ? $"{slide.SectionLabel} ({slide.PartIndex}/{slide.PartCount})"
@@ -1063,21 +1216,91 @@ public sealed partial class SongEditorViewModel : ObservableObject
                 var chords = ShowChordsInSlides
                     ? string.Join(" · ", slide.Lines.SelectMany(l => l.Chords).Select(c => c.Text).Where(c => !string.IsNullOrEmpty(c)))
                     : string.Empty;
-                GeneratedSlides.Add(new SlidePreviewCard
+                var body = string.Join("\n", slide.Lines.Select(l => l.Text));
+                var translationText = string.Join("\n", slide.TranslationLines);
+                var chordsJson = ShowChordsInSlides ? BuildChordsJson(slide) : string.Empty;
+                string styleJson;
+                if (SelectedTemplate is not null)
+                {
+                    var templateModel = TemplateStyleModel.FromProto(SelectedTemplate);
+                    if (ShowChordsInSlides && !string.IsNullOrEmpty(chordsJson))
+                    {
+                        templateModel.Roles.Chords.Visible = true;
+                    }
+                    styleJson = templateModel.ToJson();
+                }
+                else
+                {
+                    styleJson = ShowChordsInSlides && !string.IsNullOrEmpty(chordsJson)
+                        ? ChordsEnabledStyleJson
+                        : string.Empty;
+                }
+                var card = new SlidePreviewCard
                 {
                     Number = idx++,
                     Header = header,
                     ColorHex = LibraryIds.SectionColorHex(slide.SectionKind),
-                    Body = string.Join("\n", slide.Lines.Select(l => l.Text)),
+                    Body = body,
                     ChordsLine = chords,
                     Footer = slide.FooterCopyright,
-                });
+                    PreviewScene = SlidePreviewCard.BuildSlideScene(
+                        slide.IsTitle ? string.Empty : body,
+                        footer: slide.FooterCopyright,
+                        titleText: slide.IsTitle ? slide.SectionLabel : string.Empty,
+                        chordsJson: chordsJson,
+                        translationText: translationText,
+                        width: targetW,
+                        height: targetH,
+                        styleJson: styleJson),
+                };
+                GeneratedSlides.Add(card);
+                cards.Add(card);
             }
             OnPropertyChanged(nameof(SlidesSummaryText));
+            foreach (var card in cards)
+            {
+                if (Volatile.Read(ref slideThumbGeneration) != generation)
+                {
+                    return;
+                }
+                if (card.PreviewScene is not { } scene)
+                {
+                    continue;
+                }
+                try
+                {
+                    var thumbReply = await library.RenderSceneThumbnailAsync(scene, 0, 320, 180);
+                    if (Volatile.Read(ref slideThumbGeneration) != generation)
+                    {
+                        return;
+                    }
+                    card.Thumbnail = MediaCardViewModel.DecodePng(thumbReply.PngBytes.ToByteArray());
+                    card.HasFlashWarning = thumbReply.FlashWarning;
+                }
+                catch (Exception)
+                {
+                }
+            }
         }
         catch (Exception)
         {
         }
+    }
+
+    private static string BuildChordsJson(GeneratedSlide slide)
+    {
+        var anchors = new List<object>();
+        for (var lineIdx = 0; lineIdx < slide.Lines.Count; lineIdx++)
+        {
+            foreach (var chord in slide.Lines[lineIdx].Chords)
+            {
+                if (!string.IsNullOrWhiteSpace(chord.Text))
+                {
+                    anchors.Add(new { line = lineIdx, position = chord.Position, text = chord.Text });
+                }
+            }
+        }
+        return anchors.Count == 0 ? string.Empty : JsonSerializer.Serialize(anchors);
     }
 
     private void OnModelMutated()
