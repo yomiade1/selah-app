@@ -322,7 +322,7 @@ Owner: you. Coding sessions keep this table up to date, mark which feature flags
 |---|---|---|---|---|
 | H-01 | Approve installing toolchains (Rust, VS Build Tools, LLVM, .NET 10 SDK, pnpm, buf). Only needed if you also code locally; cloud sessions install their own. | M1 (optional) | Not needed for cloud sessions | |
 | H-02 | Confirm the product name and choose the code licence | M1 (placeholder allowed) | Open | |
-| H-03 | GitHub remote (done). Before CI can run: clean the history, apply the public-period settings and make the repository public (docs/CLOUD-DEVELOPMENT.md §2.2 and §3) | M1 | Partly done | Repository recreated with a clean history and made public (2026-11-01). Still to do: the settings in docs/CLOUD-DEVELOPMENT.md §2.2. |
+| H-03 | GitHub remote (done). Before CI can run: clean the history, apply the public-period settings and make the repository public (docs/CLOUD-DEVELOPMENT.md §2.2 and §3) | M1 | Partly done | Repository recreated with a clean history and made public (2026-11-01). **CI is currently blocked:** Actions permissions allow only `yomiade1`-owned actions, so every run fails at startup (runs 20 and 21, 2026-11-11). Fix: Settings ▸ Actions ▸ General, tick **Allow actions created by GitHub** (§2.2). Also re-enable **Require status checks to pass** on the `main` ruleset, turned off to merge PR #7. |
 | H-04 | macOS checks run in the `macos` CI job. Provide a Mac only for hands-on macOS testing. | M1 onward (optional) | Open | |
 | H-05 | Legal review: use of the analysis, interoperability importers (product plan §1) | Before M6 | Open | |
 | H-06 | Confirm rights for bundled Bible translations | M2 | Open | Only public-domain KJV and WEB are bundled in M2 (`content/bibles/PROVENANCE.md`). |
