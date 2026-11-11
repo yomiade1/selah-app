@@ -29,5 +29,7 @@
     <AvaloniaResource Include="Styles/*.axaml" />
     <!-- UI strings (ADR-010). -->
     <Content Include="../../content/i18n/**/*.ftl" Link="i18n/%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="../../content/help/tours/*.yaml" Link="tours/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="../../content/samples/*.json" Link="samples/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 </Project>

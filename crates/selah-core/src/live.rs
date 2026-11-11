@@ -38,6 +38,8 @@ pub struct LiveState {
     output_configs: Vec<OutputConfig>,
     explicit_configs: bool,
     snapshot: LiveMachineSnapshot,
+    /// M4.7: while practising nothing is saved, so a restart never brings practice to the screens.
+    practicing: bool,
 }
 
 fn default_output_config() -> OutputConfig {
@@ -695,6 +697,7 @@ impl LiveState {
             output_configs,
             explicit_configs,
             snapshot,
+            practicing: false,
         }
     }
 
@@ -740,6 +743,44 @@ impl LiveState {
             self.snapshot.undo_stack.drain(0..excess);
         }
         self.snapshot.redo_stack.clear();
+    }
+
+    /// Whether time passing changes anything: a running timer or a message with a duration.
+    pub fn has_running_clock_work(&self) -> bool {
+        self.snapshot
+            .status
+            .as_ref()
+            .and_then(|s| s.automation.first())
+            .is_some_and(|a| {
+                a.timers.iter().any(|t| t.running) || a.active_message_remaining_ms > 0
+            })
+    }
+
+    /// Keep the wall clock current without saving (the core host's ticker, about once a second).
+    pub fn set_wall_clock(&mut self, wall_unix_ms: i64) {
+        if wall_unix_ms > 0 {
+            self.snapshot.virtual_clock_wall_unix_ms = wall_unix_ms;
+        }
+    }
+
+    /// Wall-clock time for stage timers: the live virtual clock when a test or the core host's
+    /// ticker has set it, otherwise the system clock.
+    fn wall_now_unix_ms(&self) -> i64 {
+        if self.snapshot.virtual_clock_wall_unix_ms > 0 {
+            return self.snapshot.virtual_clock_wall_unix_ms;
+        }
+        std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .map(|d| d.as_millis() as i64)
+            .unwrap_or(0)
+    }
+
+    /// Rebuild the scene without changing what is on the audience screens: used when only what
+    /// the stage screens show has changed (booth message, stage layout, timers).
+    fn refresh_scene(&mut self) {
+        let show_logo = self.snapshot.status.as_ref().is_some_and(|s| s.show_logo);
+        let cleared = self.scene.cleared;
+        self.rebuild_scene_from_status(cleared, show_logo);
     }
 
     fn sync_status_flags(&mut self) {
@@ -1027,10 +1068,14 @@ impl LiveState {
             .filter(|l| l.active)
             .filter_map(|l| l.spec.clone())
             .collect();
-        let stage_style_json = TemplateStyle::preset_stage_monitor()
-            .to_json()
-            .unwrap_or_default();
         let active_look = self.snapshot.active_look.clone();
+        // M4.6: stage screens get their own composition (words with chords, next, timer, clock,
+        // booth message), never the audience layers or the look's rules.
+        let stage_layers = crate::stage::compose(&crate::stage::StageInputs {
+            status: &status,
+            layout: self.snapshot.active_stage_layout.as_ref(),
+            wall_now_unix_ms: self.wall_now_unix_ms(),
+        });
 
         let mut outputs = Vec::new();
         for cfg in self.output_configs.iter().filter(|c| c.enabled) {
@@ -1049,30 +1094,30 @@ impl LiveState {
                     .iter()
                     .find(|r| r.output_index == cfg.output_index)
             });
-            let out_layers: Vec<LayerSpec> = active_layers
-                .iter()
-                .filter(|spec| {
-                    if let Some(rule) = look_rule {
-                        rule.enabled_layers.contains(&spec.kind)
-                    } else {
-                        true
-                    }
-                })
-                .map(|spec| {
-                    let mut cloned = spec.clone();
-                    if role == OutputRole::Stage
-                        && let Some(layer_spec::Content::Slide(ref mut s)) = cloned.content
-                    {
-                        s.style_json = stage_style_json.clone();
-                    } else if let Some(rule) = look_rule
-                        && !rule.template_style_json.trim().is_empty()
-                        && let Some(layer_spec::Content::Slide(ref mut s)) = cloned.content
-                    {
-                        s.style_json = rule.template_style_json.clone();
-                    }
-                    cloned
-                })
-                .collect();
+            let out_layers: Vec<LayerSpec> = if role == OutputRole::Stage {
+                stage_layers.clone()
+            } else {
+                active_layers
+                    .iter()
+                    .filter(|spec| {
+                        if let Some(rule) = look_rule {
+                            rule.enabled_layers.contains(&spec.kind)
+                        } else {
+                            true
+                        }
+                    })
+                    .map(|spec| {
+                        let mut cloned = spec.clone();
+                        if let Some(rule) = look_rule
+                            && !rule.template_style_json.trim().is_empty()
+                            && let Some(layer_spec::Content::Slide(ref mut s)) = cloned.content
+                        {
+                            s.style_json = rule.template_style_json.clone();
+                        }
+                        cloned
+                    })
+                    .collect()
+            };
             let mut effects = Vec::new();
             if look_rule.is_some_and(|r| r.mask_enabled) {
                 effects.push(EffectSpec {
@@ -1716,6 +1761,34 @@ impl LiveState {
     }
 
     /// Core's role lock (SEC-14), mirrored into every status so the UI can show Simple mode.
+    /// Practice mode (M4.7): remember what the screens show now. Changes after this go to the
+    /// preview window only (core sends them as a preview scene) and are never saved.
+    pub fn begin_practice(&mut self) -> (LiveMachineSnapshot, Scene) {
+        let checkpoint = (self.snapshot.clone(), self.scene.clone());
+        self.practicing = true;
+        self.automation_mut().practice_mode = true;
+        self.sync_status_flags();
+        checkpoint
+    }
+
+    /// Leave practice: put the live state back exactly as it was, with a newer revision.
+    pub fn end_practice(&mut self, checkpoint: (LiveMachineSnapshot, Scene)) -> LiveStatus {
+        let (snapshot, mut scene) = checkpoint;
+        let revision = self.scene.revision.max(scene.revision) + 1;
+        self.snapshot = snapshot;
+        scene.revision = revision;
+        self.scene = scene;
+        self.practicing = false;
+        self.automation_mut().practice_mode = false;
+        self.sync_status_flags();
+        self.save();
+        self.status()
+    }
+
+    pub fn is_practicing(&self) -> bool {
+        self.practicing
+    }
+
     pub fn set_role_locked(&mut self, locked: bool) -> LiveStatus {
         self.automation_mut().role_locked = locked;
         self.sync_status_flags();
@@ -1737,7 +1810,7 @@ impl LiveState {
             ));
         }
         self.automation_mut().booth_message = text.trim().to_owned();
-        self.sync_status_flags();
+        self.refresh_scene();
         self.save_machine();
         Ok(self.status())
     }
@@ -2111,7 +2184,7 @@ impl LiveState {
         timer_id: &Id,
     ) -> Result<LiveStatus, CommandBusError> {
         self.start_timer_internal(library, timer_id)?;
-        self.sync_status_flags();
+        self.refresh_scene();
         self.save_machine();
         Ok(self.status())
     }
@@ -2135,7 +2208,7 @@ impl LiveState {
 
     pub fn pause_timer(&mut self, timer_id: &Id) -> Result<LiveStatus, CommandBusError> {
         self.pause_timer_internal(timer_id)?;
-        self.sync_status_flags();
+        self.refresh_scene();
         self.save_machine();
         Ok(self.status())
     }
@@ -2194,7 +2267,7 @@ impl LiveState {
         timer_id: &Id,
     ) -> Result<LiveStatus, CommandBusError> {
         self.reset_timer_internal(library, timer_id)?;
-        self.sync_status_flags();
+        self.refresh_scene();
         self.save_machine();
         Ok(self.status())
     }
@@ -2218,6 +2291,13 @@ impl LiveState {
         let now_mono_ns = self.snapshot.virtual_clock_mono_ns;
 
         let mut macros_to_fire: Vec<Id> = Vec::new();
+        let overrun_before: Vec<bool> = self
+            .snapshot
+            .status
+            .as_ref()
+            .and_then(|s| s.automation.first())
+            .map(|a| a.timers.iter().map(|t| t.overrun).collect())
+            .unwrap_or_default();
         let mut message_expired = false;
 
         {
@@ -2304,7 +2384,16 @@ impl LiveState {
             let _ = self.execute_macro_actions_internal(library, mid, 0);
         }
 
-        if message_expired || !macros_to_fire.is_empty() {
+        // A timer that just ran over (or stopped at zero) changes how the stage shows it.
+        let overrun_after: Vec<bool> = self
+            .snapshot
+            .status
+            .as_ref()
+            .and_then(|s| s.automation.first())
+            .map(|a| a.timers.iter().map(|t| t.overrun).collect())
+            .unwrap_or_default();
+        let timer_flipped = overrun_before != overrun_after;
+        if message_expired || !macros_to_fire.is_empty() || timer_flipped {
             let any_active = self
                 .snapshot
                 .status
@@ -2590,7 +2679,7 @@ impl LiveState {
         stage_layout_id: &Id,
     ) -> Result<LiveStatus, CommandBusError> {
         self.set_stage_layout_internal(library, stage_layout_id)?;
-        self.sync_status_flags();
+        self.refresh_scene();
         self.save_machine();
         Ok(self.status())
     }
@@ -2620,6 +2709,9 @@ impl LiveState {
     }
 
     fn save_machine(&self) {
+        if self.practicing {
+            return;
+        }
         if let Err(error) =
             selah_runtime::paths::write_atomic(&self.machine_path, &self.snapshot.encode_to_vec())
         {
@@ -2628,6 +2720,9 @@ impl LiveState {
     }
 
     fn save(&self) {
+        if self.practicing {
+            return;
+        }
         if let Err(error) =
             selah_runtime::paths::write_atomic(&self.path, &self.scene.encode_to_vec())
         {

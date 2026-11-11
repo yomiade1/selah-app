@@ -33,6 +33,9 @@ public sealed class LayersPane(LiveProducerViewModel owner) : ProducerPane(owner
 
 public sealed class TilesPane(LiveProducerViewModel owner) : ProducerPane(owner, "tiles", "live-pane-tiles");
 
+/// <summary>The stage display editor (M4.6).</summary>
+public sealed class StagePane(LiveProducerViewModel owner) : ProducerPane(owner, "stage", "live-pane-stage");
+
 /// <summary>
 /// Builds the Producer docking workspace (Dock.Avalonia, ADR-002) from a saved layout, and reads
 /// the current sizes back so the person can save their own.
@@ -60,8 +63,14 @@ public sealed class ProducerDockFactory(LiveProducerViewModel owner) : Factory
         inspectorTabs = new ToolDock { Id = "inspector-tabs", Proportion = 1 - state.Program };
         var layers = new LayersPane(owner);
         var tiles = new TilesPane(owner);
-        inspectorTabs.VisibleDockables = CreateList<IDockable>(layers, tiles);
-        inspectorTabs.ActiveDockable = state.InspectorTab == "tiles" ? tiles : layers;
+        var stage = new StagePane(owner);
+        inspectorTabs.VisibleDockables = CreateList<IDockable>(layers, tiles, stage);
+        inspectorTabs.ActiveDockable = state.InspectorTab switch
+        {
+            "tiles" => tiles,
+            "stage" => stage,
+            _ => layers,
+        };
 
         inspector = new ProportionalDock
         {
@@ -116,7 +125,12 @@ public sealed class ProducerDockFactory(LiveProducerViewModel owner) : Factory
         var docks = columns?.VisibleDockables?.OfType<IDock>().ToList() ?? [];
         double Size(int i, double fallback) => i < docks.Count && double.IsFinite(docks[i].Proportion) ? docks[i].Proportion : fallback;
         var programDock = inspector?.VisibleDockables?.OfType<IDock>().FirstOrDefault();
-        var tab = inspectorTabs?.ActiveDockable is TilesPane ? "tiles" : "layers";
+        var tab = inspectorTabs?.ActiveDockable switch
+        {
+            TilesPane => "tiles",
+            StagePane => "stage",
+            _ => "layers",
+        };
         return new ProducerLayoutState(
             "custom",
             Size(0, 0.22),

@@ -166,6 +166,8 @@ pub struct CoreService {
     library: Library,
     pub engine: EngineView,
     preview_scene: Option<Scene>,
+    /// M4.7 practice mode: the live state and the scene the screens kept showing.
+    practice: Option<(selah_proto::v1::LiveMachineSnapshot, Scene)>,
     safe_mode: bool,
     actor: Actor,
     /// kb.db, when it was found (KNOWLEDGE-BASE §6.4). Help queries answer empty without it.
@@ -233,6 +235,7 @@ impl CoreService {
             library,
             engine: EngineView::default(),
             preview_scene: None,
+            practice: None,
             safe_mode,
             help: None,
             available_update: None,
@@ -310,7 +313,18 @@ impl CoreService {
 
     /// Something other than nothing or the logo is on the screens (SAFE-06).
     pub fn is_live(&self) -> bool {
-        is_live(self.live.scene())
+        is_live(self.screen_scene())
+    }
+
+    /// What the real screens show: the live scene, or while practising the scene they kept.
+    pub fn screen_scene(&self) -> &Scene {
+        self.practice
+            .as_ref()
+            .map_or(self.live.scene(), |(_, scene)| scene)
+    }
+
+    pub fn is_practicing(&self) -> bool {
+        self.practice.is_some()
     }
 
     pub fn settings(&self) -> &crate::settings::StoredSettings {
@@ -326,7 +340,7 @@ impl CoreService {
             engine_scene_revision: self.engine.scene_revision,
             frame_checksum: self.engine.frame_checksum.clone(),
             version: selah_runtime::VERSION.into(),
-            live: is_live(self.live.scene()),
+            live: is_live(self.screen_scene()),
             output_statuses: self.engine.output_statuses.clone(),
             preview_scene_revision: self
                 .preview_scene
@@ -362,6 +376,28 @@ impl CoreService {
                 },
             )),
         }
+    }
+
+    /// Time passing in the real app (M4.3 timers, M4.6 stage display). The core host calls this
+    /// about once a second; tests drive the same path with `AdvanceLiveClock`. Nothing is saved
+    /// or broadcast unless a timer runs or a message is counting down.
+    pub fn tick_live_clock(&mut self, delta_ms: u64, wall_unix_ms: i64) -> Outcome {
+        if !self.live.has_running_clock_work() {
+            self.live.set_wall_clock(wall_unix_ms);
+            return Outcome::default();
+        }
+        let before = self.live.scene().revision;
+        let result = self.live.advance_live_clock(
+            &self.library,
+            &selah_proto::v1::AdvanceLiveClock {
+                delta_ms,
+                wall_unix_ms,
+            },
+        );
+        let changed = self.live.scene().revision != before;
+        let mut outcome = self.live_outcome(&Envelope::default(), result, changed);
+        outcome.reply = None;
+        outcome
     }
 
     fn live_outcome(
@@ -400,7 +436,18 @@ impl CoreService {
     }
 
     /// The command that brings a (re)connected engine up to date.
+    /// The engine command for the live scene now. While practising (M4.7) the live scene goes to
+    /// the preview window only; the screens keep what they showed.
     pub fn resync_command(&self) -> RenderCommand {
+        if self.practice.is_some() {
+            let mut scene = self.live.scene().clone();
+            scene.is_preview = true;
+            return RenderCommand {
+                action: Some(render_command::Action::SetPreviewScene(SetPreviewScene {
+                    scene: Some(scene),
+                })),
+            };
+        }
         RenderCommand {
             action: Some(render_command::Action::SetScene(self.live.scene().clone())),
         }
@@ -416,8 +463,14 @@ impl CoreService {
                 })),
             });
         }
-        out.push(self.resync_command());
-        if let Some(preview) = &self.preview_scene {
+        out.push(RenderCommand {
+            action: Some(render_command::Action::SetScene(
+                self.screen_scene().clone(),
+            )),
+        });
+        if self.practice.is_some() {
+            out.push(self.resync_command());
+        } else if let Some(preview) = &self.preview_scene {
             out.push(RenderCommand {
                 action: Some(render_command::Action::SetPreviewScene(SetPreviewScene {
                     scene: Some(preview.clone()),
@@ -1135,21 +1188,21 @@ impl CoreService {
                     Some(id) => self.live.start_timer(&self.library, id),
                     None => Err(CommandBusError::Invalid("missing timer_id".into())),
                 };
-                self.live_outcome(request, res, false)
+                self.live_outcome(request, res, true)
             }
             command::Action::PauseTimer(cmd) => {
                 let res = match cmd.timer_id.as_ref() {
                     Some(id) => self.live.pause_timer(id),
                     None => Err(CommandBusError::Invalid("missing timer_id".into())),
                 };
-                self.live_outcome(request, res, false)
+                self.live_outcome(request, res, true)
             }
             command::Action::ResetTimer(cmd) => {
                 let res = match cmd.timer_id.as_ref() {
                     Some(id) => self.live.reset_timer(&self.library, id),
                     None => Err(CommandBusError::Invalid("missing timer_id".into())),
                 };
-                self.live_outcome(request, res, false)
+                self.live_outcome(request, res, true)
             }
             command::Action::AdvanceLiveClock(cmd) => {
                 let res = self.live.advance_live_clock(&self.library, cmd);
@@ -1172,15 +1225,42 @@ impl CoreService {
             command::Action::SetStageLayout(cmd) => {
                 let id = cmd.stage_layout_id.clone().unwrap_or_default();
                 let res = self.live.set_stage_layout(&self.library, &id);
-                self.live_outcome(request, res, false)
+                self.live_outcome(request, res, true)
             }
             command::Action::SendBoothMessage(cmd) => {
                 let res = self.live.send_booth_message(&cmd.text);
-                self.live_outcome(request, res, false)
+                self.live_outcome(request, res, true)
             }
             command::Action::SetBoothLock(cmd) => {
                 let status = self.live.set_booth_lock(cmd.locked);
                 self.live_outcome(request, Ok(status), false)
+            }
+            command::Action::SetPracticeMode(cmd) => {
+                let status = match (cmd.on, self.practice.take()) {
+                    (true, None) => {
+                        self.practice = Some(self.live.begin_practice());
+                        tracing::info!("practice mode on: changes go to the preview only");
+                        self.live.status()
+                    }
+                    (true, Some(checkpoint)) => {
+                        self.practice = Some(checkpoint);
+                        self.live.status()
+                    }
+                    (false, Some(checkpoint)) => {
+                        self.live.end_practice(checkpoint);
+                        tracing::info!("practice mode off: live state put back");
+                        self.live.set_role_locked(self.role_lock.is_locked())
+                    }
+                    (false, None) => self.live.status(),
+                };
+                // Leaving practice resends what the screens show (same pictures, newer revision).
+                let mut outcome = self.live_outcome(request, Ok(status), !cmd.on);
+                if !cmd.on {
+                    outcome.to_engine = Some(RenderCommand {
+                        action: Some(render_command::Action::SetScene(self.live.scene().clone())),
+                    });
+                }
+                outcome
             }
             command::Action::SetRoleLock(cmd) => {
                 let machine = selah_proto::v1::PolicyLevel::Machine as i32;
@@ -2002,6 +2082,28 @@ impl CoreService {
             Some(query::Request::GetStageLayout(get)) => {
                 self.get_document(request, get.id.as_ref(), reply::Result::StageLayout)
             }
+            Some(query::Request::RunReadyCheck(check)) => {
+                match check
+                    .service_id
+                    .as_ref()
+                    .map(|id| self.library.get::<selah_proto::v1::Service>(id))
+                {
+                    Some(Ok(Some(service))) => {
+                        let report = crate::ready::run(&crate::ready::ReadyInputs {
+                            library: &self.library,
+                            service: &service,
+                            outputs: self.live.output_configs(),
+                            engine_connected: self.engine.connected,
+                            output_statuses: &self.engine.output_statuses,
+                        });
+                        self.reply(request, reply::Result::ReadyReport(report))
+                    }
+                    Some(Ok(None)) => {
+                        self.error(request, codes::LIB_NOT_FOUND, "error-library-not-found")
+                    }
+                    _ => self.error(request, codes::INVALID, "error-invalid-request"),
+                }
+            }
             Some(query::Request::ListStageLayouts(list)) => {
                 self.list_documents(request, list.limit, list.offset, |stage_layouts| {
                     reply::Result::StageLayoutList(StageLayoutList { stage_layouts })
@@ -2425,13 +2527,12 @@ impl CoreService {
                     self.engine.preview_scene_revision = frame.scene_revision;
                     return vec![event.clone()];
                 }
-                let output_live = if self.live.scene().outputs.is_empty() {
-                    is_live(self.live.scene())
+                let screens = self.screen_scene();
+                let output_live = if screens.outputs.is_empty() {
+                    is_live(screens)
                 } else {
-                    !self.live.scene().cleared
-                        && self
-                            .live
-                            .scene()
+                    !screens.cleared
+                        && screens
                             .outputs
                             .iter()
                             .find(|o| o.output_index == frame.output_index)
@@ -2488,6 +2589,19 @@ impl CoreService {
                 );
                 self.live.raise_revision_above(applied.scene_revision);
                 let show_logo = applied.show_logo;
+                // While practising, the real screens were cleared too: leaving practice keeps them so.
+                if let Some((_, screens)) = self.practice.as_mut() {
+                    screens.cleared = true;
+                    screens.test_pattern = TestPattern::Unspecified as i32;
+                    screens.outputs.clear();
+                    screens.preload_items.clear();
+                    screens.audio_layers.clear();
+                    screens.text = if show_logo {
+                        "logo".into()
+                    } else {
+                        String::new()
+                    };
+                }
                 self.live.change(|scene| {
                     scene.cleared = true;
                     scene.test_pattern = TestPattern::Unspecified as i32;

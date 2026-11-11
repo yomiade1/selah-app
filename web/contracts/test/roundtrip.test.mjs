@@ -1248,3 +1248,42 @@ test("M4.5 role lock command and status round trip", () => {
     const back = fromBinary(EnvelopeSchema, toBinary(EnvelopeSchema, status));
     assert.equal(back.body.value.result.value.automation[0].roleLocked, true);
 });
+
+test("M4.7 practice mode and Ready for Sunday round trip", () => {
+    const practice = create(EnvelopeSchema, {
+        id: 7471n,
+        body: {
+            case: "command",
+            value: { action: { case: "setPracticeMode", value: { on: true } } },
+        },
+    });
+    assert.deepEqual(
+        fromBinary(EnvelopeSchema, toBinary(EnvelopeSchema, practice)),
+        practice,
+    );
+    const report = create(EnvelopeSchema, {
+        id: 7472n,
+        body: {
+            case: "reply",
+            value: {
+                result: {
+                    case: "readyReport",
+                    value: {
+                        ready: true,
+                        checks: [
+                            {
+                                code: "SEL-RDY-0004",
+                                messageKey: "error-ready-no-copyright",
+                                args: { item: "New Song" },
+                                itemIndex: 2,
+                            },
+                        ],
+                    },
+                },
+            },
+        },
+    });
+    const back = fromBinary(EnvelopeSchema, toBinary(EnvelopeSchema, report));
+    assert.deepEqual(back, report);
+    assert.equal(back.body.value.result.value.checks[0].args.item, "New Song");
+});

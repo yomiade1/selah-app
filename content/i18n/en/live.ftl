@@ -123,3 +123,9 @@ role-lock-pin-hint = Use 4 to 8 numbers. You need it to unlock.
 role-lock-unlock = Unlock
 role-lock-wrong-pin = That PIN didn't work. Try again.
 role-lock-too-many-tries = Too many tries. Wait 30 seconds, then try again.
+
+## Practice mode (M4.7)
+live-practice-start = Start practice
+live-practice-stop = Stop practice
+live-practice-banner = Practice mode
+live-practice-banner-detail = Nothing goes to the screens in the room. Your changes show here only.

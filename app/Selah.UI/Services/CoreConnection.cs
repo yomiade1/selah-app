@@ -1057,6 +1057,40 @@ public sealed class CoreConnection : IAsyncDisposable, Selah.UI.ViewModels.IHelp
         return reply.Reply?.TimerList?.Timers.ToList() ?? [];
     }
 
+    public async Task<IReadOnlyList<StageLayout>> ListStageLayoutsAsync()
+    {
+        var reply = await RequestAsync(new Envelope { Query = new Query { ListStageLayouts = new ListStageLayouts { Limit = 200 } } }).ConfigureAwait(false);
+        return reply.Reply?.StageLayoutList?.StageLayouts.ToList() ?? [];
+    }
+
+    public async Task SaveStageLayoutAsync(StageLayout layout)
+    {
+        if (layout.Id is null || layout.Id.Value.IsEmpty)
+        {
+            layout.Id = LibraryIds.NewId();
+        }
+        foreach (var element in layout.Elements)
+        {
+            if (element.Id is null || element.Id.Value.IsEmpty)
+            {
+                element.Id = LibraryIds.NewId();
+            }
+        }
+        await RequestAsync(new Envelope { Command = new Command { SaveStageLayout = new SaveStageLayout { StageLayout = layout } } }).ConfigureAwait(false);
+    }
+
+    public Task<LiveStatus> SetPracticeModeAsync(bool on) =>
+        LiveAsync(new Command { SetPracticeMode = new SetPracticeMode { On = on } });
+
+    public async Task<ReadyReport> RunReadyCheckAsync(Id serviceId)
+    {
+        var reply = await RequestAsync(new Envelope { Query = new Query { RunReadyCheck = new RunReadyCheck { ServiceId = serviceId } } }, TimeSpan.FromSeconds(60)).ConfigureAwait(false);
+        return reply.Reply?.ReadyReport ?? new ReadyReport { ServiceId = serviceId };
+    }
+
+    public Task<LiveStatus> SetStageLayoutAsync(Id layoutId) =>
+        LiveAsync(new Command { SetStageLayout = new SetStageLayout { StageLayoutId = layoutId } });
+
     private Task<Envelope> RequestAsync(Envelope message) => RequestAsync(message, RequestTimeout);
 
     private async Task<Envelope> RequestAsync(Envelope message, TimeSpan timeout)

@@ -78,6 +78,20 @@ public static class HelpAnchors
     public const string LiveLayers = "live.layers";
     /// <summary>Live, tiles for looks, timers and macros.</summary>
     public const string LiveTiles = "live.tiles";
+    /// <summary>Live, the Stage tab that edits stage display layouts (M4.6).</summary>
+    public const string LiveStageEditor = "live.stage-editor";
+    /// <summary>Live, the stage screen preview in the Stage tab.</summary>
+    public const string LiveStagePreview = "live.stage-preview";
+    /// <summary>Live, Start practice / Stop practice and the practice banner (M4.7).</summary>
+    public const string LivePracticeMode = "live.practice-mode";
+    /// <summary>Services, the Ready for Sunday? checks for the selected service (M4.7).</summary>
+    public const string ServicesReadyCheck = "services.ready-check";
+    /// <summary>Help, Start tour and the tour coach mark (M4.7).</summary>
+    public const string HelpTour = "help.tour";
+    /// <summary>First-run setup, Welcome to Selah (M4.7).</summary>
+    public const string SetupWizard = "setup.wizard";
+    /// <summary>First-run setup, the CCLI licence number.</summary>
+    public const string SetupCcli = "setup.ccli";
     /// <summary>Live, Lock to Simple mode and its PIN (SEC-14).</summary>
     public const string LiveRoleLock = "live.role-lock";
     /// <summary>Simple mode, the big Back, Next slide, Next song and clear buttons.</summary>

@@ -64,6 +64,18 @@ public interface ILiveService
 
     Task<IReadOnlyList<Selah.Contracts.V1.Timer>> ListTimersAsync();
 
+    /// <summary>Saved stage display layouts (M4.6).</summary>
+    Task<IReadOnlyList<StageLayout>> ListStageLayoutsAsync();
+
+    /// <summary>Save a stage layout; core checks every rect and size (SEC-03).</summary>
+    Task SaveStageLayoutAsync(StageLayout layout);
+
+    /// <summary>Show this layout on every stage screen; an empty id goes back to the built-in one.</summary>
+    Task<LiveStatus> SetStageLayoutAsync(Id layoutId);
+
+    /// <summary>Practice mode (M4.7): changes go to the preview only; leaving puts everything back.</summary>
+    Task<LiveStatus> SetPracticeModeAsync(bool on);
+
     /// <summary>The emergency lane (SAFE-03): works even if core is frozen.</summary>
     Task<bool> ClearEverythingAsync();
 }

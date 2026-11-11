@@ -7,7 +7,7 @@ audience: [volunteer, producer]
 modes: [simple, producer]
 context: [slides.inspector, shell.preview]
 settings: []
-error_codes: []
+error_codes: [SEL-RDY-0008]
 summary: Slow down fast fades or replace high-contrast flashing clips when Selah shows a Flash warning.
 popover: ""
 user_need: As a producer, I want to clear flash warnings so that worship visuals stay safe for everyone in the room.

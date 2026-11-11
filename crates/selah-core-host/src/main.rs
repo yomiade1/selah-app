@@ -280,6 +280,33 @@ async fn serve_connection(shared: Arc<Shared>, connection: Connection) {
     }
 }
 
+/// Let time pass for live timers and timed messages, about once a second (M4.6). Core does
+/// nothing unless something is counting.
+async fn tick_live_clock(shared: Arc<Shared>) {
+    let mut interval = tokio::time::interval(Duration::from_secs(1));
+    interval.set_missed_tick_behavior(tokio::time::MissedTickBehavior::Delay);
+    let mut last = std::time::Instant::now();
+    loop {
+        interval.tick().await;
+        let now = std::time::Instant::now();
+        let delta_ms = now.duration_since(last).as_millis() as u64;
+        last = now;
+        let wall_unix_ms = std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .map(|d| d.as_millis() as i64)
+            .unwrap_or(0);
+        let outcome = shared
+            .service
+            .lock()
+            .await
+            .tick_live_clock(delta_ms, wall_unix_ms);
+        if let Some(command) = outcome.to_engine {
+            shared.send_to_engine(command).await;
+        }
+        shared.broadcast(outcome.broadcast).await;
+    }
+}
+
 /// Keep the engine in step: resend the scene on every new connection, forward its events.
 async fn follow_engine(shared: Arc<Shared>) {
     let mut state = shared.engine.state();
@@ -422,6 +449,7 @@ async fn main() -> anyhow::Result<()> {
     });
     let _heartbeat = selah_runtime::heartbeat::spawn(actor);
     tokio::spawn(follow_engine(shared.clone()));
+    tokio::spawn(tick_live_clock(shared.clone()));
 
     let mut listener = Listener::bind(&endpoint)
         .await

@@ -218,6 +218,7 @@ public sealed partial class ServicePlannerViewModel : ObservableObject
     public ServicePlannerViewModel(ILibraryService? library)
     {
         this.library = library;
+        Ready = new ReadyCheckViewModel(library, () => SelectedService);
         if (library is not null)
         {
             library.UndoStateChanged += (_, e) =>
@@ -241,6 +242,9 @@ public sealed partial class ServicePlannerViewModel : ObservableObject
     public event EventHandler<Service>? GoLiveRequested;
 
     public event EventHandler<Service>? RehearseRequested;
+
+    /// <summary>Ready for Sunday? (M4.7) for the selected service.</summary>
+    public ReadyCheckViewModel Ready { get; }
 
     [ObservableProperty]
     private Service? selectedService;

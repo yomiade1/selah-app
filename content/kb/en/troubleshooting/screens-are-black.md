@@ -7,7 +7,7 @@ audience: [volunteer, producer, it]
 modes: [simple, producer]
 context: [simple.now-showing, live.program-preview, screens.output-list]
 settings: []
-error_codes: [SEL-OUT-0001, SEL-OUT-0002]
+error_codes: [SEL-OUT-0001, SEL-OUT-0002, SEL-RDY-0006]
 summary: Check if the screens were cleared, then check the projector, the cable and the screen settings.
 popover: ""
 user_need: As a volunteer, I want to fix black screens quickly so that the service can carry on.

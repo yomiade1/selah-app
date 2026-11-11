@@ -396,3 +396,359 @@ fn each_screen_shows_the_right_layers_for_each_look_match_golden() {
         }
     }
 }
+
+// ---------------------------------------------------------------------------------------------
+// M4.6 / M4-A7: the stage display, rendered by the engine's compositors from core's composition.
+// ---------------------------------------------------------------------------------------------
+
+/// 10:12:33 UTC on a fixed day: the stage clock and the timer read from here.
+const STAGE_WALL_MS: i64 = 1_762_855_953_000;
+
+fn live_status(core: &mut CoreService) -> selah_proto::v1::LiveStatus {
+    let req = Envelope {
+        id: 9_000,
+        correlation_id: 0,
+        actor: Some(Actor {
+            user_id: "operator".into(),
+            device_id: "desk".into(),
+            origin: ActorOrigin::Ui as i32,
+        }),
+        body: Some(envelope::Body::Query(selah_proto::v1::Query {
+            request: Some(selah_proto::v1::query::Request::GetLiveState(
+                Default::default(),
+            )),
+        })),
+    };
+    match core.handle(&req).reply.expect("reply").body {
+        Some(envelope::Body::Reply(selah_proto::v1::Reply {
+            result: Some(selah_proto::v1::reply::Result::LiveStatus(status)),
+            ..
+        })) => status,
+        other => panic!("unexpected {other:?}"),
+    }
+}
+
+fn line(text: &str, chords: &[(u32, &str)]) -> selah_proto::v1::LyricLine {
+    selah_proto::v1::LyricLine {
+        text: text.into(),
+        chords: chords
+            .iter()
+            .map(|(position, chord)| selah_proto::v1::Chord {
+                position: *position,
+                text: (*chord).into(),
+            })
+            .collect(),
+    }
+}
+
+/// "Be Thou My Vision" (Irish, tr. Mary Byrne 1905, versified Eleanor Hull 1912: public domain).
+fn stage_harness(w: u32, h: u32) -> (tempfile::TempDir, CoreService) {
+    use selah_proto::v1::{
+        AdvanceLiveClock, LoadLiveService, SaveService, SaveSong, SaveTimer, Section, SectionKind,
+        SendBoothMessage, Service, ServiceItem, ServiceItemKind, Song, StartTimer, Timer,
+        TimerKind, TriggerSlide,
+    };
+    let dir = tempfile::tempdir().unwrap();
+    let mut core = CoreService::new(dir.path(), false);
+    let res = Some(Resolution {
+        width: w,
+        height: h,
+    });
+    send_cmd(
+        &mut core,
+        command::Action::SetOutputConfigs(SetOutputConfigs {
+            outputs: vec![
+                OutputConfig {
+                    output_index: 0,
+                    name: "Main Hall".into(),
+                    role: OutputRole::Main as i32,
+                    resolution: res,
+                    enabled: true,
+                    ..Default::default()
+                },
+                OutputConfig {
+                    output_index: 1,
+                    name: "Stage".into(),
+                    role: OutputRole::Stage as i32,
+                    resolution: res,
+                    enabled: true,
+                    ..Default::default()
+                },
+            ],
+        }),
+    );
+    let section = |kind: SectionKind, label: &str, lines| Section {
+        id: Some(new_id()),
+        kind: kind as i32,
+        label: label.into(),
+        lines,
+        ..Default::default()
+    };
+    let song_id = new_id();
+    send_cmd(
+        &mut core,
+        command::Action::SaveSong(SaveSong {
+            song: Some(Song {
+                id: Some(song_id.clone()),
+                title: "Be Thou My Vision".into(),
+                key: "Eb".into(),
+                sections: vec![
+                    section(
+                        SectionKind::Verse,
+                        "Verse 1",
+                        vec![
+                            line(
+                                "Be Thou my Vision, O Lord of my heart;",
+                                &[(0, "Eb"), (11, "Ab"), (25, "Eb")],
+                            ),
+                            line(
+                                "Naught be all else to me, save that Thou art.",
+                                &[(0, "Cm"), (19, "Bb"), (34, "Eb")],
+                            ),
+                        ],
+                    ),
+                    section(
+                        SectionKind::Verse,
+                        "Verse 2",
+                        vec![
+                            line(
+                                "Be Thou my Wisdom, and Thou my true Word;",
+                                &[(0, "Eb"), (11, "Ab"), (23, "Eb")],
+                            ),
+                            line(
+                                "I ever with Thee and Thou with me, Lord;",
+                                &[(2, "Cm"), (17, "Bb"), (26, "Eb")],
+                            ),
+                        ],
+                    ),
+                    section(
+                        SectionKind::Verse,
+                        "Verse 3",
+                        vec![
+                            line(
+                                "Thou my great Father, I Thy true son;",
+                                &[(0, "Eb"), (14, "Ab")],
+                            ),
+                            line(
+                                "Thou in me dwelling, and I with Thee one.",
+                                &[(0, "Cm"), (25, "Eb")],
+                            ),
+                        ],
+                    ),
+                ],
+                ..Default::default()
+            }),
+        }),
+    );
+    let service_id = new_id();
+    send_cmd(
+        &mut core,
+        command::Action::SaveService(SaveService {
+            service: Some(Service {
+                id: Some(service_id.clone()),
+                name: "Sunday Morning".into(),
+                items: vec![
+                    ServiceItem {
+                        id: Some(new_id()),
+                        kind: ServiceItemKind::Song as i32,
+                        content_id: Some(song_id),
+                        title: "Be Thou My Vision".into(),
+                        song_key: "Eb".into(),
+                        notes: "Slow down on the last line. Invite everyone to stand.".into(),
+                        ..Default::default()
+                    },
+                    ServiceItem {
+                        id: Some(new_id()),
+                        kind: ServiceItemKind::Header as i32,
+                        title: "Sermon".into(),
+                        ..Default::default()
+                    },
+                ],
+                ..Default::default()
+            }),
+        }),
+    );
+    send_cmd(
+        &mut core,
+        command::Action::AdvanceLiveClock(AdvanceLiveClock {
+            delta_ms: 0,
+            wall_unix_ms: STAGE_WALL_MS,
+        }),
+    );
+    send_cmd(
+        &mut core,
+        command::Action::LoadLiveService(LoadLiveService {
+            service_id: Some(service_id),
+            trigger_first_item: true,
+        }),
+    );
+    let status = live_status(&mut core);
+    let verse_two = status
+        .current_item_slides
+        .iter()
+        .find(|s| s.label == "Verse 2")
+        .expect("verse 2 slide")
+        .index;
+    send_cmd(
+        &mut core,
+        command::Action::TriggerSlide(TriggerSlide {
+            item_index: 0,
+            slide_index: verse_two,
+        }),
+    );
+    let timer_id = new_id();
+    send_cmd(
+        &mut core,
+        command::Action::SaveTimer(SaveTimer {
+            timer: Some(Timer {
+                id: Some(timer_id.clone()),
+                name: "Worship set".into(),
+                kind: TimerKind::Countdown as i32,
+                duration_ms: 180_000,
+                ..Default::default()
+            }),
+        }),
+    );
+    send_cmd(
+        &mut core,
+        command::Action::StartTimer(StartTimer {
+            timer_id: Some(timer_id),
+        }),
+    );
+    send_cmd(
+        &mut core,
+        command::Action::SendBoothMessage(SendBoothMessage {
+            text: "Repeat verse 4, then go straight into Romans 8".into(),
+        }),
+    );
+    (dir, core)
+}
+
+fn check_stage_frame(
+    name: &str,
+    scene: &Scene,
+    output: u32,
+    (w, h): (u32, u32),
+    gpu: &mut GpuCompositor,
+    cpu: &mut CpuCompositor,
+) {
+    gpu.set_clock_unix_ms(Some(STAGE_WALL_MS));
+    cpu.set_clock_unix_ms(Some(STAGE_WALL_MS));
+    let gpu_frame = gpu.render_output(scene, output, w, h).unwrap();
+    let cpu_frame = cpu.render_output(scene, output, w, h).unwrap();
+    golden::check(name, &gpu_frame, TOLERANCE_STYLE).unwrap_or_else(|e| panic!("{name}: {e}"));
+    let diff = golden::compare(&gpu_frame, &cpu_frame, TOLERANCE_STYLE).unwrap();
+    assert!(
+        diff.fraction() <= TOLERANCE_STYLE.max_fraction,
+        "{name} GPU/CPU parity failed: {diff:?}"
+    );
+}
+
+#[test]
+fn stage_display_matches_golden_including_chord_alignment() {
+    use selah_proto::v1::{
+        Rect, SaveStageLayout, SetStageLayout, StageElement, StageElementKind, StageLayout,
+    };
+    let mut gpu = GpuCompositor::new(AdapterChoice::Software).expect("software GPU adapter");
+    let mut cpu = CpuCompositor::default();
+    let size = (960, 540);
+    let (_dir, mut core) = stage_harness(size.0, size.1);
+
+    let scene = core.scene().clone();
+    // SAFE-01: the booth message is on the stage output and nowhere else.
+    let booth = "Repeat verse 4";
+    let stage_layers = format!("{:?}", scene.outputs[1].layers);
+    assert!(
+        stage_layers.contains(booth),
+        "stage shows the booth message"
+    );
+    let main_layers = format!("{:?}", scene.outputs[0].layers);
+    assert!(!main_layers.contains(booth), "audience screens never do");
+    // The chords travel with the words to the stage.
+    assert!(stage_layers.contains("Ab"), "{stage_layers}");
+
+    // Prototype screen 06: song, key and sections; words with chords; next; timer; clock; booth.
+    check_stage_frame("m4-stage-standard", &scene, 1, size, &mut gpu, &mut cpu);
+
+    // Chords off: the same words without the chord row (the alignment reference).
+    let layout_id = new_id();
+    send_cmd(
+        &mut core,
+        command::Action::SaveStageLayout(SaveStageLayout {
+            stage_layout: Some(StageLayout {
+                id: Some(layout_id.clone()),
+                name: "Lyrics only".into(),
+                show_chords: false,
+                show_key_badge: true,
+                show_arrangement_strip: true,
+                show_clock: true,
+                show_next_slide: true,
+                show_timer: false,
+                show_speaker_notes: false,
+                show_booth_message: false,
+                elements: Vec::new(),
+            }),
+        }),
+    );
+    send_cmd(
+        &mut core,
+        command::Action::SetStageLayout(SetStageLayout {
+            stage_layout_id: Some(layout_id),
+        }),
+    );
+    let scene = core.scene().clone();
+    check_stage_frame("m4-stage-lyrics-only", &scene, 1, size, &mut gpu, &mut cpu);
+
+    // A speaker's layout: notes beside smaller words, a big timer, no next slide.
+    let speaker_id = new_id();
+    let element = |kind: StageElementKind, x, y, width, height, font_scale| StageElement {
+        id: Some(new_id()),
+        kind: kind as i32,
+        rect: Some(Rect {
+            x,
+            y,
+            width,
+            height,
+        }),
+        visible: true,
+        font_scale,
+        show_chords: false,
+    };
+    send_cmd(
+        &mut core,
+        command::Action::SaveStageLayout(SaveStageLayout {
+            stage_layout: Some(StageLayout {
+                id: Some(speaker_id.clone()),
+                name: "Speaker".into(),
+                show_chords: false,
+                show_key_badge: false,
+                show_arrangement_strip: false,
+                show_clock: true,
+                show_next_slide: false,
+                show_timer: true,
+                show_speaker_notes: true,
+                show_booth_message: true,
+                elements: vec![
+                    element(
+                        StageElementKind::CurrentSlide,
+                        0.0,
+                        0.0667,
+                        0.55,
+                        0.65,
+                        0.75,
+                    ),
+                    element(StageElementKind::SpeakerNotes, 0.56, 0.09, 0.42, 0.6, 1.2),
+                    element(StageElementKind::Timer, 0.0, 0.72, 0.5, 0.22, 1.4),
+                ],
+            }),
+        }),
+    );
+    send_cmd(
+        &mut core,
+        command::Action::SetStageLayout(SetStageLayout {
+            stage_layout_id: Some(speaker_id),
+        }),
+    );
+    let scene = core.scene().clone();
+    check_stage_frame("m4-stage-speaker", &scene, 1, size, &mut gpu, &mut cpu);
+}

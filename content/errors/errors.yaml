@@ -22,6 +22,33 @@ errors:
   - code: SEL-SEC-0004
     message: error-role-lock-pin-format
     fix_article: live.lock-simple-mode-for-volunteers
+  - code: SEL-RDY-0001
+    message: error-ready-media-missing
+    fix_article: troubleshooting.media-is-missing
+  - code: SEL-RDY-0002
+    message: error-ready-font-missing
+    fix_article: troubleshooting.a-font-is-missing
+  - code: SEL-RDY-0003
+    message: error-ready-text-doesnt-fit
+    fix_article: troubleshooting.words-dont-fit
+  - code: SEL-RDY-0004
+    message: error-ready-no-copyright
+    fix_article: services.add-copyright-and-licence-details
+  - code: SEL-RDY-0005
+    message: error-ready-no-ccli-licence
+    fix_article: services.add-copyright-and-licence-details
+  - code: SEL-RDY-0006
+    message: error-ready-no-screens
+    fix_article: troubleshooting.screens-are-black
+  - code: SEL-RDY-0007
+    message: error-ready-no-backup-sync
+    fix_article: services.get-ready-for-sunday
+  - code: SEL-RDY-0008
+    message: error-ready-flashing
+    fix_article: troubleshooting.flashing-content-warnings
+  - code: SEL-RDY-0009
+    message: error-ready-limiter-off
+    fix_article: troubleshooting.sound-is-too-loud
   - code: SEL-IPC-0001
     message: error-unsupported-request
     fix_article: troubleshooting.selah-cant-do-that

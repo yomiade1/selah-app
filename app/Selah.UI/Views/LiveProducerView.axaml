@@ -36,6 +36,10 @@
         <Button Name="LiveNextItemButton" Command="{Binding NextItemCommand}">
           <TextBlock Text="{Binding [live-next-item-key], Source={x:Static s:Localizer.Instance}}" />
         </Button>
+        <Button Name="LivePracticeButton" Classes.primary="{Binding $parent[Window].((vm:MainViewModel)DataContext).IsPracticeMode}"
+                Command="{Binding $parent[Window].((vm:MainViewModel)DataContext).TogglePracticeCommand}" s:Help.Anchor="live.practice-mode">
+          <TextBlock Text="{Binding $parent[Window].((vm:MainViewModel)DataContext).PracticeButtonText}" />
+        </Button>
         <Button Name="LiveUndoButton" Classes="quiet" Command="{Binding UndoCommand}" IsEnabled="{Binding CanUndo}">
           <TextBlock Text="{Binding [live-undo-key], Source={x:Static s:Localizer.Instance}}" />
         </Button>
@@ -260,6 +264,87 @@
                 </DataTemplate>
               </ItemsControl.ItemTemplate>
             </ItemsControl>
+          </ScrollViewer>
+        </DataTemplate>
+        <DataTemplate DataType="vm:StagePane">
+          <ScrollViewer s:Help.Anchor="live.stage-editor">
+            <StackPanel Name="StageEditor" Spacing="{DynamicResource Space.2}" Margin="{DynamicResource Space.Text.Small}"
+                        DataContext="{Binding Live.Stage}" x:DataType="vm:StageEditorViewModel">
+              <TextBlock Classes="label" Text="{Binding [stage-editor-title], Source={x:Static s:Localizer.Instance}}" />
+              <TextBlock Classes="caption" TextWrapping="Wrap" Text="{Binding [stage-editor-hint], Source={x:Static s:Localizer.Instance}}" />
+
+              <Viewbox Stretch="Uniform" MaxHeight="220" HorizontalAlignment="Left" s:Help.Anchor="live.stage-preview">
+                <Border Name="StagePreview" Width="320" Height="180" Background="{DynamicResource Brush.PreviewBg}" ClipToBounds="True"
+                        AutomationProperties.Name="{Binding [stage-editor-preview], Source={x:Static s:Localizer.Instance}}">
+                  <ItemsControl ItemsSource="{Binding Preview}">
+                    <ItemsControl.ItemsPanel>
+                      <ItemsPanelTemplate><Grid /></ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                      <DataTemplate x:DataType="vm:StagePreviewBox">
+                        <Border Margin="{Binding Margin}" Width="{Binding Width}" Height="{Binding Height}"
+                                HorizontalAlignment="Left" VerticalAlignment="Top"
+                                BorderBrush="{DynamicResource Brush.Line2}" BorderThickness="{DynamicResource Line.Hairline}"
+                                Background="{DynamicResource Brush.Surface}">
+                          <TextBlock Classes="caption" Text="{Binding Label}" TextTrimming="CharacterEllipsis"
+                                     HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Border>
+                      </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                  </ItemsControl>
+                </Border>
+              </Viewbox>
+
+              <TextBlock Classes="caption" Text="{Binding [stage-editor-layout], Source={x:Static s:Localizer.Instance}}" />
+              <ComboBox Name="StageLayoutCombo" MinWidth="160" ItemsSource="{Binding Layouts}" SelectedItem="{Binding SelectedLayout}"
+                        AutomationProperties.Name="{Binding [stage-editor-layout], Source={x:Static s:Localizer.Instance}}">
+                <ComboBox.ItemTemplate>
+                  <DataTemplate x:DataType="pb:StageLayout">
+                    <TextBlock Text="{Binding Name}" />
+                  </DataTemplate>
+                </ComboBox.ItemTemplate>
+              </ComboBox>
+              <TextBlock Classes="caption" Foreground="{DynamicResource Brush.SuccessText}" Text="{Binding InUseText}" IsVisible="{Binding IsInUse}" />
+
+              <TextBlock Classes="caption" Text="{Binding [stage-editor-arrangement], Source={x:Static s:Localizer.Instance}}" />
+              <ComboBox Name="StageArrangementCombo" MinWidth="160" ItemsSource="{Binding Arrangements}" SelectedItem="{Binding SelectedArrangement}"
+                        AutomationProperties.Name="{Binding [stage-editor-arrangement], Source={x:Static s:Localizer.Instance}}">
+                <ComboBox.ItemTemplate>
+                  <DataTemplate x:DataType="vm:StageArrangementOption">
+                    <TextBlock Text="{Binding Name}" />
+                  </DataTemplate>
+                </ComboBox.ItemTemplate>
+              </ComboBox>
+
+              <TextBlock Classes="caption" Text="{Binding [stage-editor-show], Source={x:Static s:Localizer.Instance}}" />
+              <CheckBox Name="StageShowChords" IsChecked="{Binding ShowChords}" Content="{Binding [stage-editor-chords], Source={x:Static s:Localizer.Instance}}" />
+              <CheckBox Name="StageShowKey" IsChecked="{Binding ShowKey}" Content="{Binding [stage-editor-key], Source={x:Static s:Localizer.Instance}}" />
+              <CheckBox Name="StageShowSections" IsChecked="{Binding ShowSections}" Content="{Binding [stage-editor-arrangement-strip], Source={x:Static s:Localizer.Instance}}" />
+              <CheckBox Name="StageShowClock" IsChecked="{Binding ShowClock}" Content="{Binding [stage-editor-clock], Source={x:Static s:Localizer.Instance}}" />
+              <CheckBox Name="StageShowNext" IsChecked="{Binding ShowNext}" Content="{Binding [stage-editor-next], Source={x:Static s:Localizer.Instance}}" />
+              <CheckBox Name="StageShowTimer" IsChecked="{Binding ShowTimer}" Content="{Binding [stage-editor-timer], Source={x:Static s:Localizer.Instance}}" />
+              <CheckBox Name="StageShowNotes" IsChecked="{Binding ShowNotes}" Content="{Binding [stage-editor-notes], Source={x:Static s:Localizer.Instance}}" />
+              <CheckBox Name="StageShowBooth" IsChecked="{Binding ShowBooth}" Content="{Binding [stage-editor-booth], Source={x:Static s:Localizer.Instance}}" />
+
+              <TextBlock Classes="caption" Text="{Binding [stage-editor-text-size], Source={x:Static s:Localizer.Instance}}" />
+              <Slider Name="StageTextSize" Minimum="50" Maximum="200" SmallChange="10" LargeChange="25" TickFrequency="25"
+                      IsSnapToTickEnabled="False" Value="{Binding TextSize}"
+                      AutomationProperties.Name="{Binding [stage-editor-text-size], Source={x:Static s:Localizer.Instance}}" />
+
+              <TextBlock Classes="caption" Text="{Binding [stage-editor-name], Source={x:Static s:Localizer.Instance}}" />
+              <TextBox Name="StageLayoutName" Text="{Binding Name}" MaxLength="80"
+                       AutomationProperties.Name="{Binding [stage-editor-name], Source={x:Static s:Localizer.Instance}}" />
+
+              <WrapPanel ItemSpacing="{DynamicResource Space.2}" LineSpacing="{DynamicResource Space.2}">
+                <Button Name="StageSaveButton" Command="{Binding SaveCommand}">
+                  <TextBlock Text="{Binding [stage-editor-save], Source={x:Static s:Localizer.Instance}}" />
+                </Button>
+                <Button Name="StageUseButton" Classes="primary" Command="{Binding UseCommand}">
+                  <TextBlock Text="{Binding [stage-editor-use], Source={x:Static s:Localizer.Instance}}" />
+                </Button>
+              </WrapPanel>
+              <TextBlock Classes="caption" Text="{Binding StatusText}" IsVisible="{Binding StatusText, Converter={x:Static ObjectConverters.IsNotNull}}" />
+            </StackPanel>
           </ScrollViewer>
         </DataTemplate>
       </dock:DockControl.DataTemplates>

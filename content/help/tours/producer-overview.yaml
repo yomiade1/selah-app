@@ -1,0 +1,20 @@
+# Producer mode overview (M4.7, KNOWLEDGE-BASE §6.5). Step words are in content/i18n/en/tours.ftl.
+id: tour.producer-overview
+title_key: tour-producer-title
+mode: producer
+requires_practice_mode: false
+steps:
+  - anchor: live.service-order
+    text_key: tour-producer-order
+  - anchor: live.slides
+    text_key: tour-producer-slides
+  - anchor: live.program-preview
+    text_key: tour-producer-program
+  - anchor: live.layers
+    text_key: tour-producer-layers
+  - anchor: live.tiles
+    text_key: tour-producer-tiles
+  - anchor: live.controls
+    text_key: tour-producer-controls
+  - anchor: shell.clear-everything
+    text_key: tour-producer-clear

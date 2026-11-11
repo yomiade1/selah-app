@@ -24,3 +24,15 @@ error-library-not-found = Selah couldn't find that item in your library.
 error-library-invalid = Selah couldn't save that change to your library. Check what you entered, then try again.
 error-setting-locked = Your church admin locked this setting, so it can't change here.
 error-nothing-to-undo = There is nothing left to undo or redo.
+
+## Ready for Sunday (M4.7)
+error-ready-media-missing = A file for { $item } is missing or changed.
+error-ready-font-missing = { $item } uses the font { $font }, which isn't installed.
+error-ready-text-doesnt-fit = The words of { $item } don't fit on { $output }.
+error-ready-no-copyright = { $item } has no copyright line.
+error-ready-no-ccli-licence = Your church's CCLI licence number isn't set.
+error-ready-no-screens = No screens are connected.
+error-ready-screen-not-showing = { $output } isn't showing anything.
+error-ready-no-backup-sync = Backup sync isn't in Selah yet. Back up your library by hand.
+error-ready-flashing = { $item } may flash too fast for some people.
+error-ready-limiter-off = The volume limiter is off.

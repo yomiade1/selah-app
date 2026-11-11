@@ -188,6 +188,9 @@ public interface ILibraryService
 
     Task<IReadOnlyList<Service>> ListServicesAsync(uint limit = 200, uint offset = 0);
 
+    /// <summary>Ready for Sunday (M4.7): run every pre-flight check for a saved service.</summary>
+    Task<ReadyReport> RunReadyCheckAsync(Id serviceId) => Task.FromResult(new ReadyReport { ServiceId = serviceId });
+
     Task<Service?> GetServiceAsync(Id id);
 
     Task SaveServiceAsync(Service service, Id? undoGroup = null);

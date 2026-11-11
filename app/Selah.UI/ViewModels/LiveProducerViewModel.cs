@@ -149,7 +149,7 @@ public sealed record ProducerLayoutState(string Name, double ServiceOrder, doubl
         var b = Clamp(Slides);
         var c = Clamp(Inspector);
         var sum = a + b + c;
-        var tab = InspectorTab is "layers" or "tiles" ? InspectorTab : "layers";
+        var tab = InspectorTab is "layers" or "tiles" or "stage" ? InspectorTab : "layers";
         return this with { ServiceOrder = a / sum, Slides = b / sum, Inspector = c / sum, Program = Clamp(Program), InspectorTab = tab };
     }
 }
@@ -180,6 +180,7 @@ public sealed partial class LiveProducerViewModel : ObservableObject
             NewLayer(LayerKind.Media, "live-layer-media", "live-clear-background-key"),
             NewLayer(LayerKind.VideoInput, "live-layer-video-input", "live-clear"),
         ];
+        Stage = new StageEditorViewModel(live, ShowError);
         Layout = LoadLayout();
         Dock = new ProducerDockFactory(this);
         DockLayout = Dock.Build(Layout);
@@ -207,6 +208,33 @@ public sealed partial class LiveProducerViewModel : ObservableObject
     public IReadOnlyList<ProducerLayoutState> LayoutPresets => ProducerLayoutState.Presets;
 
     public ProducerDockFactory Dock { get; }
+
+    /// <summary>Bring forward the inspector tab that holds a help anchor (tours, M4.7).</summary>
+    public void ShowPaneFor(string anchor)
+    {
+        var id = anchor switch
+        {
+            "live.tiles" => "tiles",
+            "live.layers" => "layers",
+            "live.stage-editor" or "live.stage-preview" => "stage",
+            _ => null,
+        };
+        if (id is null)
+        {
+            return;
+        }
+        Dock.Model.Core.IDockable? Find(Dock.Model.Core.IDockable node) =>
+            node is ProducerPane pane && pane.Id == id ? pane
+            : node is Dock.Model.Core.IDock { VisibleDockables: { } children } ? children.Select(Find).FirstOrDefault(f => f is not null)
+            : null;
+        if (Find(DockLayout) is { } found)
+        {
+            this.Dock.SetActiveDockable(found);
+        }
+    }
+
+    /// <summary>The stage display editor (M4.6), the Stage tab of the inspector.</summary>
+    public StageEditorViewModel Stage { get; }
 
     [ObservableProperty]
     private Dock.Model.Controls.IRootDock dockLayout;
@@ -302,6 +330,7 @@ public sealed partial class LiveProducerViewModel : ObservableObject
         {
             await RunAsync(live.GetLiveStateAsync);
         }
+        await Stage.RefreshAsync();
     }
 
     private async Task LoadTilesAsync()
@@ -342,6 +371,7 @@ public sealed partial class LiveProducerViewModel : ObservableObject
             || next.CurrentItemSlides.Count != Slides.Count;
         var slideChanged = itemChanged || next.CurrentSlideIndex != Status.CurrentSlideIndex;
         Status = next;
+        Stage.Apply(next);
         ServiceName = next.ServiceName;
         CurrentItemTitle = next.CurrentItemTitle;
         CanUndo = next.CanLiveUndo;

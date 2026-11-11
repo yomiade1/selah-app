@@ -1262,4 +1262,29 @@ public sealed class ContractTests
         var replyBack = Envelope.Parser.ParseFrom(reply.ToByteArray());
         Assert.True(replyBack.Reply.LiveStatus.Automation[0].RoleLocked);
     }
+
+    [Fact]
+    public void M47PracticeAndReadyMessagesRoundTrip()
+    {
+        var practice = new Envelope { Id = 7471, Command = new Command { SetPracticeMode = new SetPracticeMode { On = true } } };
+        Assert.Equal(practice, Envelope.Parser.ParseFrom(practice.ToByteArray()));
+
+        var check = new ReadyCheck
+        {
+            Kind = ReadyCheckKind.Copyright,
+            Status = ReadyCheckStatus.Warn,
+            Code = "SEL-RDY-0004",
+            MessageKey = "error-ready-no-copyright",
+            FixArticleId = "services.add-copyright-and-licence-details",
+            ItemIndex = 2,
+            ItemTitle = "New Song",
+        };
+        check.Args["item"] = "New Song";
+        var report = new Envelope { Id = 7472, Reply = new Reply { ReadyReport = new ReadyReport { Ready = true, Checks = { check } } } };
+        var back = Envelope.Parser.ParseFrom(report.ToByteArray());
+        Assert.Equal(report, back);
+        Assert.Equal("New Song", back.Reply.ReadyReport.Checks[0].Args["item"]);
+        var query = new Envelope { Id = 7473, Query = new Query { RunReadyCheck = new RunReadyCheck { ServiceId = new Id { Value = Google.Protobuf.ByteString.CopyFromUtf8("s") } } } };
+        Assert.Equal(query, Envelope.Parser.ParseFrom(query.ToByteArray()));
+    }
 }

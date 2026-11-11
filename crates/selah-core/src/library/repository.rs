@@ -659,6 +659,7 @@ document!(
     StageLayout,
     |value: &StageLayout| {
         unique_ids(value.elements.iter().map(|e| &e.id))?;
+        crate::stage::validate_layout(value)?;
         ensure!(value.elements.len() <= 32, "too many stage layout elements");
         for el in &value.elements {
             ensure!(
