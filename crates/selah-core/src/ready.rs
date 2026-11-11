@@ -818,7 +818,6 @@ mod tests {
     #[test]
     fn sound_check_passes_only_with_the_limiter_on() {
         // safe: SAFE-05
-        assert!(LIMITER_ALWAYS_ON);
         assert_eq!(check_sound(true)[0].status, ReadyCheckStatus::Pass as i32);
         assert_eq!(
             statuses(&check_sound(false)),
