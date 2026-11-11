@@ -10,6 +10,9 @@ away from the suite.
 It looks at every `backticked_snake_case_name` with four or more words and fails if no Rust
 function by that name exists. Shorter names (`max_lines`, `flash_warning`) are field and column
 names, not tests, so they are left alone.
+
+Writing about a name that no longer exists (a renamed or removed test) therefore needs plain
+quotes rather than backticks, so that only names offered as real evidence are checked.
 """
 
 from __future__ import annotations
