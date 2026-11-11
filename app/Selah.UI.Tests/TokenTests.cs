@@ -27,6 +27,60 @@ public sealed class TokenTests
     }
 
     [Fact]
+    public void Booth_has_no_shadows_and_light_uses_the_documented_elevation()
+    {
+        // DESIGN-SYSTEM §3: "Booth uses no shadows; separation comes from surface colour."
+        using var document = JsonDocument.Parse(File.ReadAllText(Repo.PathOf("design", "tokens", "tokens.json")));
+        var shadow = document.RootElement.GetProperty("shadow");
+        var booth = shadow.GetProperty("booth").GetProperty("elevation").GetProperty("$value").GetString();
+        Assert.Equal("none", booth);
+        var light = shadow.GetProperty("light").GetProperty("elevation").GetProperty("$value").GetString()!;
+        Assert.Contains("#0F000000", light);
+        Assert.DoesNotContain("#40000000", light);
+    }
+
+    [Fact]
+    public void Slide_preview_and_scrim_tokens_exist_in_both_appearances()
+    {
+        // Added so no view has to hard-code a colour for slide text or an overlay scrim.
+        using var document = JsonDocument.Parse(File.ReadAllText(Repo.PathOf("design", "tokens", "tokens.json")));
+        var colors = document.RootElement.GetProperty("color");
+        foreach (var appearance in new[] { "light", "booth" })
+        {
+            var mode = colors.GetProperty(appearance);
+            foreach (var name in new[] { "slide-text", "slide-text-muted", "scrim" })
+            {
+                Assert.True(mode.TryGetProperty(name, out var token), $"{appearance}.{name} is missing");
+                Assert.False(string.IsNullOrWhiteSpace(token.GetProperty("$value").GetString()));
+            }
+        }
+    }
+
+    [Fact]
+    public void No_view_hard_codes_a_colour()
+    {
+        // The tokens-only rule (CLAUDE.md, DESIGN-SYSTEM §3). Tokens.g.axaml is generated and
+        // is the one place literal colours belong.
+        var views = Directory.GetFiles(Repo.PathOf("app", "Selah.UI"), "*.axaml", SearchOption.AllDirectories)
+            .Where(f => !Path.GetFileName(f).Contains(".g.", StringComparison.Ordinal))
+            .ToList();
+        Assert.NotEmpty(views);
+        var offenders = new List<string>();
+        foreach (var view in views)
+        {
+            var lines = File.ReadAllLines(view);
+            for (var i = 0; i < lines.Length; i++)
+            {
+                if (System.Text.RegularExpressions.Regex.IsMatch(lines[i], "#[0-9A-Fa-f]{6,8}\\b"))
+                {
+                    offenders.Add($"{Path.GetFileName(view)}:{i + 1}: {lines[i].Trim()}");
+                }
+            }
+        }
+        Assert.Empty(offenders);
+    }
+
+    [Fact]
     public void Every_declared_contrast_pair_passes()
     {
         using var document = JsonDocument.Parse(File.ReadAllText(Repo.PathOf("design", "tokens", "tokens.json")));

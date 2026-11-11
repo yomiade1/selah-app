@@ -136,6 +136,23 @@ def skia_binaries_url():
     return f"file://{folder}/skia-binaries-{{key}}.tar.gz"
 
 
+WINDOWS_CHECK_EXCLUSIONS = ROOT / "tools" / "windows-check-exclusions.txt"
+
+
+def windows_check_exclusions():
+    """Crates the cloud Windows type-check can't build, read from one documented list.
+
+    tools/check-windows-coverage.py reads the same file, so a crate that gains Windows-only
+    code can't quietly drop out of the check (that happened once: see PROGRESS.md, M1-A1).
+    """
+    crates = []
+    for line in WINDOWS_CHECK_EXCLUSIONS.read_text(encoding="utf-8").splitlines():
+        name = line.split("#", 1)[0].strip()
+        if name:
+            crates.append(name)
+    return crates
+
+
 def platform_key():
     machine = platform.machine().lower()
     arch = "arm64" if machine in {"arm64", "aarch64"} else "x64"
@@ -206,11 +223,16 @@ def stages(args):
     stage("4", "buf breaking", pnpm("exec", "buf", "breaking", "--against", f".git#tag={previous_milestone_tag()}"))
     stage("4", "generated contracts are current", [PY, "tools/check-generated.py"])
     stage("5", "cargo build", [tool("cargo"), "build", "--workspace", "--all-targets", "--locked"], rust_env)
-    # The FFmpeg-linked crates are left out: their bindings need the Windows FFmpeg headers, and
-    # the windows CI job builds them natively.
-    stage("5", "windows type-check", [tool("cargo"), "check", "--workspace", "--locked", "--target", "x86_64-pc-windows-gnu",
-                                      "--exclude", "selah-media", "--exclude", "selah-engine", "--exclude", "selah-bench", "--exclude", "selah-testkit"],
+    # Crates left out of the cross-target check, and why (see tools/windows-check-exclusions.txt,
+    # which tools/check-windows-coverage.py reads so a crate can't gain Windows-only code and
+    # silently fall out of this check). The windows CI job builds all of them natively.
+    windows_excludes = []
+    for crate in windows_check_exclusions():
+        windows_excludes += ["--exclude", crate]
+    stage("5", "windows type-check", [tool("cargo"), "check", "--workspace", "--locked",
+                                      "--target", "x86_64-pc-windows-gnu"] + windows_excludes,
           rust_env, skip=not args.cloud)
+    stage("5", "windows check coverage", [PY, "tools/check-windows-coverage.py"], skip=not args.cloud)
     stage("5", "dotnet build", [tool("dotnet"), "build", "app/Selah.sln", "-c", "Release"], timeout=900)
     stage("5", "web build", pnpm("-r", "run", "build"))
     stage("6", "cargo test", [tool("cargo"), "test", "--workspace", "--locked"],
@@ -242,6 +264,7 @@ def stages(args):
     stage("14", "dotnet vulnerable packages", [PY, "tools/check-vulnerable.py", "dotnet"])
     stage("14", "pnpm audit", [PY, "tools/check-vulnerable.py", "pnpm"])
     stage("14", "secret scan", [PY, "tools/check-secrets.py"])
+    stage("14", "evidence names", [PY, "tools/check-evidence.py"])
     stage("14", "workflow policy", [PY, "tools/check-workflows.py"])
     stage("14", "unsafe policy", [PY, "tools/check-unsafe.py"])
     return plan
