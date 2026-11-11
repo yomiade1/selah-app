@@ -67,6 +67,10 @@
                 Command="{Binding SelectModeCommand}" CommandParameter="ServicePlanner">
           <TextBlock Text="{Binding [mode-services], Source={x:Static s:Localizer.Instance}}" />
         </Button>
+        <Button Name="ModeLiveButton" Classes.primary="{Binding IsLiveMode}"
+                Command="{Binding SelectModeCommand}" CommandParameter="Live" s:Help.Anchor="live.producer">
+          <TextBlock Text="{Binding [mode-live], Source={x:Static s:Localizer.Instance}}" />
+        </Button>
         <Button Name="CommandPaletteButton" Classes="quiet" Command="{Binding OpenCommandPaletteCommand}"
                 s:Help.Anchor="shell.command-palette"
                 ToolTip.Tip="{Binding [command-search-hint], Source={x:Static s:Localizer.Instance}}">
@@ -303,6 +307,11 @@
 
       <Panel Name="ServicePlannerWorkspace" IsVisible="{Binding IsServicePlannerMode}">
         <views:ServicePlannerView Name="ServicePlannerViewControl" DataContext="{Binding ServicePlanner}" />
+      </Panel>
+
+      <!-- Live: Producer mode (M4.4). -->
+      <Panel Name="LiveWorkspace" IsVisible="{Binding IsLiveMode}">
+        <views:LiveProducerView Name="LiveProducerViewControl" DataContext="{Binding LiveProducer}" />
       </Panel>
 
       <!-- Quick find (Ctrl/Cmd+K) never covers Toolbar / Clear everything. -->

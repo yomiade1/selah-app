@@ -58,4 +58,24 @@ public static class HelpAnchors
     public const string ServicesOrder = "services.order";
     /// <summary>Services, Volunteer team roster and role assignments.</summary>
     public const string ServicesTeam = "services.team";
+    /// <summary>Live, Producer mode workspace and its top bar.</summary>
+    public const string LiveProducer = "live.producer";
+    /// <summary>Live, the Producer layout picker and Save layout.</summary>
+    public const string LiveLayout = "live.layout";
+    /// <summary>Live, the Booth lock button and banner (SAFE-06).</summary>
+    public const string LiveBoothLock = "live.booth-lock";
+    /// <summary>Live, the bottom bar with Clear, Show logo, Previous, Next and Undo.</summary>
+    public const string LiveControls = "live.controls";
+    /// <summary>Live, the health bar that shows each screen's state.</summary>
+    public const string LiveHealth = "live.health";
+    /// <summary>Live, the service order list.</summary>
+    public const string LiveServiceOrder = "live.service-order";
+    /// <summary>Live, the slide grid for the live item.</summary>
+    public const string LiveSlides = "live.slides";
+    /// <summary>Live, the Program preview of what the audience sees.</summary>
+    public const string LiveProgramPreview = "live.program-preview";
+    /// <summary>Live, the layer list with a Clear button for each layer.</summary>
+    public const string LiveLayers = "live.layers";
+    /// <summary>Live, tiles for looks, timers and macros.</summary>
+    public const string LiveTiles = "live.tiles";
 }

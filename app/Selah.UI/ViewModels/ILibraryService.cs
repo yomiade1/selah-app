@@ -42,6 +42,7 @@ public enum WorkspaceMode
     SongEditor,
     SlideEditor,
     Templates,
+    Live,
 }
 
 /// <summary>Sub-sections in the Library browser.</summary>

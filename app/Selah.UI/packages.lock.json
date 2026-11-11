@@ -53,6 +53,41 @@
         "resolved": "8.4.2",
         "contentHash": "WadCzGEc2U+3e20avRLng4qNtt4zoOGWrdUISqJWrHe3/FSnrYjuM5Sb4yQb09LhkBXrrI4Zt3dLKgRMbItsrg=="
       },
+      "Dock.Avalonia": {
+        "type": "Direct",
+        "requested": "[12.1.5, )",
+        "resolved": "12.1.5",
+        "contentHash": "/U4/ZqLpI0eDt78yjeov+xUeQ/s+0wX9FzYRT625Qo+zAq4/1wFbCXIAwQvJzJrPxigqO30NmUT3aKt2kZrr/g==",
+        "dependencies": {
+          "Avalonia": "12.1.5",
+          "Dock.Controls.DeferredContentControl": "12.1.5",
+          "Dock.Controls.ProportionalStackPanel": "12.1.5",
+          "Dock.Controls.Recycling": "12.1.5",
+          "Dock.MarkupExtension": "12.1.5",
+          "Dock.Model": "12.1.5",
+          "Dock.Settings": "12.1.5"
+        }
+      },
+      "Dock.Avalonia.Themes.Fluent": {
+        "type": "Direct",
+        "requested": "[12.1.5, )",
+        "resolved": "12.1.5",
+        "contentHash": "NNjtjyww86lKmjbFcca51uYvGzzOVHFETj9cXu1ao6/Uw/uI60dbvmVH40SyTEPRQTQ6cfKrdV7/hFCrnBJ26A==",
+        "dependencies": {
+          "Avalonia": "12.1.5",
+          "Dock.Avalonia": "12.1.5"
+        }
+      },
+      "Dock.Model.Mvvm": {
+        "type": "Direct",
+        "requested": "[12.1.5, )",
+        "resolved": "12.1.5",
+        "contentHash": "mx3sLOk+hln/svIHR73jVGb/k6WJgSsUsDJApaYZFMvxkkcrteWpazofTgpBFLf1QCKxl5h8uLCOoCINW8mgxQ==",
+        "dependencies": {
+          "CommunityToolkit.Mvvm": "8.4.0",
+          "Dock.Model": "12.1.5"
+        }
+      },
       "Linguini.Bundle": {
         "type": "Direct",
         "requested": "[0.11.0, )",
@@ -154,6 +189,61 @@
           "Avalonia.FreeDesktop": "12.1.5",
           "Avalonia.FreeDesktop.AtSpi": "12.1.5",
           "Avalonia.Skia": "12.1.5"
+        }
+      },
+      "Dock.Controls.DeferredContentControl": {
+        "type": "Transitive",
+        "resolved": "12.1.5",
+        "contentHash": "OVAwqLB3zJtkiHXY3xr95IOjnVPlJN3UvD6ZUroBTH3B0oUA4IkXGTM82IW12yGSFM8B9HzSlswt2QkcupKomw==",
+        "dependencies": {
+          "Avalonia": "12.1.5"
+        }
+      },
+      "Dock.Controls.ProportionalStackPanel": {
+        "type": "Transitive",
+        "resolved": "12.1.5",
+        "contentHash": "zX1SBVflDHpUHeYrA0rW8/ecFiPHtipATmX+AM/FMBAd6+AnGHmlaI7N2+na0qtg473IuL2X+szjCyDC+y+Pow==",
+        "dependencies": {
+          "Avalonia": "12.1.5"
+        }
+      },
+      "Dock.Controls.Recycling": {
+        "type": "Transitive",
+        "resolved": "12.1.5",
+        "contentHash": "6r7vpEjVQpTQ10UpDPcd9JZbwLR8rKzNwENxv2OP7YMGCbDue89SbCcw3KZteHmJkmzslvO1JXq1+iQmWbZbJA==",
+        "dependencies": {
+          "Avalonia": "12.1.5",
+          "Dock.Controls.Recycling.Model": "12.1.5"
+        }
+      },
+      "Dock.Controls.Recycling.Model": {
+        "type": "Transitive",
+        "resolved": "12.1.5",
+        "contentHash": "wbMdJ4zhHy5BgYGXVqim2G0tzZNn2h0H1toUaTmOrSt9CmGccwwaznbTm8jDSlkf9o5LBLkEHZgaIGzWxBXa/A=="
+      },
+      "Dock.MarkupExtension": {
+        "type": "Transitive",
+        "resolved": "12.1.5",
+        "contentHash": "TXL2fqO2V5gLyccml9x7UfrMk6sWMiS3nDihp7Tw55kDpB3GzveK86URQs2frMe9ur7LwuJk8nsb7C/FO+KDKg==",
+        "dependencies": {
+          "Avalonia": "12.1.5"
+        }
+      },
+      "Dock.Model": {
+        "type": "Transitive",
+        "resolved": "12.1.5",
+        "contentHash": "Y8DwUTydrgQCMZotmLHo6bxML+bNfLj3q0qcBXqf5+g3TnE66DYJptkb2+dGIwo9LeKaEQ8XjEYI/gLh8RGu9w==",
+        "dependencies": {
+          "Dock.Controls.Recycling.Model": "12.1.5"
+        }
+      },
+      "Dock.Settings": {
+        "type": "Transitive",
+        "resolved": "12.1.5",
+        "contentHash": "z4DP7H9dQYH/eBb1D3vk8XV9Ra3YETEYhFkwtpwP4asN1LSNaSyyQUAIr+3kRbtqfflEIetrelhIAytW0fqnPw==",
+        "dependencies": {
+          "Avalonia": "12.1.5",
+          "Dock.Model": "12.1.5"
         }
       },
       "Google.Protobuf": {

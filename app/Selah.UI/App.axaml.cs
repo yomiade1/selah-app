@@ -30,7 +30,7 @@ public sealed partial class App : Application
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
             connection = new CoreConnection();
-            var model = new MainViewModel(connection);
+            var model = new MainViewModel(connection, producerLayoutPath: UiPaths.ProducerLayout);
             var window = new MainWindow { DataContext = model };
             desktop.MainWindow = window;
             // SAFE-06: quitting (Cmd+Q, the Dock, the taskbar) while something is live asks first.

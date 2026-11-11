@@ -1,3 +1,4 @@
+using Selah.Contracts.V1;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -25,7 +26,9 @@ public sealed partial class MainViewModel : ObservableObject
         CoreConnection? connection,
         IDiagnosticsService? diagnostics = null,
         ILibraryService? library = null,
-        IHelpSource? helpSource = null)
+        IHelpSource? helpSource = null,
+        ILiveService? live = null,
+        string? producerLayoutPath = null)
     {
         this.connection = connection;
         this.diagnostics = diagnostics ?? connection;
@@ -50,6 +53,8 @@ public sealed partial class MainViewModel : ObservableObject
         TemplateEditor = new TemplateEditorViewModel(resolvedLibrary);
         ServicePlanner = new ServicePlannerViewModel(resolvedLibrary);
         CommandPalette = new CommandPaletteViewModel(resolvedLibrary, resolvedHelp);
+        liveService = live ?? connection;
+        LiveProducer = new LiveProducerViewModel(liveService, resolvedLibrary, producerLayoutPath);
 
         Library.EditSongRequested += (_, song) => _ = EditSongInEditorAsync(song);
         Library.SceneStaged += (_, _) => HasStagedPreview = true;
@@ -58,7 +63,7 @@ public sealed partial class MainViewModel : ObservableObject
         SlideEditor.SceneStaged += (_, _) => HasStagedPreview = true;
         TemplateEditor.TemplatesChanged += (_, _) => _ = RefreshTemplatesEverywhereAsync();
         ServicePlanner.RehearseRequested += (_, _) => HasStagedPreview = true;
-        ServicePlanner.GoLiveRequested += (_, _) => IsLive = true;
+        ServicePlanner.GoLiveRequested += (_, service) => _ = GoLiveAsync(service);
 
         RegisterPaletteCommands();
         CommandPalette.SongChosen += (_, song) => _ = EditSongInEditorAsync(song);
@@ -113,6 +118,33 @@ public sealed partial class MainViewModel : ObservableObject
 
     public CommandPaletteViewModel CommandPalette { get; }
 
+    /// <summary>Producer mode (M4.4).</summary>
+    public LiveProducerViewModel LiveProducer { get; }
+
+    private readonly ILiveService? liveService;
+
+    /// <summary>Holding Esc for 1 second clears the screens from every view (SAFE-03, M4-A12).</summary>
+    public HoldGesture EscapeHold { get; } = new(TimeSpan.FromSeconds(1));
+
+    /// <summary>Esc went down (or repeated while held). Clears everything once it has been held 1 s.</summary>
+    public void OnEscapeDown(TimeSpan now)
+    {
+        if (EscapeHold.Down(now))
+        {
+            ClearEverythingCommand.Execute(null);
+        }
+    }
+
+    public void OnEscapeUp() => EscapeHold.Up();
+
+    /// <summary>The planner's <b>Go live</b>: load the service into Live and switch to Producer.</summary>
+    private async Task GoLiveAsync(Service service)
+    {
+        IsLive = true;
+        ActiveMode = WorkspaceMode.Live;
+        await LiveProducer.LoadServiceAsync(service, triggerFirst: true);
+    }
+
     [ObservableProperty]
     private bool isWhatsThisActive;
 
@@ -128,6 +160,7 @@ public sealed partial class MainViewModel : ObservableObject
     [NotifyPropertyChangedFor(nameof(IsSlideEditorMode))]
     [NotifyPropertyChangedFor(nameof(IsTemplatesMode))]
     [NotifyPropertyChangedFor(nameof(IsServicePlannerMode))]
+    [NotifyPropertyChangedFor(nameof(IsLiveMode))]
     private WorkspaceMode activeMode = WorkspaceMode.Preview;
 
     public bool IsPreviewMode => ActiveMode == WorkspaceMode.Preview;
@@ -141,6 +174,8 @@ public sealed partial class MainViewModel : ObservableObject
     public bool IsTemplatesMode => ActiveMode == WorkspaceMode.Templates;
 
     public bool IsServicePlannerMode => ActiveMode == WorkspaceMode.ServicePlanner;
+
+    public bool IsLiveMode => ActiveMode == WorkspaceMode.Live;
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(StatusText))]
@@ -290,6 +325,10 @@ public sealed partial class MainViewModel : ObservableObject
         {
             _ = ServicePlanner.LoadAsync();
         }
+        else if (value == WorkspaceMode.Live)
+        {
+            _ = LiveProducer.RefreshAsync();
+        }
     }
 
     [RelayCommand]
@@ -302,6 +341,7 @@ public sealed partial class MainViewModel : ObservableObject
             "SlideEditor" => WorkspaceMode.SlideEditor,
             "Templates" => WorkspaceMode.Templates,
             "ServicePlanner" => WorkspaceMode.ServicePlanner,
+            "Live" => WorkspaceMode.Live,
             _ => WorkspaceMode.Preview,
         };
     }
@@ -443,12 +483,17 @@ public sealed partial class MainViewModel : ObservableObject
 
     public event EventHandler? ClearEverythingTriggered;
 
+    /// <summary>How many times Clear everything was asked for (F12, held Esc, buttons).</summary>
+    public int ClearEverythingRequests { get; private set; }
+
     /// <summary>Always available, even when core isn't connected (SAFE-03).</summary>
     [RelayCommand]
     private async Task ClearEverythingAsync()
     {
+        ClearEverythingRequests++;
         ClearEverythingTriggered?.Invoke(this, EventArgs.Empty);
-        if (connection is not null && !await connection.ClearEverythingAsync())
+        var lane = (ILiveService?)connection ?? liveService;
+        if (lane is not null && !await lane.ClearEverythingAsync())
         {
             LastError = Localizer.Instance["error-not-connected"];
             LastErrorFixArticleId = null;

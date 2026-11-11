@@ -55,3 +55,23 @@ anchors:
     description: Services, Service order table, item controls, and runtime projection.
   - id: services.team
     description: Services, Volunteer team roster and role assignments.
+  - id: live.producer
+    description: Live, Producer mode workspace and its top bar.
+  - id: live.layout
+    description: Live, the Producer layout picker and Save layout.
+  - id: live.booth-lock
+    description: Live, the Booth lock button and banner (SAFE-06).
+  - id: live.controls
+    description: Live, the bottom bar with Clear, Show logo, Previous, Next and Undo.
+  - id: live.health
+    description: Live, the health bar that shows each screen's state.
+  - id: live.service-order
+    description: Live, the service order list.
+  - id: live.slides
+    description: Live, the slide grid for the live item.
+  - id: live.program-preview
+    description: Live, the Program preview of what the audience sees.
+  - id: live.layers
+    description: Live, the layer list with a Clear button for each layer.
+  - id: live.tiles
+    description: Live, tiles for looks, timers and macros.

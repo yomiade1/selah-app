@@ -14,9 +14,6 @@ planned:
   - { id: simple.service-progress, kind: anchor, milestone: M4 }
   - { id: simple.slide-strip, kind: anchor, milestone: M4 }
   - { id: simple.now-showing, kind: anchor, milestone: M4 }
-  - { id: live.service-order, kind: anchor, milestone: M4 }
-  - { id: live.slides, kind: anchor, milestone: M4 }
-  - { id: live.program-preview, kind: anchor, milestone: M4 }
   - { id: screens.output-list, kind: anchor, milestone: M5 }
   - { id: screens.front-projection, kind: anchor, milestone: M5 }
   - { id: screens.blend-settings, kind: anchor, milestone: M5 }
