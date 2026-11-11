@@ -48,6 +48,7 @@ public sealed partial class MainViewModel : ObservableObject
         SongEditor = new SongEditorViewModel(resolvedLibrary);
         SlideEditor = new SlideEditorViewModel(resolvedLibrary);
         TemplateEditor = new TemplateEditorViewModel(resolvedLibrary);
+        ServicePlanner = new ServicePlannerViewModel(resolvedLibrary);
         CommandPalette = new CommandPaletteViewModel(resolvedLibrary, resolvedHelp);
 
         Library.EditSongRequested += (_, song) => _ = EditSongInEditorAsync(song);
@@ -56,6 +57,8 @@ public sealed partial class MainViewModel : ObservableObject
         SongEditor.SceneStaged += (_, _) => HasStagedPreview = true;
         SlideEditor.SceneStaged += (_, _) => HasStagedPreview = true;
         TemplateEditor.TemplatesChanged += (_, _) => _ = RefreshTemplatesEverywhereAsync();
+        ServicePlanner.RehearseRequested += (_, _) => HasStagedPreview = true;
+        ServicePlanner.GoLiveRequested += (_, _) => IsLive = true;
 
         RegisterPaletteCommands();
         CommandPalette.SongChosen += (_, song) => _ = EditSongInEditorAsync(song);
@@ -106,6 +109,8 @@ public sealed partial class MainViewModel : ObservableObject
 
     public TemplateEditorViewModel TemplateEditor { get; }
 
+    public ServicePlannerViewModel ServicePlanner { get; }
+
     public CommandPaletteViewModel CommandPalette { get; }
 
     [ObservableProperty]
@@ -122,6 +127,7 @@ public sealed partial class MainViewModel : ObservableObject
     [NotifyPropertyChangedFor(nameof(IsSongEditorMode))]
     [NotifyPropertyChangedFor(nameof(IsSlideEditorMode))]
     [NotifyPropertyChangedFor(nameof(IsTemplatesMode))]
+    [NotifyPropertyChangedFor(nameof(IsServicePlannerMode))]
     private WorkspaceMode activeMode = WorkspaceMode.Preview;
 
     public bool IsPreviewMode => ActiveMode == WorkspaceMode.Preview;
@@ -133,6 +139,8 @@ public sealed partial class MainViewModel : ObservableObject
     public bool IsSlideEditorMode => ActiveMode == WorkspaceMode.SlideEditor;
 
     public bool IsTemplatesMode => ActiveMode == WorkspaceMode.Templates;
+
+    public bool IsServicePlannerMode => ActiveMode == WorkspaceMode.ServicePlanner;
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(StatusText))]
@@ -278,6 +286,10 @@ public sealed partial class MainViewModel : ObservableObject
         {
             _ = TemplateEditor.LoadAsync();
         }
+        else if (value == WorkspaceMode.ServicePlanner)
+        {
+            _ = ServicePlanner.LoadAsync();
+        }
     }
 
     [RelayCommand]
@@ -289,6 +301,7 @@ public sealed partial class MainViewModel : ObservableObject
             "SongEditor" => WorkspaceMode.SongEditor,
             "SlideEditor" => WorkspaceMode.SlideEditor,
             "Templates" => WorkspaceMode.Templates,
+            "ServicePlanner" => WorkspaceMode.ServicePlanner,
             _ => WorkspaceMode.Preview,
         };
     }
@@ -352,6 +365,7 @@ public sealed partial class MainViewModel : ObservableObject
         CommandPalette.RegisterCommand("mode-song-editor", "editor-title", () => SelectMode("SongEditor"));
         CommandPalette.RegisterCommand("mode-slide-editor", "slides-title", () => SelectMode("SlideEditor"));
         CommandPalette.RegisterCommand("mode-templates", "templates-title", () => SelectMode("Templates"));
+        CommandPalette.RegisterCommand("mode-services", "services-title", () => SelectMode("ServicePlanner"));
         CommandPalette.RegisterCommand("library-new-song", "editor-paste-heading", OpenNewSong);
         CommandPalette.RegisterCommand("command-show-test-pattern", "command-show-test-pattern-hint", () => ShowTestPatternCommand.Execute(null));
         CommandPalette.RegisterCommand("command-clear-everything", "command-clear-everything-hint", () => ClearEverythingCommand.Execute(null));
@@ -368,6 +382,10 @@ public sealed partial class MainViewModel : ObservableObject
             else if (ActiveMode == WorkspaceMode.Templates)
             {
                 TemplateEditor.UndoCommand.Execute(null);
+            }
+            else if (ActiveMode == WorkspaceMode.ServicePlanner)
+            {
+                ServicePlanner.UndoCommand.Execute(null);
             }
             else
             {
@@ -387,6 +405,10 @@ public sealed partial class MainViewModel : ObservableObject
             else if (ActiveMode == WorkspaceMode.Templates)
             {
                 TemplateEditor.RedoCommand.Execute(null);
+            }
+            else if (ActiveMode == WorkspaceMode.ServicePlanner)
+            {
+                ServicePlanner.RedoCommand.Execute(null);
             }
             else
             {

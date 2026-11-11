@@ -310,6 +310,7 @@ fn seed_m2(library: &mut Library) -> anyhow::Result<()> {
     let service_type = ServiceType {
         id: Some(service_type_id.clone()),
         name: "Synthetic Sunday Service Type".into(),
+        ..Default::default()
     };
     library.save(&service_type)?;
 
@@ -317,6 +318,7 @@ fn seed_m2(library: &mut Library) -> anyhow::Result<()> {
     let team = Team {
         id: Some(team_id.clone()),
         name: "Synthetic Tech Team".into(),
+        ..Default::default()
     };
     library.save(&team)?;
 
@@ -353,6 +355,7 @@ fn seed_m2(library: &mut Library) -> anyhow::Result<()> {
                 ..Default::default()
             },
         ],
+        ..Default::default()
     };
     library.save(&service)?;
 

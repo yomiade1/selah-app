@@ -4,9 +4,10 @@ use selah_proto::v1::{
     Actor, ActorOrigin, BibleFormat, Command, CopyrightPlacement, Envelope, Event,
     GetPolicySettingReply, LibraryChanged, MediaItemList, MediaKind, OutputConfig,
     OutputConfigList, OutputFrameStatus, ParsePastedSongReply, ParseScriptureReferenceReply,
-    PolicySetting, PresentationList, RenderCommand, Reply, Scene, SearchScope, SetOutputConfigs,
-    SetPreviewScene, Song, SongList, SongPasteFormat, Status, TagList, TemplateList, TestPattern,
-    UndoStateChanged, command, envelope, event, query, render_command, reply,
+    PolicySetting, PresentationList, RenderCommand, Reply, Scene, SearchScope, ServiceList,
+    ServiceTypeList, SetOutputConfigs, SetPreviewScene, Song, SongList, SongPasteFormat, Status,
+    TagList, TeamList, TemplateList, TestPattern, UndoStateChanged, command, envelope, event,
+    query, render_command, reply,
 };
 
 use crate::library::{
@@ -765,6 +766,74 @@ impl CoreService {
                 };
                 self.library_outcome(request, result)
             }
+            command::Action::SaveService(cmd) => {
+                let result = match cmd.service.as_ref() {
+                    Some(doc) => self.library.save_document_op(doc, &meta),
+                    None => Err(CommandBusError::Invalid("missing service".into())),
+                };
+                self.library_outcome(request, result)
+            }
+            command::Action::DeleteService(cmd) => {
+                let result = match cmd.id.as_ref() {
+                    Some(id) => self
+                        .library
+                        .delete_document_op(DocumentKind::Service, id, &meta),
+                    None => Err(CommandBusError::Invalid("missing service id".into())),
+                };
+                self.library_outcome(request, result)
+            }
+            command::Action::SaveServiceType(cmd) => {
+                let result = match cmd.service_type.as_ref() {
+                    Some(doc) => self.library.save_document_op(doc, &meta),
+                    None => Err(CommandBusError::Invalid("missing service type".into())),
+                };
+                self.library_outcome(request, result)
+            }
+            command::Action::DeleteServiceType(cmd) => {
+                let result = match cmd.id.as_ref() {
+                    Some(id) => {
+                        self.library
+                            .delete_document_op(DocumentKind::ServiceType, id, &meta)
+                    }
+                    None => Err(CommandBusError::Invalid("missing service type id".into())),
+                };
+                self.library_outcome(request, result)
+            }
+            command::Action::SaveTeam(cmd) => {
+                let result = match cmd.team.as_ref() {
+                    Some(doc) => self.library.save_document_op(doc, &meta),
+                    None => Err(CommandBusError::Invalid("missing team".into())),
+                };
+                self.library_outcome(request, result)
+            }
+            command::Action::DeleteTeam(cmd) => {
+                let result = match cmd.id.as_ref() {
+                    Some(id) => self
+                        .library
+                        .delete_document_op(DocumentKind::Team, id, &meta),
+                    None => Err(CommandBusError::Invalid("missing team id".into())),
+                };
+                self.library_outcome(request, result)
+            }
+            command::Action::CreateServiceFromPrevious(cmd) => {
+                let result =
+                    crate::planner::create_service_from_previous_op(&mut self.library, cmd, &meta);
+                self.library_outcome(request, result)
+            }
+            command::Action::ExportServicePrint(cmd) => {
+                match crate::planner::export_service_print(&self.library, cmd) {
+                    Ok(exported) => Outcome {
+                        reply: Some(
+                            self.reply(request, reply::Result::ServicePrintExport(exported)),
+                        ),
+                        ..Outcome::default()
+                    },
+                    Err(error) => Outcome {
+                        reply: Some(self.bus_error(request, &error)),
+                        ..Outcome::default()
+                    },
+                }
+            }
             command::Action::Undo(cmd) => {
                 let result = self.library.undo_op(cmd.doc_id.as_ref(), &meta);
                 self.library_outcome(request, result)
@@ -1434,6 +1503,38 @@ impl CoreService {
             Some(query::Request::RenderSceneThumbnail(q)) => {
                 match crate::thumbnails::render_scene_thumbnail(&self.library, &self.live, q) {
                     Ok(thumb) => self.reply(request, reply::Result::SceneThumbnail(thumb)),
+                    Err(error) => self.bus_error(request, &error),
+                }
+            }
+            Some(query::Request::GetService(get)) => {
+                self.get_document(request, get.id.as_ref(), reply::Result::Service)
+            }
+            Some(query::Request::ListServices(list)) => {
+                self.list_documents(request, list.limit, list.offset, |services| {
+                    reply::Result::ServiceList(ServiceList { services })
+                })
+            }
+            Some(query::Request::GetServiceType(get)) => {
+                self.get_document(request, get.id.as_ref(), reply::Result::ServiceType)
+            }
+            Some(query::Request::ListServiceTypes(list)) => {
+                self.list_documents(request, list.limit, list.offset, |service_types| {
+                    reply::Result::ServiceTypeList(ServiceTypeList { service_types })
+                })
+            }
+            Some(query::Request::GetTeam(get)) => {
+                self.get_document(request, get.id.as_ref(), reply::Result::Team)
+            }
+            Some(query::Request::ListTeams(list)) => {
+                self.list_documents(request, list.limit, list.offset, |teams| {
+                    reply::Result::TeamList(TeamList { teams })
+                })
+            }
+            Some(query::Request::ProjectServiceRuntime(q)) => {
+                match crate::planner::project_service_runtime(&self.library, q) {
+                    Ok(projection) => {
+                        self.reply(request, reply::Result::ServiceRuntimeProjection(projection))
+                    }
                     Err(error) => self.bus_error(request, &error),
                 }
             }

@@ -37,6 +37,7 @@ public static class LibraryIds
 public enum WorkspaceMode
 {
     Preview,
+    ServicePlanner,
     Library,
     SongEditor,
     SlideEditor,
@@ -183,4 +184,34 @@ public interface ILibraryService
     Task<FlashRiskReport> AnalyzeFlashRiskAsync(AnalyzeFlashRisk request);
 
     Task PresentSceneAsync(Scene scene);
+
+    Task<IReadOnlyList<Service>> ListServicesAsync(uint limit = 200, uint offset = 0);
+
+    Task<Service?> GetServiceAsync(Id id);
+
+    Task SaveServiceAsync(Service service, Id? undoGroup = null);
+
+    Task DeleteServiceAsync(Id id, Id? undoGroup = null);
+
+    Task<IReadOnlyList<ServiceType>> ListServiceTypesAsync(uint limit = 200, uint offset = 0);
+
+    Task<ServiceType?> GetServiceTypeAsync(Id id);
+
+    Task SaveServiceTypeAsync(ServiceType serviceType, Id? undoGroup = null);
+
+    Task DeleteServiceTypeAsync(Id id, Id? undoGroup = null);
+
+    Task<IReadOnlyList<Team>> ListTeamsAsync(uint limit = 200, uint offset = 0);
+
+    Task<Team?> GetTeamAsync(Id id);
+
+    Task SaveTeamAsync(Team team, Id? undoGroup = null);
+
+    Task DeleteTeamAsync(Id id, Id? undoGroup = null);
+
+    Task<Service> CreateServiceFromPreviousAsync(CreateServiceFromPrevious request, Id? undoGroup = null);
+
+    Task<ServiceRuntimeProjection> ProjectServiceRuntimeAsync(ProjectServiceRuntime request);
+
+    Task<ServicePrintExport> ExportServicePrintAsync(ExportServicePrint request);
 }

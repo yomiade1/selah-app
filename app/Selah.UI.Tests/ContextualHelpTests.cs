@@ -326,6 +326,27 @@ public sealed class ContextualHelpTests : IDisposable
         public Task<FlashRiskReport> AnalyzeFlashRiskAsync(AnalyzeFlashRisk request) =>
             Task.FromResult(new FlashRiskReport());
         public Task PresentSceneAsync(Scene scene) => Task.CompletedTask;
+        public Task<IReadOnlyList<Service>> ListServicesAsync(uint limit = 200, uint offset = 0) =>
+            Task.FromResult<IReadOnlyList<Service>>([]);
+        public Task<Service?> GetServiceAsync(Id id) => Task.FromResult<Service?>(null);
+        public Task SaveServiceAsync(Service service, Id? undoGroup = null) => Task.CompletedTask;
+        public Task DeleteServiceAsync(Id id, Id? undoGroup = null) => Task.CompletedTask;
+        public Task<Service> CreateServiceFromPreviousAsync(CreateServiceFromPrevious request, Id? undoGroup = null) =>
+            Task.FromResult(new Service());
+        public Task<IReadOnlyList<ServiceType>> ListServiceTypesAsync(uint limit = 200, uint offset = 0) =>
+            Task.FromResult<IReadOnlyList<ServiceType>>([]);
+        public Task<ServiceType?> GetServiceTypeAsync(Id id) => Task.FromResult<ServiceType?>(null);
+        public Task SaveServiceTypeAsync(ServiceType serviceType, Id? undoGroup = null) => Task.CompletedTask;
+        public Task DeleteServiceTypeAsync(Id id, Id? undoGroup = null) => Task.CompletedTask;
+        public Task<IReadOnlyList<Team>> ListTeamsAsync(uint limit = 200, uint offset = 0) =>
+            Task.FromResult<IReadOnlyList<Team>>([]);
+        public Task<Team?> GetTeamAsync(Id id) => Task.FromResult<Team?>(null);
+        public Task SaveTeamAsync(Team team, Id? undoGroup = null) => Task.CompletedTask;
+        public Task DeleteTeamAsync(Id id, Id? undoGroup = null) => Task.CompletedTask;
+        public Task<ServiceRuntimeProjection> ProjectServiceRuntimeAsync(ProjectServiceRuntime request) =>
+            Task.FromResult(new ServiceRuntimeProjection());
+        public Task<ServicePrintExport> ExportServicePrintAsync(ExportServicePrint request) =>
+            Task.FromResult(new ServicePrintExport());
     }
 
     [AvaloniaTheory]

@@ -28,6 +28,10 @@ import {
     SongPasteFormat,
 } from "../dist/gen/selah/v1/library_pb.js";
 import { PolicyLevel } from "../dist/gen/selah/v1/settings_pb.js";
+import {
+    ServiceItemKind,
+    ServicePrintKind,
+} from "../dist/gen/selah/v1/service_pb.js";
 
 test("envelope round trip preserves actor, request and correlation", () => {
     const original = create(EnvelopeSchema, {
@@ -1019,5 +1023,76 @@ test("M3.6 scene thumbnail query and reply round trip", () => {
     assert.deepEqual(
         fromBinary(EnvelopeSchema, toBinary(EnvelopeSchema, diagnosticsReply)),
         diagnosticsReply,
+    );
+});
+
+test("M4.1 service planner commands, queries and print export round trip", () => {
+    const svcId = new Uint8Array([
+        0x01, 0x92, 0x70, 0x00, 0x00, 0x00, 0x70, 0x00, 0x80, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x41,
+    ]);
+    const saveSvc = create(EnvelopeSchema, {
+        id: 7101n,
+        body: {
+            case: "command",
+            value: {
+                action: {
+                    case: "saveService",
+                    value: {
+                        service: {
+                            id: { value: svcId },
+                            name: "Sunday 9:00 AM",
+                            series: "Romans",
+                            location: "Sanctuary",
+                            plannedDurationSeconds: 4500,
+                            defaultLookName: "Worship",
+                            items: [
+                                {
+                                    id: { value: svcId },
+                                    kind: ServiceItemKind.COUNTDOWN,
+                                    title: "Pre-service Countdown",
+                                    durationSeconds: 300,
+                                    countdownSeconds: 300,
+                                    lookName: "Pre-service",
+                                },
+                                {
+                                    id: { value: svcId },
+                                    kind: ServiceItemKind.SONG,
+                                    title: "Amazing Grace",
+                                    songKey: "A",
+                                    durationSeconds: 240,
+                                    lookName: "Worship",
+                                },
+                            ],
+                        },
+                    },
+                },
+            },
+        },
+    });
+    assert.deepEqual(
+        fromBinary(EnvelopeSchema, toBinary(EnvelopeSchema, saveSvc)),
+        saveSvc,
+    );
+
+    const exportCmd = create(EnvelopeSchema, {
+        id: 7102n,
+        body: {
+            case: "command",
+            value: {
+                action: {
+                    case: "exportServicePrint",
+                    value: {
+                        serviceId: { value: svcId },
+                        kind: ServicePrintKind.BOTH,
+                        outputPath: "C:/temp/service-packet.pdf",
+                    },
+                },
+            },
+        },
+    });
+    assert.deepEqual(
+        fromBinary(EnvelopeSchema, toBinary(EnvelopeSchema, exportCmd)),
+        exportCmd,
     );
 });

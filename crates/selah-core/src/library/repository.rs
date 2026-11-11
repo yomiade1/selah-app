@@ -379,6 +379,8 @@ document!(
     Service,
     |value: &Service| {
         optional_id(&value.service_type_id)?;
+        optional_id(&value.source_service_id)?;
+        optional_id(&value.default_template_id)?;
         unique_ids(value.items.iter().map(|s| &s.id))?;
         ensure!(value.team_ids.len() <= MAX_CHILDREN, "too many teams");
         for id in &value.team_ids {
@@ -391,6 +393,9 @@ document!(
             );
             optional_id(&item.content_id)?;
             optional_id(&item.arrangement_id)?;
+            optional_id(&item.template_id)?;
+            optional_id(&item.look_id)?;
+            optional_id(&item.background_media_id)?;
         }
         Ok(())
     },
@@ -415,13 +420,34 @@ document!(
 document!(
     ServiceType,
     ServiceType,
-    |_: &ServiceType| Ok(()),
+    |value: &ServiceType| {
+        optional_id(&value.default_template_id)?;
+        unique_ids(value.template_items.iter().map(|s| &s.id))?;
+        for item in &value.template_items {
+            ensure!(
+                ServiceItemKind::try_from(item.kind).is_ok() && item.kind != 0,
+                "unknown service item kind"
+            );
+            optional_id(&item.content_id)?;
+            optional_id(&item.arrangement_id)?;
+            optional_id(&item.template_id)?;
+            optional_id(&item.look_id)?;
+            optional_id(&item.background_media_id)?;
+        }
+        Ok(())
+    },
     |_: &ServiceType, _: &Transaction<'_>| Ok(())
 );
 document!(
     Team,
     Team,
-    |_: &Team| Ok(()),
+    |value: &Team| {
+        unique_ids(value.members.iter().map(|m| &m.id))?;
+        for member in &value.members {
+            ensure!(!member.name.trim().is_empty(), "team member name is empty");
+        }
+        Ok(())
+    },
     |_: &Team, _: &Transaction<'_>| Ok(())
 );
 document!(

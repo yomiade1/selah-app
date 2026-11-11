@@ -49,3 +49,9 @@ anchors:
     description: Slide editor, Custom slide deck, positioned elements, and live canvas preview.
   - id: slides.inspector
     description: Slide editor, Element properties, background, transition, and effect chain.
+  - id: services.planner
+    description: Services, Service planner toolbar, runtime projection, and print export actions.
+  - id: services.order
+    description: Services, Service order table, item controls, and runtime projection.
+  - id: services.team
+    description: Services, Volunteer team roster and role assignments.

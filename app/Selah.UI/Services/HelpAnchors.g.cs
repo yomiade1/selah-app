@@ -52,4 +52,10 @@ public static class HelpAnchors
     public const string SlidesEditor = "slides.editor";
     /// <summary>Slide editor, Element properties, background, transition, and effect chain.</summary>
     public const string SlidesInspector = "slides.inspector";
+    /// <summary>Services, Service planner toolbar, runtime projection, and print export actions.</summary>
+    public const string ServicesPlanner = "services.planner";
+    /// <summary>Services, Service order table, item controls, and runtime projection.</summary>
+    public const string ServicesOrder = "services.order";
+    /// <summary>Services, Volunteer team roster and role assignments.</summary>
+    public const string ServicesTeam = "services.team";
 }

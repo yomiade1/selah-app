@@ -5,6 +5,7 @@ pub mod diagnostics;
 pub mod library;
 pub mod live;
 pub mod permissions;
+pub mod planner;
 pub mod scripture;
 pub mod service;
 pub mod settings;

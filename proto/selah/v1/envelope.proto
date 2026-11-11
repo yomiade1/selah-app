@@ -7,6 +7,7 @@ import "selah/v1/errors.proto";
 import "selah/v1/help.proto";
 import "selah/v1/library.proto";
 import "selah/v1/render.proto";
+import "selah/v1/service.proto";
 import "selah/v1/settings.proto";
 
 option csharp_namespace = "Selah.Contracts.V1";
@@ -86,6 +87,14 @@ message Command {
     PresentScene present_scene = 36;
     StagePreviewScene stage_preview_scene = 37;
     PreloadItems preload_items = 38;
+    SaveService save_service = 39;
+    DeleteService delete_service = 40;
+    SaveServiceType save_service_type = 41;
+    DeleteServiceType delete_service_type = 42;
+    SaveTeam save_team = 43;
+    DeleteTeam delete_team = 44;
+    CreateServiceFromPrevious create_service_from_previous = 45;
+    ExportServicePrint export_service_print = 46;
   }
   // Optional client-supplied UUIDv7 grouping multiple mutations into one undo/redo step.
   Id undo_group = 100;
@@ -151,6 +160,13 @@ message Query {
     GetOutputConfigs get_output_configs = 36;
     AnalyzeFlashRisk analyze_flash_risk = 37;
     RenderSceneThumbnail render_scene_thumbnail = 38;
+    GetService get_service = 39;
+    ListServices list_services = 40;
+    GetServiceType get_service_type = 41;
+    ListServiceTypes list_service_types = 42;
+    GetTeam get_team = 43;
+    ListTeams list_teams = 44;
+    ProjectServiceRuntime project_service_runtime = 45;
   }
 }
 
@@ -257,6 +273,14 @@ message Reply {
     OutputConfigList output_config_list = 42;
     FlashRiskReport flash_risk_report = 43;
     SceneThumbnail scene_thumbnail = 44;
+    Service service = 45;
+    ServiceList service_list = 46;
+    ServiceType service_type = 47;
+    ServiceTypeList service_type_list = 48;
+    Team team = 49;
+    TeamList team_list = 50;
+    ServiceRuntimeProjection service_runtime_projection = 51;
+    ServicePrintExport service_print_export = 52;
   }
 }
 

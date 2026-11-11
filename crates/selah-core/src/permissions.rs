@@ -50,9 +50,17 @@ pub enum CommandKind {
     PresentScene,
     StagePreviewScene,
     PreloadItems,
+    SaveService,
+    DeleteService,
+    SaveServiceType,
+    DeleteServiceType,
+    SaveTeam,
+    DeleteTeam,
+    CreateServiceFromPrevious,
+    ExportServicePrint,
 }
 
-pub const ALL_COMMANDS: [CommandKind; 38] = [
+pub const ALL_COMMANDS: [CommandKind; 46] = [
     CommandKind::Render,
     CommandKind::SetAppearance,
     CommandKind::RecordFeedback,
@@ -91,6 +99,14 @@ pub const ALL_COMMANDS: [CommandKind; 38] = [
     CommandKind::PresentScene,
     CommandKind::StagePreviewScene,
     CommandKind::PreloadItems,
+    CommandKind::SaveService,
+    CommandKind::DeleteService,
+    CommandKind::SaveServiceType,
+    CommandKind::DeleteServiceType,
+    CommandKind::SaveTeam,
+    CommandKind::DeleteTeam,
+    CommandKind::CreateServiceFromPrevious,
+    CommandKind::ExportServicePrint,
 ];
 
 pub fn kind_of(action: &command::Action) -> CommandKind {
@@ -133,6 +149,14 @@ pub fn kind_of(action: &command::Action) -> CommandKind {
         command::Action::PresentScene(_) => CommandKind::PresentScene,
         command::Action::StagePreviewScene(_) => CommandKind::StagePreviewScene,
         command::Action::PreloadItems(_) => CommandKind::PreloadItems,
+        command::Action::SaveService(_) => CommandKind::SaveService,
+        command::Action::DeleteService(_) => CommandKind::DeleteService,
+        command::Action::SaveServiceType(_) => CommandKind::SaveServiceType,
+        command::Action::DeleteServiceType(_) => CommandKind::DeleteServiceType,
+        command::Action::SaveTeam(_) => CommandKind::SaveTeam,
+        command::Action::DeleteTeam(_) => CommandKind::DeleteTeam,
+        command::Action::CreateServiceFromPrevious(_) => CommandKind::CreateServiceFromPrevious,
+        command::Action::ExportServicePrint(_) => CommandKind::ExportServicePrint,
     }
 }
 
@@ -177,7 +201,15 @@ pub fn changes_screens(kind: CommandKind) -> bool {
         | CommandKind::CreateLibraryBackup
         | CommandKind::RestoreLibraryBackup
         | CommandKind::StagePreviewScene
-        | CommandKind::PreloadItems => false,
+        | CommandKind::PreloadItems
+        | CommandKind::SaveService
+        | CommandKind::DeleteService
+        | CommandKind::SaveServiceType
+        | CommandKind::DeleteServiceType
+        | CommandKind::SaveTeam
+        | CommandKind::DeleteTeam
+        | CommandKind::CreateServiceFromPrevious
+        | CommandKind::ExportServicePrint => false,
     }
 }
 
@@ -319,7 +351,15 @@ mod tests {
                 | CommandKind::SetOutputConfigs
                 | CommandKind::PresentScene
                 | CommandKind::StagePreviewScene
-                | CommandKind::PreloadItems => {}
+                | CommandKind::PreloadItems
+                | CommandKind::SaveService
+                | CommandKind::DeleteService
+                | CommandKind::SaveServiceType
+                | CommandKind::DeleteServiceType
+                | CommandKind::SaveTeam
+                | CommandKind::DeleteTeam
+                | CommandKind::CreateServiceFromPrevious
+                | CommandKind::ExportServicePrint => {}
             }
         }
         let unique: std::collections::HashSet<_> = ALL_COMMANDS.iter().collect();

@@ -809,6 +809,166 @@ public sealed class CoreConnection : IAsyncDisposable, Selah.UI.ViewModels.IHelp
         }).ConfigureAwait(false);
     }
 
+    public async Task<IReadOnlyList<Service>> ListServicesAsync(uint limit = 200, uint offset = 0)
+    {
+        var reply = await RequestAsync(new Envelope { Query = new Query { ListServices = new ListServices { Limit = limit, Offset = offset } } })
+            .ConfigureAwait(false);
+        return reply.Reply?.ServiceList?.Services.ToList() ?? [];
+    }
+
+    public async Task<Service?> GetServiceAsync(Id id)
+    {
+        var reply = await RequestAsync(new Envelope { Query = new Query { GetService = new GetService { Id = id } } })
+            .ConfigureAwait(false);
+        return reply.Reply?.Service;
+    }
+
+    public async Task SaveServiceAsync(Service service, Id? undoGroup = null)
+    {
+        if (service.Id is null || service.Id.Value.IsEmpty)
+        {
+            service.Id = LibraryIds.NewId();
+        }
+        foreach (var item in service.Items)
+        {
+            if (item.Id is null || item.Id.Value.IsEmpty)
+            {
+                item.Id = LibraryIds.NewId();
+            }
+        }
+        var command = new Command { SaveService = new SaveService { Service = service } };
+        if (undoGroup is not null)
+        {
+            command.UndoGroup = undoGroup;
+        }
+        await RequestAsync(new Envelope { Command = command }).ConfigureAwait(false);
+    }
+
+    public async Task DeleteServiceAsync(Id id, Id? undoGroup = null)
+    {
+        var command = new Command { DeleteService = new DeleteService { Id = id } };
+        if (undoGroup is not null)
+        {
+            command.UndoGroup = undoGroup;
+        }
+        await RequestAsync(new Envelope { Command = command }).ConfigureAwait(false);
+    }
+
+    public async Task<IReadOnlyList<ServiceType>> ListServiceTypesAsync(uint limit = 200, uint offset = 0)
+    {
+        var reply = await RequestAsync(new Envelope { Query = new Query { ListServiceTypes = new ListServiceTypes { Limit = limit, Offset = offset } } })
+            .ConfigureAwait(false);
+        return reply.Reply?.ServiceTypeList?.ServiceTypes.ToList() ?? [];
+    }
+
+    public async Task<ServiceType?> GetServiceTypeAsync(Id id)
+    {
+        var reply = await RequestAsync(new Envelope { Query = new Query { GetServiceType = new GetServiceType { Id = id } } })
+            .ConfigureAwait(false);
+        return reply.Reply?.ServiceType;
+    }
+
+    public async Task SaveServiceTypeAsync(ServiceType serviceType, Id? undoGroup = null)
+    {
+        if (serviceType.Id is null || serviceType.Id.Value.IsEmpty)
+        {
+            serviceType.Id = LibraryIds.NewId();
+        }
+        foreach (var item in serviceType.TemplateItems)
+        {
+            if (item.Id is null || item.Id.Value.IsEmpty)
+            {
+                item.Id = LibraryIds.NewId();
+            }
+        }
+        var command = new Command { SaveServiceType = new SaveServiceType { ServiceType = serviceType } };
+        if (undoGroup is not null)
+        {
+            command.UndoGroup = undoGroup;
+        }
+        await RequestAsync(new Envelope { Command = command }).ConfigureAwait(false);
+    }
+
+    public async Task DeleteServiceTypeAsync(Id id, Id? undoGroup = null)
+    {
+        var command = new Command { DeleteServiceType = new DeleteServiceType { Id = id } };
+        if (undoGroup is not null)
+        {
+            command.UndoGroup = undoGroup;
+        }
+        await RequestAsync(new Envelope { Command = command }).ConfigureAwait(false);
+    }
+
+    public async Task<IReadOnlyList<Team>> ListTeamsAsync(uint limit = 200, uint offset = 0)
+    {
+        var reply = await RequestAsync(new Envelope { Query = new Query { ListTeams = new ListTeams { Limit = limit, Offset = offset } } })
+            .ConfigureAwait(false);
+        return reply.Reply?.TeamList?.Teams.ToList() ?? [];
+    }
+
+    public async Task<Team?> GetTeamAsync(Id id)
+    {
+        var reply = await RequestAsync(new Envelope { Query = new Query { GetTeam = new GetTeam { Id = id } } })
+            .ConfigureAwait(false);
+        return reply.Reply?.Team;
+    }
+
+    public async Task SaveTeamAsync(Team team, Id? undoGroup = null)
+    {
+        if (team.Id is null || team.Id.Value.IsEmpty)
+        {
+            team.Id = LibraryIds.NewId();
+        }
+        foreach (var member in team.Members)
+        {
+            if (member.Id is null || member.Id.Value.IsEmpty)
+            {
+                member.Id = LibraryIds.NewId();
+            }
+        }
+        var command = new Command { SaveTeam = new SaveTeam { Team = team } };
+        if (undoGroup is not null)
+        {
+            command.UndoGroup = undoGroup;
+        }
+        await RequestAsync(new Envelope { Command = command }).ConfigureAwait(false);
+    }
+
+    public async Task DeleteTeamAsync(Id id, Id? undoGroup = null)
+    {
+        var command = new Command { DeleteTeam = new DeleteTeam { Id = id } };
+        if (undoGroup is not null)
+        {
+            command.UndoGroup = undoGroup;
+        }
+        await RequestAsync(new Envelope { Command = command }).ConfigureAwait(false);
+    }
+
+    public async Task<Service> CreateServiceFromPreviousAsync(CreateServiceFromPrevious request, Id? undoGroup = null)
+    {
+        var command = new Command { CreateServiceFromPrevious = request };
+        if (undoGroup is not null)
+        {
+            command.UndoGroup = undoGroup;
+        }
+        var reply = await RequestAsync(new Envelope { Command = command }).ConfigureAwait(false);
+        return reply.Reply?.Service ?? new Service();
+    }
+
+    public async Task<ServiceRuntimeProjection> ProjectServiceRuntimeAsync(ProjectServiceRuntime request)
+    {
+        var reply = await RequestAsync(new Envelope { Query = new Query { ProjectServiceRuntime = request } })
+            .ConfigureAwait(false);
+        return reply.Reply?.ServiceRuntimeProjection ?? new ServiceRuntimeProjection();
+    }
+
+    public async Task<ServicePrintExport> ExportServicePrintAsync(ExportServicePrint request)
+    {
+        var reply = await RequestAsync(new Envelope { Command = new Command { ExportServicePrint = request } }, SlowRequestTimeout)
+            .ConfigureAwait(false);
+        return reply.Reply?.ServicePrintExport ?? new ServicePrintExport();
+    }
+
     private Task<Envelope> RequestAsync(Envelope message) => RequestAsync(message, RequestTimeout);
 
     private async Task<Envelope> RequestAsync(Envelope message, TimeSpan timeout)

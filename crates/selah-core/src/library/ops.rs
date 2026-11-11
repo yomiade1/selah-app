@@ -314,7 +314,7 @@ impl Library {
         self.save_document_with_reply_op(document, meta, reply::Result::Acknowledged(true))
     }
 
-    pub(super) fn save_document_with_reply_op<T: Document>(
+    pub(crate) fn save_document_with_reply_op<T: Document>(
         &mut self,
         document: &T,
         meta: &CommandMeta<'_>,

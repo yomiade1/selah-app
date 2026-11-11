@@ -126,6 +126,10 @@ public sealed partial class MainWindow : Window, IHelpHost
             {
                 Model.TemplateEditor.SaveTemplateCommand.Execute(null);
             }
+            else if (Model?.IsServicePlannerMode == true)
+            {
+                Model.ServicePlanner.SaveServiceCommand.Execute(null);
+            }
         });
     }
 
@@ -275,6 +279,7 @@ public sealed partial class MainWindow : Window, IHelpHost
             subscribedModel.SongEditor.PropertyChanged -= OnEditorPropertyChanged;
             subscribedModel.SlideEditor.PropertyChanged -= OnSlideEditorPropertyChanged;
             subscribedModel.TemplateEditor.PropertyChanged -= OnTemplateEditorPropertyChanged;
+            subscribedModel.ServicePlanner.PropertyChanged -= OnServicePlannerPropertyChanged;
             subscribedModel.ArticleRequested -= OnArticleRequested;
             subscribedModel.OpenUrlRequested -= OnOpenUrlRequested;
             subscribedModel.ShowFileRequested -= OnShowFileRequested;
@@ -287,6 +292,7 @@ public sealed partial class MainWindow : Window, IHelpHost
             model.SongEditor.PropertyChanged += OnEditorPropertyChanged;
             model.SlideEditor.PropertyChanged += OnSlideEditorPropertyChanged;
             model.TemplateEditor.PropertyChanged += OnTemplateEditorPropertyChanged;
+            model.ServicePlanner.PropertyChanged += OnServicePlannerPropertyChanged;
             model.ArticleRequested += OnArticleRequested;
             model.OpenUrlRequested += OnOpenUrlRequested;
             model.ShowFileRequested += OnShowFileRequested;
@@ -333,6 +339,14 @@ public sealed partial class MainWindow : Window, IHelpHost
     private void OnTemplateEditorPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs args)
     {
         if (args.PropertyName is nameof(TemplateEditorViewModel.SelectedTemplate) or nameof(TemplateEditorViewModel.SelectedRoleKey))
+        {
+            ScheduleHelpContextRefresh();
+        }
+    }
+
+    private void OnServicePlannerPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs args)
+    {
+        if (args.PropertyName is nameof(ServicePlannerViewModel.SelectedService) or nameof(ServicePlannerViewModel.SelectedItem))
         {
             ScheduleHelpContextRefresh();
         }

@@ -1,0 +1,279 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:Selah.UI.ViewModels"
+             xmlns:pb="using:Selah.Contracts.V1"
+             xmlns:views="using:Selah.UI.Views"
+             xmlns:s="using:Selah.UI.Services"
+             x:Class="Selah.UI.Views.ServicePlannerView"
+             x:DataType="vm:ServicePlannerViewModel">
+  <DockPanel Margin="{DynamicResource Space.Text.Medium}">
+    <!-- Top action bar -->
+    <Border DockPanel.Dock="Top" Padding="0,0,0,10" BorderBrush="{DynamicResource Brush.Line}" BorderThickness="{DynamicResource Line.Bottom}">
+      <StackPanel Spacing="{DynamicResource Space.3}">
+        <WrapPanel ItemSpacing="{DynamicResource Space.3}" LineSpacing="{DynamicResource Space.3}" VerticalAlignment="Center"
+                   s:Help.Anchor="services.planner">
+          <TextBlock Classes="title-2" VerticalAlignment="Center"
+                     Text="{Binding [services-title], Source={x:Static s:Localizer.Instance}}" />
+          <Border Classes="pill" VerticalAlignment="Center"
+                  Background="{DynamicResource Brush.Surface2}" BorderBrush="{DynamicResource Brush.Line2}"
+                  BorderThickness="{DynamicResource Line.Hairline}">
+            <TextBlock Name="RuntimeSummaryText" Classes="label" TextWrapping="NoWrap"
+                       Text="{Binding RuntimeSummary}" />
+          </Border>
+          <Button Name="NewServiceButton" Command="{Binding NewServiceCommand}">
+            <TextBlock Text="{Binding [services-new], Source={x:Static s:Localizer.Instance}}" />
+          </Button>
+          <Button Name="InheritLastWeekButton" Command="{Binding InheritFromLastWeekCommand}">
+            <TextBlock Text="{Binding [services-inherit-last-week], Source={x:Static s:Localizer.Instance}}" />
+          </Button>
+          <Button Name="PrintServiceOrderButton" Command="{Binding ExportServiceOrderCommand}">
+            <TextBlock Text="{Binding [services-print-order], Source={x:Static s:Localizer.Instance}}" />
+          </Button>
+          <Button Name="PrintChordChartsButton" Command="{Binding ExportChordChartsCommand}">
+            <TextBlock Text="{Binding [services-print-charts], Source={x:Static s:Localizer.Instance}}" />
+          </Button>
+          <Button Name="ServiceUndoButton" Classes="quiet" Command="{Binding UndoCommand}" IsEnabled="{Binding CanUndo}">
+            <TextBlock Text="{Binding [library-undo], Source={x:Static s:Localizer.Instance}}" />
+          </Button>
+          <Button Name="ServiceRedoButton" Classes="quiet" Command="{Binding RedoCommand}" IsEnabled="{Binding CanRedo}">
+            <TextBlock Text="{Binding [library-redo], Source={x:Static s:Localizer.Instance}}" />
+          </Button>
+          <Button Name="SaveServiceButton" Command="{Binding SaveServiceCommand}">
+            <TextBlock Text="{Binding [services-save], Source={x:Static s:Localizer.Instance}}" />
+          </Button>
+          <Button Name="RehearseServiceButton" Command="{Binding RehearseCommand}">
+            <TextBlock Text="{Binding [services-rehearse], Source={x:Static s:Localizer.Instance}}" />
+          </Button>
+          <Button Name="GoLiveServiceButton" Classes="primary" Command="{Binding GoLiveCommand}">
+            <TextBlock Text="{Binding [services-go-live], Source={x:Static s:Localizer.Instance}}" />
+          </Button>
+          <views:InfoButton Name="ServicesPlannerInfoButton" Anchor="services.planner" />
+        </WrapPanel>
+
+        <Border Classes="alert-success" IsVisible="{Binding HasStatusMessage}">
+          <TextBlock Name="ServicesStatusText" Text="{Binding StatusMessage}" />
+        </Border>
+        <views:ErrorAlert Name="ServicesErrorAlert"
+                          Message="{Binding ErrorMessage}"
+                          FixArticleId="{Binding ErrorFixArticleId}" />
+      </StackPanel>
+    </Border>
+
+    <!-- Main 3-column workspace (stacks below 960px effective width) -->
+    <ScrollViewer>
+      <Grid Name="ServiceMainGrid" ColumnDefinitions="240,*,310" RowDefinitions="Auto,Auto,Auto"
+            ColumnSpacing="14" RowSpacing="14" Margin="0,12,0,12">
+        <!-- LEFT PANE: Upcoming services + Service types -->
+        <Border Name="ServiceLeftPane" Grid.Column="0" Grid.Row="0" Classes="card" VerticalAlignment="Top">
+          <StackPanel Spacing="{DynamicResource Space.4}">
+            <StackPanel Spacing="6">
+              <TextBlock Classes="title-3" Text="{Binding [services-upcoming-heading], Source={x:Static s:Localizer.Instance}}" />
+              <ListBox Name="ServicesList" ItemsSource="{Binding Services}" SelectedItem="{Binding SelectedService}" MaxHeight="240">
+                <ListBox.ItemTemplate>
+                  <DataTemplate x:DataType="pb:Service">
+                    <StackPanel Spacing="2" Margin="0,4">
+                      <TextBlock Classes="label" Text="{Binding Name}" TextWrapping="Wrap" />
+                      <TextBlock Classes="hint" Text="{Binding Series}" TextWrapping="Wrap" />
+                    </StackPanel>
+                  </DataTemplate>
+                </ListBox.ItemTemplate>
+              </ListBox>
+              <Button Name="DeleteServiceButton" Classes="quiet" Command="{Binding DeleteServiceCommand}" HorizontalAlignment="Left">
+                <TextBlock Text="{Binding [services-delete], Source={x:Static s:Localizer.Instance}}" />
+              </Button>
+            </StackPanel>
+
+            <StackPanel Spacing="6">
+              <TextBlock Classes="label" Text="{Binding [services-types-heading], Source={x:Static s:Localizer.Instance}}" />
+              <ListBox Name="ServiceTypesList" ItemsSource="{Binding ServiceTypes}" SelectedItem="{Binding SelectedServiceType}" MaxHeight="160">
+                <ListBox.ItemTemplate>
+                  <DataTemplate x:DataType="pb:ServiceType">
+                    <TextBlock Text="{Binding Name}" TextWrapping="Wrap" Margin="0,4" />
+                  </DataTemplate>
+                </ListBox.ItemTemplate>
+              </ListBox>
+            </StackPanel>
+          </StackPanel>
+        </Border>
+
+        <!-- CENTER PANE: Service metadata + Add item bar + USWDS Service Order table -->
+        <Border Name="ServiceCenterPane" Grid.Column="1" Grid.Row="0" Classes="card" VerticalAlignment="Top"
+                s:Help.Anchor="services.order">
+          <StackPanel Spacing="{DynamicResource Space.4}">
+            <!-- Service metadata fields -->
+            <Grid ColumnDefinitions="2*,2*,*" ColumnSpacing="10" RowDefinitions="Auto,Auto" RowSpacing="6">
+              <TextBlock Grid.Column="0" Grid.Row="0" Classes="label" Text="{Binding [services-name-label], Source={x:Static s:Localizer.Instance}}" />
+              <TextBox Name="ServiceNameBox" Grid.Column="0" Grid.Row="1" Text="{Binding ServiceName}" />
+
+              <TextBlock Grid.Column="1" Grid.Row="0" Classes="label" Text="{Binding [services-series-label], Source={x:Static s:Localizer.Instance}}" />
+              <TextBox Name="ServiceSeriesBox" Grid.Column="1" Grid.Row="1" Text="{Binding ServiceSeries}" />
+
+              <TextBlock Grid.Column="2" Grid.Row="0" Classes="label" Text="{Binding [services-start-time-label], Source={x:Static s:Localizer.Instance}}" />
+              <TextBox Name="ServiceStartTimeBox" Grid.Column="2" Grid.Row="1" Text="{Binding StartTimeText}" />
+            </Grid>
+
+            <!-- Add item buttons for all 8 ServiceItemKind variants -->
+            <WrapPanel ItemSpacing="{DynamicResource Space.2}" LineSpacing="{DynamicResource Space.2}" VerticalAlignment="Center">
+              <Button Name="AddSongItemButton" Command="{Binding AddSongItemCommand}">
+                <TextBlock Text="{Binding [services-add-song], Source={x:Static s:Localizer.Instance}}" />
+              </Button>
+              <Button Name="AddScriptureItemButton" Command="{Binding AddScriptureItemCommand}">
+                <TextBlock Text="{Binding [services-add-scripture], Source={x:Static s:Localizer.Instance}}" />
+              </Button>
+              <Button Name="AddMediaItemButton" Command="{Binding AddMediaItemCommand}">
+                <TextBlock Text="{Binding [services-add-media], Source={x:Static s:Localizer.Instance}}" />
+              </Button>
+              <Button Name="AddPresentationItemButton" Command="{Binding AddPresentationItemCommand}">
+                <TextBlock Text="{Binding [services-add-presentation], Source={x:Static s:Localizer.Instance}}" />
+              </Button>
+              <Button Name="AddCountdownItemButton" Command="{Binding AddCountdownItemCommand}">
+                <TextBlock Text="{Binding [services-add-countdown], Source={x:Static s:Localizer.Instance}}" />
+              </Button>
+              <Button Name="AddHeaderItemButton" Command="{Binding AddHeaderItemCommand}">
+                <TextBlock Text="{Binding [services-add-header], Source={x:Static s:Localizer.Instance}}" />
+              </Button>
+              <Button Name="AddNoteItemButton" Command="{Binding AddNoteItemCommand}">
+                <TextBlock Text="{Binding [services-add-note], Source={x:Static s:Localizer.Instance}}" />
+              </Button>
+              <Button Name="AddAudioItemButton" Command="{Binding AddAudioItemCommand}">
+                <TextBlock Text="{Binding [services-add-audio], Source={x:Static s:Localizer.Instance}}" />
+              </Button>
+            </WrapPanel>
+
+            <!-- Reorder / remove toolbar -->
+            <WrapPanel ItemSpacing="{DynamicResource Space.2}" LineSpacing="{DynamicResource Space.2}" VerticalAlignment="Center">
+              <TextBlock Classes="title-3" VerticalAlignment="Center"
+                         Text="{Binding [services-order-heading], Source={x:Static s:Localizer.Instance}}" />
+              <views:InfoButton Name="ServicesOrderInfoButton" Anchor="services.order" />
+              <Button Name="MoveItemUpButton" Classes="quiet" Command="{Binding MoveItemUpCommand}" IsEnabled="{Binding HasSelectedItem}">
+                <TextBlock Text="{Binding [services-item-move-up], Source={x:Static s:Localizer.Instance}}" />
+              </Button>
+              <Button Name="MoveItemDownButton" Classes="quiet" Command="{Binding MoveItemDownCommand}" IsEnabled="{Binding HasSelectedItem}">
+                <TextBlock Text="{Binding [services-item-move-down], Source={x:Static s:Localizer.Instance}}" />
+              </Button>
+              <Button Name="RemoveServiceItemButton" Classes="quiet" Command="{Binding RemoveItemCommand}" IsEnabled="{Binding HasSelectedItem}">
+                <TextBlock Text="{Binding [services-item-remove], Source={x:Static s:Localizer.Instance}}" />
+              </Button>
+            </WrapPanel>
+
+            <!-- USWDS Service Order Table Header -->
+            <Border Background="{DynamicResource Brush.Surface2}" BorderBrush="{DynamicResource Brush.Line}"
+                    BorderThickness="{DynamicResource Line.Bottom}" Padding="8,6">
+              <Grid ColumnDefinitions="64,76,*,100,96,64,72" ColumnSpacing="8">
+                <TextBlock Grid.Column="0" Classes="caption" Text="{Binding [services-col-time], Source={x:Static s:Localizer.Instance}}" />
+                <TextBlock Grid.Column="1" Classes="caption" Text="{Binding [services-col-type], Source={x:Static s:Localizer.Instance}}" />
+                <TextBlock Grid.Column="2" Classes="caption" Text="{Binding [services-col-item], Source={x:Static s:Localizer.Instance}}" />
+                <TextBlock Grid.Column="3" Classes="caption" Text="{Binding [services-col-look], Source={x:Static s:Localizer.Instance}}" />
+                <TextBlock Grid.Column="4" Classes="caption" Text="{Binding [services-col-owner], Source={x:Static s:Localizer.Instance}}" />
+                <TextBlock Grid.Column="5" Classes="caption" Text="{Binding [services-col-length], Source={x:Static s:Localizer.Instance}}" />
+                <TextBlock Grid.Column="6" Classes="caption" Text="{Binding [services-col-status], Source={x:Static s:Localizer.Instance}}" />
+              </Grid>
+            </Border>
+
+            <!-- Service Order Rows -->
+            <ListBox Name="ServiceOrderList" ItemsSource="{Binding Items}" SelectedItem="{Binding SelectedItem}" MaxHeight="440">
+              <ListBox.ItemTemplate>
+                <DataTemplate x:DataType="vm:ServiceOrderRowViewModel">
+                  <Grid ColumnDefinitions="64,76,*,100,96,64,72" ColumnSpacing="8" Margin="0,4" VerticalAlignment="Center">
+                    <TextBlock Grid.Column="0" Classes="mono" VerticalAlignment="Center" Text="{Binding FormattedTime}" />
+                    <Border Grid.Column="1" Classes="pill" VerticalAlignment="Center" HorizontalAlignment="Left"
+                            Background="{DynamicResource Brush.Surface2}" BorderBrush="{DynamicResource Brush.Line2}"
+                            BorderThickness="{DynamicResource Line.Hairline}">
+                      <TextBlock Classes="tag" Text="{Binding KindBadge}" />
+                    </Border>
+                    <StackPanel Grid.Column="2" Spacing="2" VerticalAlignment="Center">
+                      <TextBlock Classes="label" Text="{Binding Title}" TextWrapping="Wrap" />
+                      <TextBlock Classes="hint" Text="{Binding Subtitle}" IsVisible="{Binding HasSubtitle}" TextWrapping="Wrap" />
+                    </StackPanel>
+                    <TextBlock Grid.Column="3" VerticalAlignment="Center" Text="{Binding LookName}" TextWrapping="Wrap" />
+                    <TextBlock Grid.Column="4" VerticalAlignment="Center" Text="{Binding Owner}" TextWrapping="Wrap" />
+                    <TextBlock Grid.Column="5" Classes="mono" VerticalAlignment="Center" Text="{Binding FormattedDuration}" />
+                    <TextBlock Grid.Column="6" Classes="tag" VerticalAlignment="Center" Text="{Binding StatusTag}" />
+                  </Grid>
+                </DataTemplate>
+              </ListBox.ItemTemplate>
+            </ListBox>
+          </StackPanel>
+        </Border>
+
+        <!-- RIGHT PANE: Selected Item Inspector + Team Roster -->
+        <Border Name="ServiceRightPane" Grid.Column="2" Grid.Row="0" Classes="card" VerticalAlignment="Top">
+          <StackPanel Spacing="{DynamicResource Space.4}">
+            <!-- Selected Item Inspector -->
+            <StackPanel Spacing="8" IsVisible="{Binding HasSelectedItem}">
+              <TextBlock Classes="title-3" Text="{Binding [services-item-inspector-heading], Source={x:Static s:Localizer.Instance}}" />
+
+              <TextBlock Classes="label" Text="{Binding [services-item-title-label], Source={x:Static s:Localizer.Instance}}" />
+              <TextBox Name="SelectedItemTitleBox" Text="{Binding SelectedItemTitle}" />
+
+              <TextBlock Classes="label" Text="{Binding [services-item-subtitle-label], Source={x:Static s:Localizer.Instance}}" />
+              <TextBox Name="SelectedItemSubtitleBox" Text="{Binding SelectedItemSubtitle}" />
+
+              <Grid ColumnDefinitions="*,*" ColumnSpacing="8" RowDefinitions="Auto,Auto" RowSpacing="4">
+                <TextBlock Grid.Column="0" Grid.Row="0" Classes="label" Text="{Binding [services-item-owner-label], Source={x:Static s:Localizer.Instance}}" />
+                <TextBox Name="SelectedItemOwnerBox" Grid.Column="0" Grid.Row="1" Text="{Binding SelectedItemOwner}" />
+
+                <TextBlock Grid.Column="1" Grid.Row="0" Classes="label" Text="{Binding [services-item-duration-label], Source={x:Static s:Localizer.Instance}}" />
+                <NumericUpDown Name="SelectedItemDurationBox" Grid.Column="1" Grid.Row="1"
+                               Minimum="0" Maximum="14400" Increment="15"
+                               Value="{Binding SelectedItemDurationSeconds}" />
+              </Grid>
+
+              <Grid ColumnDefinitions="*,*" ColumnSpacing="8" RowDefinitions="Auto,Auto" RowSpacing="4">
+                <TextBlock Grid.Column="0" Grid.Row="0" Classes="label" Text="{Binding [services-item-look-label], Source={x:Static s:Localizer.Instance}}" />
+                <TextBox Name="SelectedItemLookBox" Grid.Column="0" Grid.Row="1" Text="{Binding SelectedItemLookName}" />
+
+                <TextBlock Grid.Column="1" Grid.Row="0" Classes="label" Text="{Binding [services-item-key-label], Source={x:Static s:Localizer.Instance}}" />
+                <TextBox Name="SelectedItemKeyBox" Grid.Column="1" Grid.Row="1" Text="{Binding SelectedItemSongKey}" />
+              </Grid>
+
+              <TextBlock Classes="label" Text="{Binding [services-item-notes-label], Source={x:Static s:Localizer.Instance}}" />
+              <TextBox Name="SelectedItemNotesBox" Text="{Binding SelectedItemNotes}" AcceptsReturn="True" MinHeight="56" />
+            </StackPanel>
+
+            <!-- Team Roster -->
+            <StackPanel Spacing="8" s:Help.Anchor="services.team">
+              <WrapPanel ItemSpacing="{DynamicResource Space.2}" VerticalAlignment="Center">
+                <TextBlock Classes="title-3" VerticalAlignment="Center"
+                           Text="{Binding [services-team-heading], Source={x:Static s:Localizer.Instance}}" />
+                <views:InfoButton Name="ServicesTeamInfoButton" Anchor="services.team" />
+              </WrapPanel>
+
+              <ItemsControl Name="TeamRosterList" ItemsSource="{Binding TeamMembers}">
+                <ItemsControl.ItemTemplate>
+                  <DataTemplate x:DataType="pb:TeamMember">
+                    <Border Padding="8,6" Margin="0,0,0,6"
+                            Background="{DynamicResource Brush.Surface2}" BorderBrush="{DynamicResource Brush.Line}"
+                            BorderThickness="{DynamicResource Line.Hairline}">
+                      <Grid ColumnDefinitions="36,*" ColumnSpacing="8">
+                        <Border Grid.Column="0" Classes="pill" VerticalAlignment="Center" HorizontalAlignment="Center"
+                                Background="{DynamicResource Brush.Surface}" BorderBrush="{DynamicResource Brush.Line2}"
+                                BorderThickness="{DynamicResource Line.Hairline}">
+                          <TextBlock Classes="label" Text="{Binding Initials}" />
+                        </Border>
+                        <StackPanel Grid.Column="1" Spacing="2">
+                          <TextBlock Classes="label" Text="{Binding Name}" TextWrapping="Wrap" />
+                          <TextBlock Classes="hint" Text="{Binding Role}" TextWrapping="Wrap" />
+                        </StackPanel>
+                      </Grid>
+                    </Border>
+                  </DataTemplate>
+                </ItemsControl.ItemTemplate>
+              </ItemsControl>
+
+              <TextBlock Classes="label" Text="{Binding [services-team-add-name-label], Source={x:Static s:Localizer.Instance}}" />
+              <TextBox Name="NewMemberNameBox" Text="{Binding NewMemberName}" />
+
+              <TextBlock Classes="label" Text="{Binding [services-team-add-role-label], Source={x:Static s:Localizer.Instance}}" />
+              <TextBox Name="NewMemberRoleBox" Text="{Binding NewMemberRole}" />
+
+              <Button Name="AddTeamMemberButton" Command="{Binding AddTeamMemberCommand}">
+                <TextBlock Text="{Binding [services-team-add-button], Source={x:Static s:Localizer.Instance}}" />
+              </Button>
+            </StackPanel>
+          </StackPanel>
+        </Border>
+      </Grid>
+    </ScrollViewer>
+  </DockPanel>
+</UserControl>

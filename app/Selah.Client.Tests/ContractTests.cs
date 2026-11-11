@@ -1017,4 +1017,100 @@ public sealed class ContractTests
         };
         Assert.Equal(diagReply, Envelope.Parser.ParseFrom(diagReply.ToByteArray()));
     }
+
+    [Fact]
+    public void M41ServicePlannerMessagesRoundTrip()
+    {
+        var idBytes = ByteString.CopyFrom(new byte[]
+        {
+            0x01, 0x92, 0x70, 0x00, 0x00, 0x00, 0x70, 0x00,
+            0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01,
+        });
+        var saveCmd = new Envelope
+        {
+            Id = 7101,
+            Command = new Command
+            {
+                SaveService = new SaveService
+                {
+                    Service = new Service
+                    {
+                        Id = new Id { Value = idBytes },
+                        Name = "Sunday Morning",
+                        Series = "Romans",
+                        Location = "Sanctuary",
+                        Items =
+                        {
+                            new ServiceItem
+                            {
+                                Id = new Id { Value = idBytes },
+                                Kind = ServiceItemKind.Countdown,
+                                Title = "Countdown",
+                                CountdownSeconds = 300,
+                                DurationSeconds = 300,
+                                StatusTag = "Ready",
+                            },
+                            new ServiceItem
+                            {
+                                Id = new Id { Value = idBytes },
+                                Kind = ServiceItemKind.Header,
+                                Title = "Worship",
+                            },
+                            new ServiceItem
+                            {
+                                Id = new Id { Value = idBytes },
+                                Kind = ServiceItemKind.Audio,
+                                Title = "Pad in G",
+                                DurationSeconds = 180,
+                            },
+                        },
+                    },
+                },
+            },
+        };
+        Assert.Equal(saveCmd, Envelope.Parser.ParseFrom(saveCmd.ToByteArray()));
+
+        var projReply = new Envelope
+        {
+            Id = 7102,
+            CorrelationId = 7101,
+            Reply = new Reply
+            {
+                ServiceRuntimeProjection = new ServiceRuntimeProjection
+                {
+                    TotalDurationSeconds = 4500,
+                    FormattedStartTime = "09:00",
+                    FormattedEndTime = "10:15",
+                    FormattedTotalDuration = "1 hr 15 min",
+                    Items =
+                    {
+                        new ProjectedServiceItem
+                        {
+                            ItemId = new Id { Value = idBytes },
+                            Index = 0,
+                            DurationSeconds = 300,
+                            FormattedTime = "09:00",
+                            FormattedDuration = "5:00",
+                        },
+                    },
+                },
+            },
+        };
+        Assert.Equal(projReply, Envelope.Parser.ParseFrom(projReply.ToByteArray()));
+
+        var exportCmd = new Envelope
+        {
+            Id = 7103,
+            Command = new Command
+            {
+                ExportServicePrint = new ExportServicePrint
+                {
+                    ServiceId = new Id { Value = idBytes },
+                    Kind = ServicePrintKind.Both,
+                    OutputPath = "C:/temp/service.pdf",
+                },
+            },
+        };
+        Assert.Equal(exportCmd, Envelope.Parser.ParseFrom(exportCmd.ToByteArray()));
+    }
 }

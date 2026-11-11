@@ -141,10 +141,12 @@ fn every_m2_repository_round_trips_ordered_children() {
     let service_type = ServiceType {
         id: Some(new_id()),
         name: "Test type".into(),
+        ..Default::default()
     };
     let team = Team {
         id: Some(new_id()),
         name: "Test team".into(),
+        ..Default::default()
     };
     let tag = Tag {
         id: Some(new_id()),

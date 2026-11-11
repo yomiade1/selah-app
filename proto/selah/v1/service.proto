@@ -6,7 +6,7 @@ import "selah/v1/common.proto";
 
 option csharp_namespace = "Selah.Contracts.V1";
 
-// Data contracts only. Planning and live commands arrive in M4.
+// Service planning, service types, teams, runtime projection and print/PDF export (M4.1).
 enum ServiceItemKind {
   SERVICE_ITEM_KIND_UNSPECIFIED = 0;
   SERVICE_ITEM_KIND_SONG = 1;
@@ -14,6 +14,9 @@ enum ServiceItemKind {
   SERVICE_ITEM_KIND_MEDIA = 3;
   SERVICE_ITEM_KIND_PRESENTATION = 4;
   SERVICE_ITEM_KIND_NOTE = 5;
+  SERVICE_ITEM_KIND_COUNTDOWN = 6;
+  SERVICE_ITEM_KIND_HEADER = 7;
+  SERVICE_ITEM_KIND_AUDIO = 8;
 }
 
 message ServiceItem {
@@ -25,6 +28,19 @@ message ServiceItem {
   string notes = 6;
   string scripture_reference = 7;
   string bible_translation = 8;
+  string subtitle = 9;
+  string owner = 10;
+  uint32 duration_seconds = 11;
+  Id template_id = 12;
+  string look_name = 13;
+  Id look_id = 14;
+  Id background_media_id = 15;
+  string status_tag = 16;
+  string song_key = 17;
+  uint32 countdown_seconds = 18;
+  string countdown_target_time = 19;
+  string countdown_message = 20;
+  string translation_language = 21;
 }
 
 message Service {
@@ -34,14 +50,155 @@ message Service {
   Id service_type_id = 4;
   repeated ServiceItem items = 5;
   repeated Id team_ids = 6;
+  string series = 7;
+  string location = 8;
+  string notes = 9;
+  Id source_service_id = 10;
+  uint32 planned_duration_seconds = 11;
+  Id default_template_id = 12;
+  string default_look_name = 13;
 }
 
 message ServiceType {
   Id id = 1;
   string name = 2;
+  string default_start_time = 3;
+  uint32 default_duration_seconds = 4;
+  string default_location = 5;
+  Id default_template_id = 6;
+  string default_look_name = 7;
+  repeated ServiceItem template_items = 8;
+}
+
+message TeamMember {
+  Id id = 1;
+  string name = 2;
+  string initials = 3;
+  string role = 4;
+  bool confirmed = 5;
+  string mode_lock = 6;
 }
 
 message Team {
   Id id = 1;
   string name = 2;
+  repeated TeamMember members = 3;
+}
+
+message SaveService {
+  Service service = 1;
+}
+
+message DeleteService {
+  Id id = 1;
+}
+
+message GetService {
+  Id id = 1;
+}
+
+message ListServices {
+  uint32 limit = 1;
+  uint32 offset = 2;
+}
+
+message ServiceList {
+  repeated Service services = 1;
+}
+
+message SaveServiceType {
+  ServiceType service_type = 1;
+}
+
+message DeleteServiceType {
+  Id id = 1;
+}
+
+message GetServiceType {
+  Id id = 1;
+}
+
+message ListServiceTypes {
+  uint32 limit = 1;
+  uint32 offset = 2;
+}
+
+message ServiceTypeList {
+  repeated ServiceType service_types = 1;
+}
+
+message SaveTeam {
+  Team team = 1;
+}
+
+message DeleteTeam {
+  Id id = 1;
+}
+
+message GetTeam {
+  Id id = 1;
+}
+
+message ListTeams {
+  uint32 limit = 1;
+  uint32 offset = 2;
+}
+
+message TeamList {
+  repeated Team teams = 1;
+}
+
+message CreateServiceFromPrevious {
+  Id source_service_id = 1;
+  Id service_type_id = 2;
+  string name = 3;
+  Timestamp starts_at = 4;
+  string series = 5;
+  bool keep_songs = 6;
+}
+
+message ProjectedServiceItem {
+  Id item_id = 1;
+  uint32 index = 2;
+  uint32 offset_seconds = 3;
+  uint32 duration_seconds = 4;
+  Timestamp starts_at = 5;
+  Timestamp ends_at = 6;
+  string formatted_time = 7;
+  string formatted_duration = 8;
+  bool is_header = 9;
+}
+
+message ProjectServiceRuntime {
+  Id service_id = 1;
+  Service service = 2;
+}
+
+message ServiceRuntimeProjection {
+  repeated ProjectedServiceItem items = 1;
+  uint32 total_duration_seconds = 2;
+  Timestamp projected_ends_at = 3;
+  string formatted_start_time = 4;
+  string formatted_end_time = 5;
+  string formatted_total_duration = 6;
+}
+
+enum ServicePrintKind {
+  SERVICE_PRINT_KIND_UNSPECIFIED = 0;
+  SERVICE_PRINT_KIND_SERVICE_ORDER = 1;
+  SERVICE_PRINT_KIND_CHORD_CHARTS = 2;
+  SERVICE_PRINT_KIND_BOTH = 3;
+}
+
+message ExportServicePrint {
+  Id service_id = 1;
+  ServicePrintKind kind = 2;
+  string output_path = 3;
+}
+
+message ServicePrintExport {
+  string path = 1;
+  string html = 2;
+  bytes pdf_bytes = 3;
+  uint32 page_count = 4;
 }
