@@ -75,6 +75,10 @@ anchors:
     description: Live, the layer list with a Clear button for each layer.
   - id: live.tiles
     description: Live, tiles for looks, timers and macros.
+  - id: live.stage-editor
+    description: Live, the Stage tab that edits stage display layouts (M4.6).
+  - id: live.stage-preview
+    description: Live, the stage screen preview in the Stage tab.
   - id: live.role-lock
     description: Live, Lock to Simple mode and its PIN (SEC-14).
   - id: simple.controls

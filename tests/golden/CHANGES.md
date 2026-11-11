@@ -89,3 +89,12 @@ platform-specific images in `tests/golden/<platform>/`.
   - `m4-look-camera-{main,stream,lobby}` (3 frames): Main Hall shows `VideoInput` only; Broadcast Stream shows `VideoInput` and `Props`; Lobby shows `VideoInput` and `Messages`.
 - Reviewed by eye and verified with GPU (`AdapterChoice::Software`) vs CPU compositor parity (`each_screen_shows_the_right_layers_for_each_look_match_golden`).
 - Rendered on: Windows x64, WARP (`SELAH_GPU=software`).
+
+## 2026-11-11 — reference (M4.6: 3 `m4-stage-*` frames)
+
+- Reason: M4-A7 stage display golden frames (`crates/selah-testkit/tests/golden_m4.rs::stage_display_matches_golden_including_chord_alignment`):
+  - `m4-stage-standard`: prototype screen 06. Song title, key badge and section chips (V2 current), the words with chords over the right syllables (Ab over "Wisdom", Bb over "and", Eb over "with"), the next slide band, the running "Worship set" timer, the clock and the booth message.
+  - `m4-stage-lyrics-only`: the same slide with chords, timer and booth message switched off by the layout (the alignment reference).
+  - `m4-stage-speaker`: a saved layout that moves the words left at 75%, shows slide notes on the right and a large timer at the bottom left.
+- Reviewed by eye and verified with GPU (`AdapterChoice::Software`) vs CPU compositor parity.
+- Rendered on: Windows x64, WARP (`SELAH_GPU=software`).

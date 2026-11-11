@@ -364,6 +364,28 @@ impl CoreService {
         }
     }
 
+    /// Time passing in the real app (M4.3 timers, M4.6 stage display). The core host calls this
+    /// about once a second; tests drive the same path with `AdvanceLiveClock`. Nothing is saved
+    /// or broadcast unless a timer runs or a message is counting down.
+    pub fn tick_live_clock(&mut self, delta_ms: u64, wall_unix_ms: i64) -> Outcome {
+        if !self.live.has_running_clock_work() {
+            self.live.set_wall_clock(wall_unix_ms);
+            return Outcome::default();
+        }
+        let before = self.live.scene().revision;
+        let result = self.live.advance_live_clock(
+            &self.library,
+            &selah_proto::v1::AdvanceLiveClock {
+                delta_ms,
+                wall_unix_ms,
+            },
+        );
+        let changed = self.live.scene().revision != before;
+        let mut outcome = self.live_outcome(&Envelope::default(), result, changed);
+        outcome.reply = None;
+        outcome
+    }
+
     fn live_outcome(
         &self,
         request: &Envelope,
@@ -1135,21 +1157,21 @@ impl CoreService {
                     Some(id) => self.live.start_timer(&self.library, id),
                     None => Err(CommandBusError::Invalid("missing timer_id".into())),
                 };
-                self.live_outcome(request, res, false)
+                self.live_outcome(request, res, true)
             }
             command::Action::PauseTimer(cmd) => {
                 let res = match cmd.timer_id.as_ref() {
                     Some(id) => self.live.pause_timer(id),
                     None => Err(CommandBusError::Invalid("missing timer_id".into())),
                 };
-                self.live_outcome(request, res, false)
+                self.live_outcome(request, res, true)
             }
             command::Action::ResetTimer(cmd) => {
                 let res = match cmd.timer_id.as_ref() {
                     Some(id) => self.live.reset_timer(&self.library, id),
                     None => Err(CommandBusError::Invalid("missing timer_id".into())),
                 };
-                self.live_outcome(request, res, false)
+                self.live_outcome(request, res, true)
             }
             command::Action::AdvanceLiveClock(cmd) => {
                 let res = self.live.advance_live_clock(&self.library, cmd);
@@ -1172,11 +1194,11 @@ impl CoreService {
             command::Action::SetStageLayout(cmd) => {
                 let id = cmd.stage_layout_id.clone().unwrap_or_default();
                 let res = self.live.set_stage_layout(&self.library, &id);
-                self.live_outcome(request, res, false)
+                self.live_outcome(request, res, true)
             }
             command::Action::SendBoothMessage(cmd) => {
                 let res = self.live.send_booth_message(&cmd.text);
-                self.live_outcome(request, res, false)
+                self.live_outcome(request, res, true)
             }
             command::Action::SetBoothLock(cmd) => {
                 let status = self.live.set_booth_lock(cmd.locked);

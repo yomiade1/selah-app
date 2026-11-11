@@ -11,6 +11,7 @@ pub mod scripture;
 pub mod service;
 pub mod settings;
 pub mod songs;
+pub mod stage;
 pub mod support;
 pub mod thumbnails;
 pub mod update;

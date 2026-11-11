@@ -77,10 +77,10 @@ public sealed class LiveProducerTests : IDisposable
         var (window, model, live) = Open(scale, appearance, language);
         await GoLive(model, window, live);
 
-        // The docking workspace has the five panes of prototype 01.
+        // The docking workspace has the five panes of prototype 01, plus the Stage tab (M4.6).
         var dock = Named<DockControl>(window, "LiveDock");
         Assert.True(dock.IsEffectivelyVisible);
-        Assert.Equal(["service-order", "slides", "program", "layers", "tiles"], model.LiveProducer.Dock.PaneIds(model.LiveProducer.DockLayout));
+        Assert.Equal(["service-order", "slides", "program", "layers", "tiles", "stage"], model.LiveProducer.Dock.PaneIds(model.LiveProducer.DockLayout));
         Assert.Equal(4, model.LiveProducer.Items.Count);
         Assert.True(model.LiveProducer.Items[0].IsLive);
         Assert.True(model.LiveProducer.Items[1].IsNext);
@@ -247,7 +247,11 @@ public sealed class LiveProducerTests : IDisposable
 
         public Service Service { get; }
 
-        private static readonly HashSet<string> ProducerOnly = ["look", "macro", "timer-start", "timer-pause", "timer-reset", "booth-lock"];
+        private static readonly HashSet<string> ProducerOnly = ["look", "macro", "timer-start", "timer-pause", "timer-reset", "booth-lock", "stage-use", "stage-save"];
+
+        private Id? activeStage;
+
+        public List<StageLayout> StageLayouts { get; } = [];
 
         public List<string> Calls { get; } = [];
 
@@ -292,7 +296,16 @@ public sealed class LiveProducerTests : IDisposable
                 status.CurrentItemSlides.Add(new LiveSlide { Index = (uint)i, Label = $"Verse {i + 1}", Text = slides[i], Hotkey = (i + 1).ToString(System.Globalization.CultureInfo.InvariantCulture) });
             }
             status.Layers.Add(new LiveLayerStatus { Kind = LayerKind.Slide, Active = !cleared, Title = status.CurrentItemTitle });
-            status.Automation.Add(new LiveAutomationState { RoleLocked = rolePin is not null, BoothLocked = locked, BoothMessage = boothMessage, ActiveLookId = activeLook, ActiveLookName = activeLook is null ? string.Empty : "Worship" });
+            status.Automation.Add(new LiveAutomationState
+            {
+                RoleLocked = rolePin is not null,
+                BoothLocked = locked,
+                BoothMessage = boothMessage,
+                ActiveLookId = activeLook,
+                ActiveLookName = activeLook is null ? string.Empty : "Worship",
+                ActiveStageLayoutId = activeStage,
+                ActiveStageLayoutName = StageLayouts.FirstOrDefault(l => l.Id.Value == activeStage?.Value)?.Name ?? string.Empty,
+            });
             return status;
         }
 
@@ -409,6 +422,21 @@ public sealed class LiveProducerTests : IDisposable
 
         public Task<IReadOnlyList<Selah.Contracts.V1.Timer>> ListTimersAsync() =>
             Task.FromResult<IReadOnlyList<Selah.Contracts.V1.Timer>>([new Selah.Contracts.V1.Timer { Id = LibraryIds.NewId(), Name = "Sermon", DurationMs = 35 * 60 * 1000 }]);
+
+        public Task<IReadOnlyList<StageLayout>> ListStageLayoutsAsync() =>
+            Task.FromResult<IReadOnlyList<StageLayout>>(StageLayouts.Select(l => l.Clone()).ToList());
+
+        public Task SaveStageLayoutAsync(StageLayout layout)
+        {
+            Do("stage-save", () =>
+            {
+                StageLayouts.RemoveAll(l => l.Id.Value == layout.Id.Value);
+                StageLayouts.Add(layout.Clone());
+            });
+            return Task.CompletedTask;
+        }
+
+        public Task<LiveStatus> SetStageLayoutAsync(Id layoutId) => Do("stage-use", () => activeStage = layoutId);
 
         public Task<bool> ClearEverythingAsync()
         {

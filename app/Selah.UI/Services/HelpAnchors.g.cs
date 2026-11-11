@@ -78,6 +78,10 @@ public static class HelpAnchors
     public const string LiveLayers = "live.layers";
     /// <summary>Live, tiles for looks, timers and macros.</summary>
     public const string LiveTiles = "live.tiles";
+    /// <summary>Live, the Stage tab that edits stage display layouts (M4.6).</summary>
+    public const string LiveStageEditor = "live.stage-editor";
+    /// <summary>Live, the stage screen preview in the Stage tab.</summary>
+    public const string LiveStagePreview = "live.stage-preview";
     /// <summary>Live, Lock to Simple mode and its PIN (SEC-14).</summary>
     public const string LiveRoleLock = "live.role-lock";
     /// <summary>Simple mode, the big Back, Next slide, Next song and clear buttons.</summary>
