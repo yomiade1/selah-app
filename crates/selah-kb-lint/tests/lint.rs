@@ -95,7 +95,11 @@ fn planned_references_warn_until_their_milestone_is_done() {
             .iter()
             .any(|f| f.rule == "KB-PLANNED" && f.severity == Severity::Warning)
     );
-    context.done.insert("M4".into());
+    // Whichever milestone a planned reference belongs to, marking it done turns the warning into
+    // an error. (This used to mark only M4, which stopped working once M4 built its planned items.)
+    for milestone in 1..=10 {
+        context.done.insert(format!("M{milestone}"));
+    }
     let corpus = selah_kb::load(&root(), &context, &Options::default());
     assert!(
         corpus
