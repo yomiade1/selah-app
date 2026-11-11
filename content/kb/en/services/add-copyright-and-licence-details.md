@@ -32,8 +32,9 @@ Songs that aren't in the public domain need a credit line. Your church's CCLI li
 
 ## Add your licence number
 
-1. Open **Settings**.
-2. Type your number in **CCLI licence number**. Use digits only.
+Selah asks for it the first time you open it. Type your number in **CCLI licence number**. Use digits only.
+
+If you skipped it, you can't add it later yet. A later update of Selah adds it to the settings.
 
 > [!TIP]
 > Old hymns are often in the public domain. Type "Public Domain" as the copyright line.
