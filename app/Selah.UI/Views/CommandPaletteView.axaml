@@ -5,11 +5,11 @@
              x:Class="Selah.UI.Views.CommandPaletteView"
              x:DataType="vm:CommandPaletteViewModel"
              IsVisible="{Binding IsOpen}">
-  <Border Name="PaletteBackdrop" Background="#40000000" PointerPressed="OnBackdropPressed">
+  <Border Name="PaletteBackdrop" Background="{DynamicResource Brush.Scrim}" PointerPressed="OnBackdropPressed">
     <Border Name="PaletteDialog" Classes="card" MaxWidth="680" MaxHeight="520"
             VerticalAlignment="Top" HorizontalAlignment="Stretch"
             Margin="{DynamicResource Space.Text.Large}"
-            BoxShadow="0 16 40 0 #40000000">
+            BoxShadow="{DynamicResource Shadow.Elevation}">
       <DockPanel>
         <StackPanel DockPanel.Dock="Top" Spacing="{DynamicResource Space.3}">
           <DockPanel>

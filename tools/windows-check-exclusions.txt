@@ -1,0 +1,42 @@
+# Crates left out of the cloud session's Windows type-check
+# (`cargo check --target x86_64-pc-windows-gnu`, gate stage 5, ADR-023).
+#
+# One name per line; `#` starts a comment. tools/verify.py builds the --exclude list from
+# this file, and tools/check-windows-coverage.py checks that nothing with Windows-only code
+# is excluded without a reason recorded here. The `windows` CI job builds every crate
+# natively, so nothing here goes unchecked before a release.
+#
+# "Windows-only code" means code behind a #[cfg(windows)] attribute, which is never
+# type-checked unless the target is Windows. A `cfg!(windows)` runtime branch does not count:
+# both of its arms compile on every platform already.
+#
+# Why each one is here:
+#
+#   selah-render   needs a prebuilt Skia for the target. rust-skia publishes
+#                  x86_64-pc-windows-msvc but not x86_64-pc-windows-gnu, and building Skia
+#                  from source needs network access cloud sessions don't have. No
+#                  #[cfg(windows)] code, so the cross-target check loses nothing here.
+#   selah-media    FFmpeg bindings need the Windows FFmpeg headers and libraries.
+#                  HAS Windows-only code (D3D11VA): covered by the `windows` CI job only.
+#   selah-engine   depends on selah-render (Skia) and selah-media (FFmpeg). No
+#                  #[cfg(windows)] code beyond the windows_subsystem attribute.
+#   selah-core     depends on selah-render for offscreen thumbnails (M3.6). No
+#                  #[cfg(windows)] code.
+#   selah-core-host depends on selah-core. No #[cfg(windows)] code beyond the
+#                  windows_subsystem attribute, which gates nothing.
+#   selah-bench    depends on selah-render and selah-media.
+#   selah-testkit  depends on selah-render and selah-media.
+#                  HAS Windows-only code (thread freeze for the SAFE-03 chaos test):
+#                  covered by the `windows` CI job only.
+#
+# Crates that stay in the check, and hold the Windows-only code that matters most:
+#   selah-ipc (named pipes, DACL), selah-runtime (power, paths), selah-secrets
+#   (Credential Manager, DPAPI), selah-watchdog (process control, single instance).
+
+selah-render
+selah-media
+selah-engine
+selah-core
+selah-core-host
+selah-bench
+selah-testkit

@@ -145,8 +145,8 @@
                               <Panel>
                                 <Image Source="{Binding Thumbnail}" Stretch="Uniform" IsVisible="{Binding HasThumbnail}" />
                                 <StackPanel Spacing="2" Margin="6" IsVisible="{Binding !HasThumbnail}">
-                                  <TextBlock Foreground="#FFFFFF" Text="{Binding Body}" TextWrapping="Wrap" />
-                                  <TextBlock Foreground="#D1D1D6" Classes="caption" Text="{Binding Footer}" IsVisible="{Binding HasFooter}" />
+                                  <TextBlock Foreground="{DynamicResource Brush.SlideText}" Text="{Binding Body}" TextWrapping="Wrap" />
+                                  <TextBlock Foreground="{DynamicResource Brush.SlideTextMuted}" Classes="caption" Text="{Binding Footer}" IsVisible="{Binding HasFooter}" />
                                 </StackPanel>
                               </Panel>
                             </Border>
@@ -402,8 +402,8 @@
                             <Panel>
                               <Image Source="{Binding Thumbnail}" Stretch="Uniform" IsVisible="{Binding HasThumbnail}" />
                               <StackPanel Spacing="2" Margin="6" IsVisible="{Binding !HasThumbnail}">
-                                <TextBlock Foreground="#FFFFFF" Text="{Binding Body}" TextWrapping="Wrap" />
-                                <TextBlock Foreground="#D1D1D6" Classes="caption" Text="{Binding Footer}" IsVisible="{Binding HasFooter}" />
+                                <TextBlock Foreground="{DynamicResource Brush.SlideText}" Text="{Binding Body}" TextWrapping="Wrap" />
+                                <TextBlock Foreground="{DynamicResource Brush.SlideTextMuted}" Classes="caption" Text="{Binding Footer}" IsVisible="{Binding HasFooter}" />
                               </StackPanel>
                             </Panel>
                           </Border>

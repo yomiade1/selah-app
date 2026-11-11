@@ -28,6 +28,9 @@
   --emergency: #9C3D10;
   --on-emergency: #FFFFFF;
   --preview-bg: #000000;
+  --slide-text: #FFFFFF;
+  --slide-text-muted: #D1D1D6;
+  --scrim: #40000000;
   --color-section-verse: #2378C3;
   --color-section-chorus: #C84281;
   --color-section-bridge: #E66F0E;
@@ -92,4 +95,7 @@
   --emergency: #9C3D10;
   --on-emergency: #FFFFFF;
   --preview-bg: #000000;
+  --slide-text: #FFFFFF;
+  --slide-text-muted: #D1D1D6;
+  --scrim: #40000000;
 }

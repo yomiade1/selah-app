@@ -105,6 +105,12 @@ export_env() {
     "export DOTNET_NOLOGO=1"
     "export SELAH_CLOUD=1"
     # skia-bindings reads the pinned Skia build fetched by tools/setup.sh --fetch (SEC-09).
+    # Cloud sessions are Linux, so linux-x64 is the right folder for every build that runs
+    # here. It is NOT a template for other targets: {key} carries the target triple, so a
+    # cross-target build would look for, say, a windows-gnu tarball inside this Linux folder
+    # and fail. Nothing is pinned for x86_64-pc-windows-gnu (rust-skia publishes msvc only),
+    # which is why the Windows type-check skips the Skia crates — see
+    # tools/windows-check-exclusions.txt.
     "export SKIA_BINARIES_URL=\"file://${CLAUDE_PROJECT_DIR:-$PWD}/third_party/skia/linux-x64/skia-binaries-{key}.tar.gz\""
     # The FFmpeg bindings (selah-media, M1.7) build and run against the pinned FFmpeg.
     "export FFMPEG_DIR=\"\$(ls -d ${CLAUDE_PROJECT_DIR:-$PWD}/third_party/ffmpeg/linux-x64/shared/ffmpeg-*/ 2>/dev/null | head -1)\""

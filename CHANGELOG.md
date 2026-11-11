@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+Fixes since Milestone 3:
+
+- The command palette's drop shadow is now the soft elevation the design system calls for, and is gone in the Booth appearance, where shadows don't belong.
+
 Milestone 3: the render engine, templates and the slide editor. Still a work-in-progress preview build with no live Sunday service runner yet (coming in M4).
 
 - Multi-layer render engine & independent screens: composes Video Input, Media, Slide, Props and Messages layers at 60 Hz across independent screen resolutions with upcoming-slide pre-rasterisation.

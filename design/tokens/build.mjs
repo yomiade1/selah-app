@@ -24,15 +24,24 @@ StyleDictionary.registerFormat({
           return `        <SolidColorBrush x:Key="Brush.${name}" Color="${t.$value}" />`;
         })
         .join("\n");
+    // Elevation (DESIGN-SYSTEM §3). BoxShadows is its own type, so it needs its own element
+    // rather than a SolidColorBrush; Booth resolves to "none".
+    const shadows = (mode) =>
+      dictionary.allTokens
+        .filter((t) => t.path[0] === "shadow" && t.path[1] === mode)
+        .map((t) => `        <BoxShadows x:Key="Shadow.${pascal(t.path.slice(2))}">${t.$value}</BoxShadows>`)
+        .join("\n");
     return `<!-- ${header} -->
 <ResourceDictionary xmlns="https://github.com/avaloniaui"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
   <ResourceDictionary.ThemeDictionaries>
     <ResourceDictionary x:Key="Light">
 ${brushes("light")}
+${shadows("light")}
     </ResourceDictionary>
     <ResourceDictionary x:Key="Dark">
 ${brushes("booth")}
+${shadows("booth")}
     </ResourceDictionary>
   </ResourceDictionary.ThemeDictionaries>
 </ResourceDictionary>
@@ -111,7 +120,7 @@ const sd = new StyleDictionary({
     avalonia: {
       buildPath: "app/Selah.UI/Styles/",
       files: [
-        { destination: "Tokens.g.axaml", format: "selah/avalonia-colors", filter: (t) => t.$type === "color" },
+        { destination: "Tokens.g.axaml", format: "selah/avalonia-colors", filter: (t) => t.$type === "color" || t.$type === "shadow" },
         { destination: "Tokens.g.cs", format: "selah/csharp-sizes" },
       ],
     },

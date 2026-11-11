@@ -31,11 +31,15 @@
         <SolidColorBrush x:Key="Brush.Emergency" Color="#9C3D10" />
         <SolidColorBrush x:Key="Brush.OnEmergency" Color="#FFFFFF" />
         <SolidColorBrush x:Key="Brush.PreviewBg" Color="#000000" />
+        <SolidColorBrush x:Key="Brush.SlideText" Color="#FFFFFF" />
+        <SolidColorBrush x:Key="Brush.SlideTextMuted" Color="#D1D1D6" />
+        <SolidColorBrush x:Key="Brush.Scrim" Color="#40000000" />
         <SolidColorBrush x:Key="Brush.Section.Verse" Color="#2378C3" />
         <SolidColorBrush x:Key="Brush.Section.Chorus" Color="#C84281" />
         <SolidColorBrush x:Key="Brush.Section.Bridge" Color="#E66F0E" />
         <SolidColorBrush x:Key="Brush.Section.Tag" Color="#009EC1" />
         <SolidColorBrush x:Key="Brush.Section.Other" Color="#71767A" />
+        <BoxShadows x:Key="Shadow.Elevation">0 1 2 0 #0F000000, 0 4 16 0 #0F000000</BoxShadows>
     </ResourceDictionary>
     <ResourceDictionary x:Key="Dark">
         <SolidColorBrush x:Key="Brush.Bg" Color="#000000" />
@@ -66,11 +70,15 @@
         <SolidColorBrush x:Key="Brush.Emergency" Color="#9C3D10" />
         <SolidColorBrush x:Key="Brush.OnEmergency" Color="#FFFFFF" />
         <SolidColorBrush x:Key="Brush.PreviewBg" Color="#000000" />
+        <SolidColorBrush x:Key="Brush.SlideText" Color="#FFFFFF" />
+        <SolidColorBrush x:Key="Brush.SlideTextMuted" Color="#D1D1D6" />
+        <SolidColorBrush x:Key="Brush.Scrim" Color="#40000000" />
         <SolidColorBrush x:Key="Brush.Section.Verse" Color="#2378C3" />
         <SolidColorBrush x:Key="Brush.Section.Chorus" Color="#C84281" />
         <SolidColorBrush x:Key="Brush.Section.Bridge" Color="#E66F0E" />
         <SolidColorBrush x:Key="Brush.Section.Tag" Color="#009EC1" />
         <SolidColorBrush x:Key="Brush.Section.Other" Color="#71767A" />
+        <BoxShadows x:Key="Shadow.Elevation">none</BoxShadows>
     </ResourceDictionary>
   </ResourceDictionary.ThemeDictionaries>
 </ResourceDictionary>

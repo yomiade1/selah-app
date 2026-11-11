@@ -43,6 +43,9 @@ Defined once in `design/tokens/tokens.json` (DTCG format) and generated into Ava
 | `color.info` | `#00BDE3` | `#00BDE3` | Info alerts, summary box |
 | `color.emergency` | `#9C3D10` | `#9C3D10` | Severe system alerts |
 | `color.preview-bg` | `#000000` | `#000000` | Behind the program preview (an empty screen is black) |
+| `color.slide-text` | `#FFFFFF` | `#FFFFFF` | Lyrics and verse text inside a slide preview or thumbnail (what the congregation sees, so the same in both) |
+| `color.slide-text-muted` | `#D1D1D6` | `#D1D1D6` | Secondary slide text in a preview: copyright, translation, reference |
+| `color.scrim` | `#40000000` | `#40000000` | Dims the screen behind the command palette and other overlays (25% black) |
 | Section colours | verse `#2378C3`, chorus `#C84281`, bridge `#E66F0E`, tag `#009EC1`, intro/other `#71767A` | same | Song sections (always paired with a text label) |
 
 Rules:
@@ -104,7 +107,7 @@ No interface text is smaller than 11.5 px at 90%.
   - 14 cards and grouped lists (Apple)
   - 18 big Simple-mode buttons
   - 999 pills and status chips
-- **Elevation:** light `0 1px 2px rgba(0,0,0,.06), 0 4px 16px rgba(0,0,0,.06)`. Booth uses no shadows; separation comes from surface colour.
+- **Elevation:** light `0 1px 2px rgba(0,0,0,.06), 0 4px 16px rgba(0,0,0,.06)`. Booth uses no shadows; separation comes from surface colour. Use the `shadow.elevation` token (`Shadow.Elevation` in Avalonia), which resolves to `none` in Booth — never write a shadow inline.
 - **Materials:** toolbars and bottom bars use translucent `surface` at 72% opacity with background blur and 180% saturation. High contrast turns translucency off.
 - **Focus:** 4 px `color.focus` outline, 2 px offset, on every focusable element. It's never removed.
 - **Motion:**

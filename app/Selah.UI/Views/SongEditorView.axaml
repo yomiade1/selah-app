@@ -270,8 +270,8 @@
                           <StackPanel Spacing="4" Margin="4" IsVisible="{Binding !HasThumbnail}">
                             <TextBlock Foreground="{DynamicResource Brush.Warning}" Classes="caption"
                                        IsVisible="{Binding HasChords}" Text="{Binding ChordsLine}" />
-                            <TextBlock Foreground="#FFFFFF" Text="{Binding Body}" TextWrapping="Wrap" />
-                            <TextBlock Foreground="#D1D1D6" Classes="caption" IsVisible="{Binding HasFooter}" Text="{Binding Footer}" />
+                            <TextBlock Foreground="{DynamicResource Brush.SlideText}" Text="{Binding Body}" TextWrapping="Wrap" />
+                            <TextBlock Foreground="{DynamicResource Brush.SlideTextMuted}" Classes="caption" IsVisible="{Binding HasFooter}" Text="{Binding Footer}" />
                           </StackPanel>
                         </Panel>
                       </Border>
