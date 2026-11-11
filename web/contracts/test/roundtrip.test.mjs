@@ -1227,7 +1227,10 @@ test("M4.5 role lock command and status round trip", () => {
             },
         },
     });
-    assert.deepEqual(fromBinary(EnvelopeSchema, toBinary(EnvelopeSchema, lock)), lock);
+    assert.deepEqual(
+        fromBinary(EnvelopeSchema, toBinary(EnvelopeSchema, lock)),
+        lock,
+    );
     const status = create(EnvelopeSchema, {
         id: 7452n,
         body: {
@@ -1235,7 +1238,9 @@ test("M4.5 role lock command and status round trip", () => {
             value: {
                 result: {
                     case: "liveStatus",
-                    value: { automation: [{ roleLocked: true, boothLocked: false }] },
+                    value: {
+                        automation: [{ roleLocked: true, boothLocked: false }],
+                    },
                 },
             },
         },
