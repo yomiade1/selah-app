@@ -373,6 +373,8 @@ async fn main() -> anyhow::Result<()> {
         selah_runtime::power::platform(),
     )
     .context("could not open the library")?;
+    // Every secret goes through SecretStore (the role lock PIN hash, M4.5).
+    service.set_secrets(selah_secrets::SecretStore::platform());
     match help_index() {
         Some((path, help)) => {
             tracing::info!(path = %path.display(), "help index loaded");

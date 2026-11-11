@@ -1244,4 +1244,22 @@ public sealed class ContractTests
         };
         Assert.Equal(boothLock, Envelope.Parser.ParseFrom(boothLock.ToByteArray()));
     }
+    [Fact]
+    public void M45RoleLockMessagesRoundTrip()
+    {
+        var lockEnvelope = new Envelope
+        {
+            Id = 7451,
+            Command = new Command { SetRoleLock = new SetRoleLock { Locked = true, Pin = "2468" } },
+        };
+        var lockBack = Envelope.Parser.ParseFrom(lockEnvelope.ToByteArray());
+        Assert.Equal(lockEnvelope, lockBack);
+        Assert.True(lockBack.Command.SetRoleLock.Locked);
+
+        var status = new LiveStatus();
+        status.Automation.Add(new LiveAutomationState { RoleLocked = true, BoothLocked = false });
+        var reply = new Envelope { Id = 7452, Reply = new Reply { LiveStatus = status } };
+        var replyBack = Envelope.Parser.ParseFrom(reply.ToByteArray());
+        Assert.True(replyBack.Reply.LiveStatus.Automation[0].RoleLocked);
+    }
 }

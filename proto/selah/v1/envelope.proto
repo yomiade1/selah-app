@@ -139,6 +139,7 @@ message Command {
     SetStageLayout set_stage_layout = 87;
     SendBoothMessage send_booth_message = 88;
     SetBoothLock set_booth_lock = 89;
+    SetRoleLock set_role_lock = 90;
   }
   // Optional client-supplied UUIDv7 grouping multiple mutations into one undo/redo step.
   Id undo_group = 100;

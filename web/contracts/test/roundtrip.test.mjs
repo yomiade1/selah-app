@@ -1213,3 +1213,33 @@ test("M4.3 looks, props, messages, timers, macros and clear groups round trip", 
         boothLock,
     );
 });
+
+test("M4.5 role lock command and status round trip", () => {
+    const lock = create(EnvelopeSchema, {
+        id: 7451n,
+        body: {
+            case: "command",
+            value: {
+                action: {
+                    case: "setRoleLock",
+                    value: { locked: true, pin: "2468" },
+                },
+            },
+        },
+    });
+    assert.deepEqual(fromBinary(EnvelopeSchema, toBinary(EnvelopeSchema, lock)), lock);
+    const status = create(EnvelopeSchema, {
+        id: 7452n,
+        body: {
+            case: "reply",
+            value: {
+                result: {
+                    case: "liveStatus",
+                    value: { automation: [{ roleLocked: true, boothLocked: false }] },
+                },
+            },
+        },
+    });
+    const back = fromBinary(EnvelopeSchema, toBinary(EnvelopeSchema, status));
+    assert.equal(back.body.value.result.value.automation[0].roleLocked, true);
+});

@@ -76,6 +76,8 @@ public sealed partial class TextScale : ObservableObject
         }
         resources["Size.ControlHeight"] = Tokens.SizeControlHeight * f;
         resources["Size.TouchTarget"] = Math.Max(Tokens.SizeTouchTarget, Tokens.SizeTouchTarget * f);
+        // Simple mode's big buttons are at least 64 px high (DESIGN-SYSTEM §5).
+        resources["Size.SimpleButtonHeight"] = Math.Max(Tokens.SizeSimpleButtonHeight, Tokens.SizeSimpleButtonHeight * f);
         resources["Size.Icon"] = Tokens.SizeIcon * f;
         resources["Size.ToolbarHeight"] = Tokens.SizeToolbarHeight * f;
         // Side panels grow more slowly than text, so the preview keeps its space (§4.1).
@@ -104,6 +106,7 @@ public sealed partial class TextScale : ObservableObject
         resources["Radius.Control"] = new CornerRadius(Tokens.RadiusControl);
         resources["Radius.Card"] = new CornerRadius(Tokens.RadiusCard);
         resources["Radius.Pill"] = new CornerRadius(Tokens.RadiusPill);
+        resources["Radius.SimpleButton"] = new CornerRadius(Tokens.RadiusSimpleButton);
         resources["Focus.Thickness"] = new Thickness(Tokens.FocusWidth);
         resources["Focus.Margin"] = new Thickness(-(Tokens.FocusWidth + Tokens.FocusOffset));
         // USWDS hairlines and the alert bar (the alert's left border is the focus width).

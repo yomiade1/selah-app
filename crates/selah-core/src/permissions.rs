@@ -101,9 +101,10 @@ pub enum CommandKind {
     SetStageLayout,
     SendBoothMessage,
     SetBoothLock,
+    SetRoleLock,
 }
 
-pub const ALL_COMMANDS: [CommandKind; 89] = [
+pub const ALL_COMMANDS: [CommandKind; 90] = [
     CommandKind::Render,
     CommandKind::SetAppearance,
     CommandKind::RecordFeedback,
@@ -193,6 +194,7 @@ pub const ALL_COMMANDS: [CommandKind; 89] = [
     CommandKind::SetStageLayout,
     CommandKind::SendBoothMessage,
     CommandKind::SetBoothLock,
+    CommandKind::SetRoleLock,
 ];
 
 pub fn kind_of(action: &command::Action) -> CommandKind {
@@ -286,6 +288,7 @@ pub fn kind_of(action: &command::Action) -> CommandKind {
         command::Action::SetStageLayout(_) => CommandKind::SetStageLayout,
         command::Action::SendBoothMessage(_) => CommandKind::SendBoothMessage,
         command::Action::SetBoothLock(_) => CommandKind::SetBoothLock,
+        command::Action::SetRoleLock(_) => CommandKind::SetRoleLock,
     }
 }
 
@@ -381,7 +384,8 @@ pub fn changes_screens(kind: CommandKind) -> bool {
         | CommandKind::SaveStageLayout
         | CommandKind::DeleteStageLayout
         | CommandKind::SendBoothMessage
-        | CommandKind::SetBoothLock => false,
+        | CommandKind::SetBoothLock
+        | CommandKind::SetRoleLock => false,
     }
 }
 
@@ -422,12 +426,15 @@ pub fn is_volunteer_allowed(kind: CommandKind) -> bool {
             | CommandKind::PreviousSlide
             | CommandKind::NextItem
             | CommandKind::PreviousItem
+            | CommandKind::TriggerSectionHotkey
             | CommandKind::ClearOutputs
             | CommandKind::ClearLayer
             | CommandKind::ShowLogo
             | CommandKind::LiveUndo
             | CommandKind::LiveRedo
             | CommandKind::SendBoothMessage
+            // Unlocking needs the PIN, which core checks.
+            | CommandKind::SetRoleLock
             | CommandKind::RecordFeedback
             | CommandKind::StagePreviewScene
             | CommandKind::PreloadItems
@@ -488,20 +495,13 @@ pub fn principal(origin: ActorOrigin) -> Principal {
     }
 }
 
-pub fn is_volunteer_actor(actor: &Actor) -> bool {
-    let uid = actor.user_id.trim();
-    uid.eq_ignore_ascii_case("volunteer")
-        || uid.starts_with("volunteer:")
-        || uid.starts_with("volunteer-")
-        || uid.eq_ignore_ascii_case("simple-locked")
-}
-
 /// Decide before the command is validated or applied. The peer is already verified as the
-/// same OS user by the transport.
-pub fn authorize(actor: &Actor, kind: CommandKind) -> Result<(), Denied> {
+/// same OS user by the transport. `role_locked` is core's own state (SEC-14): while it is on,
+/// the person at the UI is a volunteer, whatever the request says about itself.
+pub fn authorize(actor: &Actor, kind: CommandKind, role_locked: bool) -> Result<(), Denied> {
     let origin = ActorOrigin::try_from(actor.origin).unwrap_or(ActorOrigin::Unspecified);
     let effective_principal = match principal(origin) {
-        Principal::LocalOwner if is_volunteer_actor(actor) => Principal::Volunteer,
+        Principal::LocalOwner if role_locked => Principal::Volunteer,
         other => other,
     };
     let allowed = match (effective_principal, kind) {
@@ -538,8 +538,9 @@ mod tests {
     ];
 
     /// The expected matrix for M1–M4. Changing a cell is a security decision: say why in the PR.
-    fn expected(origin: ActorOrigin, kind: CommandKind) -> bool {
+    fn expected(origin: ActorOrigin, kind: CommandKind, role_locked: bool) -> bool {
         match origin {
+            ActorOrigin::Ui | ActorOrigin::Tour if role_locked => is_volunteer_allowed(kind),
             ActorOrigin::Ui | ActorOrigin::Tour => kind != CommandKind::Render,
             ActorOrigin::Macro => is_macro_allowed(kind),
             _ => false,
@@ -550,22 +551,27 @@ mod tests {
     fn permission_matrix_covers_every_origin_and_command() {
         // sec: SEC-14, SAFE-01
         let mut cells = 0;
-        for origin in ORIGINS {
-            for kind in ALL_COMMANDS {
-                let actor = Actor {
-                    user_id: "local-owner".into(),
-                    device_id: "test".into(),
-                    origin: origin as i32,
-                };
-                assert_eq!(
-                    authorize(&actor, kind).is_ok(),
-                    expected(origin, kind),
-                    "{origin:?} × {kind:?}"
-                );
-                cells += 1;
+        for role_locked in [false, true] {
+            for origin in ORIGINS {
+                for kind in ALL_COMMANDS {
+                    // What the client calls itself never matters: core decides (SEC-14).
+                    for user_id in ["local-owner", "volunteer", "admin"] {
+                        let actor = Actor {
+                            user_id: user_id.into(),
+                            device_id: "test".into(),
+                            origin: origin as i32,
+                        };
+                        assert_eq!(
+                            authorize(&actor, kind, role_locked).is_ok(),
+                            expected(origin, kind, role_locked),
+                            "{origin:?} × {kind:?} × {user_id} × locked={role_locked}"
+                        );
+                    }
+                    cells += 1;
+                }
             }
         }
-        assert_eq!(cells, ORIGINS.len() * ALL_COMMANDS.len());
+        assert_eq!(cells, 2 * ORIGINS.len() * ALL_COMMANDS.len());
     }
 
     #[test]
@@ -661,7 +667,8 @@ mod tests {
                 | CommandKind::TriggerClearGroup
                 | CommandKind::SetStageLayout
                 | CommandKind::SendBoothMessage
-                | CommandKind::SetBoothLock => {}
+                | CommandKind::SetBoothLock
+                | CommandKind::SetRoleLock => {}
             }
         }
         let unique: std::collections::HashSet<_> = ALL_COMMANDS.iter().collect();
@@ -675,6 +682,6 @@ mod tests {
             device_id: "y".into(),
             origin: 4242,
         };
-        assert!(authorize(&actor, CommandKind::ClearOutputs).is_err());
+        assert!(authorize(&actor, CommandKind::ClearOutputs, false).is_err());
     }
 }

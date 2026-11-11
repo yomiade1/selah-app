@@ -1033,6 +1033,9 @@ public sealed class CoreConnection : IAsyncDisposable, Selah.UI.ViewModels.IHelp
     public Task<LiveStatus> SetBoothLockAsync(bool locked) =>
         LiveAsync(new Command { SetBoothLock = new SetBoothLock { Locked = locked } });
 
+    public Task<LiveStatus> SetRoleLockAsync(bool locked, string pin) =>
+        LiveAsync(new Command { SetRoleLock = new SetRoleLock { Locked = locked, Pin = pin } });
+
     public Task<LiveStatus> SendBoothMessageAsync(string text) =>
         LiveAsync(new Command { SendBoothMessage = new SendBoothMessage { Text = text } });
 

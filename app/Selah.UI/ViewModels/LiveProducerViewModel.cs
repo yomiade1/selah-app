@@ -241,6 +241,16 @@ public sealed partial class LiveProducerViewModel : ObservableObject
     [ObservableProperty]
     private bool isShowingLogo;
 
+    /// <summary>Core's Simple-mode role lock (SEC-14). The UI follows it; core enforces it.</summary>
+    [ObservableProperty]
+    private bool isRoleLocked;
+
+    [ObservableProperty]
+    private bool isLocking;
+
+    [ObservableProperty]
+    private string lockPin = string.Empty;
+
     [ObservableProperty]
     private string boothMessage = string.Empty;
 
@@ -339,6 +349,7 @@ public sealed partial class LiveProducerViewModel : ObservableObject
         NextText = next.HasNext ? Localizer.Instance.Get("live-next-up", ("title", next.NextItemTitle), ("label", next.NextSlideLabel)) : Localizer.Instance["live-next-none"];
         var automation = next.Automation.FirstOrDefault();
         IsBoothLocked = automation?.BoothLocked ?? false;
+        IsRoleLocked = automation?.RoleLocked ?? false;
         ActiveLookName = automation?.ActiveLookName ?? string.Empty;
         BoothMessage = automation?.BoothMessage ?? string.Empty;
 
@@ -499,6 +510,33 @@ public sealed partial class LiveProducerViewModel : ObservableObject
     /// <summary>Ctrl/Cmd+L (SAFE-06).</summary>
     [RelayCommand]
     private Task ToggleBoothLockAsync() => RunAsync(() => live!.SetBoothLockAsync(!IsBoothLocked));
+
+    [RelayCommand]
+    private void StartLock()
+    {
+        IsLocking = true;
+        LockPin = string.Empty;
+    }
+
+    [RelayCommand]
+    private void CancelLock()
+    {
+        IsLocking = false;
+        LockPin = string.Empty;
+    }
+
+    /// <summary>Lock to Simple mode (SEC-14): core keeps the state and a salted hash of the PIN.</summary>
+    [RelayCommand]
+    private async Task LockAsync()
+    {
+        var pin = LockPin;
+        LockPin = string.Empty;
+        await RunAsync(() => live!.SetRoleLockAsync(true, pin));
+        if (ErrorText is null)
+        {
+            IsLocking = false;
+        }
+    }
 
     [RelayCommand]
     private Task DismissBoothMessageAsync()

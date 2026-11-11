@@ -55,6 +55,14 @@ public sealed partial class MainViewModel : ObservableObject
         CommandPalette = new CommandPaletteViewModel(resolvedLibrary, resolvedHelp);
         liveService = live ?? connection;
         LiveProducer = new LiveProducerViewModel(liveService, resolvedLibrary, producerLayoutPath);
+        Simple = new SimpleModeViewModel(LiveProducer, liveService);
+        LiveProducer.PropertyChanged += (_, args) =>
+        {
+            if (args.PropertyName == nameof(LiveProducerViewModel.IsRoleLocked))
+            {
+                OnRoleLockChanged(LiveProducer.IsRoleLocked);
+            }
+        };
 
         Library.EditSongRequested += (_, song) => _ = EditSongInEditorAsync(song);
         Library.SceneStaged += (_, _) => HasStagedPreview = true;
@@ -121,6 +129,47 @@ public sealed partial class MainViewModel : ObservableObject
     /// <summary>Producer mode (M4.4).</summary>
     public LiveProducerViewModel LiveProducer { get; }
 
+    /// <summary>Simple mode (M4.5).</summary>
+    public SimpleModeViewModel Simple { get; }
+
+    /// <summary>Which Live view shows: Simple (volunteers) or Producer.</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsSimpleView))]
+    [NotifyPropertyChangedFor(nameof(IsProducerView))]
+    private bool isSimpleMode;
+
+    public bool IsSimpleView => IsLiveMode && IsSimpleMode;
+
+    public bool IsProducerView => IsLiveMode && !IsSimpleMode;
+
+    /// <summary>SEC-14: while core's role lock is on, only Simple mode opens. Core enforces it too.</summary>
+    public bool IsRoleLocked => LiveProducer.IsRoleLocked;
+
+    public bool CanChangeMode => !IsRoleLocked;
+
+    private void OnRoleLockChanged(bool locked)
+    {
+        Simple.IsRoleLocked = locked;
+        if (locked)
+        {
+            ActiveMode = WorkspaceMode.Live;
+            IsSimpleMode = true;
+        }
+        OnPropertyChanged(nameof(IsRoleLocked));
+        OnPropertyChanged(nameof(CanChangeMode));
+    }
+
+    /// <summary>The Simple / Producer switch in the Live toolbar.</summary>
+    [RelayCommand]
+    public void SelectLiveView(string view)
+    {
+        if (view == "Producer" && IsRoleLocked)
+        {
+            return;
+        }
+        IsSimpleMode = view == "Simple";
+    }
+
     private readonly ILiveService? liveService;
 
     /// <summary>Holding Esc for 1 second clears the screens from every view (SAFE-03, M4-A12).</summary>
@@ -135,7 +184,14 @@ public sealed partial class MainViewModel : ObservableObject
         }
     }
 
-    public void OnEscapeUp() => EscapeHold.Up();
+    /// <summary>Esc came up. In Simple mode a short tap hides the words (prototype 02).</summary>
+    public void OnEscapeUp()
+    {
+        if (!EscapeHold.Up() && IsSimpleView)
+        {
+            Simple.OnEscapeTapped();
+        }
+    }
 
     /// <summary>The planner's <b>Go live</b>: load the service into Live and switch to Producer.</summary>
     private async Task GoLiveAsync(Service service)
@@ -161,6 +217,8 @@ public sealed partial class MainViewModel : ObservableObject
     [NotifyPropertyChangedFor(nameof(IsTemplatesMode))]
     [NotifyPropertyChangedFor(nameof(IsServicePlannerMode))]
     [NotifyPropertyChangedFor(nameof(IsLiveMode))]
+    [NotifyPropertyChangedFor(nameof(IsSimpleView))]
+    [NotifyPropertyChangedFor(nameof(IsProducerView))]
     private WorkspaceMode activeMode = WorkspaceMode.Preview;
 
     public bool IsPreviewMode => ActiveMode == WorkspaceMode.Preview;
@@ -334,6 +392,13 @@ public sealed partial class MainViewModel : ObservableObject
     [RelayCommand]
     public void SelectMode(string mode)
     {
+        // SEC-14: a role-locked volunteer stays in Live (Simple mode).
+        if (IsRoleLocked)
+        {
+            ActiveMode = WorkspaceMode.Live;
+            IsSimpleMode = true;
+            return;
+        }
         ActiveMode = mode switch
         {
             "Library" => WorkspaceMode.Library,

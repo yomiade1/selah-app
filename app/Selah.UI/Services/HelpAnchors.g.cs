@@ -78,4 +78,18 @@ public static class HelpAnchors
     public const string LiveLayers = "live.layers";
     /// <summary>Live, tiles for looks, timers and macros.</summary>
     public const string LiveTiles = "live.tiles";
+    /// <summary>Live, Lock to Simple mode and its PIN (SEC-14).</summary>
+    public const string LiveRoleLock = "live.role-lock";
+    /// <summary>Simple mode, the big Back, Next slide, Next song and clear buttons.</summary>
+    public const string SimpleControls = "simple.controls";
+    /// <summary>Simple mode, the On screen now picture.</summary>
+    public const string SimpleNowShowing = "simple.now-showing";
+    /// <summary>Simple mode, the service progress steps.</summary>
+    public const string SimpleServiceProgress = "simple.service-progress";
+    /// <summary>Simple mode, All slides in this song.</summary>
+    public const string SimpleSlideStrip = "simple.slide-strip";
+    /// <summary>Simple mode, Message the booth and Quick tips.</summary>
+    public const string SimpleMessageTheBooth = "simple.message-the-booth";
+    /// <summary>Simple mode, Unlock with the PIN.</summary>
+    public const string SimpleUnlock = "simple.unlock";
 }

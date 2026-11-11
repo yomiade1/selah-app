@@ -55,6 +55,9 @@ public interface ILiveService
 
     Task<LiveStatus> SendBoothMessageAsync(string text);
 
+    /// <summary>SEC-14: lock to Simple mode, or unlock with the PIN. Core keeps the state.</summary>
+    Task<LiveStatus> SetRoleLockAsync(bool locked, string pin);
+
     Task<IReadOnlyList<Look>> ListLooksAsync();
 
     Task<IReadOnlyList<Macro>> ListMacrosAsync();

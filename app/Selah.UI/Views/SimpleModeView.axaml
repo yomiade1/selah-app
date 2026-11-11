@@ -1,0 +1,175 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:Selah.UI.ViewModels"
+             xmlns:views="using:Selah.UI.Views"
+             xmlns:s="using:Selah.UI.Services"
+             x:Class="Selah.UI.Views.SimpleModeView"
+             x:DataType="vm:SimpleModeViewModel"
+             Focusable="True">
+  <DockPanel>
+    <!-- Bottom first: the big buttons keep their space at any text size (DESIGN-SYSTEM §10). -->
+    <Border Name="SimpleControls" DockPanel.Dock="Bottom" Padding="{DynamicResource Space.Text.Medium}"
+            Background="{DynamicResource Brush.Surface}" BorderBrush="{DynamicResource Brush.Line}"
+            BorderThickness="{DynamicResource Line.Hairline}" s:Help.Anchor="simple.controls">
+      <StackPanel Spacing="{DynamicResource Space.3}">
+        <UniformGrid Rows="1" ColumnSpacing="{DynamicResource Space.3}">
+          <Button Name="SimpleBackButton" Classes="simple" Command="{Binding Producer.PreviousCommand}" HorizontalAlignment="Stretch">
+            <TextBlock views:Critical.IsCritical="True" Text="{Binding [simple-back], Source={x:Static s:Localizer.Instance}}" />
+          </Button>
+          <Button Name="SimpleNextSlideButton" Classes="simple primary" Command="{Binding Producer.NextCommand}" HorizontalAlignment="Stretch">
+            <TextBlock views:Critical.IsCritical="True" Text="{Binding [simple-next-slide], Source={x:Static s:Localizer.Instance}}" />
+          </Button>
+          <Button Name="SimpleNextSongButton" Classes="simple" Command="{Binding Producer.NextItemCommand}" HorizontalAlignment="Stretch">
+            <TextBlock Text="{Binding [simple-next-song], Source={x:Static s:Localizer.Instance}}" />
+          </Button>
+        </UniformGrid>
+        <UniformGrid Rows="1" ColumnSpacing="{DynamicResource Space.3}">
+          <Button Name="SimpleHideWordsButton" Classes="simple" Command="{Binding Producer.ClearTextCommand}" HorizontalAlignment="Stretch">
+            <TextBlock Text="{Binding [simple-hide-words], Source={x:Static s:Localizer.Instance}}" TextWrapping="Wrap" TextAlignment="Center" />
+          </Button>
+          <Button Name="SimpleHideBackgroundButton" Classes="simple" Command="{Binding Producer.ClearBackgroundCommand}" HorizontalAlignment="Stretch">
+            <TextBlock Text="{Binding [simple-hide-background], Source={x:Static s:Localizer.Instance}}" TextWrapping="Wrap" TextAlignment="Center" />
+          </Button>
+          <Button Name="SimpleShowLogoButton" Classes="simple" Command="{Binding Producer.ShowLogoCommand}" HorizontalAlignment="Stretch">
+            <TextBlock Text="{Binding [simple-show-logo], Source={x:Static s:Localizer.Instance}}" TextWrapping="Wrap" TextAlignment="Center" />
+          </Button>
+          <Button Name="SimpleClearEverythingButton" Classes="simple emergency" Command="{Binding Producer.ClearAllCommand}" HorizontalAlignment="Stretch">
+            <TextBlock views:Critical.IsCritical="True" Text="{Binding [simple-clear-everything], Source={x:Static s:Localizer.Instance}}" TextWrapping="Wrap" TextAlignment="Center" />
+          </Button>
+        </UniformGrid>
+        <!-- Message the booth (SAFE-01): goes to the producer only. -->
+        <DockPanel s:Help.Anchor="simple.message-the-booth">
+          <!-- SEC-14: only someone with the PIN unlocks; core checks it. -->
+          <Button Name="SimpleUnlockButton" DockPanel.Dock="Right" Classes="link" Command="{Binding StartUnlockCommand}"
+                  IsVisible="{Binding IsRoleLocked}" s:Help.Anchor="simple.unlock">
+            <TextBlock Text="{Binding [role-lock-unlock], Source={x:Static s:Localizer.Instance}}" />
+          </Button>
+          <StackPanel Orientation="Horizontal" Spacing="{DynamicResource Space.2}" DockPanel.Dock="Right" IsVisible="{Binding IsUnlocking}">
+            <TextBox Name="SimpleUnlockPinBox" MinWidth="120" MaxLength="8" PasswordChar="•" Text="{Binding UnlockPin}"
+                     AutomationProperties.Name="{Binding [role-lock-pin], Source={x:Static s:Localizer.Instance}}"
+                     Watermark="{Binding [role-lock-pin], Source={x:Static s:Localizer.Instance}}" />
+            <Button Name="SimpleUnlockConfirmButton" Classes="primary" Command="{Binding UnlockCommand}">
+              <TextBlock Text="{Binding [role-lock-unlock], Source={x:Static s:Localizer.Instance}}" />
+            </Button>
+          </StackPanel>
+          <Button Name="SimpleQuickTipsButton" DockPanel.Dock="Right" Classes="link" Command="{Binding NextTipCommand}">
+            <TextBlock Text="{Binding [simple-quick-tips], Source={x:Static s:Localizer.Instance}}" />
+          </Button>
+          <Button Name="SimpleMessageBoothButton" DockPanel.Dock="Right" Command="{Binding OpenBoothMessageCommand}"
+                  IsVisible="{Binding !IsComposingBoothMessage}">
+            <TextBlock Text="{Binding [simple-message-the-booth], Source={x:Static s:Localizer.Instance}}" />
+          </Button>
+          <StackPanel Orientation="Horizontal" Spacing="{DynamicResource Space.2}" DockPanel.Dock="Right" IsVisible="{Binding IsComposingBoothMessage}">
+            <TextBox Name="SimpleBoothMessageBox" MinWidth="240" MaxLength="200" Text="{Binding BoothMessageDraft}"
+                     AutomationProperties.Name="{Binding [simple-message-the-booth], Source={x:Static s:Localizer.Instance}}"
+                     Watermark="{Binding [simple-booth-message-placeholder], Source={x:Static s:Localizer.Instance}}" />
+            <Button Name="SimpleSendBoothMessageButton" Classes="primary" Command="{Binding SendBoothMessageCommand}">
+              <TextBlock Text="{Binding [simple-booth-message-send], Source={x:Static s:Localizer.Instance}}" />
+            </Button>
+            <Button Name="SimpleCancelBoothMessageButton" Classes="quiet" Command="{Binding CancelBoothMessageCommand}">
+              <TextBlock Text="{Binding [simple-booth-message-cancel], Source={x:Static s:Localizer.Instance}}" />
+            </Button>
+          </StackPanel>
+          <StackPanel VerticalAlignment="Center">
+            <TextBlock Name="SimpleTipText" Classes="hint" TextWrapping="Wrap" Text="{Binding Tip}" />
+            <TextBlock Name="SimpleRoleLockedText" Classes="hint" TextWrapping="Wrap" IsVisible="{Binding IsRoleLocked}"
+                       Text="{Binding [simple-role-locked], Source={x:Static s:Localizer.Instance}}" />
+            <TextBlock Name="SimpleUnlockError" Classes="hint" Foreground="{DynamicResource Brush.Live}" TextWrapping="Wrap" Text="{Binding UnlockError}"
+                       IsVisible="{Binding UnlockError, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+            <TextBlock Name="SimpleBoothMessageStatus" Classes="hint" TextWrapping="Wrap" Text="{Binding BoothMessageStatus}"
+                       IsVisible="{Binding BoothMessageStatus, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+          </StackPanel>
+        </DockPanel>
+      </StackPanel>
+    </Border>
+
+    <views:ErrorAlert Name="SimpleErrorAlert" DockPanel.Dock="Top" Message="{Binding Producer.ErrorText}" FixArticleId="{Binding Producer.ErrorFixArticleId}" />
+
+    <!-- Service progress (step indicator). -->
+    <ScrollViewer DockPanel.Dock="Top" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled"
+                  Margin="{DynamicResource Space.Text.Medium}" s:Help.Anchor="simple.service-progress">
+      <ItemsControl Name="SimpleStepIndicator" ItemsSource="{Binding Steps}">
+        <ItemsControl.ItemsPanel>
+          <ItemsPanelTemplate><StackPanel Orientation="Horizontal" Spacing="{DynamicResource Space.2}" /></ItemsPanelTemplate>
+        </ItemsControl.ItemsPanel>
+        <ItemsControl.ItemTemplate>
+          <DataTemplate x:DataType="vm:SimpleStep">
+            <StackPanel MinWidth="96" Spacing="{DynamicResource Space.1}">
+              <Panel Height="{DynamicResource Space.1}">
+                <Border Background="{DynamicResource Brush.Line2}" />
+                <Border Background="{DynamicResource Brush.Primary}" IsVisible="{Binding IsDone}" />
+                <Border Background="{DynamicResource Brush.Success}" IsVisible="{Binding IsCurrent}" />
+              </Panel>
+              <StackPanel Orientation="Horizontal" Spacing="{DynamicResource Space.1}">
+                <TextBlock Classes="label" Text="{Binding Marker}" />
+                <TextBlock Classes="caption" Text="{Binding Title}" FontWeight="{Binding IsCurrent, Converter={x:Static views:BoldWhenTrue.Instance}}" />
+              </StackPanel>
+            </StackPanel>
+          </DataTemplate>
+        </ItemsControl.ItemTemplate>
+      </ItemsControl>
+    </ScrollViewer>
+
+    <!-- All slides in this song. -->
+    <StackPanel DockPanel.Dock="Bottom" Margin="{DynamicResource Space.Text.Medium}" Spacing="{DynamicResource Space.2}" s:Help.Anchor="simple.slide-strip">
+      <TextBlock Classes="label" Text="{Binding [simple-all-slides], Source={x:Static s:Localizer.Instance}}" />
+      <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
+        <ItemsControl Name="SimpleSlideStrip" ItemsSource="{Binding Slides}">
+          <ItemsControl.ItemsPanel>
+            <ItemsPanelTemplate><StackPanel Orientation="Horizontal" Spacing="{DynamicResource Space.3}" /></ItemsPanelTemplate>
+          </ItemsControl.ItemsPanel>
+          <ItemsControl.ItemTemplate>
+            <DataTemplate x:DataType="vm:LiveSlideCard">
+              <Button Width="176" Padding="0" Classes.primary="{Binding IsLive}" AutomationProperties.Name="{Binding AccessibleName}"
+                      Command="{Binding $parent[ItemsControl].((vm:SimpleModeViewModel)DataContext).Producer.TriggerSlideCommand}"
+                      CommandParameter="{Binding}">
+                <StackPanel>
+                  <Border Height="99" Background="{DynamicResource Brush.PreviewBg}" Padding="{DynamicResource Space.Text.Small}">
+                    <TextBlock Foreground="{DynamicResource Brush.SlideText}" TextWrapping="Wrap" TextAlignment="Center" VerticalAlignment="Center" Text="{Binding Text}" />
+                  </Border>
+                  <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="{DynamicResource Space.1}" Margin="{DynamicResource Space.Text.Small}">
+                    <TextBlock Classes="caption" Text="{Binding Label}" TextTrimming="CharacterEllipsis" />
+                    <TextBlock Grid.Column="1" Classes="tag" Text="{Binding StateText}" />
+                    <TextBlock Grid.Column="2" Classes="caption" Text="{Binding Number}" />
+                  </Grid>
+                </StackPanel>
+              </Button>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+      </ScrollViewer>
+    </StackPanel>
+
+    <!-- On screen now, and Next. -->
+    <Grid ColumnDefinitions="3*,2*" ColumnSpacing="{DynamicResource Space.5}" Margin="{DynamicResource Space.Text.Medium}">
+      <DockPanel s:Help.Anchor="simple.now-showing">
+        <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Spacing="{DynamicResource Space.2}">
+          <TextBlock Classes="tag" Foreground="{DynamicResource Brush.Live}" Text="{Binding [simple-on-screen-now], Source={x:Static s:Localizer.Instance}}" />
+          <TextBlock Name="SimpleNowCaption" Classes="caption" Text="{Binding NowCaption}" />
+        </StackPanel>
+        <Viewbox Stretch="Uniform">
+          <Border Width="480" Height="270" Background="{DynamicResource Brush.PreviewBg}" BorderBrush="{DynamicResource Brush.Live}"
+                  BorderThickness="{DynamicResource Line.Emphasis}" Padding="{DynamicResource Space.Text.Medium}">
+            <Panel>
+              <Image Source="{Binding Producer.ProgramFrame}" Stretch="Uniform" />
+              <TextBlock Name="SimpleNowText" Foreground="{DynamicResource Brush.SlideText}" TextWrapping="Wrap" TextAlignment="Center"
+                         VerticalAlignment="Center" Text="{Binding NowText}" IsVisible="{Binding Producer.ProgramFrame, Converter={x:Static ObjectConverters.IsNull}}" />
+            </Panel>
+          </Border>
+        </Viewbox>
+      </DockPanel>
+      <DockPanel Grid.Column="1">
+        <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Spacing="{DynamicResource Space.2}">
+          <TextBlock Classes="tag" Foreground="{DynamicResource Brush.SuccessText}" Text="{Binding [live-tag-next], Source={x:Static s:Localizer.Instance}}" />
+          <TextBlock Name="SimpleNextCaption" Classes="caption" Text="{Binding NextCaption}" TextWrapping="Wrap" />
+        </StackPanel>
+        <Viewbox Stretch="Uniform" VerticalAlignment="Top">
+          <Border Width="480" Height="270" Background="{DynamicResource Brush.PreviewBg}" Padding="{DynamicResource Space.Text.Medium}">
+            <TextBlock Name="SimpleNextText" Foreground="{DynamicResource Brush.SlideText}" TextWrapping="Wrap" TextAlignment="Center"
+                       VerticalAlignment="Center" Text="{Binding NextText}" />
+          </Border>
+        </Viewbox>
+      </DockPanel>
+    </Grid>
+  </DockPanel>
+</UserControl>

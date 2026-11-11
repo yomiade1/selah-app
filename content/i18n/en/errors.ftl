@@ -1,6 +1,9 @@
 # Error messages. Codes and fix articles live in content/errors/errors.yaml (M1.9).
 
 error-not-permitted = You don't have permission to do that.
+error-role-lock-wrong-pin = That PIN didn't work. Try again.
+error-role-lock-too-many-tries = Too many tries. Wait 30 seconds, then try again.
+error-role-lock-pin-format = Use a PIN of 4 to 8 numbers.
 error-unsupported-request = Selah couldn't do that. Try again, or restart Selah.
 error-invalid-setting = That setting isn't allowed.
 error-not-connected = Selah isn't connected yet. Wait a moment, then try again.

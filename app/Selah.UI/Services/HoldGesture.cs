@@ -26,10 +26,13 @@ public sealed class HoldGesture(TimeSpan threshold)
         return true;
     }
 
-    public void Up()
+    /// <summary>The key came up. Returns true if this press already fired (a hold, not a tap).</summary>
+    public bool Up()
     {
+        var wasHold = fired;
         pressedAt = null;
         fired = false;
+        return wasHold;
     }
 }
 

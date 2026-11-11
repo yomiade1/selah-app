@@ -72,6 +72,13 @@
     <Setter Property="BorderBrush" Value="{DynamicResource Brush.Live}" />
     <Setter Property="BorderThickness" Value="{DynamicResource Line.Emphasis}" />
   </Style>
+  <!-- Simple mode's big buttons (DESIGN-SYSTEM §5, §6): at least 64 px high at any text size. -->
+  <Style Selector="Button.simple">
+    <Setter Property="MinHeight" Value="{DynamicResource Size.SimpleButtonHeight}" />
+    <Setter Property="CornerRadius" Value="{DynamicResource Radius.SimpleButton}" />
+    <Setter Property="HorizontalContentAlignment" Value="Center" />
+    <Setter Property="VerticalContentAlignment" Value="Center" />
+  </Style>
   <!-- Links inside help articles: text-like, primary colour, underlined. -->
   <Style Selector="Button.link">
     <Setter Property="Background" Value="Transparent" />

@@ -1715,6 +1715,14 @@ impl LiveState {
             .is_some_and(|a| a.booth_locked)
     }
 
+    /// Core's role lock (SEC-14), mirrored into every status so the UI can show Simple mode.
+    pub fn set_role_locked(&mut self, locked: bool) -> LiveStatus {
+        self.automation_mut().role_locked = locked;
+        self.sync_status_flags();
+        self.save_machine();
+        self.status()
+    }
+
     pub fn set_booth_lock(&mut self, locked: bool) -> LiveStatus {
         self.automation_mut().booth_locked = locked;
         self.sync_status_flags();

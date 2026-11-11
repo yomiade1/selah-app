@@ -85,3 +85,41 @@ live-announce-cleared = The screens are clear
 live-error-not-permitted = You can't do that from this account. Ask your producer.
 live-error-booth-locked = The booth is locked. Only Next, Previous and Clear work.
 live-error-core-busy = Selah didn't answer in time. Your screens keep showing what they showed.
+
+## Simple mode (M4.5, prototype 02). Labels match the volunteer handbook articles.
+
+simple-on-screen-now = On screen now
+simple-nothing-on-screen = Nothing is on screen
+simple-now-caption = { $label } · slide { $number } of { $count }
+simple-next-caption = { $label } · slide { $number }
+simple-next-song-caption = Next: { $title }
+simple-all-slides = All slides in this song
+simple-back = Back
+simple-next-slide = Next slide
+simple-next-song = Next song
+simple-hide-words = Hide words
+simple-hide-background = Hide background
+simple-show-logo = Show logo
+simple-clear-everything = Clear everything
+simple-message-the-booth = Message the booth
+simple-booth-message-placeholder = Tell the booth team what you need
+simple-booth-message-send = Send to the booth
+simple-booth-message-cancel = Cancel
+simple-booth-message-sent = Sent. The booth team can see your message.
+simple-booth-message-failed = Selah couldn't send that. Wave to the booth team.
+simple-quick-tips = Quick tips
+simple-tip-next = Press Space to show the next slide.
+simple-tip-clear = Something wrong on screen? Press Esc to hide the words.
+simple-tip-wrong-slide = Showed the wrong slide? Press Ctrl+Z to go back.
+simple-role-locked = Simple mode · Your admin has turned off advanced controls for this account.
+simple-screens-working = All screens working
+
+## Role lock (SEC-14).
+
+role-lock-turn-on = Lock to Simple mode
+role-lock-turn-on-hint = Volunteers see only Simple mode until someone enters the PIN.
+role-lock-pin = PIN
+role-lock-pin-hint = Use 4 to 8 numbers. You need it to unlock.
+role-lock-unlock = Unlock
+role-lock-wrong-pin = That PIN didn't work. Try again.
+role-lock-too-many-tries = Too many tries. Wait 30 seconds, then try again.

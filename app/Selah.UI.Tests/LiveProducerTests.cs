@@ -229,6 +229,7 @@ public sealed class LiveProducerTests : IDisposable
         private bool cleared;
         private bool logo;
         private bool locked;
+        private string? rolePin;
         private string boothMessage = string.Empty;
         private Id? activeLook;
         private readonly Stack<(uint, uint)> undo = new();
@@ -245,6 +246,8 @@ public sealed class LiveProducerTests : IDisposable
         }
 
         public Service Service { get; }
+
+        private static readonly HashSet<string> ProducerOnly = ["look", "macro", "timer-start", "timer-pause", "timer-reset", "booth-lock"];
 
         public List<string> Calls { get; } = [];
 
@@ -281,19 +284,22 @@ public sealed class LiveProducerTests : IDisposable
             status.NextSlideIndex = last ? 0 : slide + 1;
             status.NextItemTitle = Service.Items[(int)status.NextItemIndex % Service.Items.Count].Title;
             status.NextSlideLabel = $"Verse {status.NextSlideIndex + 1}";
+            // Like core: the words on the current and next slides.
+            status.CurrentSlideText = slides[slide];
+            status.NextSlideText = status.HasNext ? SlideText[status.NextItemIndex][status.NextSlideIndex] : string.Empty;
             for (var i = 0; i < slides.Length; i++)
             {
                 status.CurrentItemSlides.Add(new LiveSlide { Index = (uint)i, Label = $"Verse {i + 1}", Text = slides[i], Hotkey = (i + 1).ToString(System.Globalization.CultureInfo.InvariantCulture) });
             }
             status.Layers.Add(new LiveLayerStatus { Kind = LayerKind.Slide, Active = !cleared, Title = status.CurrentItemTitle });
-            status.Automation.Add(new LiveAutomationState { BoothLocked = locked, BoothMessage = boothMessage, ActiveLookId = activeLook, ActiveLookName = activeLook is null ? string.Empty : "Worship" });
+            status.Automation.Add(new LiveAutomationState { RoleLocked = rolePin is not null, BoothLocked = locked, BoothMessage = boothMessage, ActiveLookId = activeLook, ActiveLookName = activeLook is null ? string.Empty : "Worship" });
             return status;
         }
 
         private Task<LiveStatus> Do(string call, Action change, bool allowedWhenLocked = false)
         {
             Calls.Add(call);
-            if (locked && !allowedWhenLocked)
+            if ((locked && !allowedWhenLocked) || (rolePin is not null && ProducerOnly.Contains(call.Split(':')[0])))
             {
                 throw new CoreException("SEL-SEC-0001", "error-not-permitted");
             }
@@ -372,6 +378,26 @@ public sealed class LiveProducerTests : IDisposable
         public Task<LiveStatus> HidePropAsync() => Do("hide-prop", () => { }, allowedWhenLocked: true);
 
         public Task<LiveStatus> SetBoothLockAsync(bool locked) => Do($"booth-lock:{locked}", () => this.locked = locked, allowedWhenLocked: true);
+
+        public string LastBoothMessage => boothMessage;
+
+        public Task<LiveStatus> SetRoleLockAsync(bool locked, string pin)
+        {
+            Calls.Add($"role-lock:{locked}");
+            if (locked)
+            {
+                rolePin ??= pin;
+            }
+            else if (rolePin is not null && rolePin != pin)
+            {
+                throw new CoreException("SEL-SEC-0002", "error-role-lock-wrong-pin");
+            }
+            else
+            {
+                rolePin = null;
+            }
+            return Task.FromResult(Build());
+        }
 
         public Task<LiveStatus> SendBoothMessageAsync(string text) => Do("booth-message", () => boothMessage = text, allowedWhenLocked: true);
 

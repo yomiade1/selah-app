@@ -159,6 +159,10 @@ pub struct Outcome {
 pub struct CoreService {
     settings: SettingsStore,
     live: LiveState,
+    /// The Simple-mode role lock (SEC-14), core's own state.
+    role_lock: crate::role_lock::RoleLock,
+    /// Every secret goes through SecretStore (the OS keychain in the host, memory in tests).
+    secrets: selah_secrets::SecretStore,
     library: Library,
     pub engine: EngineView,
     preview_scene: Option<Scene>,
@@ -224,6 +228,8 @@ impl CoreService {
         let mut service = Self {
             settings: SettingsStore::open(config_dir),
             live: LiveState::open(config_dir),
+            role_lock: crate::role_lock::RoleLock::default(),
+            secrets: selah_secrets::SecretStore::memory(),
             library,
             engine: EngineView::default(),
             preview_scene: None,
@@ -242,7 +248,26 @@ impl CoreService {
         service.apply_settings_side_effects();
         // The live-state snapshot may say something is on the screens (core restarted).
         service.sync_keep_awake();
+        // SEC-14: the role lock survives restarts; it is core's state, not the UI's.
+        let role_locked = service
+            .library
+            .setting(crate::role_lock::POLICY_KEY)
+            .ok()
+            .flatten()
+            .is_some_and(|setting| setting.value.as_bool() == Some(true));
+        service.role_lock = crate::role_lock::RoleLock::new(role_locked);
+        service.live.set_role_locked(role_locked);
         Ok(service)
+    }
+
+    /// The host gives core the OS keychain (SecretStore::platform); tests keep memory.
+    pub fn set_secrets(&mut self, secrets: selah_secrets::SecretStore) {
+        self.secrets = secrets;
+    }
+
+    /// Whether the Simple-mode role lock is on (SEC-14).
+    pub fn is_role_locked(&self) -> bool {
+        self.role_lock.is_locked()
     }
 
     pub fn library(&self) -> &Library {
@@ -537,8 +562,8 @@ impl CoreService {
         let kind = permissions::kind_of(action);
         let actor = request.actor.clone().unwrap_or_default();
         // SEC-14: authorise before validating or applying anything.
-        if let Err(denied) = permissions::authorize(&actor, kind) {
-            tracing::warn!(origin = ?denied.origin, kind = ?denied.kind, "command refused");
+        if let Err(denied) = permissions::authorize(&actor, kind, self.role_lock.is_locked()) {
+            tracing::warn!(origin = ?denied.origin, kind = ?denied.kind, role_locked = self.role_lock.is_locked(), "command refused");
             return Outcome {
                 reply: Some(self.error(request, DENIED_CODE, "error-not-permitted")),
                 ..Outcome::default()
@@ -1157,6 +1182,54 @@ impl CoreService {
                 let status = self.live.set_booth_lock(cmd.locked);
                 self.live_outcome(request, Ok(status), false)
             }
+            command::Action::SetRoleLock(cmd) => {
+                let machine = selah_proto::v1::PolicyLevel::Machine as i32;
+                let result = if cmd.locked {
+                    let was_locked = self.role_lock.is_locked();
+                    self.role_lock.lock(&self.secrets, &cmd.pin).and_then(|()| {
+                        if was_locked {
+                            return Ok(());
+                        }
+                        self.library
+                            .set_policy_setting_op(
+                                crate::role_lock::POLICY_KEY,
+                                "true",
+                                machine,
+                                false,
+                                &meta,
+                            )
+                            .map(|_| ())
+                            .map_err(|_| crate::role_lock::RoleLockError::Storage)
+                    })
+                } else {
+                    let was_locked = self.role_lock.is_locked();
+                    self.role_lock
+                        .unlock(&self.secrets, &cmd.pin, std::time::Instant::now())
+                        .and_then(|()| {
+                            if !was_locked {
+                                return Ok(());
+                            }
+                            self.library
+                                .remove_policy_setting_op(
+                                    crate::role_lock::POLICY_KEY,
+                                    machine,
+                                    &meta,
+                                )
+                                .map(|_| ())
+                                .map_err(|_| crate::role_lock::RoleLockError::Storage)
+                        })
+                };
+                match result {
+                    Ok(()) => {
+                        let status = self.live.set_role_locked(self.role_lock.is_locked());
+                        self.live_outcome(request, Ok(status), false)
+                    }
+                    Err(error) => Outcome {
+                        reply: Some(self.error(request, error.code(), error.message_key())),
+                        ..Outcome::default()
+                    },
+                }
+            }
             command::Action::Undo(cmd) => {
                 let result = self.library.undo_op(cmd.doc_id.as_ref(), &meta);
                 self.library_outcome(request, result)
@@ -1182,6 +1255,12 @@ impl CoreService {
                 };
                 self.library_outcome(request, result)
             }
+            command::Action::SetPolicySetting(cmd) if cmd.key == crate::role_lock::POLICY_KEY => {
+                Outcome {
+                    reply: Some(self.error(request, DENIED_CODE, "error-not-permitted")),
+                    ..Outcome::default()
+                }
+            }
             command::Action::SetPolicySetting(cmd) => {
                 let result = self.library.set_policy_setting_op(
                     &cmd.key,
@@ -1191,6 +1270,14 @@ impl CoreService {
                     &meta,
                 );
                 self.library_outcome(request, result)
+            }
+            command::Action::RemovePolicySetting(cmd)
+                if cmd.key == crate::role_lock::POLICY_KEY =>
+            {
+                Outcome {
+                    reply: Some(self.error(request, DENIED_CODE, "error-not-permitted")),
+                    ..Outcome::default()
+                }
             }
             command::Action::RemovePolicySetting(cmd) => {
                 let result = self

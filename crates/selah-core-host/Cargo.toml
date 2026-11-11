@@ -19,6 +19,7 @@ selah-net = { path = "../selah-net" }
 selah-ipc = { path = "../selah-ipc" }
 selah-proto = { path = "../selah-proto" }
 selah-runtime = { path = "../selah-runtime" }
+selah-secrets = { path = "../selah-secrets" }
 tokio = { workspace = true, features = ["rt-multi-thread", "macros", "sync", "time", "signal"] }
 serde.workspace = true
 serde_json.workspace = true

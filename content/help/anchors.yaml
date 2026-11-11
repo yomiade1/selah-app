@@ -75,3 +75,17 @@ anchors:
     description: Live, the layer list with a Clear button for each layer.
   - id: live.tiles
     description: Live, tiles for looks, timers and macros.
+  - id: live.role-lock
+    description: Live, Lock to Simple mode and its PIN (SEC-14).
+  - id: simple.controls
+    description: Simple mode, the big Back, Next slide, Next song and clear buttons.
+  - id: simple.now-showing
+    description: Simple mode, the On screen now picture.
+  - id: simple.service-progress
+    description: Simple mode, the service progress steps.
+  - id: simple.slide-strip
+    description: Simple mode, All slides in this song.
+  - id: simple.message-the-booth
+    description: Simple mode, Message the booth and Quick tips.
+  - id: simple.unlock
+    description: Simple mode, Unlock with the PIN.

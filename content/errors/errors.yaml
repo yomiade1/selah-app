@@ -13,6 +13,15 @@ errors:
   - code: SEL-SEC-0001
     message: error-not-permitted
     fix_article: troubleshooting.you-dont-have-permission
+  - code: SEL-SEC-0002
+    message: error-role-lock-wrong-pin
+    fix_article: live.lock-simple-mode-for-volunteers
+  - code: SEL-SEC-0003
+    message: error-role-lock-too-many-tries
+    fix_article: live.lock-simple-mode-for-volunteers
+  - code: SEL-SEC-0004
+    message: error-role-lock-pin-format
+    fix_article: live.lock-simple-mode-for-volunteers
   - code: SEL-IPC-0001
     message: error-unsupported-request
     fix_article: troubleshooting.selah-cant-do-that

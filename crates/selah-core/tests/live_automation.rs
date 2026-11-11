@@ -9,9 +9,9 @@ use selah_proto::v1::{
     PreviousSlide, Prop, Query, ResetTimer, Resolution, RunMacro, SaveClearGroup, SaveLook,
     SaveMacro, SaveMessage, SaveProp, SaveService, SaveSong, SaveTemplate, SaveTimer, Section,
     SendBoothMessage, Service, ServiceItem, ServiceItemKind, SetBoothLock, SetLayerState, SetLook,
-    SetOutputConfigs, ShowLogoCommand, ShowMessage, ShowProp, Song, StartTimer, Template, Timer,
-    TimerKind, TimerOverrunMode, TriggerClearGroup, TriggerSlide, VideoInputLayerSpec, command,
-    envelope, layer_spec, query, reply,
+    SetOutputConfigs, SetRoleLock, ShowLogoCommand, ShowMessage, ShowProp, Song, StartTimer,
+    Template, Timer, TimerKind, TimerOverrunMode, TriggerClearGroup, TriggerSlide,
+    VideoInputLayerSpec, command, envelope, layer_spec, query, reply,
 };
 use selah_render::template::TemplateStyle;
 
@@ -965,8 +965,15 @@ fn macros_slide_actions_clear_groups_booth_lock_and_volunteer_role_lock() {
         command::Action::SetBoothLock(SetBoothLock { locked: false }),
     );
 
-    // M4-A12 / SEC-14 / SAFE-01: Volunteer role lock ("volunteer" actor) allows Simple-mode
-    // triggers, Clear, and SendBoothMessage, but refuses Producer/Library commands (SetLook, RunMacro, SaveSong).
+    // M4-A12 / SEC-14 / SAFE-01: with core's role lock on, the UI is a volunteer: Simple-mode
+    // triggers, Clear, and SendBoothMessage work; Producer/Library commands (SetLook) are refused.
+    send_cmd(
+        &mut core,
+        command::Action::SetRoleLock(SetRoleLock {
+            locked: true,
+            pin: "2468".into(),
+        }),
+    );
     assert!(matches!(
         send_cmd_with_actor(
             &mut core,
@@ -1002,6 +1009,13 @@ fn macros_slide_actions_clear_groups_booth_lock_and_volunteer_role_lock() {
         Some(envelope::Body::Error(err)) => assert_eq!(err.code, "SEL-SEC-0001"),
         other => panic!("expected SEL-SEC-0001 for volunteer SetLook, got {other:?}"),
     }
+    send_cmd(
+        &mut core,
+        command::Action::SetRoleLock(SetRoleLock {
+            locked: false,
+            pin: "2468".into(),
+        }),
+    );
 
     // Verify List queries return our saved M4.3 documents.
     let reply::Result::LookList(looks) = send_query(

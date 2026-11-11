@@ -108,6 +108,8 @@ message LiveAutomationState {
   string active_stage_layout_name = 11;
   bool booth_locked = 12;
   bool practice_mode = 13;
+  // SEC-14: core holds the Simple-mode role lock; the UI only shows it.
+  bool role_locked = 14;
 }
 
 // Macros and slide actions (M4.3).
@@ -403,4 +405,11 @@ message SendBoothMessage {
 // SAFE-06 / M4-A12: locks the booth UI so only Next, Previous and Clear commands are accepted.
 message SetBoothLock {
   bool locked = 1;
+}
+
+// SEC-14 / M4-A6: lock this computer to Simple mode. Core keeps the state and a salted PIN hash
+// (SecretStore). Unlocking needs the PIN; wrong PINs are rate limited.
+message SetRoleLock {
+  bool locked = 1;
+  string pin = 2;
 }

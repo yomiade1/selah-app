@@ -97,6 +97,22 @@
                       Command="{Binding ToggleBoothLockCommand}" s:Help.Anchor="live.booth-lock">
           <TextBlock Text="{Binding [live-booth-lock], Source={x:Static s:Localizer.Instance}}" />
         </ToggleButton>
+        <!-- SEC-14: lock this computer to Simple mode with a PIN. -->
+        <Button Name="LiveRoleLockButton" Command="{Binding StartLockCommand}" IsVisible="{Binding !IsLocking}" s:Help.Anchor="live.role-lock">
+          <TextBlock Text="{Binding [role-lock-turn-on], Source={x:Static s:Localizer.Instance}}" />
+        </Button>
+        <StackPanel Orientation="Horizontal" Spacing="{DynamicResource Space.2}" IsVisible="{Binding IsLocking}" s:Help.Anchor="live.role-lock">
+          <TextBox Name="LiveRoleLockPinBox" MinWidth="120" MaxLength="8" PasswordChar="•" Text="{Binding LockPin}"
+                   AutomationProperties.Name="{Binding [role-lock-pin], Source={x:Static s:Localizer.Instance}}"
+                   Watermark="{Binding [role-lock-pin], Source={x:Static s:Localizer.Instance}}"
+                   ToolTip.Tip="{Binding [role-lock-pin-hint], Source={x:Static s:Localizer.Instance}}" />
+          <Button Name="LiveRoleLockConfirmButton" Classes="primary" Command="{Binding LockCommand}">
+            <TextBlock Text="{Binding [role-lock-turn-on], Source={x:Static s:Localizer.Instance}}" />
+          </Button>
+          <Button Name="LiveRoleLockCancelButton" Classes="quiet" Command="{Binding CancelLockCommand}">
+            <TextBlock Text="{Binding [simple-booth-message-cancel], Source={x:Static s:Localizer.Instance}}" />
+          </Button>
+        </StackPanel>
         <views:InfoButton Name="LiveProducerInfoButton" Anchor="live.producer" />
       </WrapPanel>
     </Border>

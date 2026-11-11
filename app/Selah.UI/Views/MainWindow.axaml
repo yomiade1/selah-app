@@ -43,27 +43,27 @@
           <TextBlock Classes="tag" Foreground="{DynamicResource Brush.OnPrimary}" views:Critical.IsCritical="True"
                      Text="{Binding [preview-live], Source={x:Static s:Localizer.Instance}}" />
         </Border>
-        <Button Name="ModePreviewButton" Classes.primary="{Binding IsPreviewMode}"
+        <Button Name="ModePreviewButton" IsEnabled="{Binding CanChangeMode}" Classes.primary="{Binding IsPreviewMode}"
                 Command="{Binding SelectModeCommand}" CommandParameter="Preview">
           <TextBlock Text="{Binding [mode-preview], Source={x:Static s:Localizer.Instance}}" />
         </Button>
-        <Button Name="ModeLibraryButton" Classes.primary="{Binding IsLibraryMode}"
+        <Button Name="ModeLibraryButton" IsEnabled="{Binding CanChangeMode}" Classes.primary="{Binding IsLibraryMode}"
                 Command="{Binding SelectModeCommand}" CommandParameter="Library">
           <TextBlock Text="{Binding [mode-library], Source={x:Static s:Localizer.Instance}}" />
         </Button>
-        <Button Name="ModeSongEditorButton" Classes.primary="{Binding IsSongEditorMode}"
+        <Button Name="ModeSongEditorButton" IsEnabled="{Binding CanChangeMode}" Classes.primary="{Binding IsSongEditorMode}"
                 Command="{Binding SelectModeCommand}" CommandParameter="SongEditor">
           <TextBlock Text="{Binding [mode-song-editor], Source={x:Static s:Localizer.Instance}}" />
         </Button>
-        <Button Name="ModeSlideEditorButton" Classes.primary="{Binding IsSlideEditorMode}"
+        <Button Name="ModeSlideEditorButton" IsEnabled="{Binding CanChangeMode}" Classes.primary="{Binding IsSlideEditorMode}"
                 Command="{Binding SelectModeCommand}" CommandParameter="SlideEditor">
           <TextBlock Text="{Binding [mode-slide-editor], Source={x:Static s:Localizer.Instance}}" />
         </Button>
-        <Button Name="ModeTemplatesButton" Classes.primary="{Binding IsTemplatesMode}"
+        <Button Name="ModeTemplatesButton" IsEnabled="{Binding CanChangeMode}" Classes.primary="{Binding IsTemplatesMode}"
                 Command="{Binding SelectModeCommand}" CommandParameter="Templates">
           <TextBlock Text="{Binding [mode-templates], Source={x:Static s:Localizer.Instance}}" />
         </Button>
-        <Button Name="ModeServicePlannerButton" Classes.primary="{Binding IsServicePlannerMode}"
+        <Button Name="ModeServicePlannerButton" IsEnabled="{Binding CanChangeMode}" Classes.primary="{Binding IsServicePlannerMode}"
                 Command="{Binding SelectModeCommand}" CommandParameter="ServicePlanner">
           <TextBlock Text="{Binding [mode-services], Source={x:Static s:Localizer.Instance}}" />
         </Button>
@@ -71,6 +71,17 @@
                 Command="{Binding SelectModeCommand}" CommandParameter="Live" s:Help.Anchor="live.producer">
           <TextBlock Text="{Binding [mode-live], Source={x:Static s:Localizer.Instance}}" />
         </Button>
+        <!-- Simple / Producer (prototypes 01, 02). A role-locked volunteer can't open Producer (SEC-14). -->
+        <StackPanel Orientation="Horizontal" IsVisible="{Binding IsLiveMode}" Spacing="{DynamicResource Space.1}" s:Help.Anchor="simple.controls">
+          <Button Name="LiveSimpleViewButton" Classes.primary="{Binding IsSimpleMode}"
+                  Command="{Binding SelectLiveViewCommand}" CommandParameter="Simple">
+            <TextBlock Text="{Binding [live-mode-simple], Source={x:Static s:Localizer.Instance}}" />
+          </Button>
+          <Button Name="LiveProducerViewButton" Classes.primary="{Binding !IsSimpleMode}" IsEnabled="{Binding CanChangeMode}"
+                  Command="{Binding SelectLiveViewCommand}" CommandParameter="Producer">
+            <TextBlock Text="{Binding [live-mode-producer], Source={x:Static s:Localizer.Instance}}" />
+          </Button>
+        </StackPanel>
         <Button Name="CommandPaletteButton" Classes="quiet" Command="{Binding OpenCommandPaletteCommand}"
                 s:Help.Anchor="shell.command-palette"
                 ToolTip.Tip="{Binding [command-search-hint], Source={x:Static s:Localizer.Instance}}">
@@ -311,7 +322,8 @@
 
       <!-- Live: Producer mode (M4.4). -->
       <Panel Name="LiveWorkspace" IsVisible="{Binding IsLiveMode}">
-        <views:LiveProducerView Name="LiveProducerViewControl" DataContext="{Binding LiveProducer}" />
+        <views:LiveProducerView Name="LiveProducerViewControl" DataContext="{Binding LiveProducer}" IsVisible="{Binding $parent[Window].((vm:MainViewModel)DataContext).IsProducerView}" />
+        <views:SimpleModeView Name="SimpleModeViewControl" DataContext="{Binding Simple}" IsVisible="{Binding $parent[Window].((vm:MainViewModel)DataContext).IsSimpleView}" />
       </Panel>
 
       <!-- Quick find (Ctrl/Cmd+K) never covers Toolbar / Clear everything. -->
