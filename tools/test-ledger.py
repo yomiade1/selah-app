@@ -7,6 +7,12 @@
 
 Counts come from the logs the gate writes to target/verify-report/counts/, so run the gate
 (tools/verify.sh or tools/verify.ps1) first. Skipped or ignored tests don't count.
+
+The ledger is ONE floor shared by every platform. Platform-only tests (#[cfg(unix)] symlink and
+Unix-socket cases, #[cfg(windows)] pipe and Credential Manager cases) mean the same commit
+counts differently per platform: Linux ran 284 Rust tests where Windows ran 279. So --update on
+the higher platform raises the floor above what the other can reach and turns its gate red.
+Keep the lowest platform's count (TESTING-AND-QUALITY section 3 rule 2).
 """
 import argparse
 import json
