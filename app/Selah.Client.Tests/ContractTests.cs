@@ -1182,4 +1182,66 @@ public sealed class ContractTests
         };
         Assert.Equal(liveStatusReply, Envelope.Parser.ParseFrom(liveStatusReply.ToByteArray()));
     }
+
+    [Fact]
+    public void M43LiveAutomationMessagesRoundTrip()
+    {
+        var idBytes = Google.Protobuf.ByteString.CopyFrom(new byte[]
+        {
+            0x01, 0x92, 0x70, 0x00, 0x00, 0x00, 0x70, 0x00,
+            0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x43,
+        });
+
+        var saveLook = new Envelope
+        {
+            Id = 7301,
+            Command = new Command
+            {
+                SaveLook = new SaveLook
+                {
+                    Look = new Look
+                    {
+                        Id = new Id { Value = idBytes },
+                        Name = "Worship",
+                        Hotkey = "Shift+1",
+                        Rules =
+                        {
+                            new LookRule
+                            {
+                                Id = new Id { Value = idBytes },
+                                OutputIndex = 0,
+                                EnabledLayers = { LayerKind.Media, LayerKind.Slide },
+                            },
+                        },
+                    },
+                },
+            },
+        };
+        Assert.Equal(saveLook, Envelope.Parser.ParseFrom(saveLook.ToByteArray()));
+
+        var showMessage = new Envelope
+        {
+            Id = 7302,
+            Command = new Command
+            {
+                ShowMessage = new ShowMessage
+                {
+                    MessageId = new Id { Value = idBytes },
+                    DurationSeconds = 15,
+                    TokenValues = { { "code", "142" } },
+                },
+            },
+        };
+        Assert.Equal(showMessage, Envelope.Parser.ParseFrom(showMessage.ToByteArray()));
+
+        var boothLock = new Envelope
+        {
+            Id = 7303,
+            Command = new Command
+            {
+                SetBoothLock = new SetBoothLock { Locked = true },
+            },
+        };
+        Assert.Equal(boothLock, Envelope.Parser.ParseFrom(boothLock.ToByteArray()));
+    }
 }

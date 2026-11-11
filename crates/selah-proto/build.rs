@@ -5,7 +5,7 @@ use std::{error::Error, path::PathBuf};
 fn main() -> Result<(), Box<dyn Error>> {
     let root = PathBuf::from("../../proto");
     let files = [
-        "common", "errors", "render", "settings", "help", "envelope", "library", "service",
+        "common", "errors", "render", "settings", "help", "envelope", "library", "live", "service",
     ]
     .map(|name| root.join(format!("selah/v1/{name}.proto")));
     for file in &files {

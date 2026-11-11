@@ -10,7 +10,7 @@ import type { Message } from "@bufbuild/protobuf";
  * Describes the file selah/v1/common.proto.
  */
 export const file_selah_v1_common: GenFile = /*@__PURE__*/
-  fileDesc("ChVzZWxhaC92MS9jb21tb24ucHJvdG8SCHNlbGFoLnYxIhMKAklkEg0KBXZhbHVlGAEgASgMIiYKCVRpbWVzdGFtcBIZChF1bml4X21pbGxpc2Vjb25kcxgBIAEoAyIrCgpSZXNvbHV0aW9uEg0KBXdpZHRoGAEgASgNEg4KBmhlaWdodBgCIAEoDSJACgVDb2xvchILCgNyZWQYASABKAISDQoFZ3JlZW4YAiABKAISDAoEYmx1ZRgDIAEoAhINCgVhbHBoYRgEIAEoAkIVqgISU2VsYWguQ29udHJhY3RzLlYxYgZwcm90bzM");
+  fileDesc("ChVzZWxhaC92MS9jb21tb24ucHJvdG8SCHNlbGFoLnYxIhMKAklkEg0KBXZhbHVlGAEgASgMIiYKCVRpbWVzdGFtcBIZChF1bml4X21pbGxpc2Vjb25kcxgBIAEoAyIrCgpSZXNvbHV0aW9uEg0KBXdpZHRoGAEgASgNEg4KBmhlaWdodBgCIAEoDSJACgVDb2xvchILCgNyZWQYASABKAISDQoFZ3JlZW4YAiABKAISDAoEYmx1ZRgDIAEoAhINCgVhbHBoYRgEIAEoAiI7CgRSZWN0EgkKAXgYASABKAISCQoBeRgCIAEoAhINCgV3aWR0aBgDIAEoAhIOCgZoZWlnaHQYBCABKAJCFaoCElNlbGFoLkNvbnRyYWN0cy5WMWIGcHJvdG8z");
 
 /**
  * A UUIDv7 represented by exactly 16 bytes. Receivers validate the size.
@@ -101,4 +101,36 @@ export type Color = Message<"selah.v1.Color"> & {
  */
 export const ColorSchema: GenMessage<Color> = /*@__PURE__*/
   messageDesc(file_selah_v1_common, 3);
+
+/**
+ * @generated from message selah.v1.Rect
+ */
+export type Rect = Message<"selah.v1.Rect"> & {
+  /**
+   * @generated from field: float x = 1;
+   */
+  x: number;
+
+  /**
+   * @generated from field: float y = 2;
+   */
+  y: number;
+
+  /**
+   * @generated from field: float width = 3;
+   */
+  width: number;
+
+  /**
+   * @generated from field: float height = 4;
+   */
+  height: number;
+};
+
+/**
+ * Describes the message selah.v1.Rect.
+ * Use `create(RectSchema)` to create a new message.
+ */
+export const RectSchema: GenMessage<Rect> = /*@__PURE__*/
+  messageDesc(file_selah_v1_common, 4);
 

@@ -6,6 +6,7 @@ import "selah/v1/common.proto";
 import "selah/v1/errors.proto";
 import "selah/v1/help.proto";
 import "selah/v1/library.proto";
+import "selah/v1/live.proto";
 import "selah/v1/render.proto";
 import "selah/v1/service.proto";
 import "selah/v1/settings.proto";
@@ -110,6 +111,34 @@ message Command {
     StopAudioLayer stop_audio_layer = 59;
     LiveUndo live_undo = 60;
     LiveRedo live_redo = 61;
+    SaveLook save_look = 62;
+    DeleteLook delete_look = 63;
+    SaveProp save_prop = 64;
+    DeleteProp delete_prop = 65;
+    SaveMessage save_message = 66;
+    DeleteMessage delete_message = 67;
+    SaveTimer save_timer = 68;
+    DeleteTimer delete_timer = 69;
+    SaveMacro save_macro = 70;
+    DeleteMacro delete_macro = 71;
+    SaveClearGroup save_clear_group = 72;
+    DeleteClearGroup delete_clear_group = 73;
+    SaveStageLayout save_stage_layout = 74;
+    DeleteStageLayout delete_stage_layout = 75;
+    SetLook set_look = 76;
+    ShowProp show_prop = 77;
+    HideProp hide_prop = 78;
+    ShowMessage show_message = 79;
+    HideMessage hide_message = 80;
+    StartTimer start_timer = 81;
+    PauseTimer pause_timer = 82;
+    ResetTimer reset_timer = 83;
+    AdvanceLiveClock advance_live_clock = 84;
+    RunMacro run_macro = 85;
+    TriggerClearGroup trigger_clear_group = 86;
+    SetStageLayout set_stage_layout = 87;
+    SendBoothMessage send_booth_message = 88;
+    SetBoothLock set_booth_lock = 89;
   }
   // Optional client-supplied UUIDv7 grouping multiple mutations into one undo/redo step.
   Id undo_group = 100;
@@ -183,6 +212,20 @@ message Query {
     ListTeams list_teams = 44;
     ProjectServiceRuntime project_service_runtime = 45;
     GetLiveState get_live_state = 46;
+    GetLook get_look = 47;
+    ListLooks list_looks = 48;
+    GetProp get_prop = 49;
+    ListProps list_props = 50;
+    GetMessage get_message = 51;
+    ListMessages list_messages = 52;
+    GetTimer get_timer = 53;
+    ListTimers list_timers = 54;
+    GetMacro get_macro = 55;
+    ListMacros list_macros = 56;
+    GetClearGroup get_clear_group = 57;
+    ListClearGroups list_clear_groups = 58;
+    GetStageLayout get_stage_layout = 59;
+    ListStageLayouts list_stage_layouts = 60;
   }
 }
 
@@ -299,6 +342,20 @@ message Reply {
     ServiceRuntimeProjection service_runtime_projection = 51;
     ServicePrintExport service_print_export = 52;
     LiveStatus live_status = 53;
+    Look look = 54;
+    LookList look_list = 55;
+    Prop prop = 56;
+    PropList prop_list = 57;
+    LiveMessage live_message = 58;
+    MessageList message_list = 59;
+    Timer timer = 60;
+    TimerList timer_list = 61;
+    Macro macro = 62;
+    MacroList macro_list = 63;
+    ClearGroup clear_group = 64;
+    ClearGroupList clear_group_list = 65;
+    StageLayout stage_layout = 66;
+    StageLayoutList stage_layout_list = 67;
   }
 }
 

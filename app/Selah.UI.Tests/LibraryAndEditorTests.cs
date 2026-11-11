@@ -320,8 +320,8 @@ public sealed partial class LibraryAndEditorTests : IDisposable
 
         var clearBtn = ControlByName<Button>(window, "ClearEverythingButton");
         var paletteDialog = ControlByName<Border>(window, "PaletteDialog");
-        var clearRect = new Rect(clearBtn.TranslatePoint(default, window) ?? default, clearBtn.Bounds.Size);
-        var paletteRect = new Rect(paletteDialog.TranslatePoint(default, window) ?? default, paletteDialog.Bounds.Size);
+        var clearRect = new Avalonia.Rect(clearBtn.TranslatePoint(default, window) ?? default, clearBtn.Bounds.Size);
+        var paletteRect = new Avalonia.Rect(paletteDialog.TranslatePoint(default, window) ?? default, paletteDialog.Bounds.Size);
         Assert.False(clearRect.Intersects(paletteRect), "Ctrl+K palette must not cover Clear everything");
 
         // 1) Find a song and activate it -> enters Song Editor with that song loaded.

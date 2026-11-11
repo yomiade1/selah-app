@@ -1155,3 +1155,61 @@ test("M4.2 live state machine commands, queries and status round trip", () => {
         statusReply,
     );
 });
+
+test("M4.3 looks, props, messages, timers, macros and clear groups round trip", () => {
+    const docId = new Uint8Array([
+        0x01, 0x92, 0x70, 0x00, 0x00, 0x00, 0x70, 0x00, 0x80, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x43,
+    ]);
+    const saveLook = create(EnvelopeSchema, {
+        id: 7301n,
+        body: {
+            case: "command",
+            value: {
+                action: {
+                    case: "saveLook",
+                    value: {
+                        look: {
+                            id: { value: docId },
+                            name: "Worship",
+                            hotkey: "Shift+1",
+                            rules: [
+                                {
+                                    id: { value: docId },
+                                    outputIndex: 0,
+                                    enabledLayers: [
+                                        LayerKind.MEDIA,
+                                        LayerKind.SLIDE,
+                                    ],
+                                },
+                            ],
+                        },
+                    },
+                },
+            },
+        },
+    });
+    assert.deepEqual(
+        fromBinary(EnvelopeSchema, toBinary(EnvelopeSchema, saveLook)),
+        saveLook,
+    );
+
+    const boothLock = create(EnvelopeSchema, {
+        id: 7302n,
+        body: {
+            case: "command",
+            value: {
+                action: {
+                    case: "setBoothLock",
+                    value: {
+                        locked: true,
+                    },
+                },
+            },
+        },
+    });
+    assert.deepEqual(
+        fromBinary(EnvelopeSchema, toBinary(EnvelopeSchema, boothLock)),
+        boothLock,
+    );
+});

@@ -18,6 +18,13 @@ pub enum DocumentKind {
     ServiceType,
     Team,
     Tag,
+    Look,
+    Prop,
+    Message,
+    Timer,
+    Macro,
+    ClearGroup,
+    StageLayout,
 }
 
 impl DocumentKind {
@@ -31,6 +38,13 @@ impl DocumentKind {
             Self::ServiceType => "service_types",
             Self::Team => "teams",
             Self::Tag => "tags",
+            Self::Look => "looks",
+            Self::Prop => "props",
+            Self::Message => "messages",
+            Self::Timer => "timers",
+            Self::Macro => "macros",
+            Self::ClearGroup => "clear_groups",
+            Self::StageLayout => "stage_layouts",
         }
     }
 
@@ -44,6 +58,13 @@ impl DocumentKind {
             Self::ServiceType => "service_type",
             Self::Team => "team",
             Self::Tag => "tag",
+            Self::Look => "look",
+            Self::Prop => "prop",
+            Self::Message => "message",
+            Self::Timer => "timer",
+            Self::Macro => "macro",
+            Self::ClearGroup => "clear_group",
+            Self::StageLayout => "stage_layout",
         }
     }
 
@@ -57,6 +78,13 @@ impl DocumentKind {
             "service_type" => Some(Self::ServiceType),
             "team" => Some(Self::Team),
             "tag" => Some(Self::Tag),
+            "look" => Some(Self::Look),
+            "prop" => Some(Self::Prop),
+            "message" => Some(Self::Message),
+            "timer" => Some(Self::Timer),
+            "macro" => Some(Self::Macro),
+            "clear_group" => Some(Self::ClearGroup),
+            "stage_layout" => Some(Self::StageLayout),
             _ => None,
         }
     }
@@ -71,6 +99,13 @@ impl DocumentKind {
             DocumentType::ServiceType => Some(Self::ServiceType),
             DocumentType::Team => Some(Self::Team),
             DocumentType::Tag => Some(Self::Tag),
+            DocumentType::Look => Some(Self::Look),
+            DocumentType::Prop => Some(Self::Prop),
+            DocumentType::Message => Some(Self::Message),
+            DocumentType::Timer => Some(Self::Timer),
+            DocumentType::Macro => Some(Self::Macro),
+            DocumentType::ClearGroup => Some(Self::ClearGroup),
+            DocumentType::StageLayout => Some(Self::StageLayout),
             DocumentType::Unspecified => None,
         }
     }
@@ -85,6 +120,13 @@ impl DocumentKind {
             Self::ServiceType => DocumentType::ServiceType,
             Self::Team => DocumentType::Team,
             Self::Tag => DocumentType::Tag,
+            Self::Look => DocumentType::Look,
+            Self::Prop => DocumentType::Prop,
+            Self::Message => DocumentType::Message,
+            Self::Timer => DocumentType::Timer,
+            Self::Macro => DocumentType::Macro,
+            Self::ClearGroup => DocumentType::ClearGroup,
+            Self::StageLayout => DocumentType::StageLayout,
         }
     }
 }
@@ -456,6 +498,178 @@ document!(
     |_: &Tag| Ok(()),
     |_: &Tag, _: &Transaction<'_>| Ok(())
 );
+document!(
+    Look,
+    Look,
+    |value: &Look| {
+        unique_ids(value.rules.iter().map(|r| &r.id))?;
+        ensure!(value.rules.len() <= 32, "too many look rules");
+        for rule in &value.rules {
+            optional_id(&rule.template_override_id)?;
+            ensure!(
+                rule.enabled_layers.len() <= 16,
+                "too many enabled layers in look rule"
+            );
+            for &lk in &rule.enabled_layers {
+                ensure!(
+                    LayerKind::try_from(lk).is_ok() && lk != 0,
+                    "invalid layer kind in look rule"
+                );
+            }
+        }
+        Ok(())
+    },
+    |value: &Look, tx: &Transaction<'_>| {
+        let id = required_id(&value.id)?;
+        tx.execute("DELETE FROM look_rules WHERE look_id=?1", [id])?;
+        for (position, rule) in value.rules.iter().enumerate() {
+            tx.execute(
+                "INSERT INTO look_rules VALUES (?1, ?2, ?3, ?4)",
+                params![
+                    required_id(&rule.id)?,
+                    id,
+                    position as i64,
+                    rule.encode_to_vec()
+                ],
+            )?;
+        }
+        Ok(())
+    }
+);
+document!(
+    Prop,
+    Prop,
+    |value: &Prop| {
+        optional_id(&value.media_id)?;
+        ensure!(
+            value.label.chars().count() <= 512,
+            "prop label is too long (max 512 chars)"
+        );
+        ensure!(
+            value.auto_clear_seconds <= 86_400,
+            "prop auto_clear_seconds exceeds 24 hours"
+        );
+        Ok(())
+    },
+    |_: &Prop, _: &Transaction<'_>| Ok(())
+);
+document!(
+    LiveMessage,
+    Message,
+    |value: &LiveMessage| {
+        optional_id(&value.timer_id)?;
+        ensure!(
+            !value.template_text.trim().is_empty() && value.template_text.chars().count() <= 512,
+            "message template_text must be 1 to 512 characters"
+        );
+        ensure!(
+            value.default_tokens.len() <= 32,
+            "too many default message tokens"
+        );
+        for (k, v) in &value.default_tokens {
+            ensure!(
+                !k.trim().is_empty() && k.len() <= 64 && v.chars().count() <= 256,
+                "invalid message token key or value"
+            );
+        }
+        ensure!(
+            value.duration_seconds <= 86_400,
+            "message duration exceeds 24 hours"
+        );
+        Ok(())
+    },
+    |_: &LiveMessage, _: &Transaction<'_>| Ok(())
+);
+document!(
+    Timer,
+    Timer,
+    |value: &Timer| {
+        ensure!(
+            TimerKind::try_from(value.kind).is_ok() && value.kind != 0,
+            "unknown timer kind"
+        );
+        ensure!(
+            value.duration_ms <= 86_400_000,
+            "timer duration exceeds 24 hours"
+        );
+        ensure!(
+            value.target_time_of_day_seconds < 86_400,
+            "target_time_of_day_seconds must be under 86400"
+        );
+        optional_id(&value.overrun_macro_id)?;
+        Ok(())
+    },
+    |_: &Timer, _: &Transaction<'_>| Ok(())
+);
+document!(
+    Macro,
+    Macro,
+    |value: &Macro| {
+        unique_ids(value.actions.iter().map(|a| &a.id))?;
+        ensure!(
+            value.actions.len() <= 32,
+            "macro has too many actions (max 32)"
+        );
+        for action in &value.actions {
+            ensure!(
+                MacroActionKind::try_from(action.kind).is_ok() && action.kind != 0,
+                "unknown macro action kind"
+            );
+            optional_id(&action.target_id)?;
+        }
+        Ok(())
+    },
+    |value: &Macro, tx: &Transaction<'_>| {
+        let id = required_id(&value.id)?;
+        tx.execute("DELETE FROM macro_actions WHERE macro_id=?1", [id])?;
+        for (position, action) in value.actions.iter().enumerate() {
+            tx.execute(
+                "INSERT INTO macro_actions VALUES (?1, ?2, ?3, ?4)",
+                params![
+                    required_id(&action.id)?,
+                    id,
+                    position as i64,
+                    action.encode_to_vec()
+                ],
+            )?;
+        }
+        Ok(())
+    }
+);
+document!(
+    ClearGroup,
+    ClearGroup,
+    |value: &ClearGroup| {
+        ensure!(
+            value.layers_to_clear.len() <= 16,
+            "too many layers in clear group"
+        );
+        for &lk in &value.layers_to_clear {
+            ensure!(
+                LayerKind::try_from(lk).is_ok() && lk != 0,
+                "invalid layer kind in clear group"
+            );
+        }
+        Ok(())
+    },
+    |_: &ClearGroup, _: &Transaction<'_>| Ok(())
+);
+document!(
+    StageLayout,
+    StageLayout,
+    |value: &StageLayout| {
+        unique_ids(value.elements.iter().map(|e| &e.id))?;
+        ensure!(value.elements.len() <= 32, "too many stage layout elements");
+        for el in &value.elements {
+            ensure!(
+                StageElementKind::try_from(el.kind).is_ok() && el.kind != 0,
+                "invalid stage element kind"
+            );
+        }
+        Ok(())
+    },
+    |_: &StageLayout, _: &Transaction<'_>| Ok(())
+);
 
 impl Library {
     /// Storage primitive; the command bus must authorise and log before calling this.
@@ -629,5 +843,12 @@ pub(super) fn apply_snapshot_in_tx(
         DocumentKind::ServiceType => verify_and_write::<ServiceType>(media_root, tx, id, data),
         DocumentKind::Team => verify_and_write::<Team>(media_root, tx, id, data),
         DocumentKind::Tag => verify_and_write::<Tag>(media_root, tx, id, data),
+        DocumentKind::Look => verify_and_write::<Look>(media_root, tx, id, data),
+        DocumentKind::Prop => verify_and_write::<Prop>(media_root, tx, id, data),
+        DocumentKind::Message => verify_and_write::<LiveMessage>(media_root, tx, id, data),
+        DocumentKind::Timer => verify_and_write::<Timer>(media_root, tx, id, data),
+        DocumentKind::Macro => verify_and_write::<Macro>(media_root, tx, id, data),
+        DocumentKind::ClearGroup => verify_and_write::<ClearGroup>(media_root, tx, id, data),
+        DocumentKind::StageLayout => verify_and_write::<StageLayout>(media_root, tx, id, data),
     }
 }

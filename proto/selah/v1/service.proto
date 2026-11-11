@@ -3,6 +3,7 @@ syntax = "proto3";
 package selah.v1;
 
 import "selah/v1/common.proto";
+import "selah/v1/live.proto";
 import "selah/v1/render.proto";
 
 option csharp_namespace = "Selah.Contracts.V1";
@@ -42,6 +43,10 @@ message ServiceItem {
   string countdown_target_time = 19;
   string countdown_message = 20;
   string translation_language = 21;
+  Id macro_id = 22;
+  uint32 slide_action_index = 23;
+  Id slide_look_id = 24;
+  Id slide_macro_id = 25;
 }
 
 message Service {
@@ -221,6 +226,9 @@ message LiveSlide {
   string elements_json = 13;
   string style_json = 14;
   bool is_blank = 15;
+  Id macro_id = 16;
+  Id look_id = 17;
+  string action_badge = 18;
 }
 
 message LiveItemSlides {
@@ -277,6 +285,7 @@ message LiveStatus {
   bool can_live_undo = 23;
   bool can_live_redo = 24;
   uint64 scene_revision = 25;
+  repeated LiveAutomationState automation = 26;
 }
 
 message LoadLiveService {
@@ -352,4 +361,8 @@ message LiveMachineSnapshot {
   LiveStatus status = 3;
   repeated LiveSnapshotEntry undo_stack = 4;
   repeated LiveSnapshotEntry redo_stack = 5;
+  Look active_look = 6;
+  StageLayout active_stage_layout = 7;
+  uint64 virtual_clock_mono_ns = 8;
+  int64 virtual_clock_wall_unix_ms = 9;
 }

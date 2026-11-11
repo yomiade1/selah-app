@@ -1,10 +1,10 @@
 {
-  "rust": 286,
-  "dotnet": 30,
-  "web": 14,
-  "golden": 10,
+  "rust": 290,
+  "dotnet": 31,
+  "web": 15,
+  "golden": 11,
   "ui": 126,
   "e2e": 6,
   "kb": 59,
-  "total": 531
+  "total": 538
 }

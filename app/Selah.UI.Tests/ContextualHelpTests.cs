@@ -53,14 +53,14 @@ public sealed class ContextualHelpTests : IDisposable
     private static T ControlByName<T>(Control root, string name) where T : Control =>
         root.GetVisualDescendants().OfType<T>().Single(c => c.Name == name);
 
-    private static Rect BoundsInWindow(Visual visual, Window window)
+    private static Avalonia.Rect BoundsInWindow(Visual visual, Window window)
     {
         var topLeft = visual.TranslatePoint(default, window) ?? default;
         var bottomRight = visual.TranslatePoint(new Point(visual.Bounds.Width, visual.Bounds.Height), window) ?? topLeft;
-        return new Rect(topLeft, bottomRight);
+        return new Avalonia.Rect(topLeft, bottomRight);
     }
 
-    private static bool RectsOverlap(Rect a, Rect b) =>
+    private static bool RectsOverlap(Avalonia.Rect a, Avalonia.Rect b) =>
         a.Width > 0 && a.Height > 0 && b.Width > 0 && b.Height > 0 && a.Intersects(b);
 
     private static IEnumerable<string> Runs(Control root) =>

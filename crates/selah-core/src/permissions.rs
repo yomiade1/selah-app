@@ -73,9 +73,37 @@ pub enum CommandKind {
     StopAudioLayer,
     LiveUndo,
     LiveRedo,
+    SaveLook,
+    DeleteLook,
+    SaveProp,
+    DeleteProp,
+    SaveMessage,
+    DeleteMessage,
+    SaveTimer,
+    DeleteTimer,
+    SaveMacro,
+    DeleteMacro,
+    SaveClearGroup,
+    DeleteClearGroup,
+    SaveStageLayout,
+    DeleteStageLayout,
+    SetLook,
+    ShowProp,
+    HideProp,
+    ShowMessage,
+    HideMessage,
+    StartTimer,
+    PauseTimer,
+    ResetTimer,
+    AdvanceLiveClock,
+    RunMacro,
+    TriggerClearGroup,
+    SetStageLayout,
+    SendBoothMessage,
+    SetBoothLock,
 }
 
-pub const ALL_COMMANDS: [CommandKind; 61] = [
+pub const ALL_COMMANDS: [CommandKind; 89] = [
     CommandKind::Render,
     CommandKind::SetAppearance,
     CommandKind::RecordFeedback,
@@ -137,6 +165,34 @@ pub const ALL_COMMANDS: [CommandKind; 61] = [
     CommandKind::StopAudioLayer,
     CommandKind::LiveUndo,
     CommandKind::LiveRedo,
+    CommandKind::SaveLook,
+    CommandKind::DeleteLook,
+    CommandKind::SaveProp,
+    CommandKind::DeleteProp,
+    CommandKind::SaveMessage,
+    CommandKind::DeleteMessage,
+    CommandKind::SaveTimer,
+    CommandKind::DeleteTimer,
+    CommandKind::SaveMacro,
+    CommandKind::DeleteMacro,
+    CommandKind::SaveClearGroup,
+    CommandKind::DeleteClearGroup,
+    CommandKind::SaveStageLayout,
+    CommandKind::DeleteStageLayout,
+    CommandKind::SetLook,
+    CommandKind::ShowProp,
+    CommandKind::HideProp,
+    CommandKind::ShowMessage,
+    CommandKind::HideMessage,
+    CommandKind::StartTimer,
+    CommandKind::PauseTimer,
+    CommandKind::ResetTimer,
+    CommandKind::AdvanceLiveClock,
+    CommandKind::RunMacro,
+    CommandKind::TriggerClearGroup,
+    CommandKind::SetStageLayout,
+    CommandKind::SendBoothMessage,
+    CommandKind::SetBoothLock,
 ];
 
 pub fn kind_of(action: &command::Action) -> CommandKind {
@@ -202,6 +258,34 @@ pub fn kind_of(action: &command::Action) -> CommandKind {
         command::Action::StopAudioLayer(_) => CommandKind::StopAudioLayer,
         command::Action::LiveUndo(_) => CommandKind::LiveUndo,
         command::Action::LiveRedo(_) => CommandKind::LiveRedo,
+        command::Action::SaveLook(_) => CommandKind::SaveLook,
+        command::Action::DeleteLook(_) => CommandKind::DeleteLook,
+        command::Action::SaveProp(_) => CommandKind::SaveProp,
+        command::Action::DeleteProp(_) => CommandKind::DeleteProp,
+        command::Action::SaveMessage(_) => CommandKind::SaveMessage,
+        command::Action::DeleteMessage(_) => CommandKind::DeleteMessage,
+        command::Action::SaveTimer(_) => CommandKind::SaveTimer,
+        command::Action::DeleteTimer(_) => CommandKind::DeleteTimer,
+        command::Action::SaveMacro(_) => CommandKind::SaveMacro,
+        command::Action::DeleteMacro(_) => CommandKind::DeleteMacro,
+        command::Action::SaveClearGroup(_) => CommandKind::SaveClearGroup,
+        command::Action::DeleteClearGroup(_) => CommandKind::DeleteClearGroup,
+        command::Action::SaveStageLayout(_) => CommandKind::SaveStageLayout,
+        command::Action::DeleteStageLayout(_) => CommandKind::DeleteStageLayout,
+        command::Action::SetLook(_) => CommandKind::SetLook,
+        command::Action::ShowProp(_) => CommandKind::ShowProp,
+        command::Action::HideProp(_) => CommandKind::HideProp,
+        command::Action::ShowMessage(_) => CommandKind::ShowMessage,
+        command::Action::HideMessage(_) => CommandKind::HideMessage,
+        command::Action::StartTimer(_) => CommandKind::StartTimer,
+        command::Action::PauseTimer(_) => CommandKind::PauseTimer,
+        command::Action::ResetTimer(_) => CommandKind::ResetTimer,
+        command::Action::AdvanceLiveClock(_) => CommandKind::AdvanceLiveClock,
+        command::Action::RunMacro(_) => CommandKind::RunMacro,
+        command::Action::TriggerClearGroup(_) => CommandKind::TriggerClearGroup,
+        command::Action::SetStageLayout(_) => CommandKind::SetStageLayout,
+        command::Action::SendBoothMessage(_) => CommandKind::SendBoothMessage,
+        command::Action::SetBoothLock(_) => CommandKind::SetBoothLock,
     }
 }
 
@@ -227,7 +311,19 @@ pub fn changes_screens(kind: CommandKind) -> bool {
         | CommandKind::PlayAudioLayer
         | CommandKind::StopAudioLayer
         | CommandKind::LiveUndo
-        | CommandKind::LiveRedo => true,
+        | CommandKind::LiveRedo
+        | CommandKind::SetLook
+        | CommandKind::ShowProp
+        | CommandKind::HideProp
+        | CommandKind::ShowMessage
+        | CommandKind::HideMessage
+        | CommandKind::StartTimer
+        | CommandKind::PauseTimer
+        | CommandKind::ResetTimer
+        | CommandKind::AdvanceLiveClock
+        | CommandKind::RunMacro
+        | CommandKind::TriggerClearGroup
+        | CommandKind::SetStageLayout => true,
         // An update restarts every process, but core refuses it while anything is live.
         CommandKind::SetAppearance
         | CommandKind::RecordFeedback
@@ -269,8 +365,89 @@ pub fn changes_screens(kind: CommandKind) -> bool {
         | CommandKind::SaveTeam
         | CommandKind::DeleteTeam
         | CommandKind::CreateServiceFromPrevious
-        | CommandKind::ExportServicePrint => false,
+        | CommandKind::ExportServicePrint
+        | CommandKind::SaveLook
+        | CommandKind::DeleteLook
+        | CommandKind::SaveProp
+        | CommandKind::DeleteProp
+        | CommandKind::SaveMessage
+        | CommandKind::DeleteMessage
+        | CommandKind::SaveTimer
+        | CommandKind::DeleteTimer
+        | CommandKind::SaveMacro
+        | CommandKind::DeleteMacro
+        | CommandKind::SaveClearGroup
+        | CommandKind::DeleteClearGroup
+        | CommandKind::SaveStageLayout
+        | CommandKind::DeleteStageLayout
+        | CommandKind::SendBoothMessage
+        | CommandKind::SetBoothLock => false,
     }
+}
+
+/// Commands that a macro action (`ActorOrigin::Macro`) is permitted to dispatch (M4.3, SEC-03/SEC-14).
+/// Macros may never invoke another macro (`RunMacro`), mutate library documents, or change settings.
+pub fn is_macro_allowed(kind: CommandKind) -> bool {
+    matches!(
+        kind,
+        CommandKind::ClearOutputs
+            | CommandKind::ClearLayer
+            | CommandKind::SetLayerState
+            | CommandKind::ShowLogo
+            | CommandKind::PlayAudioLayer
+            | CommandKind::StopAudioLayer
+            | CommandKind::SetLook
+            | CommandKind::ShowProp
+            | CommandKind::HideProp
+            | CommandKind::ShowMessage
+            | CommandKind::HideMessage
+            | CommandKind::StartTimer
+            | CommandKind::PauseTimer
+            | CommandKind::ResetTimer
+            | CommandKind::TriggerClearGroup
+            | CommandKind::SetStageLayout
+    )
+}
+
+/// Commands that a role-locked Simple-mode volunteer may execute (M4.5, SEC-14, SAFE-01, M4-A12).
+/// Producer commands (Looks, Props, audience Messages, Macros, library/template edits, output
+/// configuration, policies) are refused when role lock is active.
+pub fn is_volunteer_allowed(kind: CommandKind) -> bool {
+    matches!(
+        kind,
+        CommandKind::LoadLiveService
+            | CommandKind::TriggerItem
+            | CommandKind::TriggerSlide
+            | CommandKind::NextSlide
+            | CommandKind::PreviousSlide
+            | CommandKind::NextItem
+            | CommandKind::PreviousItem
+            | CommandKind::ClearOutputs
+            | CommandKind::ClearLayer
+            | CommandKind::ShowLogo
+            | CommandKind::LiveUndo
+            | CommandKind::LiveRedo
+            | CommandKind::SendBoothMessage
+            | CommandKind::RecordFeedback
+            | CommandKind::StagePreviewScene
+            | CommandKind::PreloadItems
+    )
+}
+
+/// Commands allowed while Booth lock (`Ctrl/Cmd+L`, SAFE-06, M4-A12) is active:
+/// leaves only Next, Previous, Clear, and unlocking Booth lock working.
+pub fn is_booth_lock_allowed(kind: CommandKind) -> bool {
+    matches!(
+        kind,
+        CommandKind::NextSlide
+            | CommandKind::PreviousSlide
+            | CommandKind::NextItem
+            | CommandKind::PreviousItem
+            | CommandKind::ClearOutputs
+            | CommandKind::ClearLayer
+            | CommandKind::ShowLogo
+            | CommandKind::SetBoothLock
+    )
 }
 
 /// Who is asking, once the actor is bound to the verified peer.
@@ -278,9 +455,13 @@ pub fn changes_screens(kind: CommandKind) -> bool {
 pub enum Principal {
     /// The person at this computer, through the Selah UI (or a tour it runs).
     LocalOwner,
+    /// A role-locked volunteer operating in Simple mode (M4.5, SEC-14, SAFE-01).
+    Volunteer,
+    /// An in-service macro action (M4.3).
+    Macro,
     /// One of Selah's own processes.
     Internal,
-    /// An origin whose feature isn't built yet (API, MIDI, macros, timelines, sync).
+    /// An origin whose feature isn't built yet (API, MIDI, timelines, sync).
     NotYetSupported,
 }
 
@@ -297,24 +478,38 @@ pub const DENIED_CODE: &str = "SEL-SEC-0001";
 pub fn principal(origin: ActorOrigin) -> Principal {
     match origin {
         ActorOrigin::Ui | ActorOrigin::Tour => Principal::LocalOwner,
+        ActorOrigin::Macro => Principal::Macro,
         ActorOrigin::Core | ActorOrigin::Engine | ActorOrigin::Watchdog => Principal::Internal,
         ActorOrigin::Api
         | ActorOrigin::Midi
-        | ActorOrigin::Macro
         | ActorOrigin::Timeline
         | ActorOrigin::Sync
         | ActorOrigin::Unspecified => Principal::NotYetSupported,
     }
 }
 
+pub fn is_volunteer_actor(actor: &Actor) -> bool {
+    let uid = actor.user_id.trim();
+    uid.eq_ignore_ascii_case("volunteer")
+        || uid.starts_with("volunteer:")
+        || uid.starts_with("volunteer-")
+        || uid.eq_ignore_ascii_case("simple-locked")
+}
+
 /// Decide before the command is validated or applied. The peer is already verified as the
 /// same OS user by the transport.
 pub fn authorize(actor: &Actor, kind: CommandKind) -> Result<(), Denied> {
     let origin = ActorOrigin::try_from(actor.origin).unwrap_or(ActorOrigin::Unspecified);
-    let allowed = match (principal(origin), kind) {
+    let effective_principal = match principal(origin) {
+        Principal::LocalOwner if is_volunteer_actor(actor) => Principal::Volunteer,
+        other => other,
+    };
+    let allowed = match (effective_principal, kind) {
         // Nobody outside core may send raw engine commands.
         (_, CommandKind::Render) => false,
         (Principal::LocalOwner, _) => true,
+        (Principal::Volunteer, k) => is_volunteer_allowed(k),
+        (Principal::Macro, k) => is_macro_allowed(k),
         (Principal::Internal, _) | (Principal::NotYetSupported, _) => false,
     };
     if allowed {
@@ -342,9 +537,13 @@ mod tests {
         ActorOrigin::Watchdog,
     ];
 
-    /// The expected matrix for M1. Changing a cell is a security decision: say why in the PR.
+    /// The expected matrix for M1–M4. Changing a cell is a security decision: say why in the PR.
     fn expected(origin: ActorOrigin, kind: CommandKind) -> bool {
-        matches!(origin, ActorOrigin::Ui | ActorOrigin::Tour) && kind != CommandKind::Render
+        match origin {
+            ActorOrigin::Ui | ActorOrigin::Tour => kind != CommandKind::Render,
+            ActorOrigin::Macro => is_macro_allowed(kind),
+            _ => false,
+        }
     }
 
     #[test]
@@ -434,7 +633,35 @@ mod tests {
                 | CommandKind::PlayAudioLayer
                 | CommandKind::StopAudioLayer
                 | CommandKind::LiveUndo
-                | CommandKind::LiveRedo => {}
+                | CommandKind::LiveRedo
+                | CommandKind::SaveLook
+                | CommandKind::DeleteLook
+                | CommandKind::SaveProp
+                | CommandKind::DeleteProp
+                | CommandKind::SaveMessage
+                | CommandKind::DeleteMessage
+                | CommandKind::SaveTimer
+                | CommandKind::DeleteTimer
+                | CommandKind::SaveMacro
+                | CommandKind::DeleteMacro
+                | CommandKind::SaveClearGroup
+                | CommandKind::DeleteClearGroup
+                | CommandKind::SaveStageLayout
+                | CommandKind::DeleteStageLayout
+                | CommandKind::SetLook
+                | CommandKind::ShowProp
+                | CommandKind::HideProp
+                | CommandKind::ShowMessage
+                | CommandKind::HideMessage
+                | CommandKind::StartTimer
+                | CommandKind::PauseTimer
+                | CommandKind::ResetTimer
+                | CommandKind::AdvanceLiveClock
+                | CommandKind::RunMacro
+                | CommandKind::TriggerClearGroup
+                | CommandKind::SetStageLayout
+                | CommandKind::SendBoothMessage
+                | CommandKind::SetBoothLock => {}
             }
         }
         let unique: std::collections::HashSet<_> = ALL_COMMANDS.iter().collect();

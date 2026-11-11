@@ -1,13 +1,14 @@
 //! Core request handling: authorise, validate, apply, then tell the engine and subscribers.
 use prost::Message;
 use selah_proto::v1::{
-    Actor, ActorOrigin, BibleFormat, Command, CopyrightPlacement, Envelope, Event,
-    GetPolicySettingReply, LibraryChanged, MediaItemList, MediaKind, OutputConfig,
-    OutputConfigList, OutputFrameStatus, ParsePastedSongReply, ParseScriptureReferenceReply,
-    PolicySetting, PresentationList, RenderCommand, Reply, Scene, SearchScope, ServiceList,
-    ServiceTypeList, SetOutputConfigs, SetPreviewScene, Song, SongList, SongPasteFormat, Status,
-    TagList, TeamList, TemplateList, TestPattern, UndoStateChanged, command, envelope, event,
-    query, render_command, reply,
+    Actor, ActorOrigin, BibleFormat, ClearGroupList, Command, CopyrightPlacement, Envelope, Event,
+    GetPolicySettingReply, LibraryChanged, LookList, MacroList, MediaItemList, MediaKind,
+    MessageList, OutputConfig, OutputConfigList, OutputFrameStatus, ParsePastedSongReply,
+    ParseScriptureReferenceReply, PolicySetting, PresentationList, PropList, RenderCommand, Reply,
+    Scene, SearchScope, ServiceList, ServiceTypeList, SetOutputConfigs, SetPreviewScene, Song,
+    SongList, SongPasteFormat, StageLayoutList, Status, TagList, TeamList, TemplateList,
+    TestPattern, TimerList, UndoStateChanged, command, envelope, event, query, render_command,
+    reply,
 };
 
 use crate::library::{
@@ -543,6 +544,14 @@ impl CoreService {
                 ..Outcome::default()
             };
         }
+        // SAFE-06 / M4-A12: Booth lock leaves only Next, Previous and Clear working (plus SetBoothLock to unlock).
+        if self.live.is_booth_locked() && !permissions::is_booth_lock_allowed(kind) {
+            tracing::warn!(kind = ?kind, "command refused while booth is locked");
+            return Outcome {
+                reply: Some(self.error(request, DENIED_CODE, "error-not-permitted")),
+                ..Outcome::default()
+            };
+        }
         let command_hash: [u8; 32] = *blake3::hash(&command.encode_to_vec()).as_bytes();
         let meta = CommandMeta {
             actor: &actor,
@@ -957,6 +966,196 @@ impl CoreService {
             command::Action::LiveRedo(_) => {
                 let res = self.live.live_redo();
                 self.live_outcome(request, res, true)
+            }
+            command::Action::SaveLook(cmd) => {
+                let result = match cmd.look.as_ref() {
+                    Some(doc) => self.library.save_document_op(doc, &meta),
+                    None => Err(CommandBusError::Invalid("missing look".into())),
+                };
+                self.library_outcome(request, result)
+            }
+            command::Action::DeleteLook(cmd) => {
+                let result = match cmd.id.as_ref() {
+                    Some(id) => self
+                        .library
+                        .delete_document_op(DocumentKind::Look, id, &meta),
+                    None => Err(CommandBusError::Invalid("missing look id".into())),
+                };
+                self.library_outcome(request, result)
+            }
+            command::Action::SaveProp(cmd) => {
+                let result = match cmd.prop.as_ref() {
+                    Some(doc) => self.library.save_document_op(doc, &meta),
+                    None => Err(CommandBusError::Invalid("missing prop".into())),
+                };
+                self.library_outcome(request, result)
+            }
+            command::Action::DeleteProp(cmd) => {
+                let result = match cmd.id.as_ref() {
+                    Some(id) => self
+                        .library
+                        .delete_document_op(DocumentKind::Prop, id, &meta),
+                    None => Err(CommandBusError::Invalid("missing prop id".into())),
+                };
+                self.library_outcome(request, result)
+            }
+            command::Action::SaveMessage(cmd) => {
+                let result = match cmd.message.as_ref() {
+                    Some(doc) => self.library.save_document_op(doc, &meta),
+                    None => Err(CommandBusError::Invalid("missing message".into())),
+                };
+                self.library_outcome(request, result)
+            }
+            command::Action::DeleteMessage(cmd) => {
+                let result = match cmd.id.as_ref() {
+                    Some(id) => self
+                        .library
+                        .delete_document_op(DocumentKind::Message, id, &meta),
+                    None => Err(CommandBusError::Invalid("missing message id".into())),
+                };
+                self.library_outcome(request, result)
+            }
+            command::Action::SaveTimer(cmd) => {
+                let result = match cmd.timer.as_ref() {
+                    Some(doc) => self.library.save_document_op(doc, &meta),
+                    None => Err(CommandBusError::Invalid("missing timer".into())),
+                };
+                self.library_outcome(request, result)
+            }
+            command::Action::DeleteTimer(cmd) => {
+                let result = match cmd.id.as_ref() {
+                    Some(id) => self
+                        .library
+                        .delete_document_op(DocumentKind::Timer, id, &meta),
+                    None => Err(CommandBusError::Invalid("missing timer id".into())),
+                };
+                self.library_outcome(request, result)
+            }
+            command::Action::SaveMacro(cmd) => {
+                let result = match cmd.r#macro.as_ref() {
+                    Some(doc) => self.library.save_document_op(doc, &meta),
+                    None => Err(CommandBusError::Invalid("missing macro".into())),
+                };
+                self.library_outcome(request, result)
+            }
+            command::Action::DeleteMacro(cmd) => {
+                let result = match cmd.id.as_ref() {
+                    Some(id) => self
+                        .library
+                        .delete_document_op(DocumentKind::Macro, id, &meta),
+                    None => Err(CommandBusError::Invalid("missing macro id".into())),
+                };
+                self.library_outcome(request, result)
+            }
+            command::Action::SaveClearGroup(cmd) => {
+                let result = match cmd.clear_group.as_ref() {
+                    Some(doc) => self.library.save_document_op(doc, &meta),
+                    None => Err(CommandBusError::Invalid("missing clear_group".into())),
+                };
+                self.library_outcome(request, result)
+            }
+            command::Action::DeleteClearGroup(cmd) => {
+                let result = match cmd.id.as_ref() {
+                    Some(id) => {
+                        self.library
+                            .delete_document_op(DocumentKind::ClearGroup, id, &meta)
+                    }
+                    None => Err(CommandBusError::Invalid("missing clear_group id".into())),
+                };
+                self.library_outcome(request, result)
+            }
+            command::Action::SaveStageLayout(cmd) => {
+                let result = match cmd.stage_layout.as_ref() {
+                    Some(doc) => self.library.save_document_op(doc, &meta),
+                    None => Err(CommandBusError::Invalid("missing stage_layout".into())),
+                };
+                self.library_outcome(request, result)
+            }
+            command::Action::DeleteStageLayout(cmd) => {
+                let result = match cmd.id.as_ref() {
+                    Some(id) => {
+                        self.library
+                            .delete_document_op(DocumentKind::StageLayout, id, &meta)
+                    }
+                    None => Err(CommandBusError::Invalid("missing stage_layout id".into())),
+                };
+                self.library_outcome(request, result)
+            }
+            command::Action::SetLook(cmd) => {
+                let id = cmd.look_id.clone().unwrap_or_default();
+                let res = self.live.set_look(&self.library, &id);
+                self.live_outcome(request, res, true)
+            }
+            command::Action::ShowProp(cmd) => {
+                let res = match cmd.prop_id.as_ref() {
+                    Some(id) => self.live.show_prop(&self.library, id),
+                    None => Err(CommandBusError::Invalid("missing prop_id".into())),
+                };
+                self.live_outcome(request, res, true)
+            }
+            command::Action::HideProp(cmd) => {
+                let res = self.live.hide_prop(cmd.prop_id.as_ref());
+                self.live_outcome(request, res, true)
+            }
+            command::Action::ShowMessage(cmd) => {
+                let res = self.live.show_message(&self.library, cmd);
+                self.live_outcome(request, res, true)
+            }
+            command::Action::HideMessage(_) => {
+                let res = self.live.hide_message();
+                self.live_outcome(request, res, true)
+            }
+            command::Action::StartTimer(cmd) => {
+                let res = match cmd.timer_id.as_ref() {
+                    Some(id) => self.live.start_timer(&self.library, id),
+                    None => Err(CommandBusError::Invalid("missing timer_id".into())),
+                };
+                self.live_outcome(request, res, false)
+            }
+            command::Action::PauseTimer(cmd) => {
+                let res = match cmd.timer_id.as_ref() {
+                    Some(id) => self.live.pause_timer(id),
+                    None => Err(CommandBusError::Invalid("missing timer_id".into())),
+                };
+                self.live_outcome(request, res, false)
+            }
+            command::Action::ResetTimer(cmd) => {
+                let res = match cmd.timer_id.as_ref() {
+                    Some(id) => self.live.reset_timer(&self.library, id),
+                    None => Err(CommandBusError::Invalid("missing timer_id".into())),
+                };
+                self.live_outcome(request, res, false)
+            }
+            command::Action::AdvanceLiveClock(cmd) => {
+                let res = self.live.advance_live_clock(&self.library, cmd);
+                self.live_outcome(request, res, true)
+            }
+            command::Action::RunMacro(cmd) => {
+                let res = match cmd.macro_id.as_ref() {
+                    Some(id) => self.live.run_macro(&self.library, id),
+                    None => Err(CommandBusError::Invalid("missing macro_id".into())),
+                };
+                self.live_outcome(request, res, true)
+            }
+            command::Action::TriggerClearGroup(cmd) => {
+                let res = match cmd.clear_group_id.as_ref() {
+                    Some(id) => self.live.trigger_clear_group(&self.library, id),
+                    None => Err(CommandBusError::Invalid("missing clear_group_id".into())),
+                };
+                self.live_outcome(request, res, true)
+            }
+            command::Action::SetStageLayout(cmd) => {
+                let id = cmd.stage_layout_id.clone().unwrap_or_default();
+                let res = self.live.set_stage_layout(&self.library, &id);
+                self.live_outcome(request, res, false)
+            }
+            command::Action::SendBoothMessage(cmd) => {
+                let res = self.live.send_booth_message(&cmd.text);
+                self.live_outcome(request, res, false)
+            }
+            command::Action::SetBoothLock(cmd) => {
+                let status = self.live.set_booth_lock(cmd.locked);
+                self.live_outcome(request, Ok(status), false)
             }
             command::Action::Undo(cmd) => {
                 let result = self.library.undo_op(cmd.doc_id.as_ref(), &meta);
@@ -1664,6 +1863,62 @@ impl CoreService {
             }
             Some(query::Request::GetLiveState(_)) => {
                 self.reply(request, reply::Result::LiveStatus(self.live.status()))
+            }
+            Some(query::Request::GetLook(get)) => {
+                self.get_document(request, get.id.as_ref(), reply::Result::Look)
+            }
+            Some(query::Request::ListLooks(list)) => {
+                self.list_documents(request, list.limit, list.offset, |looks| {
+                    reply::Result::LookList(LookList { looks })
+                })
+            }
+            Some(query::Request::GetProp(get)) => {
+                self.get_document(request, get.id.as_ref(), reply::Result::Prop)
+            }
+            Some(query::Request::ListProps(list)) => {
+                self.list_documents(request, list.limit, list.offset, |props| {
+                    reply::Result::PropList(PropList { props })
+                })
+            }
+            Some(query::Request::GetMessage(get)) => {
+                self.get_document(request, get.id.as_ref(), reply::Result::LiveMessage)
+            }
+            Some(query::Request::ListMessages(list)) => {
+                self.list_documents(request, list.limit, list.offset, |messages| {
+                    reply::Result::MessageList(MessageList { messages })
+                })
+            }
+            Some(query::Request::GetTimer(get)) => {
+                self.get_document(request, get.id.as_ref(), reply::Result::Timer)
+            }
+            Some(query::Request::ListTimers(list)) => {
+                self.list_documents(request, list.limit, list.offset, |timers| {
+                    reply::Result::TimerList(TimerList { timers })
+                })
+            }
+            Some(query::Request::GetMacro(get)) => {
+                self.get_document(request, get.id.as_ref(), reply::Result::Macro)
+            }
+            Some(query::Request::ListMacros(list)) => {
+                self.list_documents(request, list.limit, list.offset, |macros| {
+                    reply::Result::MacroList(MacroList { macros })
+                })
+            }
+            Some(query::Request::GetClearGroup(get)) => {
+                self.get_document(request, get.id.as_ref(), reply::Result::ClearGroup)
+            }
+            Some(query::Request::ListClearGroups(list)) => {
+                self.list_documents(request, list.limit, list.offset, |clear_groups| {
+                    reply::Result::ClearGroupList(ClearGroupList { clear_groups })
+                })
+            }
+            Some(query::Request::GetStageLayout(get)) => {
+                self.get_document(request, get.id.as_ref(), reply::Result::StageLayout)
+            }
+            Some(query::Request::ListStageLayouts(list)) => {
+                self.list_documents(request, list.limit, list.offset, |stage_layouts| {
+                    reply::Result::StageLayoutList(StageLayoutList { stage_layouts })
+                })
             }
             Some(query::Request::GetWatchdogStatus(_)) | None => {
                 self.error(request, codes::UNSUPPORTED, "error-unsupported-request")
