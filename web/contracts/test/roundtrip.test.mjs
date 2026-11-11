@@ -1096,3 +1096,62 @@ test("M4.1 service planner commands, queries and print export round trip", () =>
         exportCmd,
     );
 });
+
+test("M4.2 live state machine commands, queries and status round trip", () => {
+    const svcId = new Uint8Array([
+        0x01, 0x92, 0x70, 0x00, 0x00, 0x00, 0x70, 0x00, 0x80, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x42,
+    ]);
+    const triggerCmd = create(EnvelopeSchema, {
+        id: 7201n,
+        body: {
+            case: "command",
+            value: {
+                action: {
+                    case: "triggerSlide",
+                    value: {
+                        itemIndex: 1,
+                        slideIndex: 2,
+                    },
+                },
+            },
+        },
+    });
+    assert.deepEqual(
+        fromBinary(EnvelopeSchema, toBinary(EnvelopeSchema, triggerCmd)),
+        triggerCmd,
+    );
+
+    const statusReply = create(EnvelopeSchema, {
+        id: 7202n,
+        correlationId: 7201n,
+        body: {
+            case: "reply",
+            value: {
+                result: {
+                    case: "liveStatus",
+                    value: {
+                        serviceId: { value: svcId },
+                        serviceName: "Sunday Morning",
+                        hasActiveItem: true,
+                        currentItemIndex: 1,
+                        currentSlideIndex: 2,
+                        hasNext: true,
+                        nextItemIndex: 1,
+                        nextSlideIndex: 3,
+                        currentItemTitle: "Cornerstone",
+                        currentSlideLabel: "Chorus",
+                        currentSlideText: "Christ alone, Cornerstone",
+                        songKey: "D",
+                        canLiveUndo: true,
+                        sceneRevision: 42n,
+                    },
+                },
+            },
+        },
+    });
+    assert.deepEqual(
+        fromBinary(EnvelopeSchema, toBinary(EnvelopeSchema, statusReply)),
+        statusReply,
+    );
+});

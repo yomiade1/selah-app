@@ -95,6 +95,21 @@ message Command {
     DeleteTeam delete_team = 44;
     CreateServiceFromPrevious create_service_from_previous = 45;
     ExportServicePrint export_service_print = 46;
+    LoadLiveService load_live_service = 47;
+    TriggerItem trigger_item = 48;
+    TriggerSlide trigger_slide = 49;
+    NextSlide next_slide = 50;
+    PreviousSlide previous_slide = 51;
+    NextItem next_item = 52;
+    PreviousItem previous_item = 53;
+    TriggerSectionHotkey trigger_section_hotkey = 54;
+    ClearLayer clear_layer = 55;
+    SetLayerState set_layer_state = 56;
+    ShowLogoCommand show_logo = 57;
+    PlayAudioLayer play_audio_layer = 58;
+    StopAudioLayer stop_audio_layer = 59;
+    LiveUndo live_undo = 60;
+    LiveRedo live_redo = 61;
   }
   // Optional client-supplied UUIDv7 grouping multiple mutations into one undo/redo step.
   Id undo_group = 100;
@@ -167,6 +182,7 @@ message Query {
     GetTeam get_team = 43;
     ListTeams list_teams = 44;
     ProjectServiceRuntime project_service_runtime = 45;
+    GetLiveState get_live_state = 46;
   }
 }
 
@@ -224,6 +240,7 @@ message Event {
     EmergencyApplied emergency_applied = 4;
     LibraryChanged library_changed = 5;
     UndoStateChanged undo_state_changed = 6;
+    LiveStateChanged live_state_changed = 7;
   }
 }
 
@@ -281,6 +298,7 @@ message Reply {
     TeamList team_list = 50;
     ServiceRuntimeProjection service_runtime_projection = 51;
     ServicePrintExport service_print_export = 52;
+    LiveStatus live_status = 53;
   }
 }
 

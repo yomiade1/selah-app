@@ -6,13 +6,15 @@ import type { GenEnum, GenFile, GenMessage } from "@bufbuild/protobuf/codegenv2"
 import { enumDesc, fileDesc, messageDesc } from "@bufbuild/protobuf/codegenv2";
 import type { Id, Timestamp } from "./common_pb.js";
 import { file_selah_v1_common } from "./common_pb.js";
+import type { LayerKind, LayerSpec, Scene } from "./render_pb.js";
+import { file_selah_v1_render } from "./render_pb.js";
 import type { Message } from "@bufbuild/protobuf";
 
 /**
  * Describes the file selah/v1/service.proto.
  */
 export const file_selah_v1_service: GenFile = /*@__PURE__*/
-  fileDesc("ChZzZWxhaC92MS9zZXJ2aWNlLnByb3RvEghzZWxhaC52MSLCBAoLU2VydmljZUl0ZW0SGAoCaWQYASABKAsyDC5zZWxhaC52MS5JZBInCgRraW5kGAIgASgOMhkuc2VsYWgudjEuU2VydmljZUl0ZW1LaW5kEiAKCmNvbnRlbnRfaWQYAyABKAsyDC5zZWxhaC52MS5JZBIkCg5hcnJhbmdlbWVudF9pZBgEIAEoCzIMLnNlbGFoLnYxLklkEg0KBXRpdGxlGAUgASgJEg0KBW5vdGVzGAYgASgJEhsKE3NjcmlwdHVyZV9yZWZlcmVuY2UYByABKAkSGQoRYmlibGVfdHJhbnNsYXRpb24YCCABKAkSEAoIc3VidGl0bGUYCSABKAkSDQoFb3duZXIYCiABKAkSGAoQZHVyYXRpb25fc2Vjb25kcxgLIAEoDRIhCgt0ZW1wbGF0ZV9pZBgMIAEoCzIMLnNlbGFoLnYxLklkEhEKCWxvb2tfbmFtZRgNIAEoCRIdCgdsb29rX2lkGA4gASgLMgwuc2VsYWgudjEuSWQSKQoTYmFja2dyb3VuZF9tZWRpYV9pZBgPIAEoCzIMLnNlbGFoLnYxLklkEhIKCnN0YXR1c190YWcYECABKAkSEAoIc29uZ19rZXkYESABKAkSGQoRY291bnRkb3duX3NlY29uZHMYEiABKA0SHQoVY291bnRkb3duX3RhcmdldF90aW1lGBMgASgJEhkKEWNvdW50ZG93bl9tZXNzYWdlGBQgASgJEhwKFHRyYW5zbGF0aW9uX2xhbmd1YWdlGBUgASgJIogDCgdTZXJ2aWNlEhgKAmlkGAEgASgLMgwuc2VsYWgudjEuSWQSDAoEbmFtZRgCIAEoCRImCglzdGFydHNfYXQYAyABKAsyEy5zZWxhaC52MS5UaW1lc3RhbXASJQoPc2VydmljZV90eXBlX2lkGAQgASgLMgwuc2VsYWgudjEuSWQSJAoFaXRlbXMYBSADKAsyFS5zZWxhaC52MS5TZXJ2aWNlSXRlbRIeCgh0ZWFtX2lkcxgGIAMoCzIMLnNlbGFoLnYxLklkEg4KBnNlcmllcxgHIAEoCRIQCghsb2NhdGlvbhgIIAEoCRINCgVub3RlcxgJIAEoCRInChFzb3VyY2Vfc2VydmljZV9pZBgKIAEoCzIMLnNlbGFoLnYxLklkEiAKGHBsYW5uZWRfZHVyYXRpb25fc2Vjb25kcxgLIAEoDRIpChNkZWZhdWx0X3RlbXBsYXRlX2lkGAwgASgLMgwuc2VsYWgudjEuSWQSGQoRZGVmYXVsdF9sb29rX25hbWUYDSABKAkiggIKC1NlcnZpY2VUeXBlEhgKAmlkGAEgASgLMgwuc2VsYWgudjEuSWQSDAoEbmFtZRgCIAEoCRIaChJkZWZhdWx0X3N0YXJ0X3RpbWUYAyABKAkSIAoYZGVmYXVsdF9kdXJhdGlvbl9zZWNvbmRzGAQgASgNEhgKEGRlZmF1bHRfbG9jYXRpb24YBSABKAkSKQoTZGVmYXVsdF90ZW1wbGF0ZV9pZBgGIAEoCzIMLnNlbGFoLnYxLklkEhkKEWRlZmF1bHRfbG9va19uYW1lGAcgASgJEi0KDnRlbXBsYXRlX2l0ZW1zGAggAygLMhUuc2VsYWgudjEuU2VydmljZUl0ZW0iegoKVGVhbU1lbWJlchIYCgJpZBgBIAEoCzIMLnNlbGFoLnYxLklkEgwKBG5hbWUYAiABKAkSEAoIaW5pdGlhbHMYAyABKAkSDAoEcm9sZRgEIAEoCRIRCgljb25maXJtZWQYBSABKAgSEQoJbW9kZV9sb2NrGAYgASgJIlUKBFRlYW0SGAoCaWQYASABKAsyDC5zZWxhaC52MS5JZBIMCgRuYW1lGAIgASgJEiUKB21lbWJlcnMYAyADKAsyFC5zZWxhaC52MS5UZWFtTWVtYmVyIjEKC1NhdmVTZXJ2aWNlEiIKB3NlcnZpY2UYASABKAsyES5zZWxhaC52MS5TZXJ2aWNlIikKDURlbGV0ZVNlcnZpY2USGAoCaWQYASABKAsyDC5zZWxhaC52MS5JZCImCgpHZXRTZXJ2aWNlEhgKAmlkGAEgASgLMgwuc2VsYWgudjEuSWQiLQoMTGlzdFNlcnZpY2VzEg0KBWxpbWl0GAEgASgNEg4KBm9mZnNldBgCIAEoDSIyCgtTZXJ2aWNlTGlzdBIjCghzZXJ2aWNlcxgBIAMoCzIRLnNlbGFoLnYxLlNlcnZpY2UiPgoPU2F2ZVNlcnZpY2VUeXBlEisKDHNlcnZpY2VfdHlwZRgBIAEoCzIVLnNlbGFoLnYxLlNlcnZpY2VUeXBlIi0KEURlbGV0ZVNlcnZpY2VUeXBlEhgKAmlkGAEgASgLMgwuc2VsYWgudjEuSWQiKgoOR2V0U2VydmljZVR5cGUSGAoCaWQYASABKAsyDC5zZWxhaC52MS5JZCIxChBMaXN0U2VydmljZVR5cGVzEg0KBWxpbWl0GAEgASgNEg4KBm9mZnNldBgCIAEoDSI/Cg9TZXJ2aWNlVHlwZUxpc3QSLAoNc2VydmljZV90eXBlcxgBIAMoCzIVLnNlbGFoLnYxLlNlcnZpY2VUeXBlIigKCFNhdmVUZWFtEhwKBHRlYW0YASABKAsyDi5zZWxhaC52MS5UZWFtIiYKCkRlbGV0ZVRlYW0SGAoCaWQYASABKAsyDC5zZWxhaC52MS5JZCIjCgdHZXRUZWFtEhgKAmlkGAEgASgLMgwuc2VsYWgudjEuSWQiKgoJTGlzdFRlYW1zEg0KBWxpbWl0GAEgASgNEg4KBm9mZnNldBgCIAEoDSIpCghUZWFtTGlzdBIdCgV0ZWFtcxgBIAMoCzIOLnNlbGFoLnYxLlRlYW0ixQEKGUNyZWF0ZVNlcnZpY2VGcm9tUHJldmlvdXMSJwoRc291cmNlX3NlcnZpY2VfaWQYASABKAsyDC5zZWxhaC52MS5JZBIlCg9zZXJ2aWNlX3R5cGVfaWQYAiABKAsyDC5zZWxhaC52MS5JZBIMCgRuYW1lGAMgASgJEiYKCXN0YXJ0c19hdBgEIAEoCzITLnNlbGFoLnYxLlRpbWVzdGFtcBIOCgZzZXJpZXMYBSABKAkSEgoKa2VlcF9zb25ncxgGIAEoCCKLAgoUUHJvamVjdGVkU2VydmljZUl0ZW0SHQoHaXRlbV9pZBgBIAEoCzIMLnNlbGFoLnYxLklkEg0KBWluZGV4GAIgASgNEhYKDm9mZnNldF9zZWNvbmRzGAMgASgNEhgKEGR1cmF0aW9uX3NlY29uZHMYBCABKA0SJgoJc3RhcnRzX2F0GAUgASgLMhMuc2VsYWgudjEuVGltZXN0YW1wEiQKB2VuZHNfYXQYBiABKAsyEy5zZWxhaC52MS5UaW1lc3RhbXASFgoOZm9ybWF0dGVkX3RpbWUYByABKAkSGgoSZm9ybWF0dGVkX2R1cmF0aW9uGAggASgJEhEKCWlzX2hlYWRlchgJIAEoCCJdChVQcm9qZWN0U2VydmljZVJ1bnRpbWUSIAoKc2VydmljZV9pZBgBIAEoCzIMLnNlbGFoLnYxLklkEiIKB3NlcnZpY2UYAiABKAsyES5zZWxhaC52MS5TZXJ2aWNlIvUBChhTZXJ2aWNlUnVudGltZVByb2plY3Rpb24SLQoFaXRlbXMYASADKAsyHi5zZWxhaC52MS5Qcm9qZWN0ZWRTZXJ2aWNlSXRlbRIeChZ0b3RhbF9kdXJhdGlvbl9zZWNvbmRzGAIgASgNEi4KEXByb2plY3RlZF9lbmRzX2F0GAMgASgLMhMuc2VsYWgudjEuVGltZXN0YW1wEhwKFGZvcm1hdHRlZF9zdGFydF90aW1lGAQgASgJEhoKEmZvcm1hdHRlZF9lbmRfdGltZRgFIAEoCRIgChhmb3JtYXR0ZWRfdG90YWxfZHVyYXRpb24YBiABKAkidQoSRXhwb3J0U2VydmljZVByaW50EiAKCnNlcnZpY2VfaWQYASABKAsyDC5zZWxhaC52MS5JZBIoCgRraW5kGAIgASgOMhouc2VsYWgudjEuU2VydmljZVByaW50S2luZBITCgtvdXRwdXRfcGF0aBgDIAEoCSJXChJTZXJ2aWNlUHJpbnRFeHBvcnQSDAoEcGF0aBgBIAEoCRIMCgRodG1sGAIgASgJEhEKCXBkZl9ieXRlcxgDIAEoDBISCgpwYWdlX2NvdW50GAQgASgNKqoCCg9TZXJ2aWNlSXRlbUtpbmQSIQodU0VSVklDRV9JVEVNX0tJTkRfVU5TUEVDSUZJRUQQABIaChZTRVJWSUNFX0lURU1fS0lORF9TT05HEAESHwobU0VSVklDRV9JVEVNX0tJTkRfU0NSSVBUVVJFEAISGwoXU0VSVklDRV9JVEVNX0tJTkRfTUVESUEQAxIiCh5TRVJWSUNFX0lURU1fS0lORF9QUkVTRU5UQVRJT04QBBIaChZTRVJWSUNFX0lURU1fS0lORF9OT1RFEAUSHwobU0VSVklDRV9JVEVNX0tJTkRfQ09VTlRET1dOEAYSHAoYU0VSVklDRV9JVEVNX0tJTkRfSEVBREVSEAcSGwoXU0VSVklDRV9JVEVNX0tJTkRfQVVESU8QCCqeAQoQU2VydmljZVByaW50S2luZBIiCh5TRVJWSUNFX1BSSU5UX0tJTkRfVU5TUEVDSUZJRUQQABIkCiBTRVJWSUNFX1BSSU5UX0tJTkRfU0VSVklDRV9PUkRFUhABEiMKH1NFUlZJQ0VfUFJJTlRfS0lORF9DSE9SRF9DSEFSVFMQAhIbChdTRVJWSUNFX1BSSU5UX0tJTkRfQk9USBADQhWqAhJTZWxhaC5Db250cmFjdHMuVjFiBnByb3RvMw", [file_selah_v1_common]);
+  fileDesc("ChZzZWxhaC92MS9zZXJ2aWNlLnByb3RvEghzZWxhaC52MSLCBAoLU2VydmljZUl0ZW0SGAoCaWQYASABKAsyDC5zZWxhaC52MS5JZBInCgRraW5kGAIgASgOMhkuc2VsYWgudjEuU2VydmljZUl0ZW1LaW5kEiAKCmNvbnRlbnRfaWQYAyABKAsyDC5zZWxhaC52MS5JZBIkCg5hcnJhbmdlbWVudF9pZBgEIAEoCzIMLnNlbGFoLnYxLklkEg0KBXRpdGxlGAUgASgJEg0KBW5vdGVzGAYgASgJEhsKE3NjcmlwdHVyZV9yZWZlcmVuY2UYByABKAkSGQoRYmlibGVfdHJhbnNsYXRpb24YCCABKAkSEAoIc3VidGl0bGUYCSABKAkSDQoFb3duZXIYCiABKAkSGAoQZHVyYXRpb25fc2Vjb25kcxgLIAEoDRIhCgt0ZW1wbGF0ZV9pZBgMIAEoCzIMLnNlbGFoLnYxLklkEhEKCWxvb2tfbmFtZRgNIAEoCRIdCgdsb29rX2lkGA4gASgLMgwuc2VsYWgudjEuSWQSKQoTYmFja2dyb3VuZF9tZWRpYV9pZBgPIAEoCzIMLnNlbGFoLnYxLklkEhIKCnN0YXR1c190YWcYECABKAkSEAoIc29uZ19rZXkYESABKAkSGQoRY291bnRkb3duX3NlY29uZHMYEiABKA0SHQoVY291bnRkb3duX3RhcmdldF90aW1lGBMgASgJEhkKEWNvdW50ZG93bl9tZXNzYWdlGBQgASgJEhwKFHRyYW5zbGF0aW9uX2xhbmd1YWdlGBUgASgJIogDCgdTZXJ2aWNlEhgKAmlkGAEgASgLMgwuc2VsYWgudjEuSWQSDAoEbmFtZRgCIAEoCRImCglzdGFydHNfYXQYAyABKAsyEy5zZWxhaC52MS5UaW1lc3RhbXASJQoPc2VydmljZV90eXBlX2lkGAQgASgLMgwuc2VsYWgudjEuSWQSJAoFaXRlbXMYBSADKAsyFS5zZWxhaC52MS5TZXJ2aWNlSXRlbRIeCgh0ZWFtX2lkcxgGIAMoCzIMLnNlbGFoLnYxLklkEg4KBnNlcmllcxgHIAEoCRIQCghsb2NhdGlvbhgIIAEoCRINCgVub3RlcxgJIAEoCRInChFzb3VyY2Vfc2VydmljZV9pZBgKIAEoCzIMLnNlbGFoLnYxLklkEiAKGHBsYW5uZWRfZHVyYXRpb25fc2Vjb25kcxgLIAEoDRIpChNkZWZhdWx0X3RlbXBsYXRlX2lkGAwgASgLMgwuc2VsYWgudjEuSWQSGQoRZGVmYXVsdF9sb29rX25hbWUYDSABKAkiggIKC1NlcnZpY2VUeXBlEhgKAmlkGAEgASgLMgwuc2VsYWgudjEuSWQSDAoEbmFtZRgCIAEoCRIaChJkZWZhdWx0X3N0YXJ0X3RpbWUYAyABKAkSIAoYZGVmYXVsdF9kdXJhdGlvbl9zZWNvbmRzGAQgASgNEhgKEGRlZmF1bHRfbG9jYXRpb24YBSABKAkSKQoTZGVmYXVsdF90ZW1wbGF0ZV9pZBgGIAEoCzIMLnNlbGFoLnYxLklkEhkKEWRlZmF1bHRfbG9va19uYW1lGAcgASgJEi0KDnRlbXBsYXRlX2l0ZW1zGAggAygLMhUuc2VsYWgudjEuU2VydmljZUl0ZW0iegoKVGVhbU1lbWJlchIYCgJpZBgBIAEoCzIMLnNlbGFoLnYxLklkEgwKBG5hbWUYAiABKAkSEAoIaW5pdGlhbHMYAyABKAkSDAoEcm9sZRgEIAEoCRIRCgljb25maXJtZWQYBSABKAgSEQoJbW9kZV9sb2NrGAYgASgJIlUKBFRlYW0SGAoCaWQYASABKAsyDC5zZWxhaC52MS5JZBIMCgRuYW1lGAIgASgJEiUKB21lbWJlcnMYAyADKAsyFC5zZWxhaC52MS5UZWFtTWVtYmVyIjEKC1NhdmVTZXJ2aWNlEiIKB3NlcnZpY2UYASABKAsyES5zZWxhaC52MS5TZXJ2aWNlIikKDURlbGV0ZVNlcnZpY2USGAoCaWQYASABKAsyDC5zZWxhaC52MS5JZCImCgpHZXRTZXJ2aWNlEhgKAmlkGAEgASgLMgwuc2VsYWgudjEuSWQiLQoMTGlzdFNlcnZpY2VzEg0KBWxpbWl0GAEgASgNEg4KBm9mZnNldBgCIAEoDSIyCgtTZXJ2aWNlTGlzdBIjCghzZXJ2aWNlcxgBIAMoCzIRLnNlbGFoLnYxLlNlcnZpY2UiPgoPU2F2ZVNlcnZpY2VUeXBlEisKDHNlcnZpY2VfdHlwZRgBIAEoCzIVLnNlbGFoLnYxLlNlcnZpY2VUeXBlIi0KEURlbGV0ZVNlcnZpY2VUeXBlEhgKAmlkGAEgASgLMgwuc2VsYWgudjEuSWQiKgoOR2V0U2VydmljZVR5cGUSGAoCaWQYASABKAsyDC5zZWxhaC52MS5JZCIxChBMaXN0U2VydmljZVR5cGVzEg0KBWxpbWl0GAEgASgNEg4KBm9mZnNldBgCIAEoDSI/Cg9TZXJ2aWNlVHlwZUxpc3QSLAoNc2VydmljZV90eXBlcxgBIAMoCzIVLnNlbGFoLnYxLlNlcnZpY2VUeXBlIigKCFNhdmVUZWFtEhwKBHRlYW0YASABKAsyDi5zZWxhaC52MS5UZWFtIiYKCkRlbGV0ZVRlYW0SGAoCaWQYASABKAsyDC5zZWxhaC52MS5JZCIjCgdHZXRUZWFtEhgKAmlkGAEgASgLMgwuc2VsYWgudjEuSWQiKgoJTGlzdFRlYW1zEg0KBWxpbWl0GAEgASgNEg4KBm9mZnNldBgCIAEoDSIpCghUZWFtTGlzdBIdCgV0ZWFtcxgBIAMoCzIOLnNlbGFoLnYxLlRlYW0ixQEKGUNyZWF0ZVNlcnZpY2VGcm9tUHJldmlvdXMSJwoRc291cmNlX3NlcnZpY2VfaWQYASABKAsyDC5zZWxhaC52MS5JZBIlCg9zZXJ2aWNlX3R5cGVfaWQYAiABKAsyDC5zZWxhaC52MS5JZBIMCgRuYW1lGAMgASgJEiYKCXN0YXJ0c19hdBgEIAEoCzITLnNlbGFoLnYxLlRpbWVzdGFtcBIOCgZzZXJpZXMYBSABKAkSEgoKa2VlcF9zb25ncxgGIAEoCCKLAgoUUHJvamVjdGVkU2VydmljZUl0ZW0SHQoHaXRlbV9pZBgBIAEoCzIMLnNlbGFoLnYxLklkEg0KBWluZGV4GAIgASgNEhYKDm9mZnNldF9zZWNvbmRzGAMgASgNEhgKEGR1cmF0aW9uX3NlY29uZHMYBCABKA0SJgoJc3RhcnRzX2F0GAUgASgLMhMuc2VsYWgudjEuVGltZXN0YW1wEiQKB2VuZHNfYXQYBiABKAsyEy5zZWxhaC52MS5UaW1lc3RhbXASFgoOZm9ybWF0dGVkX3RpbWUYByABKAkSGgoSZm9ybWF0dGVkX2R1cmF0aW9uGAggASgJEhEKCWlzX2hlYWRlchgJIAEoCCJdChVQcm9qZWN0U2VydmljZVJ1bnRpbWUSIAoKc2VydmljZV9pZBgBIAEoCzIMLnNlbGFoLnYxLklkEiIKB3NlcnZpY2UYAiABKAsyES5zZWxhaC52MS5TZXJ2aWNlIvUBChhTZXJ2aWNlUnVudGltZVByb2plY3Rpb24SLQoFaXRlbXMYASADKAsyHi5zZWxhaC52MS5Qcm9qZWN0ZWRTZXJ2aWNlSXRlbRIeChZ0b3RhbF9kdXJhdGlvbl9zZWNvbmRzGAIgASgNEi4KEXByb2plY3RlZF9lbmRzX2F0GAMgASgLMhMuc2VsYWgudjEuVGltZXN0YW1wEhwKFGZvcm1hdHRlZF9zdGFydF90aW1lGAQgASgJEhoKEmZvcm1hdHRlZF9lbmRfdGltZRgFIAEoCRIgChhmb3JtYXR0ZWRfdG90YWxfZHVyYXRpb24YBiABKAkidQoSRXhwb3J0U2VydmljZVByaW50EiAKCnNlcnZpY2VfaWQYASABKAsyDC5zZWxhaC52MS5JZBIoCgRraW5kGAIgASgOMhouc2VsYWgudjEuU2VydmljZVByaW50S2luZBITCgtvdXRwdXRfcGF0aBgDIAEoCSJXChJTZXJ2aWNlUHJpbnRFeHBvcnQSDAoEcGF0aBgBIAEoCRIMCgRodG1sGAIgASgJEhEKCXBkZl9ieXRlcxgDIAEoDBISCgpwYWdlX2NvdW50GAQgASgNIrACCglMaXZlU2xpZGUSDQoFaW5kZXgYASABKA0SDQoFbGFiZWwYAiABKAkSFAoMc2VjdGlvbl9raW5kGAMgASgJEhUKDXNlY3Rpb25fY29sb3IYBCABKAkSDgoGaG90a2V5GAUgASgJEgwKBHRleHQYBiABKAkSEwoLY2hvcmRzX2pzb24YByABKAkSDQoFbm90ZXMYCCABKAkSEgoKdGl0bGVfdGV4dBgJIAEoCRIWCg5yZWZlcmVuY2VfdGV4dBgKIAEoCRITCgtmb290ZXJfdGV4dBgLIAEoCRIYChB0cmFuc2xhdGlvbl90ZXh0GAwgASgJEhUKDWVsZW1lbnRzX2pzb24YDSABKAkSEgoKc3R5bGVfanNvbhgOIAEoCRIQCghpc19ibGFuaxgPIAEoCCLEAQoOTGl2ZUl0ZW1TbGlkZXMSHQoHaXRlbV9pZBgBIAEoCzIMLnNlbGFoLnYxLklkEhIKCml0ZW1faW5kZXgYAiABKA0SJwoEa2luZBgDIAEoDjIZLnNlbGFoLnYxLlNlcnZpY2VJdGVtS2luZBINCgV0aXRsZRgEIAEoCRIQCghzdWJ0aXRsZRgFIAEoCRIQCghzb25nX2tleRgGIAEoCRIjCgZzbGlkZXMYByADKAsyEy5zZWxhaC52MS5MaXZlU2xpZGUiiAEKD0xpdmVMYXllclN0YXR1cxIhCgRraW5kGAEgASgOMhMuc2VsYWgudjEuTGF5ZXJLaW5kEg4KBmFjdGl2ZRgCIAEoCBINCgV0aXRsZRgDIAEoCRIQCghzdWJ0aXRsZRgEIAEoCRIhCgRzcGVjGAUgASgLMhMuc2VsYWgudjEuTGF5ZXJTcGVjIqUBChBBdWRpb0xheWVyU3RhdHVzEg8KB3BsYXlpbmcYASABKAgSHgoIbWVkaWFfaWQYAiABKAsyDC5zZWxhaC52MS5JZBINCgV0aXRsZRgDIAEoCRIUCgxjb250ZW50X2hhc2gYBCABKAkSFwoPbWVkaWFfZXh0ZW5zaW9uGAUgASgJEg4KBnZvbHVtZRgGIAEoAhISCgpsb29wX2F1ZGlvGAcgASgIIrQFCgpMaXZlU3RhdHVzEiAKCnNlcnZpY2VfaWQYASABKAsyDC5zZWxhaC52MS5JZBIUCgxzZXJ2aWNlX25hbWUYAiABKAkSFwoPaGFzX2FjdGl2ZV9pdGVtGAMgASgIEhoKEmN1cnJlbnRfaXRlbV9pbmRleBgEIAEoDRIbChNjdXJyZW50X3NsaWRlX2luZGV4GAUgASgNEhAKCGhhc19uZXh0GAYgASgIEhcKD25leHRfaXRlbV9pbmRleBgHIAEoDRIYChBuZXh0X3NsaWRlX2luZGV4GAggASgNEhoKEmN1cnJlbnRfaXRlbV90aXRsZRgJIAEoCRIXCg9uZXh0X2l0ZW1fdGl0bGUYCiABKAkSGwoTY3VycmVudF9zbGlkZV9sYWJlbBgLIAEoCRIYChBuZXh0X3NsaWRlX2xhYmVsGAwgASgJEhoKEmN1cnJlbnRfc2xpZGVfdGV4dBgNIAEoCRIXCg9uZXh0X3NsaWRlX3RleHQYDiABKAkSGwoTY3VycmVudF9jaG9yZHNfanNvbhgPIAEoCRIVCg1jdXJyZW50X25vdGVzGBAgASgJEhAKCHNvbmdfa2V5GBEgASgJEjAKE2N1cnJlbnRfaXRlbV9zbGlkZXMYEiADKAsyEy5zZWxhaC52MS5MaXZlU2xpZGUSKQoGbGF5ZXJzGBMgAygLMhkuc2VsYWgudjEuTGl2ZUxheWVyU3RhdHVzEikKBWF1ZGlvGBQgASgLMhouc2VsYWgudjEuQXVkaW9MYXllclN0YXR1cxIRCglzaG93X2xvZ28YFSABKAgSDwoHY2xlYXJlZBgWIAEoCBIVCg1jYW5fbGl2ZV91bmRvGBcgASgIEhUKDWNhbl9saXZlX3JlZG8YGCABKAgSFgoOc2NlbmVfcmV2aXNpb24YGSABKAQiTwoPTG9hZExpdmVTZXJ2aWNlEiAKCnNlcnZpY2VfaWQYASABKAsyDC5zZWxhaC52MS5JZBIaChJ0cmlnZ2VyX2ZpcnN0X2l0ZW0YAiABKAgiIQoLVHJpZ2dlckl0ZW0SEgoKaXRlbV9pbmRleBgBIAEoDSI3CgxUcmlnZ2VyU2xpZGUSEgoKaXRlbV9pbmRleBgBIAEoDRITCgtzbGlkZV9pbmRleBgCIAEoDSILCglOZXh0U2xpZGUiDwoNUHJldmlvdXNTbGlkZSIKCghOZXh0SXRlbSIOCgxQcmV2aW91c0l0ZW0iJgoUVHJpZ2dlclNlY3Rpb25Ib3RrZXkSDgoGaG90a2V5GAEgASgJIi8KCkNsZWFyTGF5ZXISIQoEa2luZBgBIAEoDjITLnNlbGFoLnYxLkxheWVyS2luZCIzCg1TZXRMYXllclN0YXRlEiIKBWxheWVyGAEgASgLMhMuc2VsYWgudjEuTGF5ZXJTcGVjIiQKD1Nob3dMb2dvQ29tbWFuZBIRCglzaG93X2xvZ28YASABKAgiVAoOUGxheUF1ZGlvTGF5ZXISHgoIbWVkaWFfaWQYASABKAsyDC5zZWxhaC52MS5JZBIOCgZ2b2x1bWUYAiABKAISEgoKbG9vcF9hdWRpbxgDIAEoCCIQCg5TdG9wQXVkaW9MYXllciIKCghMaXZlVW5kbyIKCghMaXZlUmVkbyIOCgxHZXRMaXZlU3RhdGUizwEKEExpdmVTdGF0ZUNoYW5nZWQSFgoOc2NlbmVfcmV2aXNpb24YASABKAQSIAoKc2VydmljZV9pZBgCIAEoCzIMLnNlbGFoLnYxLklkEhoKEmN1cnJlbnRfaXRlbV9pbmRleBgDIAEoDRIbChNjdXJyZW50X3NsaWRlX2luZGV4GAQgASgNEg8KB2NsZWFyZWQYBSABKAgSEQoJc2hvd19sb2dvGAYgASgIEiQKBnN0YXR1cxgHIAMoCzIULnNlbGFoLnYxLkxpdmVTdGF0dXMiWQoRTGl2ZVNuYXBzaG90RW50cnkSHgoFc2NlbmUYASABKAsyDy5zZWxhaC52MS5TY2VuZRIkCgZzdGF0dXMYAiABKAsyFC5zZWxhaC52MS5MaXZlU3RhdHVzIvABChNMaXZlTWFjaGluZVNuYXBzaG90EiIKB3NlcnZpY2UYASABKAsyES5zZWxhaC52MS5TZXJ2aWNlEi0KC2l0ZW1fc2xpZGVzGAIgAygLMhguc2VsYWgudjEuTGl2ZUl0ZW1TbGlkZXMSJAoGc3RhdHVzGAMgASgLMhQuc2VsYWgudjEuTGl2ZVN0YXR1cxIvCgp1bmRvX3N0YWNrGAQgAygLMhsuc2VsYWgudjEuTGl2ZVNuYXBzaG90RW50cnkSLwoKcmVkb19zdGFjaxgFIAMoCzIbLnNlbGFoLnYxLkxpdmVTbmFwc2hvdEVudHJ5KqoCCg9TZXJ2aWNlSXRlbUtpbmQSIQodU0VSVklDRV9JVEVNX0tJTkRfVU5TUEVDSUZJRUQQABIaChZTRVJWSUNFX0lURU1fS0lORF9TT05HEAESHwobU0VSVklDRV9JVEVNX0tJTkRfU0NSSVBUVVJFEAISGwoXU0VSVklDRV9JVEVNX0tJTkRfTUVESUEQAxIiCh5TRVJWSUNFX0lURU1fS0lORF9QUkVTRU5UQVRJT04QBBIaChZTRVJWSUNFX0lURU1fS0lORF9OT1RFEAUSHwobU0VSVklDRV9JVEVNX0tJTkRfQ09VTlRET1dOEAYSHAoYU0VSVklDRV9JVEVNX0tJTkRfSEVBREVSEAcSGwoXU0VSVklDRV9JVEVNX0tJTkRfQVVESU8QCCqeAQoQU2VydmljZVByaW50S2luZBIiCh5TRVJWSUNFX1BSSU5UX0tJTkRfVU5TUEVDSUZJRUQQABIkCiBTRVJWSUNFX1BSSU5UX0tJTkRfU0VSVklDRV9PUkRFUhABEiMKH1NFUlZJQ0VfUFJJTlRfS0lORF9DSE9SRF9DSEFSVFMQAhIbChdTRVJWSUNFX1BSSU5UX0tJTkRfQk9USBADQhWqAhJTZWxhaC5Db250cmFjdHMuVjFiBnByb3RvMw", [file_selah_v1_common, file_selah_v1_render]);
 
 /**
  * @generated from message selah.v1.ServiceItem
@@ -820,6 +822,729 @@ export type ServicePrintExport = Message<"selah.v1.ServicePrintExport"> & {
  */
 export const ServicePrintExportSchema: GenMessage<ServicePrintExport> = /*@__PURE__*/
   messageDesc(file_selah_v1_service, 25);
+
+/**
+ * Live state machine, triggering, layers, hotkeys, audio layer and undo (M4.2).
+ *
+ * @generated from message selah.v1.LiveSlide
+ */
+export type LiveSlide = Message<"selah.v1.LiveSlide"> & {
+  /**
+   * @generated from field: uint32 index = 1;
+   */
+  index: number;
+
+  /**
+   * @generated from field: string label = 2;
+   */
+  label: string;
+
+  /**
+   * @generated from field: string section_kind = 3;
+   */
+  sectionKind: string;
+
+  /**
+   * @generated from field: string section_color = 4;
+   */
+  sectionColor: string;
+
+  /**
+   * @generated from field: string hotkey = 5;
+   */
+  hotkey: string;
+
+  /**
+   * @generated from field: string text = 6;
+   */
+  text: string;
+
+  /**
+   * @generated from field: string chords_json = 7;
+   */
+  chordsJson: string;
+
+  /**
+   * @generated from field: string notes = 8;
+   */
+  notes: string;
+
+  /**
+   * @generated from field: string title_text = 9;
+   */
+  titleText: string;
+
+  /**
+   * @generated from field: string reference_text = 10;
+   */
+  referenceText: string;
+
+  /**
+   * @generated from field: string footer_text = 11;
+   */
+  footerText: string;
+
+  /**
+   * @generated from field: string translation_text = 12;
+   */
+  translationText: string;
+
+  /**
+   * @generated from field: string elements_json = 13;
+   */
+  elementsJson: string;
+
+  /**
+   * @generated from field: string style_json = 14;
+   */
+  styleJson: string;
+
+  /**
+   * @generated from field: bool is_blank = 15;
+   */
+  isBlank: boolean;
+};
+
+/**
+ * Describes the message selah.v1.LiveSlide.
+ * Use `create(LiveSlideSchema)` to create a new message.
+ */
+export const LiveSlideSchema: GenMessage<LiveSlide> = /*@__PURE__*/
+  messageDesc(file_selah_v1_service, 26);
+
+/**
+ * @generated from message selah.v1.LiveItemSlides
+ */
+export type LiveItemSlides = Message<"selah.v1.LiveItemSlides"> & {
+  /**
+   * @generated from field: selah.v1.Id item_id = 1;
+   */
+  itemId?: Id;
+
+  /**
+   * @generated from field: uint32 item_index = 2;
+   */
+  itemIndex: number;
+
+  /**
+   * @generated from field: selah.v1.ServiceItemKind kind = 3;
+   */
+  kind: ServiceItemKind;
+
+  /**
+   * @generated from field: string title = 4;
+   */
+  title: string;
+
+  /**
+   * @generated from field: string subtitle = 5;
+   */
+  subtitle: string;
+
+  /**
+   * @generated from field: string song_key = 6;
+   */
+  songKey: string;
+
+  /**
+   * @generated from field: repeated selah.v1.LiveSlide slides = 7;
+   */
+  slides: LiveSlide[];
+};
+
+/**
+ * Describes the message selah.v1.LiveItemSlides.
+ * Use `create(LiveItemSlidesSchema)` to create a new message.
+ */
+export const LiveItemSlidesSchema: GenMessage<LiveItemSlides> = /*@__PURE__*/
+  messageDesc(file_selah_v1_service, 27);
+
+/**
+ * @generated from message selah.v1.LiveLayerStatus
+ */
+export type LiveLayerStatus = Message<"selah.v1.LiveLayerStatus"> & {
+  /**
+   * @generated from field: selah.v1.LayerKind kind = 1;
+   */
+  kind: LayerKind;
+
+  /**
+   * @generated from field: bool active = 2;
+   */
+  active: boolean;
+
+  /**
+   * @generated from field: string title = 3;
+   */
+  title: string;
+
+  /**
+   * @generated from field: string subtitle = 4;
+   */
+  subtitle: string;
+
+  /**
+   * @generated from field: selah.v1.LayerSpec spec = 5;
+   */
+  spec?: LayerSpec;
+};
+
+/**
+ * Describes the message selah.v1.LiveLayerStatus.
+ * Use `create(LiveLayerStatusSchema)` to create a new message.
+ */
+export const LiveLayerStatusSchema: GenMessage<LiveLayerStatus> = /*@__PURE__*/
+  messageDesc(file_selah_v1_service, 28);
+
+/**
+ * @generated from message selah.v1.AudioLayerStatus
+ */
+export type AudioLayerStatus = Message<"selah.v1.AudioLayerStatus"> & {
+  /**
+   * @generated from field: bool playing = 1;
+   */
+  playing: boolean;
+
+  /**
+   * @generated from field: selah.v1.Id media_id = 2;
+   */
+  mediaId?: Id;
+
+  /**
+   * @generated from field: string title = 3;
+   */
+  title: string;
+
+  /**
+   * @generated from field: string content_hash = 4;
+   */
+  contentHash: string;
+
+  /**
+   * @generated from field: string media_extension = 5;
+   */
+  mediaExtension: string;
+
+  /**
+   * @generated from field: float volume = 6;
+   */
+  volume: number;
+
+  /**
+   * @generated from field: bool loop_audio = 7;
+   */
+  loopAudio: boolean;
+};
+
+/**
+ * Describes the message selah.v1.AudioLayerStatus.
+ * Use `create(AudioLayerStatusSchema)` to create a new message.
+ */
+export const AudioLayerStatusSchema: GenMessage<AudioLayerStatus> = /*@__PURE__*/
+  messageDesc(file_selah_v1_service, 29);
+
+/**
+ * @generated from message selah.v1.LiveStatus
+ */
+export type LiveStatus = Message<"selah.v1.LiveStatus"> & {
+  /**
+   * @generated from field: selah.v1.Id service_id = 1;
+   */
+  serviceId?: Id;
+
+  /**
+   * @generated from field: string service_name = 2;
+   */
+  serviceName: string;
+
+  /**
+   * @generated from field: bool has_active_item = 3;
+   */
+  hasActiveItem: boolean;
+
+  /**
+   * @generated from field: uint32 current_item_index = 4;
+   */
+  currentItemIndex: number;
+
+  /**
+   * @generated from field: uint32 current_slide_index = 5;
+   */
+  currentSlideIndex: number;
+
+  /**
+   * @generated from field: bool has_next = 6;
+   */
+  hasNext: boolean;
+
+  /**
+   * @generated from field: uint32 next_item_index = 7;
+   */
+  nextItemIndex: number;
+
+  /**
+   * @generated from field: uint32 next_slide_index = 8;
+   */
+  nextSlideIndex: number;
+
+  /**
+   * @generated from field: string current_item_title = 9;
+   */
+  currentItemTitle: string;
+
+  /**
+   * @generated from field: string next_item_title = 10;
+   */
+  nextItemTitle: string;
+
+  /**
+   * @generated from field: string current_slide_label = 11;
+   */
+  currentSlideLabel: string;
+
+  /**
+   * @generated from field: string next_slide_label = 12;
+   */
+  nextSlideLabel: string;
+
+  /**
+   * @generated from field: string current_slide_text = 13;
+   */
+  currentSlideText: string;
+
+  /**
+   * @generated from field: string next_slide_text = 14;
+   */
+  nextSlideText: string;
+
+  /**
+   * @generated from field: string current_chords_json = 15;
+   */
+  currentChordsJson: string;
+
+  /**
+   * @generated from field: string current_notes = 16;
+   */
+  currentNotes: string;
+
+  /**
+   * @generated from field: string song_key = 17;
+   */
+  songKey: string;
+
+  /**
+   * @generated from field: repeated selah.v1.LiveSlide current_item_slides = 18;
+   */
+  currentItemSlides: LiveSlide[];
+
+  /**
+   * @generated from field: repeated selah.v1.LiveLayerStatus layers = 19;
+   */
+  layers: LiveLayerStatus[];
+
+  /**
+   * @generated from field: selah.v1.AudioLayerStatus audio = 20;
+   */
+  audio?: AudioLayerStatus;
+
+  /**
+   * @generated from field: bool show_logo = 21;
+   */
+  showLogo: boolean;
+
+  /**
+   * @generated from field: bool cleared = 22;
+   */
+  cleared: boolean;
+
+  /**
+   * @generated from field: bool can_live_undo = 23;
+   */
+  canLiveUndo: boolean;
+
+  /**
+   * @generated from field: bool can_live_redo = 24;
+   */
+  canLiveRedo: boolean;
+
+  /**
+   * @generated from field: uint64 scene_revision = 25;
+   */
+  sceneRevision: bigint;
+};
+
+/**
+ * Describes the message selah.v1.LiveStatus.
+ * Use `create(LiveStatusSchema)` to create a new message.
+ */
+export const LiveStatusSchema: GenMessage<LiveStatus> = /*@__PURE__*/
+  messageDesc(file_selah_v1_service, 30);
+
+/**
+ * @generated from message selah.v1.LoadLiveService
+ */
+export type LoadLiveService = Message<"selah.v1.LoadLiveService"> & {
+  /**
+   * @generated from field: selah.v1.Id service_id = 1;
+   */
+  serviceId?: Id;
+
+  /**
+   * @generated from field: bool trigger_first_item = 2;
+   */
+  triggerFirstItem: boolean;
+};
+
+/**
+ * Describes the message selah.v1.LoadLiveService.
+ * Use `create(LoadLiveServiceSchema)` to create a new message.
+ */
+export const LoadLiveServiceSchema: GenMessage<LoadLiveService> = /*@__PURE__*/
+  messageDesc(file_selah_v1_service, 31);
+
+/**
+ * @generated from message selah.v1.TriggerItem
+ */
+export type TriggerItem = Message<"selah.v1.TriggerItem"> & {
+  /**
+   * @generated from field: uint32 item_index = 1;
+   */
+  itemIndex: number;
+};
+
+/**
+ * Describes the message selah.v1.TriggerItem.
+ * Use `create(TriggerItemSchema)` to create a new message.
+ */
+export const TriggerItemSchema: GenMessage<TriggerItem> = /*@__PURE__*/
+  messageDesc(file_selah_v1_service, 32);
+
+/**
+ * @generated from message selah.v1.TriggerSlide
+ */
+export type TriggerSlide = Message<"selah.v1.TriggerSlide"> & {
+  /**
+   * @generated from field: uint32 item_index = 1;
+   */
+  itemIndex: number;
+
+  /**
+   * @generated from field: uint32 slide_index = 2;
+   */
+  slideIndex: number;
+};
+
+/**
+ * Describes the message selah.v1.TriggerSlide.
+ * Use `create(TriggerSlideSchema)` to create a new message.
+ */
+export const TriggerSlideSchema: GenMessage<TriggerSlide> = /*@__PURE__*/
+  messageDesc(file_selah_v1_service, 33);
+
+/**
+ * @generated from message selah.v1.NextSlide
+ */
+export type NextSlide = Message<"selah.v1.NextSlide"> & {
+};
+
+/**
+ * Describes the message selah.v1.NextSlide.
+ * Use `create(NextSlideSchema)` to create a new message.
+ */
+export const NextSlideSchema: GenMessage<NextSlide> = /*@__PURE__*/
+  messageDesc(file_selah_v1_service, 34);
+
+/**
+ * @generated from message selah.v1.PreviousSlide
+ */
+export type PreviousSlide = Message<"selah.v1.PreviousSlide"> & {
+};
+
+/**
+ * Describes the message selah.v1.PreviousSlide.
+ * Use `create(PreviousSlideSchema)` to create a new message.
+ */
+export const PreviousSlideSchema: GenMessage<PreviousSlide> = /*@__PURE__*/
+  messageDesc(file_selah_v1_service, 35);
+
+/**
+ * @generated from message selah.v1.NextItem
+ */
+export type NextItem = Message<"selah.v1.NextItem"> & {
+};
+
+/**
+ * Describes the message selah.v1.NextItem.
+ * Use `create(NextItemSchema)` to create a new message.
+ */
+export const NextItemSchema: GenMessage<NextItem> = /*@__PURE__*/
+  messageDesc(file_selah_v1_service, 36);
+
+/**
+ * @generated from message selah.v1.PreviousItem
+ */
+export type PreviousItem = Message<"selah.v1.PreviousItem"> & {
+};
+
+/**
+ * Describes the message selah.v1.PreviousItem.
+ * Use `create(PreviousItemSchema)` to create a new message.
+ */
+export const PreviousItemSchema: GenMessage<PreviousItem> = /*@__PURE__*/
+  messageDesc(file_selah_v1_service, 37);
+
+/**
+ * @generated from message selah.v1.TriggerSectionHotkey
+ */
+export type TriggerSectionHotkey = Message<"selah.v1.TriggerSectionHotkey"> & {
+  /**
+   * @generated from field: string hotkey = 1;
+   */
+  hotkey: string;
+};
+
+/**
+ * Describes the message selah.v1.TriggerSectionHotkey.
+ * Use `create(TriggerSectionHotkeySchema)` to create a new message.
+ */
+export const TriggerSectionHotkeySchema: GenMessage<TriggerSectionHotkey> = /*@__PURE__*/
+  messageDesc(file_selah_v1_service, 38);
+
+/**
+ * @generated from message selah.v1.ClearLayer
+ */
+export type ClearLayer = Message<"selah.v1.ClearLayer"> & {
+  /**
+   * @generated from field: selah.v1.LayerKind kind = 1;
+   */
+  kind: LayerKind;
+};
+
+/**
+ * Describes the message selah.v1.ClearLayer.
+ * Use `create(ClearLayerSchema)` to create a new message.
+ */
+export const ClearLayerSchema: GenMessage<ClearLayer> = /*@__PURE__*/
+  messageDesc(file_selah_v1_service, 39);
+
+/**
+ * @generated from message selah.v1.SetLayerState
+ */
+export type SetLayerState = Message<"selah.v1.SetLayerState"> & {
+  /**
+   * @generated from field: selah.v1.LayerSpec layer = 1;
+   */
+  layer?: LayerSpec;
+};
+
+/**
+ * Describes the message selah.v1.SetLayerState.
+ * Use `create(SetLayerStateSchema)` to create a new message.
+ */
+export const SetLayerStateSchema: GenMessage<SetLayerState> = /*@__PURE__*/
+  messageDesc(file_selah_v1_service, 40);
+
+/**
+ * @generated from message selah.v1.ShowLogoCommand
+ */
+export type ShowLogoCommand = Message<"selah.v1.ShowLogoCommand"> & {
+  /**
+   * @generated from field: bool show_logo = 1;
+   */
+  showLogo: boolean;
+};
+
+/**
+ * Describes the message selah.v1.ShowLogoCommand.
+ * Use `create(ShowLogoCommandSchema)` to create a new message.
+ */
+export const ShowLogoCommandSchema: GenMessage<ShowLogoCommand> = /*@__PURE__*/
+  messageDesc(file_selah_v1_service, 41);
+
+/**
+ * @generated from message selah.v1.PlayAudioLayer
+ */
+export type PlayAudioLayer = Message<"selah.v1.PlayAudioLayer"> & {
+  /**
+   * @generated from field: selah.v1.Id media_id = 1;
+   */
+  mediaId?: Id;
+
+  /**
+   * @generated from field: float volume = 2;
+   */
+  volume: number;
+
+  /**
+   * @generated from field: bool loop_audio = 3;
+   */
+  loopAudio: boolean;
+};
+
+/**
+ * Describes the message selah.v1.PlayAudioLayer.
+ * Use `create(PlayAudioLayerSchema)` to create a new message.
+ */
+export const PlayAudioLayerSchema: GenMessage<PlayAudioLayer> = /*@__PURE__*/
+  messageDesc(file_selah_v1_service, 42);
+
+/**
+ * @generated from message selah.v1.StopAudioLayer
+ */
+export type StopAudioLayer = Message<"selah.v1.StopAudioLayer"> & {
+};
+
+/**
+ * Describes the message selah.v1.StopAudioLayer.
+ * Use `create(StopAudioLayerSchema)` to create a new message.
+ */
+export const StopAudioLayerSchema: GenMessage<StopAudioLayer> = /*@__PURE__*/
+  messageDesc(file_selah_v1_service, 43);
+
+/**
+ * @generated from message selah.v1.LiveUndo
+ */
+export type LiveUndo = Message<"selah.v1.LiveUndo"> & {
+};
+
+/**
+ * Describes the message selah.v1.LiveUndo.
+ * Use `create(LiveUndoSchema)` to create a new message.
+ */
+export const LiveUndoSchema: GenMessage<LiveUndo> = /*@__PURE__*/
+  messageDesc(file_selah_v1_service, 44);
+
+/**
+ * @generated from message selah.v1.LiveRedo
+ */
+export type LiveRedo = Message<"selah.v1.LiveRedo"> & {
+};
+
+/**
+ * Describes the message selah.v1.LiveRedo.
+ * Use `create(LiveRedoSchema)` to create a new message.
+ */
+export const LiveRedoSchema: GenMessage<LiveRedo> = /*@__PURE__*/
+  messageDesc(file_selah_v1_service, 45);
+
+/**
+ * @generated from message selah.v1.GetLiveState
+ */
+export type GetLiveState = Message<"selah.v1.GetLiveState"> & {
+};
+
+/**
+ * Describes the message selah.v1.GetLiveState.
+ * Use `create(GetLiveStateSchema)` to create a new message.
+ */
+export const GetLiveStateSchema: GenMessage<GetLiveState> = /*@__PURE__*/
+  messageDesc(file_selah_v1_service, 46);
+
+/**
+ * @generated from message selah.v1.LiveStateChanged
+ */
+export type LiveStateChanged = Message<"selah.v1.LiveStateChanged"> & {
+  /**
+   * @generated from field: uint64 scene_revision = 1;
+   */
+  sceneRevision: bigint;
+
+  /**
+   * @generated from field: selah.v1.Id service_id = 2;
+   */
+  serviceId?: Id;
+
+  /**
+   * @generated from field: uint32 current_item_index = 3;
+   */
+  currentItemIndex: number;
+
+  /**
+   * @generated from field: uint32 current_slide_index = 4;
+   */
+  currentSlideIndex: number;
+
+  /**
+   * @generated from field: bool cleared = 5;
+   */
+  cleared: boolean;
+
+  /**
+   * @generated from field: bool show_logo = 6;
+   */
+  showLogo: boolean;
+
+  /**
+   * @generated from field: repeated selah.v1.LiveStatus status = 7;
+   */
+  status: LiveStatus[];
+};
+
+/**
+ * Describes the message selah.v1.LiveStateChanged.
+ * Use `create(LiveStateChangedSchema)` to create a new message.
+ */
+export const LiveStateChangedSchema: GenMessage<LiveStateChanged> = /*@__PURE__*/
+  messageDesc(file_selah_v1_service, 47);
+
+/**
+ * @generated from message selah.v1.LiveSnapshotEntry
+ */
+export type LiveSnapshotEntry = Message<"selah.v1.LiveSnapshotEntry"> & {
+  /**
+   * @generated from field: selah.v1.Scene scene = 1;
+   */
+  scene?: Scene;
+
+  /**
+   * @generated from field: selah.v1.LiveStatus status = 2;
+   */
+  status?: LiveStatus;
+};
+
+/**
+ * Describes the message selah.v1.LiveSnapshotEntry.
+ * Use `create(LiveSnapshotEntrySchema)` to create a new message.
+ */
+export const LiveSnapshotEntrySchema: GenMessage<LiveSnapshotEntry> = /*@__PURE__*/
+  messageDesc(file_selah_v1_service, 48);
+
+/**
+ * @generated from message selah.v1.LiveMachineSnapshot
+ */
+export type LiveMachineSnapshot = Message<"selah.v1.LiveMachineSnapshot"> & {
+  /**
+   * @generated from field: selah.v1.Service service = 1;
+   */
+  service?: Service;
+
+  /**
+   * @generated from field: repeated selah.v1.LiveItemSlides item_slides = 2;
+   */
+  itemSlides: LiveItemSlides[];
+
+  /**
+   * @generated from field: selah.v1.LiveStatus status = 3;
+   */
+  status?: LiveStatus;
+
+  /**
+   * @generated from field: repeated selah.v1.LiveSnapshotEntry undo_stack = 4;
+   */
+  undoStack: LiveSnapshotEntry[];
+
+  /**
+   * @generated from field: repeated selah.v1.LiveSnapshotEntry redo_stack = 5;
+   */
+  redoStack: LiveSnapshotEntry[];
+};
+
+/**
+ * Describes the message selah.v1.LiveMachineSnapshot.
+ * Use `create(LiveMachineSnapshotSchema)` to create a new message.
+ */
+export const LiveMachineSnapshotSchema: GenMessage<LiveMachineSnapshot> = /*@__PURE__*/
+  messageDesc(file_selah_v1_service, 49);
 
 /**
  * Service planning, service types, teams, runtime projection and print/PDF export (M4.1).

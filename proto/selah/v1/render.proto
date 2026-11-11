@@ -236,6 +236,7 @@ message Scene {
   repeated OutputScene outputs = 6;
   bool is_preview = 7;
   repeated PreloadHint preload_items = 8;
+  repeated MediaLayerSpec audio_layers = 9;
 }
 
 message SetPreviewScene {

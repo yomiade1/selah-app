@@ -3,6 +3,7 @@ syntax = "proto3";
 package selah.v1;
 
 import "selah/v1/common.proto";
+import "selah/v1/render.proto";
 
 option csharp_namespace = "Selah.Contracts.V1";
 
@@ -201,4 +202,154 @@ message ServicePrintExport {
   string html = 2;
   bytes pdf_bytes = 3;
   uint32 page_count = 4;
+}
+
+// Live state machine, triggering, layers, hotkeys, audio layer and undo (M4.2).
+message LiveSlide {
+  uint32 index = 1;
+  string label = 2;
+  string section_kind = 3;
+  string section_color = 4;
+  string hotkey = 5;
+  string text = 6;
+  string chords_json = 7;
+  string notes = 8;
+  string title_text = 9;
+  string reference_text = 10;
+  string footer_text = 11;
+  string translation_text = 12;
+  string elements_json = 13;
+  string style_json = 14;
+  bool is_blank = 15;
+}
+
+message LiveItemSlides {
+  Id item_id = 1;
+  uint32 item_index = 2;
+  ServiceItemKind kind = 3;
+  string title = 4;
+  string subtitle = 5;
+  string song_key = 6;
+  repeated LiveSlide slides = 7;
+}
+
+message LiveLayerStatus {
+  LayerKind kind = 1;
+  bool active = 2;
+  string title = 3;
+  string subtitle = 4;
+  LayerSpec spec = 5;
+}
+
+message AudioLayerStatus {
+  bool playing = 1;
+  Id media_id = 2;
+  string title = 3;
+  string content_hash = 4;
+  string media_extension = 5;
+  float volume = 6;
+  bool loop_audio = 7;
+}
+
+message LiveStatus {
+  Id service_id = 1;
+  string service_name = 2;
+  bool has_active_item = 3;
+  uint32 current_item_index = 4;
+  uint32 current_slide_index = 5;
+  bool has_next = 6;
+  uint32 next_item_index = 7;
+  uint32 next_slide_index = 8;
+  string current_item_title = 9;
+  string next_item_title = 10;
+  string current_slide_label = 11;
+  string next_slide_label = 12;
+  string current_slide_text = 13;
+  string next_slide_text = 14;
+  string current_chords_json = 15;
+  string current_notes = 16;
+  string song_key = 17;
+  repeated LiveSlide current_item_slides = 18;
+  repeated LiveLayerStatus layers = 19;
+  AudioLayerStatus audio = 20;
+  bool show_logo = 21;
+  bool cleared = 22;
+  bool can_live_undo = 23;
+  bool can_live_redo = 24;
+  uint64 scene_revision = 25;
+}
+
+message LoadLiveService {
+  Id service_id = 1;
+  bool trigger_first_item = 2;
+}
+
+message TriggerItem {
+  uint32 item_index = 1;
+}
+
+message TriggerSlide {
+  uint32 item_index = 1;
+  uint32 slide_index = 2;
+}
+
+message NextSlide {}
+
+message PreviousSlide {}
+
+message NextItem {}
+
+message PreviousItem {}
+
+message TriggerSectionHotkey {
+  string hotkey = 1;
+}
+
+message ClearLayer {
+  LayerKind kind = 1;
+}
+
+message SetLayerState {
+  LayerSpec layer = 1;
+}
+
+message ShowLogoCommand {
+  bool show_logo = 1;
+}
+
+message PlayAudioLayer {
+  Id media_id = 1;
+  float volume = 2;
+  bool loop_audio = 3;
+}
+
+message StopAudioLayer {}
+
+message LiveUndo {}
+
+message LiveRedo {}
+
+message GetLiveState {}
+
+message LiveStateChanged {
+  uint64 scene_revision = 1;
+  Id service_id = 2;
+  uint32 current_item_index = 3;
+  uint32 current_slide_index = 4;
+  bool cleared = 5;
+  bool show_logo = 6;
+  repeated LiveStatus status = 7;
+}
+
+message LiveSnapshotEntry {
+  Scene scene = 1;
+  LiveStatus status = 2;
+}
+
+message LiveMachineSnapshot {
+  Service service = 1;
+  repeated LiveItemSlides item_slides = 2;
+  LiveStatus status = 3;
+  repeated LiveSnapshotEntry undo_stack = 4;
+  repeated LiveSnapshotEntry redo_stack = 5;
 }

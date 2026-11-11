@@ -321,6 +321,58 @@ impl CoreService {
         }
     }
 
+    fn live_state_event(&self) -> Event {
+        let status = self.live.status();
+        Event {
+            notification: Some(event::Notification::LiveStateChanged(
+                selah_proto::v1::LiveStateChanged {
+                    scene_revision: status.scene_revision,
+                    service_id: status.service_id.clone(),
+                    current_item_index: status.current_item_index,
+                    current_slide_index: status.current_slide_index,
+                    cleared: status.cleared,
+                    show_logo: status.show_logo,
+                    status: vec![status],
+                },
+            )),
+        }
+    }
+
+    fn live_outcome(
+        &self,
+        request: &Envelope,
+        result: Result<selah_proto::v1::LiveStatus, CommandBusError>,
+        send_to_engine: bool,
+    ) -> Outcome {
+        match result {
+            Ok(status) => Outcome {
+                reply: Some(self.reply(request, reply::Result::LiveStatus(status.clone()))),
+                to_engine: send_to_engine.then(|| self.resync_command()),
+                broadcast: vec![
+                    self.status_event(),
+                    Event {
+                        notification: Some(event::Notification::LiveStateChanged(
+                            selah_proto::v1::LiveStateChanged {
+                                scene_revision: status.scene_revision,
+                                service_id: status.service_id.clone(),
+                                current_item_index: status.current_item_index,
+                                current_slide_index: status.current_slide_index,
+                                cleared: status.cleared,
+                                show_logo: status.show_logo,
+                                status: vec![status],
+                            },
+                        )),
+                    },
+                ],
+                ..Outcome::default()
+            },
+            Err(error) => Outcome {
+                reply: Some(self.bus_error(request, &error)),
+                ..Outcome::default()
+            },
+        }
+    }
+
     /// The command that brings a (re)connected engine up to date.
     pub fn resync_command(&self) -> RenderCommand {
         RenderCommand {
@@ -524,17 +576,11 @@ impl CoreService {
                 }
             }
             command::Action::ClearOutputs(_) => {
-                self.live.change(|scene| {
-                    scene.cleared = true;
-                    scene.test_pattern = TestPattern::Unspecified as i32;
-                    scene.text.clear();
-                    scene.outputs.clear();
-                    scene.preload_items.clear();
-                });
+                self.live.clear_all();
                 Outcome {
                     reply: ack(self),
                     to_engine: Some(self.resync_command()),
-                    broadcast: vec![self.status_event()],
+                    broadcast: vec![self.status_event(), self.live_state_event()],
                     ..Outcome::default()
                 }
             }
@@ -833,6 +879,84 @@ impl CoreService {
                         ..Outcome::default()
                     },
                 }
+            }
+            command::Action::LoadLiveService(cmd) => {
+                let res = match cmd.service_id.as_ref() {
+                    Some(id) => self
+                        .live
+                        .load_service(&self.library, id, cmd.trigger_first_item),
+                    None => Err(CommandBusError::Invalid("missing service_id".into())),
+                };
+                self.live_outcome(request, res, cmd.trigger_first_item)
+            }
+            command::Action::TriggerItem(cmd) => {
+                let res = self.live.trigger_item(&self.library, cmd.item_index);
+                self.live_outcome(request, res, true)
+            }
+            command::Action::TriggerSlide(cmd) => {
+                let res = self
+                    .live
+                    .trigger_slide(&self.library, cmd.item_index, cmd.slide_index);
+                self.live_outcome(request, res, true)
+            }
+            command::Action::NextSlide(_) => {
+                let res = self.live.next_slide(&self.library);
+                self.live_outcome(request, res, true)
+            }
+            command::Action::PreviousSlide(_) => {
+                let res = self.live.previous_slide(&self.library);
+                self.live_outcome(request, res, true)
+            }
+            command::Action::NextItem(_) => {
+                let res = self.live.next_item(&self.library);
+                self.live_outcome(request, res, true)
+            }
+            command::Action::PreviousItem(_) => {
+                let res = self.live.previous_item(&self.library);
+                self.live_outcome(request, res, true)
+            }
+            command::Action::TriggerSectionHotkey(cmd) => {
+                let res = self.live.trigger_section_hotkey(&self.library, &cmd.hotkey);
+                self.live_outcome(request, res, true)
+            }
+            command::Action::ClearLayer(cmd) => {
+                let kind = selah_proto::v1::LayerKind::try_from(cmd.kind)
+                    .unwrap_or(selah_proto::v1::LayerKind::Unspecified);
+                let res = self.live.clear_layer(kind);
+                self.live_outcome(request, res, true)
+            }
+            command::Action::SetLayerState(cmd) => {
+                let res = match cmd.layer.clone() {
+                    Some(spec) => self.live.set_layer_state(spec),
+                    None => Err(CommandBusError::Invalid("missing layer spec".into())),
+                };
+                self.live_outcome(request, res, true)
+            }
+            command::Action::ShowLogo(cmd) => {
+                let status = self.live.set_show_logo(cmd.show_logo);
+                self.live_outcome(request, Ok(status), true)
+            }
+            command::Action::PlayAudioLayer(cmd) => {
+                let res = match cmd.media_id.as_ref() {
+                    Some(id) => {
+                        self.live
+                            .play_audio_layer(&self.library, id, cmd.volume, cmd.loop_audio)
+                    }
+                    None => Err(CommandBusError::Invalid("missing media_id".into())),
+                };
+                self.live_outcome(request, res, true)
+            }
+            command::Action::StopAudioLayer(_) => {
+                let status = self.live.stop_audio_layer();
+                self.live_outcome(request, Ok(status), true)
+            }
+            command::Action::LiveUndo(_) => {
+                let res = self.live.live_undo();
+                self.live_outcome(request, res, true)
+            }
+            command::Action::LiveRedo(_) => {
+                let res = self.live.live_redo();
+                self.live_outcome(request, res, true)
             }
             command::Action::Undo(cmd) => {
                 let result = self.library.undo_op(cmd.doc_id.as_ref(), &meta);
@@ -1537,6 +1661,9 @@ impl CoreService {
                     }
                     Err(error) => self.bus_error(request, &error),
                 }
+            }
+            Some(query::Request::GetLiveState(_)) => {
+                self.reply(request, reply::Result::LiveStatus(self.live.status()))
             }
             Some(query::Request::GetWatchdogStatus(_)) | None => {
                 self.error(request, codes::UNSUPPORTED, "error-unsupported-request")

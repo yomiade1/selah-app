@@ -218,6 +218,13 @@ pub fn scene_is_live(scene: &Scene) -> bool {
     if scene.cleared {
         return false;
     }
+    if scene
+        .audio_layers
+        .iter()
+        .any(|a| !a.content_hash.trim().is_empty() && !a.paused)
+    {
+        return true;
+    }
     if scene.outputs.is_empty() {
         scene.test_pattern != TestPattern::Unspecified as i32 || !scene.text.is_empty()
     } else {
@@ -691,7 +698,11 @@ pub fn media_backdrop_frame(
         }
     }
 
-    if include_image && !m.content_hash.trim().is_empty() && m.media_kind != "video" {
+    if include_image
+        && !m.content_hash.trim().is_empty()
+        && m.media_kind != "video"
+        && m.media_kind != "audio"
+    {
         if let Some(b) = base.take() {
             base = Some(crate::media_bg::blur_frame_skia(&b, m.blur_radius)?);
         }

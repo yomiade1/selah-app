@@ -58,9 +58,24 @@ pub enum CommandKind {
     DeleteTeam,
     CreateServiceFromPrevious,
     ExportServicePrint,
+    LoadLiveService,
+    TriggerItem,
+    TriggerSlide,
+    NextSlide,
+    PreviousSlide,
+    NextItem,
+    PreviousItem,
+    TriggerSectionHotkey,
+    ClearLayer,
+    SetLayerState,
+    ShowLogo,
+    PlayAudioLayer,
+    StopAudioLayer,
+    LiveUndo,
+    LiveRedo,
 }
 
-pub const ALL_COMMANDS: [CommandKind; 46] = [
+pub const ALL_COMMANDS: [CommandKind; 61] = [
     CommandKind::Render,
     CommandKind::SetAppearance,
     CommandKind::RecordFeedback,
@@ -107,6 +122,21 @@ pub const ALL_COMMANDS: [CommandKind; 46] = [
     CommandKind::DeleteTeam,
     CommandKind::CreateServiceFromPrevious,
     CommandKind::ExportServicePrint,
+    CommandKind::LoadLiveService,
+    CommandKind::TriggerItem,
+    CommandKind::TriggerSlide,
+    CommandKind::NextSlide,
+    CommandKind::PreviousSlide,
+    CommandKind::NextItem,
+    CommandKind::PreviousItem,
+    CommandKind::TriggerSectionHotkey,
+    CommandKind::ClearLayer,
+    CommandKind::SetLayerState,
+    CommandKind::ShowLogo,
+    CommandKind::PlayAudioLayer,
+    CommandKind::StopAudioLayer,
+    CommandKind::LiveUndo,
+    CommandKind::LiveRedo,
 ];
 
 pub fn kind_of(action: &command::Action) -> CommandKind {
@@ -157,6 +187,21 @@ pub fn kind_of(action: &command::Action) -> CommandKind {
         command::Action::DeleteTeam(_) => CommandKind::DeleteTeam,
         command::Action::CreateServiceFromPrevious(_) => CommandKind::CreateServiceFromPrevious,
         command::Action::ExportServicePrint(_) => CommandKind::ExportServicePrint,
+        command::Action::LoadLiveService(_) => CommandKind::LoadLiveService,
+        command::Action::TriggerItem(_) => CommandKind::TriggerItem,
+        command::Action::TriggerSlide(_) => CommandKind::TriggerSlide,
+        command::Action::NextSlide(_) => CommandKind::NextSlide,
+        command::Action::PreviousSlide(_) => CommandKind::PreviousSlide,
+        command::Action::NextItem(_) => CommandKind::NextItem,
+        command::Action::PreviousItem(_) => CommandKind::PreviousItem,
+        command::Action::TriggerSectionHotkey(_) => CommandKind::TriggerSectionHotkey,
+        command::Action::ClearLayer(_) => CommandKind::ClearLayer,
+        command::Action::SetLayerState(_) => CommandKind::SetLayerState,
+        command::Action::ShowLogo(_) => CommandKind::ShowLogo,
+        command::Action::PlayAudioLayer(_) => CommandKind::PlayAudioLayer,
+        command::Action::StopAudioLayer(_) => CommandKind::StopAudioLayer,
+        command::Action::LiveUndo(_) => CommandKind::LiveUndo,
+        command::Action::LiveRedo(_) => CommandKind::LiveRedo,
     }
 }
 
@@ -167,7 +212,22 @@ pub fn changes_screens(kind: CommandKind) -> bool {
         | CommandKind::ShowTestPattern
         | CommandKind::ClearOutputs
         | CommandKind::SetOutputConfigs
-        | CommandKind::PresentScene => true,
+        | CommandKind::PresentScene
+        | CommandKind::LoadLiveService
+        | CommandKind::TriggerItem
+        | CommandKind::TriggerSlide
+        | CommandKind::NextSlide
+        | CommandKind::PreviousSlide
+        | CommandKind::NextItem
+        | CommandKind::PreviousItem
+        | CommandKind::TriggerSectionHotkey
+        | CommandKind::ClearLayer
+        | CommandKind::SetLayerState
+        | CommandKind::ShowLogo
+        | CommandKind::PlayAudioLayer
+        | CommandKind::StopAudioLayer
+        | CommandKind::LiveUndo
+        | CommandKind::LiveRedo => true,
         // An update restarts every process, but core refuses it while anything is live.
         CommandKind::SetAppearance
         | CommandKind::RecordFeedback
@@ -359,7 +419,22 @@ mod tests {
                 | CommandKind::SaveTeam
                 | CommandKind::DeleteTeam
                 | CommandKind::CreateServiceFromPrevious
-                | CommandKind::ExportServicePrint => {}
+                | CommandKind::ExportServicePrint
+                | CommandKind::LoadLiveService
+                | CommandKind::TriggerItem
+                | CommandKind::TriggerSlide
+                | CommandKind::NextSlide
+                | CommandKind::PreviousSlide
+                | CommandKind::NextItem
+                | CommandKind::PreviousItem
+                | CommandKind::TriggerSectionHotkey
+                | CommandKind::ClearLayer
+                | CommandKind::SetLayerState
+                | CommandKind::ShowLogo
+                | CommandKind::PlayAudioLayer
+                | CommandKind::StopAudioLayer
+                | CommandKind::LiveUndo
+                | CommandKind::LiveRedo => {}
             }
         }
         let unique: std::collections::HashSet<_> = ALL_COMMANDS.iter().collect();

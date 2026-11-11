@@ -322,6 +322,16 @@ fn collect_video_specs(scene: &Scene) -> BTreeMap<String, MediaLayerSpec> {
     if scene.cleared {
         return specs;
     }
+    for audio in &scene.audio_layers {
+        let hash = audio.content_hash.trim().to_ascii_lowercase();
+        if !hash.is_empty() {
+            let mut spec = audio.clone();
+            if spec.media_kind.trim().is_empty() {
+                spec.media_kind = "audio".into();
+            }
+            specs.insert(hash, spec);
+        }
+    }
     for output in &scene.outputs {
         if output.cleared || output.show_logo {
             continue;
@@ -331,7 +341,7 @@ fn collect_video_specs(scene: &Scene) -> BTreeMap<String, MediaLayerSpec> {
                 continue;
             }
             if let Some(layer_spec::Content::Media(media)) = layer.content.as_ref()
-                && media.media_kind == "video"
+                && (media.media_kind == "video" || media.media_kind == "audio")
             {
                 let hash = media.content_hash.trim().to_ascii_lowercase();
                 if !hash.is_empty() {
@@ -346,7 +356,11 @@ fn collect_video_specs(scene: &Scene) -> BTreeMap<String, MediaLayerSpec> {
 fn structural_key(hash: &str, spec: &MediaLayerSpec) -> StructuralKey {
     let ext = spec.media_extension.trim().to_ascii_lowercase();
     let extension = if ext.is_empty() {
-        "mp4".to_owned()
+        if spec.media_kind == "audio" {
+            "wav".to_owned()
+        } else {
+            "mp4".to_owned()
+        }
     } else {
         ext
     };

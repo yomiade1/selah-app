@@ -1113,4 +1113,73 @@ public sealed class ContractTests
         };
         Assert.Equal(exportCmd, Envelope.Parser.ParseFrom(exportCmd.ToByteArray()));
     }
+
+    [Fact]
+    public void M42LiveStateMachineMessagesRoundTrip()
+    {
+        var idBytes = Google.Protobuf.ByteString.CopyFrom(new byte[]
+        {
+            0x01, 0x92, 0x70, 0x00, 0x00, 0x00, 0x70, 0x00,
+            0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x42,
+        });
+
+        var triggerCmd = new Envelope
+        {
+            Id = 7201,
+            Command = new Command
+            {
+                TriggerSlide = new TriggerSlide
+                {
+                    ItemIndex = 1,
+                    SlideIndex = 2,
+                },
+            },
+        };
+        Assert.Equal(triggerCmd, Envelope.Parser.ParseFrom(triggerCmd.ToByteArray()));
+
+        var hotkeyCmd = new Envelope
+        {
+            Id = 7202,
+            Command = new Command
+            {
+                TriggerSectionHotkey = new TriggerSectionHotkey { Hotkey = "C" },
+            },
+        };
+        Assert.Equal(hotkeyCmd, Envelope.Parser.ParseFrom(hotkeyCmd.ToByteArray()));
+
+        var liveStatusReply = new Envelope
+        {
+            Id = 7203,
+            CorrelationId = 7201,
+            Reply = new Reply
+            {
+                LiveStatus = new LiveStatus
+                {
+                    ServiceId = new Id { Value = idBytes },
+                    ServiceName = "Sunday Morning",
+                    HasActiveItem = true,
+                    CurrentItemIndex = 1,
+                    CurrentSlideIndex = 2,
+                    HasNext = true,
+                    NextItemIndex = 1,
+                    NextSlideIndex = 3,
+                    CurrentItemTitle = "Cornerstone",
+                    CurrentSlideLabel = "Chorus",
+                    CurrentSlideText = "Christ alone, Cornerstone",
+                    SongKey = "D",
+                    CanLiveUndo = true,
+                    SceneRevision = 42,
+                    Audio = new AudioLayerStatus
+                    {
+                        Playing = true,
+                        MediaId = new Id { Value = idBytes },
+                        Title = "Warm Pad.wav",
+                        Volume = 0.8f,
+                        LoopAudio = true,
+                    },
+                },
+            },
+        };
+        Assert.Equal(liveStatusReply, Envelope.Parser.ParseFrom(liveStatusReply.ToByteArray()));
+    }
 }
