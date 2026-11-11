@@ -59,7 +59,8 @@ Set these before you make the repository public (section 3).
 - Choose **Limit to repository collaborators**. Strangers then can't open issues or pull requests, or comment. Limits last up to 6 months; renew them if the repository stays public longer.
 
 **Settings ▸ Actions ▸ General**
-- **Actions permissions:** allow only actions created by GitHub, and turn on **Require actions to be pinned to a full-length commit SHA**.
+- **Actions permissions:** choose **Allow `yomiade1`, and select non-`yomiade1`, actions and reusable workflows**, then tick **Allow actions created by GitHub** and **Require actions to be pinned to a full-length commit SHA**.
+  - **The GitHub checkbox is essential.** CI uses `actions/checkout`, `actions/cache`, `actions/setup-dotnet`, `actions/setup-node` and `actions/upload-artifact`, all owned by `actions`, not by you (ADR-024 requires GitHub-owned actions pinned by SHA). Leaving it unticked allows only your own actions, and every CI run then fails instantly with `startup_failure`: no jobs, no logs, and the reason only in the run page's **Annotations** box. This happened on 2026-11-11 (runs 20 and 21) and blocked PR #7.
 - **Fork pull request workflows:** **Require approval for all external contributors**.
 - **Workflow permissions:** **Read repository contents and packages permissions**. Turn off **Allow GitHub Actions to create and approve pull requests**.
 - **Artifact and log retention:** 7 days.
