@@ -6,7 +6,9 @@ import "selah/v1/common.proto";
 import "selah/v1/errors.proto";
 import "selah/v1/help.proto";
 import "selah/v1/library.proto";
+import "selah/v1/live.proto";
 import "selah/v1/render.proto";
+import "selah/v1/service.proto";
 import "selah/v1/settings.proto";
 
 option csharp_namespace = "Selah.Contracts.V1";
@@ -86,6 +88,58 @@ message Command {
     PresentScene present_scene = 36;
     StagePreviewScene stage_preview_scene = 37;
     PreloadItems preload_items = 38;
+    SaveService save_service = 39;
+    DeleteService delete_service = 40;
+    SaveServiceType save_service_type = 41;
+    DeleteServiceType delete_service_type = 42;
+    SaveTeam save_team = 43;
+    DeleteTeam delete_team = 44;
+    CreateServiceFromPrevious create_service_from_previous = 45;
+    ExportServicePrint export_service_print = 46;
+    LoadLiveService load_live_service = 47;
+    TriggerItem trigger_item = 48;
+    TriggerSlide trigger_slide = 49;
+    NextSlide next_slide = 50;
+    PreviousSlide previous_slide = 51;
+    NextItem next_item = 52;
+    PreviousItem previous_item = 53;
+    TriggerSectionHotkey trigger_section_hotkey = 54;
+    ClearLayer clear_layer = 55;
+    SetLayerState set_layer_state = 56;
+    ShowLogoCommand show_logo = 57;
+    PlayAudioLayer play_audio_layer = 58;
+    StopAudioLayer stop_audio_layer = 59;
+    LiveUndo live_undo = 60;
+    LiveRedo live_redo = 61;
+    SaveLook save_look = 62;
+    DeleteLook delete_look = 63;
+    SaveProp save_prop = 64;
+    DeleteProp delete_prop = 65;
+    SaveMessage save_message = 66;
+    DeleteMessage delete_message = 67;
+    SaveTimer save_timer = 68;
+    DeleteTimer delete_timer = 69;
+    SaveMacro save_macro = 70;
+    DeleteMacro delete_macro = 71;
+    SaveClearGroup save_clear_group = 72;
+    DeleteClearGroup delete_clear_group = 73;
+    SaveStageLayout save_stage_layout = 74;
+    DeleteStageLayout delete_stage_layout = 75;
+    SetLook set_look = 76;
+    ShowProp show_prop = 77;
+    HideProp hide_prop = 78;
+    ShowMessage show_message = 79;
+    HideMessage hide_message = 80;
+    StartTimer start_timer = 81;
+    PauseTimer pause_timer = 82;
+    ResetTimer reset_timer = 83;
+    AdvanceLiveClock advance_live_clock = 84;
+    RunMacro run_macro = 85;
+    TriggerClearGroup trigger_clear_group = 86;
+    SetStageLayout set_stage_layout = 87;
+    SendBoothMessage send_booth_message = 88;
+    SetBoothLock set_booth_lock = 89;
+    SetRoleLock set_role_lock = 90;
   }
   // Optional client-supplied UUIDv7 grouping multiple mutations into one undo/redo step.
   Id undo_group = 100;
@@ -151,6 +205,28 @@ message Query {
     GetOutputConfigs get_output_configs = 36;
     AnalyzeFlashRisk analyze_flash_risk = 37;
     RenderSceneThumbnail render_scene_thumbnail = 38;
+    GetService get_service = 39;
+    ListServices list_services = 40;
+    GetServiceType get_service_type = 41;
+    ListServiceTypes list_service_types = 42;
+    GetTeam get_team = 43;
+    ListTeams list_teams = 44;
+    ProjectServiceRuntime project_service_runtime = 45;
+    GetLiveState get_live_state = 46;
+    GetLook get_look = 47;
+    ListLooks list_looks = 48;
+    GetProp get_prop = 49;
+    ListProps list_props = 50;
+    GetMessage get_message = 51;
+    ListMessages list_messages = 52;
+    GetTimer get_timer = 53;
+    ListTimers list_timers = 54;
+    GetMacro get_macro = 55;
+    ListMacros list_macros = 56;
+    GetClearGroup get_clear_group = 57;
+    ListClearGroups list_clear_groups = 58;
+    GetStageLayout get_stage_layout = 59;
+    ListStageLayouts list_stage_layouts = 60;
   }
 }
 
@@ -208,6 +284,7 @@ message Event {
     EmergencyApplied emergency_applied = 4;
     LibraryChanged library_changed = 5;
     UndoStateChanged undo_state_changed = 6;
+    LiveStateChanged live_state_changed = 7;
   }
 }
 
@@ -257,6 +334,29 @@ message Reply {
     OutputConfigList output_config_list = 42;
     FlashRiskReport flash_risk_report = 43;
     SceneThumbnail scene_thumbnail = 44;
+    Service service = 45;
+    ServiceList service_list = 46;
+    ServiceType service_type = 47;
+    ServiceTypeList service_type_list = 48;
+    Team team = 49;
+    TeamList team_list = 50;
+    ServiceRuntimeProjection service_runtime_projection = 51;
+    ServicePrintExport service_print_export = 52;
+    LiveStatus live_status = 53;
+    Look look = 54;
+    LookList look_list = 55;
+    Prop prop = 56;
+    PropList prop_list = 57;
+    LiveMessage live_message = 58;
+    MessageList message_list = 59;
+    Timer timer = 60;
+    TimerList timer_list = 61;
+    Macro macro = 62;
+    MacroList macro_list = 63;
+    ClearGroup clear_group = 64;
+    ClearGroupList clear_group_list = 65;
+    StageLayout stage_layout = 66;
+    StageLayoutList stage_layout_list = 67;
   }
 }
 

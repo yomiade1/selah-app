@@ -49,3 +49,43 @@ anchors:
     description: Slide editor, Custom slide deck, positioned elements, and live canvas preview.
   - id: slides.inspector
     description: Slide editor, Element properties, background, transition, and effect chain.
+  - id: services.planner
+    description: Services, Service planner toolbar, runtime projection, and print export actions.
+  - id: services.order
+    description: Services, Service order table, item controls, and runtime projection.
+  - id: services.team
+    description: Services, Volunteer team roster and role assignments.
+  - id: live.producer
+    description: Live, Producer mode workspace and its top bar.
+  - id: live.layout
+    description: Live, the Producer layout picker and Save layout.
+  - id: live.booth-lock
+    description: Live, the Booth lock button and banner (SAFE-06).
+  - id: live.controls
+    description: Live, the bottom bar with Clear, Show logo, Previous, Next and Undo.
+  - id: live.health
+    description: Live, the health bar that shows each screen's state.
+  - id: live.service-order
+    description: Live, the service order list.
+  - id: live.slides
+    description: Live, the slide grid for the live item.
+  - id: live.program-preview
+    description: Live, the Program preview of what the audience sees.
+  - id: live.layers
+    description: Live, the layer list with a Clear button for each layer.
+  - id: live.tiles
+    description: Live, tiles for looks, timers and macros.
+  - id: live.role-lock
+    description: Live, Lock to Simple mode and its PIN (SEC-14).
+  - id: simple.controls
+    description: Simple mode, the big Back, Next slide, Next song and clear buttons.
+  - id: simple.now-showing
+    description: Simple mode, the On screen now picture.
+  - id: simple.service-progress
+    description: Simple mode, the service progress steps.
+  - id: simple.slide-strip
+    description: Simple mode, All slides in this song.
+  - id: simple.message-the-booth
+    description: Simple mode, Message the booth and Quick tips.
+  - id: simple.unlock
+    description: Simple mode, Unlock with the PIN.

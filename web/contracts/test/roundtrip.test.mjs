@@ -28,6 +28,10 @@ import {
     SongPasteFormat,
 } from "../dist/gen/selah/v1/library_pb.js";
 import { PolicyLevel } from "../dist/gen/selah/v1/settings_pb.js";
+import {
+    ServiceItemKind,
+    ServicePrintKind,
+} from "../dist/gen/selah/v1/service_pb.js";
 
 test("envelope round trip preserves actor, request and correlation", () => {
     const original = create(EnvelopeSchema, {
@@ -1020,4 +1024,227 @@ test("M3.6 scene thumbnail query and reply round trip", () => {
         fromBinary(EnvelopeSchema, toBinary(EnvelopeSchema, diagnosticsReply)),
         diagnosticsReply,
     );
+});
+
+test("M4.1 service planner commands, queries and print export round trip", () => {
+    const svcId = new Uint8Array([
+        0x01, 0x92, 0x70, 0x00, 0x00, 0x00, 0x70, 0x00, 0x80, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x41,
+    ]);
+    const saveSvc = create(EnvelopeSchema, {
+        id: 7101n,
+        body: {
+            case: "command",
+            value: {
+                action: {
+                    case: "saveService",
+                    value: {
+                        service: {
+                            id: { value: svcId },
+                            name: "Sunday 9:00 AM",
+                            series: "Romans",
+                            location: "Sanctuary",
+                            plannedDurationSeconds: 4500,
+                            defaultLookName: "Worship",
+                            items: [
+                                {
+                                    id: { value: svcId },
+                                    kind: ServiceItemKind.COUNTDOWN,
+                                    title: "Pre-service Countdown",
+                                    durationSeconds: 300,
+                                    countdownSeconds: 300,
+                                    lookName: "Pre-service",
+                                },
+                                {
+                                    id: { value: svcId },
+                                    kind: ServiceItemKind.SONG,
+                                    title: "Amazing Grace",
+                                    songKey: "A",
+                                    durationSeconds: 240,
+                                    lookName: "Worship",
+                                },
+                            ],
+                        },
+                    },
+                },
+            },
+        },
+    });
+    assert.deepEqual(
+        fromBinary(EnvelopeSchema, toBinary(EnvelopeSchema, saveSvc)),
+        saveSvc,
+    );
+
+    const exportCmd = create(EnvelopeSchema, {
+        id: 7102n,
+        body: {
+            case: "command",
+            value: {
+                action: {
+                    case: "exportServicePrint",
+                    value: {
+                        serviceId: { value: svcId },
+                        kind: ServicePrintKind.BOTH,
+                        outputPath: "C:/temp/service-packet.pdf",
+                    },
+                },
+            },
+        },
+    });
+    assert.deepEqual(
+        fromBinary(EnvelopeSchema, toBinary(EnvelopeSchema, exportCmd)),
+        exportCmd,
+    );
+});
+
+test("M4.2 live state machine commands, queries and status round trip", () => {
+    const svcId = new Uint8Array([
+        0x01, 0x92, 0x70, 0x00, 0x00, 0x00, 0x70, 0x00, 0x80, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x42,
+    ]);
+    const triggerCmd = create(EnvelopeSchema, {
+        id: 7201n,
+        body: {
+            case: "command",
+            value: {
+                action: {
+                    case: "triggerSlide",
+                    value: {
+                        itemIndex: 1,
+                        slideIndex: 2,
+                    },
+                },
+            },
+        },
+    });
+    assert.deepEqual(
+        fromBinary(EnvelopeSchema, toBinary(EnvelopeSchema, triggerCmd)),
+        triggerCmd,
+    );
+
+    const statusReply = create(EnvelopeSchema, {
+        id: 7202n,
+        correlationId: 7201n,
+        body: {
+            case: "reply",
+            value: {
+                result: {
+                    case: "liveStatus",
+                    value: {
+                        serviceId: { value: svcId },
+                        serviceName: "Sunday Morning",
+                        hasActiveItem: true,
+                        currentItemIndex: 1,
+                        currentSlideIndex: 2,
+                        hasNext: true,
+                        nextItemIndex: 1,
+                        nextSlideIndex: 3,
+                        currentItemTitle: "Cornerstone",
+                        currentSlideLabel: "Chorus",
+                        currentSlideText: "Christ alone, Cornerstone",
+                        songKey: "D",
+                        canLiveUndo: true,
+                        sceneRevision: 42n,
+                    },
+                },
+            },
+        },
+    });
+    assert.deepEqual(
+        fromBinary(EnvelopeSchema, toBinary(EnvelopeSchema, statusReply)),
+        statusReply,
+    );
+});
+
+test("M4.3 looks, props, messages, timers, macros and clear groups round trip", () => {
+    const docId = new Uint8Array([
+        0x01, 0x92, 0x70, 0x00, 0x00, 0x00, 0x70, 0x00, 0x80, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x43,
+    ]);
+    const saveLook = create(EnvelopeSchema, {
+        id: 7301n,
+        body: {
+            case: "command",
+            value: {
+                action: {
+                    case: "saveLook",
+                    value: {
+                        look: {
+                            id: { value: docId },
+                            name: "Worship",
+                            hotkey: "Shift+1",
+                            rules: [
+                                {
+                                    id: { value: docId },
+                                    outputIndex: 0,
+                                    enabledLayers: [
+                                        LayerKind.MEDIA,
+                                        LayerKind.SLIDE,
+                                    ],
+                                },
+                            ],
+                        },
+                    },
+                },
+            },
+        },
+    });
+    assert.deepEqual(
+        fromBinary(EnvelopeSchema, toBinary(EnvelopeSchema, saveLook)),
+        saveLook,
+    );
+
+    const boothLock = create(EnvelopeSchema, {
+        id: 7302n,
+        body: {
+            case: "command",
+            value: {
+                action: {
+                    case: "setBoothLock",
+                    value: {
+                        locked: true,
+                    },
+                },
+            },
+        },
+    });
+    assert.deepEqual(
+        fromBinary(EnvelopeSchema, toBinary(EnvelopeSchema, boothLock)),
+        boothLock,
+    );
+});
+
+test("M4.5 role lock command and status round trip", () => {
+    const lock = create(EnvelopeSchema, {
+        id: 7451n,
+        body: {
+            case: "command",
+            value: {
+                action: {
+                    case: "setRoleLock",
+                    value: { locked: true, pin: "2468" },
+                },
+            },
+        },
+    });
+    assert.deepEqual(
+        fromBinary(EnvelopeSchema, toBinary(EnvelopeSchema, lock)),
+        lock,
+    );
+    const status = create(EnvelopeSchema, {
+        id: 7452n,
+        body: {
+            case: "reply",
+            value: {
+                result: {
+                    case: "liveStatus",
+                    value: {
+                        automation: [{ roleLocked: true, boothLocked: false }],
+                    },
+                },
+            },
+        },
+    });
+    const back = fromBinary(EnvelopeSchema, toBinary(EnvelopeSchema, status));
+    assert.equal(back.body.value.result.value.automation[0].roleLocked, true);
 });

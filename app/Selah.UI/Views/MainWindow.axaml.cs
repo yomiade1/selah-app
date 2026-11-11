@@ -34,6 +34,7 @@ public sealed partial class MainWindow : Window, IHelpHost
         InitializeComponent();
         AddTextSizeShortcuts();
         AddHandler(KeyDownEvent, OnTunnelKeyDown, RoutingStrategies.Tunnel);
+        AddHandler(KeyUpEvent, OnTunnelKeyUp, RoutingStrategies.Tunnel);
         AddHandler(PointerPressedEvent, OnTunnelPointerPressed, RoutingStrategies.Tunnel);
         TextScale.Instance.PropertyChanged += (_, _) => UpdateLayoutForWidth();
         previewTimer.Tick += (_, _) => RefreshPreview();
@@ -75,7 +76,8 @@ public sealed partial class MainWindow : Window, IHelpHost
         var width = EffectiveWidth;
         var showShellInspector = (Model?.IsPreviewMode ?? true) && !(Model?.IsHelpPanelOpen ?? false);
         Inspector.IsVisible = showShellInspector && width >= InspectorBreakpoint;
-        Sidebar.IsVisible = width >= SidebarBreakpoint;
+        // Live gives the left column to the service order (prototype 01).
+        Sidebar.IsVisible = width >= SidebarBreakpoint && !(Model?.IsLiveMode ?? false);
         if (width >= DualPreviewBreakpoint)
         {
             PreviewDualGrid.ColumnDefinitions = new ColumnDefinitions("*,*");
@@ -126,6 +128,10 @@ public sealed partial class MainWindow : Window, IHelpHost
             {
                 Model.TemplateEditor.SaveTemplateCommand.Execute(null);
             }
+            else if (Model?.IsServicePlannerMode == true)
+            {
+                Model.ServicePlanner.SaveServiceCommand.Execute(null);
+            }
         });
     }
 
@@ -156,6 +162,33 @@ public sealed partial class MainWindow : Window, IHelpHost
         {
             Model.DismissWhatsThisCommand.Execute(null);
             e.Handled = true;
+            return;
+        }
+        // SAFE-03 / M4-A12: holding Esc for 1 second clears the screens from every view. Key
+        // repeat re-checks while held; a timer covers keyboards that don't repeat.
+        if (e.Key == Key.Escape && Model is { } model)
+        {
+            model.OnEscapeDown(holdClock.Elapsed);
+            escapeTimer ??= new DispatcherTimer(TimeSpan.FromMilliseconds(100), DispatcherPriority.Input, (_, _) =>
+            {
+                if (Model is { EscapeHold.IsHeld: true } held)
+                {
+                    held.OnEscapeDown(holdClock.Elapsed);
+                }
+            });
+            escapeTimer.Start();
+        }
+    }
+
+    private readonly System.Diagnostics.Stopwatch holdClock = System.Diagnostics.Stopwatch.StartNew();
+    private DispatcherTimer? escapeTimer;
+
+    private void OnTunnelKeyUp(object? sender, KeyEventArgs e)
+    {
+        if (e.Key == Key.Escape)
+        {
+            escapeTimer?.Stop();
+            Model?.OnEscapeUp();
         }
     }
 
@@ -275,6 +308,7 @@ public sealed partial class MainWindow : Window, IHelpHost
             subscribedModel.SongEditor.PropertyChanged -= OnEditorPropertyChanged;
             subscribedModel.SlideEditor.PropertyChanged -= OnSlideEditorPropertyChanged;
             subscribedModel.TemplateEditor.PropertyChanged -= OnTemplateEditorPropertyChanged;
+            subscribedModel.ServicePlanner.PropertyChanged -= OnServicePlannerPropertyChanged;
             subscribedModel.ArticleRequested -= OnArticleRequested;
             subscribedModel.OpenUrlRequested -= OnOpenUrlRequested;
             subscribedModel.ShowFileRequested -= OnShowFileRequested;
@@ -287,6 +321,7 @@ public sealed partial class MainWindow : Window, IHelpHost
             model.SongEditor.PropertyChanged += OnEditorPropertyChanged;
             model.SlideEditor.PropertyChanged += OnSlideEditorPropertyChanged;
             model.TemplateEditor.PropertyChanged += OnTemplateEditorPropertyChanged;
+            model.ServicePlanner.PropertyChanged += OnServicePlannerPropertyChanged;
             model.ArticleRequested += OnArticleRequested;
             model.OpenUrlRequested += OnOpenUrlRequested;
             model.ShowFileRequested += OnShowFileRequested;
@@ -333,6 +368,14 @@ public sealed partial class MainWindow : Window, IHelpHost
     private void OnTemplateEditorPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs args)
     {
         if (args.PropertyName is nameof(TemplateEditorViewModel.SelectedTemplate) or nameof(TemplateEditorViewModel.SelectedRoleKey))
+        {
+            ScheduleHelpContextRefresh();
+        }
+    }
+
+    private void OnServicePlannerPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs args)
+    {
+        if (args.PropertyName is nameof(ServicePlannerViewModel.SelectedService) or nameof(ServicePlannerViewModel.SelectedItem))
         {
             ScheduleHelpContextRefresh();
         }
@@ -426,12 +469,18 @@ public sealed partial class MainWindow : Window, IHelpHost
     private void RefreshPreview()
     {
         var ns = Model?.IpcNamespace ?? IpcEndpoint.ForCurrentUser(IpcService.Engine).Namespace;
-        RefreshRing(
-            Path.Combine(RuntimeDirectory.Path, $"{ns}-preview-0.ring"),
-            ref preview,
-            ref lastPreviewFrame,
-            ref previewBitmap,
-            PreviewImage);
+        if (RefreshRing(
+                Path.Combine(RuntimeDirectory.Path, $"{ns}-preview-0.ring"),
+                ref preview,
+                ref lastPreviewFrame,
+                ref previewBitmap,
+                PreviewImage)
+            && Model is { IsLiveMode: true } live)
+        {
+            // Producer's Program pane shows the same program frame (prototype 01).
+            live.LiveProducer.ProgramFrame = null;
+            live.LiveProducer.ProgramFrame = previewBitmap;
+        }
         if (RefreshRing(
                 Path.Combine(RuntimeDirectory.Path, $"{ns}-stage-0.ring"),
                 ref stagePreview,

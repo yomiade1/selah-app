@@ -1,0 +1,268 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:Selah.UI.ViewModels"
+             xmlns:pb="using:Selah.Contracts.V1"
+             xmlns:views="using:Selah.UI.Views"
+             xmlns:s="using:Selah.UI.Services"
+             xmlns:dock="using:Dock.Avalonia.Controls"
+             x:Class="Selah.UI.Views.LiveProducerView"
+             x:DataType="vm:LiveProducerViewModel"
+             Focusable="True">
+  <DockPanel>
+    <!-- Bottom: the live controls. Docked first so they keep their space at any text size;
+         nothing covers these (DESIGN-SYSTEM §10). -->
+    <Border Name="LiveControlBar" DockPanel.Dock="Bottom" Padding="{DynamicResource Space.Text.Small}"
+            BorderBrush="{DynamicResource Brush.Line}" BorderThickness="{DynamicResource Line.Hairline}"
+            Background="{DynamicResource Brush.Surface}" s:Help.Anchor="live.controls">
+      <WrapPanel ItemSpacing="{DynamicResource Space.2}" LineSpacing="{DynamicResource Space.2}">
+        <Button Name="LiveClearAllButton" Classes="emergency" Command="{Binding ClearAllCommand}">
+          <TextBlock views:Critical.IsCritical="True" Text="{Binding [live-clear-all-key], Source={x:Static s:Localizer.Instance}}" />
+        </Button>
+        <Button Name="LivePreviousButton" Command="{Binding PreviousCommand}">
+          <TextBlock views:Critical.IsCritical="True" Text="{Binding [live-previous], Source={x:Static s:Localizer.Instance}}" />
+        </Button>
+        <Button Name="LiveNextButton" Classes="primary" Command="{Binding NextCommand}">
+          <TextBlock views:Critical.IsCritical="True" Text="{Binding [live-next-key], Source={x:Static s:Localizer.Instance}}" />
+        </Button>
+        <Button Name="LiveClearTextButton" Command="{Binding ClearTextCommand}">
+          <TextBlock views:Critical.IsCritical="True" Text="{Binding [live-clear-text-key-bar], Source={x:Static s:Localizer.Instance}}" />
+        </Button>
+        <Button Name="LiveClearBackgroundButton" Command="{Binding ClearBackgroundCommand}">
+          <TextBlock Text="{Binding [live-clear-background-key-bar], Source={x:Static s:Localizer.Instance}}" />
+        </Button>
+        <Button Name="LiveShowLogoButton" Command="{Binding ShowLogoCommand}">
+          <TextBlock Text="{Binding [live-show-logo-key], Source={x:Static s:Localizer.Instance}}" />
+        </Button>
+        <Button Name="LiveNextItemButton" Command="{Binding NextItemCommand}">
+          <TextBlock Text="{Binding [live-next-item-key], Source={x:Static s:Localizer.Instance}}" />
+        </Button>
+        <Button Name="LiveUndoButton" Classes="quiet" Command="{Binding UndoCommand}" IsEnabled="{Binding CanUndo}">
+          <TextBlock Text="{Binding [live-undo-key], Source={x:Static s:Localizer.Instance}}" />
+        </Button>
+        <ItemsControl Name="LiveHealthBar" ItemsSource="{Binding Health}" VerticalAlignment="Center" s:Help.Anchor="live.health">
+          <ItemsControl.ItemsPanel>
+            <ItemsPanelTemplate><WrapPanel ItemSpacing="{DynamicResource Space.3}" /></ItemsPanelTemplate>
+          </ItemsControl.ItemsPanel>
+          <ItemsControl.ItemTemplate>
+            <DataTemplate x:DataType="vm:LiveHealthItem">
+              <StackPanel Orientation="Horizontal" Spacing="{DynamicResource Space.1}">
+                <Ellipse Width="{DynamicResource Space.3}" Height="{DynamicResource Space.3}" VerticalAlignment="Center"
+                         Fill="{DynamicResource Brush.Success}" IsVisible="{Binding Ok}" />
+                <Ellipse Width="{DynamicResource Space.3}" Height="{DynamicResource Space.3}" VerticalAlignment="Center"
+                         Fill="{DynamicResource Brush.Warning}" IsVisible="{Binding !Ok}" />
+                <TextBlock Classes="caption" Text="{Binding Name}" />
+                <TextBlock Classes="caption" Text="{Binding StateText}" />
+              </StackPanel>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+      </WrapPanel>
+    </Border>
+
+    <!-- Top: which service, layout and booth lock. -->
+    <Border DockPanel.Dock="Top" Padding="{DynamicResource Space.Text.Small}"
+            BorderBrush="{DynamicResource Brush.Line}" BorderThickness="{DynamicResource Line.Bottom}">
+      <WrapPanel ItemSpacing="{DynamicResource Space.3}" LineSpacing="{DynamicResource Space.2}" s:Help.Anchor="live.producer">
+        <StackPanel VerticalAlignment="Center">
+          <TextBlock Name="LiveServiceNameText" Classes="title-3" Text="{Binding ServiceName}" />
+          <TextBlock Name="LiveLookTag" Classes="caption" IsVisible="{Binding ActiveLookName, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
+                     Text="{Binding ActiveLookName}" />
+        </StackPanel>
+        <ComboBox Name="LiveServicePicker" MinWidth="200" VerticalAlignment="Center"
+                  ItemsSource="{Binding Services}" SelectedItem="{Binding SelectedService}"
+                  AutomationProperties.Name="{Binding [live-choose-service], Source={x:Static s:Localizer.Instance}}">
+          <ComboBox.ItemTemplate>
+            <DataTemplate x:DataType="pb:Service">
+              <TextBlock Text="{Binding Name}" />
+            </DataTemplate>
+          </ComboBox.ItemTemplate>
+        </ComboBox>
+        <Button Name="LiveLoadServiceButton" Command="{Binding GoLiveWithServiceCommand}">
+          <TextBlock Text="{Binding [live-load-service], Source={x:Static s:Localizer.Instance}}" />
+        </Button>
+        <ComboBox Name="LiveLayoutPicker" MinWidth="160" VerticalAlignment="Center" s:Help.Anchor="live.layout"
+                  ItemsSource="{Binding LayoutPresets}" SelectionChanged="OnLayoutPresetChosen"
+                  PlaceholderText="{Binding [live-layout], Source={x:Static s:Localizer.Instance}}"
+                  AutomationProperties.Name="{Binding [live-layout], Source={x:Static s:Localizer.Instance}}">
+          <ComboBox.ItemTemplate>
+            <DataTemplate x:DataType="vm:ProducerLayoutState">
+              <TextBlock Text="{Binding Name, Converter={x:Static views:LayoutNameConverter.Instance}}" />
+            </DataTemplate>
+          </ComboBox.ItemTemplate>
+        </ComboBox>
+        <Button Name="LiveSaveLayoutButton" Classes="quiet" Command="{Binding SaveLayoutCommand}">
+          <TextBlock Text="{Binding [live-layout-save], Source={x:Static s:Localizer.Instance}}" />
+        </Button>
+        <ToggleButton Name="LiveBoothLockButton" IsChecked="{Binding IsBoothLocked, Mode=OneWay}"
+                      Command="{Binding ToggleBoothLockCommand}" s:Help.Anchor="live.booth-lock">
+          <TextBlock Text="{Binding [live-booth-lock], Source={x:Static s:Localizer.Instance}}" />
+        </ToggleButton>
+        <!-- SEC-14: lock this computer to Simple mode with a PIN. -->
+        <Button Name="LiveRoleLockButton" Command="{Binding StartLockCommand}" IsVisible="{Binding !IsLocking}" s:Help.Anchor="live.role-lock">
+          <TextBlock Text="{Binding [role-lock-turn-on], Source={x:Static s:Localizer.Instance}}" />
+        </Button>
+        <StackPanel Orientation="Horizontal" Spacing="{DynamicResource Space.2}" IsVisible="{Binding IsLocking}" s:Help.Anchor="live.role-lock">
+          <TextBox Name="LiveRoleLockPinBox" MinWidth="120" MaxLength="8" PasswordChar="•" Text="{Binding LockPin}"
+                   AutomationProperties.Name="{Binding [role-lock-pin], Source={x:Static s:Localizer.Instance}}"
+                   Watermark="{Binding [role-lock-pin], Source={x:Static s:Localizer.Instance}}"
+                   ToolTip.Tip="{Binding [role-lock-pin-hint], Source={x:Static s:Localizer.Instance}}" />
+          <Button Name="LiveRoleLockConfirmButton" Classes="primary" Command="{Binding LockCommand}">
+            <TextBlock Text="{Binding [role-lock-turn-on], Source={x:Static s:Localizer.Instance}}" />
+          </Button>
+          <Button Name="LiveRoleLockCancelButton" Classes="quiet" Command="{Binding CancelLockCommand}">
+            <TextBlock Text="{Binding [simple-booth-message-cancel], Source={x:Static s:Localizer.Instance}}" />
+          </Button>
+        </StackPanel>
+        <views:InfoButton Name="LiveProducerInfoButton" Anchor="live.producer" />
+      </WrapPanel>
+    </Border>
+
+    <!-- SAFE-06: the booth lock banner. -->
+    <Border Name="LiveBoothLockedBanner" DockPanel.Dock="Top" Classes="alert-warning" IsVisible="{Binding IsBoothLocked}">
+      <TextBlock Classes="label" TextWrapping="Wrap" Text="{Binding [live-booth-locked-banner], Source={x:Static s:Localizer.Instance}}" />
+    </Border>
+    <!-- SAFE-01: Message the booth reaches the operator only, here. -->
+    <Border Name="LiveBoothMessageAlert" DockPanel.Dock="Top" Classes="alert-warning" IsVisible="{Binding HasBoothMessage}">
+      <DockPanel>
+        <Button Name="LiveBoothMessageDismiss" DockPanel.Dock="Right" Classes="quiet" Command="{Binding DismissBoothMessageCommand}">
+          <TextBlock Text="{Binding [live-booth-message-dismiss], Source={x:Static s:Localizer.Instance}}" />
+        </Button>
+        <TextBlock Name="LiveBoothMessageText" Classes="label" TextWrapping="Wrap" VerticalAlignment="Center" Text="{Binding BoothMessage}" />
+      </DockPanel>
+    </Border>
+    <views:ErrorAlert Name="LiveErrorAlert" DockPanel.Dock="Top" Message="{Binding ErrorText}" FixArticleId="{Binding ErrorFixArticleId}" />
+
+    <!-- Screen readers hear what is on screen (DESIGN-SYSTEM §9). -->
+    <TextBlock Name="LiveAnnouncement" DockPanel.Dock="Bottom" Height="0" Text="{Binding Announcement}"
+               AutomationProperties.LiveSetting="Polite" />
+
+    <dock:DockControl Name="LiveDock" Layout="{Binding DockLayout}" InitializeLayout="True" InitializeFactory="True">
+      <dock:DockControl.DataTemplates>
+        <DataTemplate DataType="vm:ServiceOrderPane">
+          <DockPanel s:Help.Anchor="live.service-order">
+            <TextBlock DockPanel.Dock="Top" Classes="hint" Margin="{DynamicResource Space.Text.Small}" IsVisible="{Binding !Live.HasService}"
+                       TextWrapping="Wrap" Text="{Binding [live-empty-service-action], Source={x:Static s:Localizer.Instance}}" />
+            <ScrollViewer>
+              <ItemsControl Name="LiveServiceOrderList" ItemsSource="{Binding Live.Items}">
+                <ItemsControl.ItemTemplate>
+                  <DataTemplate x:DataType="vm:LiveItemRow">
+                    <Button Classes="quiet" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch"
+                            Classes.primary="{Binding IsLive}" IsEnabled="{Binding !IsHeader}"
+                            Command="{Binding $parent[ItemsControl].((vm:ServiceOrderPane)DataContext).Live.TriggerItemCommand}"
+                            CommandParameter="{Binding}" AutomationProperties.Name="{Binding Title}">
+                      <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="{DynamicResource Space.2}">
+                        <TextBlock Classes="label" Text="{Binding KindGlyph}" VerticalAlignment="Center" />
+                        <StackPanel Grid.Column="1">
+                          <TextBlock Classes="label" Text="{Binding Title}" TextTrimming="CharacterEllipsis" />
+                          <TextBlock Classes="caption" Text="{Binding Subtitle}" TextTrimming="CharacterEllipsis" />
+                        </StackPanel>
+                        <TextBlock Grid.Column="2" Classes="tag" Text="{Binding StateText}" VerticalAlignment="Center" />
+                      </Grid>
+                    </Button>
+                  </DataTemplate>
+                </ItemsControl.ItemTemplate>
+              </ItemsControl>
+            </ScrollViewer>
+          </DockPanel>
+        </DataTemplate>
+
+        <DataTemplate DataType="vm:SlidesPane">
+          <DockPanel s:Help.Anchor="live.slides">
+            <StackPanel DockPanel.Dock="Top" Margin="{DynamicResource Space.Text.Small}">
+              <TextBlock Classes="caption" Foreground="{DynamicResource Brush.Primary}" Text="{Binding Live.CurrentItemEyebrow}" />
+              <TextBlock Name="LiveCurrentTitle" Classes="title-2" Text="{Binding Live.CurrentItemTitle}" TextWrapping="Wrap" />
+              <TextBlock Classes="hint" Text="{Binding Live.NextText}" TextWrapping="Wrap" />
+              <TextBlock Classes="hint" Text="{Binding [live-hotkeys-hint], Source={x:Static s:Localizer.Instance}}" TextWrapping="Wrap" />
+            </StackPanel>
+            <ScrollViewer>
+              <ItemsControl Name="LiveSlideGrid" ItemsSource="{Binding Live.Slides}">
+                <ItemsControl.ItemsPanel>
+                  <ItemsPanelTemplate><WrapPanel ItemSpacing="{DynamicResource Space.3}" LineSpacing="{DynamicResource Space.3}" Margin="{DynamicResource Space.Text.Small}" /></ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                  <DataTemplate x:DataType="vm:LiveSlideCard">
+                    <Button Width="208" Padding="0" Classes.primary="{Binding IsLive}"
+                            Command="{Binding $parent[ItemsControl].((vm:SlidesPane)DataContext).Live.TriggerSlideCommand}"
+                            CommandParameter="{Binding}" AutomationProperties.Name="{Binding AccessibleName}">
+                      <StackPanel>
+                        <Border Height="117" Background="{DynamicResource Brush.PreviewBg}" CornerRadius="{DynamicResource Radius.Card}" Padding="{DynamicResource Space.Text.Small}">
+                          <TextBlock Foreground="{DynamicResource Brush.SlideText}" TextWrapping="Wrap" TextAlignment="Center" VerticalAlignment="Center"
+                                     Text="{Binding Text}" />
+                        </Border>
+                        <Grid ColumnDefinitions="Auto,*,Auto,Auto" ColumnSpacing="{DynamicResource Space.1}" Margin="{DynamicResource Space.Text.Small}">
+                          <Ellipse Width="{DynamicResource Space.3}" Height="{DynamicResource Space.3}" Fill="{Binding SectionColor}" VerticalAlignment="Center" />
+                          <TextBlock Grid.Column="1" Classes="caption" Text="{Binding Label}" TextTrimming="CharacterEllipsis" />
+                          <TextBlock Grid.Column="2" Classes="tag" Text="{Binding StateText}" />
+                          <TextBlock Grid.Column="3" Classes="caption" Text="{Binding Number}" />
+                        </Grid>
+                      </StackPanel>
+                    </Button>
+                  </DataTemplate>
+                </ItemsControl.ItemTemplate>
+              </ItemsControl>
+            </ScrollViewer>
+          </DockPanel>
+        </DataTemplate>
+
+        <DataTemplate DataType="vm:ProgramPane">
+          <DockPanel s:Help.Anchor="live.program-preview" Margin="{DynamicResource Space.Text.Small}">
+            <TextBlock DockPanel.Dock="Top" Classes="label" Text="{Binding [live-pane-program], Source={x:Static s:Localizer.Instance}}" />
+            <Viewbox Stretch="Uniform">
+              <Border Width="480" Height="270" Background="{DynamicResource Brush.PreviewBg}" BorderBrush="{DynamicResource Brush.Live}"
+                      BorderThickness="{DynamicResource Line.Emphasis}">
+                <Image Name="LiveProgramImage" Source="{Binding Live.ProgramFrame}" Stretch="Uniform" />
+              </Border>
+            </Viewbox>
+          </DockPanel>
+        </DataTemplate>
+
+        <DataTemplate DataType="vm:LayersPane">
+          <ScrollViewer s:Help.Anchor="live.layers">
+            <ItemsControl Name="LiveLayersList" ItemsSource="{Binding Live.Layers}" Margin="{DynamicResource Space.Text.Small}">
+              <ItemsControl.ItemTemplate>
+                <DataTemplate x:DataType="vm:LiveLayerRow">
+                  <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="{DynamicResource Space.2}" Margin="{DynamicResource Space.Item}">
+                    <Border Width="{DynamicResource Space.1}" Background="{DynamicResource Brush.Success}" IsVisible="{Binding IsActive}" />
+                    <StackPanel Grid.Column="1">
+                      <TextBlock Classes="label" Text="{Binding Name}" />
+                      <TextBlock Classes="caption" Text="{Binding Detail}" TextTrimming="CharacterEllipsis" />
+                    </StackPanel>
+                    <Button Grid.Column="2" Command="{Binding $parent[ItemsControl].((vm:LayersPane)DataContext).Live.ClearLayerCommand}"
+                            CommandParameter="{Binding}">
+                      <TextBlock Text="{Binding ClearText}" />
+                    </Button>
+                  </Grid>
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+          </ScrollViewer>
+        </DataTemplate>
+
+        <DataTemplate DataType="vm:TilesPane">
+          <ScrollViewer s:Help.Anchor="live.tiles">
+            <ItemsControl Name="LiveTilesList" ItemsSource="{Binding Live.Tiles}" Margin="{DynamicResource Space.Text.Small}">
+              <ItemsControl.ItemsPanel>
+                <ItemsPanelTemplate><WrapPanel ItemSpacing="{DynamicResource Space.2}" LineSpacing="{DynamicResource Space.2}" /></ItemsPanelTemplate>
+              </ItemsControl.ItemsPanel>
+              <ItemsControl.ItemTemplate>
+                <DataTemplate x:DataType="vm:LiveTile">
+                  <Button MinWidth="120" Classes.primary="{Binding IsOn}"
+                          Command="{Binding $parent[ItemsControl].((vm:TilesPane)DataContext).Live.ActivateTileCommand}"
+                          CommandParameter="{Binding}">
+                    <StackPanel>
+                      <StackPanel Orientation="Horizontal" Spacing="{DynamicResource Space.1}">
+                        <TextBlock Classes="caption" Text="{Binding Caption}" />
+                        <TextBlock Classes="caption" Text="{Binding Hotkey}" IsVisible="{Binding HasHotkey}" />
+                      </StackPanel>
+                      <TextBlock Classes="label" Text="{Binding Value}" />
+                    </StackPanel>
+                  </Button>
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+          </ScrollViewer>
+        </DataTemplate>
+      </dock:DockControl.DataTemplates>
+    </dock:DockControl>
+  </DockPanel>
+</UserControl>

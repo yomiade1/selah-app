@@ -6,35 +6,45 @@ Status values: `Not started` · `In progress` · `Blocked` (say on what) · `Don
 
 ## Current status
 
-| Milestone | Status | Branch / tag | Started | Finished | Notes |
-|---|---|---|---|---|---|
-| M1. Foundations and risk spikes | Done, H-checks pending | `claude/m1-finish` | 2026-11-07 | 2026-11-07 | All 13 WPs done (local Windows sessions, H-01). Open (H): M1-A7 benchmark report, M1-A12 install on your PC; M1-A1/A6 macOS from the `macos` job. |
-| M2. Library, songs, scripture and the help system | Done, H-checks pending | `codex/m2-library` | 2026-11-09 | 2026-11-09 | All 9 WPs done (local Windows session, H-01). Open (H): M2-A10 / H-06 (Bible rights beyond public-domain KJV & WEB) and H-18 (2i KB review; 37 articles in `review`). |
-| M3. Render engine, templates and the slide editor | Done, H-checks pending | `antigravity/m3-render-engine` | 2026-11-10 | 2026-11-10 | All 8 WPs done (local Windows session, H-01). Open (H): M3-A6 (H) Help ▸ Diagnostics 2×1080p + 4K benchmark on your PC (H-23 reference hardware in M10) and H-18 (2i KB review; 57 articles in `review`). `ci:macos` in PR CI. |
-| M4. Live operation, services and stage | Not started | — | — | — | |
-| M5. Screens, video and audio I/O | Not started | — | — | — | |
-| M6. Importers, migration and the alpha release | Not started | — | — | — | |
-| M7. Remote control, API and show control | Not started | — | — | — | |
-| M8. Broadcast, creative and intelligence | Not started | — | — | — | |
-| M9. Cloud, teams and enterprise | Not started | — | — | — | |
-| M10. Launch readiness and v1.0 | Not started | — | — | — | |
+| Milestone                                         | Status                 | Branch / tag                         | Started    | Finished   | Notes                                                                                                                                                                                                                          |
+| ------------------------------------------------- | ---------------------- | ------------------------------------ | ---------- | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| M1. Foundations and risk spikes                   | Done, H-checks pending | `claude/m1-finish`                   | 2026-11-07 | 2026-11-07 | All 13 WPs done (local Windows sessions, H-01). Open (H): M1-A7 benchmark report, M1-A12 install on your PC; M1-A1/A6 macOS from the `macos` job.                                                                              |
+| M2. Library, songs, scripture and the help system | Done, H-checks pending | `codex/m2-library`                   | 2026-11-09 | 2026-11-09 | All 9 WPs done (local Windows session, H-01). Open (H): M2-A10 / H-06 (Bible rights beyond public-domain KJV & WEB) and H-18 (2i KB review; 37 articles in `review`).                                                          |
+| M3. Render engine, templates and the slide editor | Done, H-checks pending | `antigravity/m3-render-engine`       | 2026-11-10 | 2026-11-10 | All 8 WPs done (local Windows session, H-01). Open (H): M3-A6 (H) Help ▸ Diagnostics 2×1080p + 4K benchmark on your PC (H-23 reference hardware in M10) and H-18 (2i KB review; 57 articles in `review`). `ci:macos` in PR CI. |
+| M4. Live operation, services and stage            | In progress            | `antigravity/m4-live-services-stage` | 2026-11-11 | —          | M4.1–M4.5 done (PR open); M4.6 next.                                                                                                                                                                                                      |
+| M5. Screens, video and audio I/O                  | Not started            | —                                    | —          | —          |                                                                                                                                                                                                                                |
+| M6. Importers, migration and the alpha release    | Not started            | —                                    | —          | —          |                                                                                                                                                                                                                                |
+| M7. Remote control, API and show control          | Not started            | —                                    | —          | —          |                                                                                                                                                                                                                                |
+| M8. Broadcast, creative and intelligence          | Not started            | —                                    | —          | —          |                                                                                                                                                                                                                                |
+| M9. Cloud, teams and enterprise                   | Not started            | —                                    | —          | —          |                                                                                                                                                                                                                                |
+| M10. Launch readiness and v1.0                    | Not started            | —                                    | —          | —          |                                                                                                                                                                                                                                |
 
 **Next action:** start Milestone 4 (M4. Live operation, services and stage). Human checklists M1–M3 remain open below.
 
 **Open risks carried into M4** (from the M1–M3 review on 2026-11-11):
 
-| Risk | State | Who clears it |
-|---|---|---|
-| The 8 ms per-frame budget (ARCHITECTURE §12) is unmet by every measurement so far: `14.86 ms` on an MX350 laptop GPU, `57.40 ms` on lavapipe. Both machines lack a real GPU, so this is unproven rather than failed, but nothing yet shows Selah hitting 8 ms. | Open | You, on reference hardware (`H-23`, M10). `selah-bench m3` already reports `hardware_pass` honestly. |
-| `selah-media` and `selah-testkit` hold Windows-only code that no cloud session can type-check (FFmpeg and Skia have no cloud-buildable Windows target). The `windows` CI job is the only thing that compiles it. | Accepted, recorded | `tools/windows-check-exclusions.txt`; `tools/check-windows-coverage.py` keeps the list honest. |
-| The template editor and slide editor (M3.7) have no counterpart in `design/prototype/`, so the visual reference is behind the app. | Open | A prototype screen for each, or a note that the app is now the reference. |
-| 57 help articles sit at `status: review`. | Open | `H-18` (content designer). |
+| Risk                                                                                                                                                                                                                                                           | State              | Who clears it                                                                                        |
+| -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------ | ---------------------------------------------------------------------------------------------------- |
+| The 8 ms per-frame budget (ARCHITECTURE §12) is unmet by every measurement so far: `14.86 ms` on an MX350 laptop GPU, `57.40 ms` on lavapipe. Both machines lack a real GPU, so this is unproven rather than failed, but nothing yet shows Selah hitting 8 ms. | Open               | You, on reference hardware (`H-23`, M10). `selah-bench m3` already reports `hardware_pass` honestly. |
+| `selah-media` and `selah-testkit` hold Windows-only code that no cloud session can type-check (FFmpeg and Skia have no cloud-buildable Windows target). The `windows` CI job is the only thing that compiles it.                                               | Accepted, recorded | `tools/windows-check-exclusions.txt`; `tools/check-windows-coverage.py` keeps the list honest.       |
+| The template editor and slide editor (M3.7) have no counterpart in `design/prototype/`, so the visual reference is behind the app.                                                                                                                             | Open               | A prototype screen for each, or a note that the app is now the reference.                            |
+| 57 help articles sit at `status: review`.                                                                                                                                                                                                                      | Open               | `H-18` (content designer).                                                                           |
 
 ## Resume notes
 
 _When a session stops partway through a milestone, write here: the milestone, the last finished WP, anything half-done (files, branch state) and the exact next step. Clear it when the milestone is done._
 
-(none — Milestone 3 complete)
+**Milestone 4, parked after M4.5 (2026-11-11, local Windows session, H-01).** Branch `antigravity/m4-live-services-stage`; the PR covers M4.1 to M4.5. Merge it, then say "Complete milestone 4".
+
+Next steps, in order:
+
+1. **M4.6 Stage display.** Contracts and core exist from M4.3 (`StageLayout`, `StageElement` with 8 `StageElementKind`s, `SaveStageLayout` / `ListStageLayouts`, `SetStageLayout`, `LiveState::set_stage_layout`). Still to build: the stage layout editor UI matching prototype 06 (current and next text, chords over lyrics, key badge, clock, timers, booth message, notes, arrangement strip); engine-rendered stage outputs (look in `crates/selah-render` for a stage compositor before adding one; chord alignment can reuse the chord-over-lyric positioning in `crates/selah-core/src/planner.rs`); golden frames `m4-stage-*` in `crates/selah-testkit/tests/golden_m4.rs`, blessed with `tools/bless-golden.sh --reason` (M4-A7). The **Message the booth** text (`LiveAutomationState.booth_message`) goes to the stage display and the producer only (SAFE-01).
+2. **M4.7 Ready for Sunday, practice mode, setup and tours.** Each check needs unit tests and an existing fix article (M4-A8), including the flash and limiter checks (SAFE-04, SAFE-05). Practice mode sends outputs to a preview window only, with a banner (`LiveAutomationState.practice_mode` is in the proto). Tour engine reads `content/help/tours/*.yaml`; tours refuse to start while live unless practice mode is on (M4-A9). First-run setup with a public-domain sample service.
+3. **M4.8 End-to-end and chaos.** Rust tests in `crates/selah-testkit/tests/`; add the file stem to `E2E_FILES` in `tools/test-ledger.py` so they count as e2e. A scripted 12-item service with frame and latency asserts (M4-A1), and 50 random kills of UI, core or engine (M4-A5; reuse `selah-testkit` `Stack` and `freeze`). Run the long ones in the background.
+4. **M4.9 Knowledge base.** 12 M4 articles exist (2 from M4.1, 6 from M4.4, 4 from M4.5). About 33 more, Quick tips for Simple mode, and the `volunteer-handbook` collection check (M4-A10).
+5. **Finish M4.** Specs in `docs/specs/`, CHANGELOG, `tests/fixtures/db/m4.db`, the (H) checklist for M4-A11 (H-22), the threat-model review in `docs/SECURITY.md` §3 (cover the role lock and its fail-open choice, the booth-message route, Dock.Avalonia), the full gate, and the PR with `--label ci:macos`.
+
+Watch-outs: on Windows, Python edits must write bytes (`write_bytes`), or the gate's `dotnet format` fails on CRLF. `tools/check-generated.py` passes only once generated files are committed. Run Prettier on `web/contracts/test/*.mjs` after editing.
 
 ## Milestone checklists
 
@@ -123,7 +133,7 @@ _When a session stops partway through a milestone, write here: the milestone, th
 - [x] **M3-A3** (auto) Thumbnails match the downscaled real output (pixel difference under the threshold). — evidence: `crates/selah-core/tests/thumbnails.rs::scene_thumbnail_matches_gpu_compositor_for_layers_and_effects` (compares offscreen `RenderSceneThumbnail` 320×180 PNG against downscaled `GpuCompositor` `1280×720` render across image backdrop, `ColourAdjust`, `Slide` typography, `Props` card, and `Vignette`, asserting mean channel abs diff `<= 3.0`), `scene_thumbnail_caches_canonically_heals_corrupt_files_and_evicts_lru`, `scene_thumbnail_renders_video_poster_and_propagates_flash_warning`, `scene_thumbnail_rejects_malformed_and_unsafe_inputs`
 - [x] **M3-A4** (auto) A 1080p loop has no frame gap at the loop point, and A/V sync is within ±1 frame (flash/beep test clip). — evidence: `selah-media::player::tests::loop_1080p_has_zero_frame_gap_at_loop_point` (`h264-1080p60.mp4`, 0..120 sequence numbers with 0 skips/repeats and exact `1/60 s` seam delta across laps), `flash_and_beep_stay_synchronized_within_one_frame_at_half_one_and_two_x_speed` (`flash-beep-360p60.mp4` at `0.5x`/`1.0x`/`2.0x` within ±1 frame of audio beep), `in_and_out_points_trim_and_loop_cleanly`, `clear_fade_out_silences_and_finishes_player_cleanly`, `software_pump_drives_clock_and_frames_asynchronously`
 - [x] **M3-A5** (auto) Slide editor UI flow: create a custom slide with text, an image and a shape, align them, undo and redo. — evidence: `Selah.UI.Tests.LibraryAndEditorTests::Slide_editor_create_align_undo_and_redo_flow` (creates slide deck, adds text, shape, and image elements, selects all and aligns horizontally, verifies undo restores pre-align X position and redo re-applies aligned X, saves presentation, verifies live thumbnail preview & zero clipped critical labels across `ModesMatrix` 100/200%, Light/Booth, `en`/`en-XA`) + `Template_editor_looks_assignment_and_song_fit_flow` + `Slide_editor_flash_warning_guard_blocks_unconfirmed_stage` + `crates/selah-render/tests/elements.rs` (3/3)
-- [x] **M3-A6** (auto) (ci-win) Bench recorded in the cloud and the Windows job: 2 × 1080p outputs with a 4K video background, p99 frame time. — evidence: `selah-bench m3 --iterations 10 --check --json target/verify-report/bench-m3.json` wired into Gate Stage 6 (WARP software adapter CI measurement with 4K HEVC clip: `p50 = 1280.63 ms`, `p99 = 1311.46 ms <= SOFTWARE_CI_CEILING_MS = 5000.0 ms`; NVIDIA GeForce MX350 hardware GPU DX12 measurement on this PC with 4K HEVC clip: `p50 = 12.95 ms`, `p95 = 14.53 ms`, `p99 = 14.86 ms` against `OUTPUT_P99_BUDGET_MS = 8.0 ms`) + `selah_core::diagnostics` & `selah-testkit::support::diagnostics_shows_the_engine_and_writes_a_benchmark_report` + `DiagnosticsTests` (17/17); cloud session 2026-11-11 (lavapipe software adapter, synthetic 4K NV12): `p50 = 50.44 ms`, `p99 = 57.40 ms`, under `SOFTWARE_CI_CEILING_MS` so the gate passes. **The 8 ms hardware budget is not met by any measurement so far** (`14.86 ms` on an MX350, `57.40 ms` on lavapipe; `hardware_pass = false` in both reports). This criterion is ticked because it asks for the bench to be *recorded*, which it is — not because the budget is met. (H) open and **carried into M4 as an open risk**: run **Help ▸ Diagnostics ▸ Run benchmark** on target reference hardware (`H-23` in M10)
+- [x] **M3-A6** (auto) (ci-win) Bench recorded in the cloud and the Windows job: 2 × 1080p outputs with a 4K video background, p99 frame time. — evidence: `selah-bench m3 --iterations 10 --check --json target/verify-report/bench-m3.json` wired into Gate Stage 6 (WARP software adapter CI measurement with 4K HEVC clip: `p50 = 1280.63 ms`, `p99 = 1311.46 ms <= SOFTWARE_CI_CEILING_MS = 5000.0 ms`; NVIDIA GeForce MX350 hardware GPU DX12 measurement on this PC with 4K HEVC clip: `p50 = 12.95 ms`, `p95 = 14.53 ms`, `p99 = 14.86 ms` against `OUTPUT_P99_BUDGET_MS = 8.0 ms`) + `selah_core::diagnostics` & `selah-testkit::support::diagnostics_shows_the_engine_and_writes_a_benchmark_report` + `DiagnosticsTests` (17/17); cloud session 2026-11-11 (lavapipe software adapter, synthetic 4K NV12): `p50 = 50.44 ms`, `p99 = 57.40 ms`, under `SOFTWARE_CI_CEILING_MS` so the gate passes. **The 8 ms hardware budget is not met by any measurement so far** (`14.86 ms` on an MX350, `57.40 ms` on lavapipe; `hardware_pass = false` in both reports). This criterion is ticked because it asks for the bench to be _recorded_, which it is — not because the budget is met. (H) open and **carried into M4 as an open risk**: run **Help ▸ Diagnostics ▸ Run benchmark** on target reference hardware (`H-23` in M10)
 - [x] **M3-A7** (auto) KB coverage passes; all earlier tests pass; `m3.db` is saved. — evidence: `cargo run --locked -p selah-kb-lint` passes 57 articles / 0 errors across rules R1–R18 and coverage checks 1–6 (41 existing M4/M5 planned-item warnings), `selah-kb build` writes 57 articles to `target/kb/kb.db`, `crates/selah-kb-lint/tests/lint.rs` 10/10; `tests/fixtures/db/m3.db` generated via `library_fixture --m3` with `schema-v1.db` & `m2.db` untouched and verified in `crates/selah-core/tests/migrations.rs` (3/3, Gate Stage 10); full `tools/verify.ps1` green with `tests/ledger.json` strictly non-decreasing
 - [x] **M3-A8** (auto) The flash analyser flags the known flashing test clip, and transition settings that would flash more than 3 times a second, and passes safe ones. — evidence: `selah-render::flash::tests` (`wcag_luminance_rate_and_area_thresholds_hold`, `transition_risk_catches_unsafe_strobe_and_passes_smooth_fade`), `crates/selah-core/tests/flash_and_shaders.rs` (`import_media_flags_flashing_clip_and_selah_round_trip_preserves_warning`, `analyze_flash_risk_and_split_slides_report_wcag_warnings`) on `tests/fixtures/media/committed/wcag-flash-360p60.mp4` vs `flash-beep-360p60.mp4`, and `crates/selah-testkit/tests/transitions_effects_flash.rs::transitions_effects_flash_guard_and_emergency_cancel_end_to_end` (live engine `FrameShown.flash_warning` under `SAFE-04` and emergency clear reset under `SAFE-03`)
 
@@ -131,221 +141,221 @@ _When a session stops partway through a milestone, write here: the milestone, th
 
 **Work packages**
 
-- [ ] **M4.1** Services and the planner — evidence: 
-- [ ] **M4.2** Live state machine — evidence: 
-- [ ] **M4.3** Looks, props, messages, timers, macros and clear groups — evidence: 
-- [ ] **M4.4** Producer mode — evidence: 
-- [ ] **M4.5** Simple mode — evidence: 
-- [ ] **M4.6** Stage display — evidence: 
-- [ ] **M4.7** Ready for Sunday, practice mode, setup and tours — evidence: 
-- [ ] **M4.8** End-to-end and chaos tests — evidence: 
-- [ ] **M4.9** Knowledge base content for M4 — evidence: 
+- [x] **M4.1** Services and the planner — evidence: commit `M4.1`; `proto/selah/v1/{service,envelope}.proto` + TS/Rust/C# generated contracts (`ServiceItemKind` 8 kinds incl. `COUNTDOWN`/`HEADER`/`AUDIO`, `Service`, `ServiceType`, `Team`/`TeamMember`, `SaveService`/`DeleteService`/`GetService`/`ListServices`, `SaveServiceType`/`DeleteServiceType`/`GetServiceType`/`ListServiceTypes`, `SaveTeam`/`DeleteTeam`/`GetTeam`/`ListTeams`, `CreateServiceFromPrevious`, `ProjectServiceRuntime`, `ExportServicePrint`; `M41ServicePlannerMessagesRoundTrip`, `web/contracts` 13/13, `buf breaking --against .git#tag=m3` & `check-generated` pass); `crates/selah-core/src/planner.rs` (`project_service_runtime`, `create_service_from_previous_op`, `export_service_print` HTML + multi-page `%PDF-1.4` with transposed chord-over-lyric sheets and `SEC-04` path validation; unit tests `chord_over_lyric_pair_aligns_chords_at_character_positions`, `time_and_duration_formatting_is_tabular_and_deterministic`) + `crates/selah-core/tests/services.rs` (`service_crud_all_eight_item_kinds_inherit_last_week_and_undo_redo`, `runtime_projection_and_print_pdf_export_with_transposed_chord_charts`) + `permissions::authorize` SEC-14 matrix extended to all 46 commands; `app/Selah.UI` `ServicePlannerView{,Model}` matching prototype 04 (`Service_planner_builds_service_inherits_last_week_projects_runtime_and_exports_print` across `ModesMatrix` 100/200%, Light/Booth, `en`/`en-XA`, 126/126 UI tests green); `content/i18n/en/{shell,services}.ftl` (`lint-strings.py` OK); `content/help/anchors.yaml` (27 anchors) + 2 initial M4 KB articles (`services.{build-a-service,print-the-service-order-and-chord-charts}`, `selah-kb-lint` 59 articles / 0 errors); full `tools/verify.ps1` gate green on Windows
+- [x] **M4.2** Live state machine — evidence: commit `M4.2`; `proto/selah/v1/{render,service,envelope}.proto` (`Scene.audio_layers`, `LiveSlide`, `LiveItemSlides`, `LiveLayerStatus`, `AudioLayerStatus`, `LiveStatus`, `LiveStateChanged`, `LoadLiveService`, `TriggerItem`, `TriggerSlide`, `NextSlide`, `PreviousSlide`, `NextItem`, `PreviousItem`, `TriggerSectionHotkey`, `ClearLayer`, `SetLayerState`, `ShowLogoCommand`, `PlayAudioLayer`, `StopAudioLayer`, `LiveUndo`, `LiveRedo`, `GetLiveState`, `LiveMachineSnapshot`; `M42LiveStateMachineMessagesRoundTrip`); `crates/selah-core/src/live.rs` (`LiveState::load_service`, `trigger_slide`, `trigger_item`, `next_slide`, `previous_slide`, `next_item`, `previous_item`, `trigger_section_hotkey`, `clear_layer`, `set_layer_state`, `set_show_logo`, `clear_all`, `play_audio_layer`, `stop_audio_layer`, `live_undo`, `live_redo`, atomic `live_state.bin` + `live_machine.bin` crash recovery; `snapshot_survives_a_restart`, `corrupt_snapshot_starts_cleared`, `layer_scene_liveness_tracks_enabled_layers`) + `crates/selah-core/tests/live_machine.rs` (`live_machine_triggers_items_slides_next_previous_and_skips_headers`, `live_machine_section_hotkeys_f9_f12_layers_and_audio_playback`, `live_undo_ctrl_z_restores_exact_previous_frame_checksum_and_survives_restart`) + `permissions::authorize` SEC-14 matrix extended to all 61 commands (`permission_matrix_covers_every_origin_and_command`, `every_command_variant_is_listed`)
+- [x] **M4.3** Looks, props, messages, timers, macros and clear groups — evidence: commit `M4.3`; `proto/selah/v1/live.proto` (`Look`/`LookRule`, `Prop`, `LiveMessage`, `Timer`/`TimerStatus` with `COUNTDOWN`/`COUNT_UP`/`COUNT_TO_TIME` and 3 overrun modes, `Macro`/`MacroAction` (15 action kinds), `ClearGroup`, `StageLayout`, CRUD + `SetLook`/`ShowProp`/`HideProp`/`ShowMessage`/`HideMessage`/`Start|Pause|ResetTimer`/`AdvanceLiveClock`/`RunMacro`/`TriggerClearGroup`/`SetStageLayout`/`SendBoothMessage`/`SetBoothLock`; `M43LiveAutomationMessagesRoundTrip`, `web/contracts` round-trip, `buf breaking --against .git#tag=m3`); migration `004_live_and_services.sql`; `crates/selah-core/src/live.rs` automation (look rules per output × layer with template override, `{token}` message interpolation and auto-hide, virtual-clock timers, macros that may not call macros, clear groups); `crates/selah-core/tests/live_automation.rs` (`looks_filter_layers_and_override_templates_per_output`, `props_and_messages_interpolate_tokens_and_auto_hide_on_clock`, `timers_stay_within_one_frame_over_sixty_minutes_and_handle_overrun_modes`, `macros_slide_actions_clear_groups_booth_lock_and_volunteer_role_lock`); `permissions::is_macro_allowed` (SEC-14 matrix: `Macro` origin limited to live actions); golden `crates/selah-testkit/tests/golden_m4.rs` (9 `m4-look-*` frames, `tests/golden/CHANGES.md`); fast gate + stage 7 green on Windows
+- [x] **M4.4** Producer mode — evidence: commit `M4.4`; `app/Selah.UI` `LiveProducerView{,Model}` + `ProducerDockFactory` (Dock.Avalonia 12.1.5, MIT, ADR-002: service order, slides, program, layers, looks/timers/macros tiles; panes can't close or float), health bar, saved layouts (`ProducerLayoutState` presets + **Save layout**, bounded/clamped JSON under `SELAH_HOME`/app data), keyboard map `LiveKeys` (Space/arrows, Shift+arrows, F9–F11, Ctrl+Z/Y, Ctrl+L, section/macro/look hotkeys; never from a text box), hold-Esc 1 s clear (`HoldGesture`, SAFE-03), `ILiveService` on `CoreConnection` + `LiveStateChanged` events; `app/Selah.UI.Tests/LiveProducerTests.cs` (`Producer_mode_runs_a_service_from_the_keyboard_with_every_live_control_visible` across `ModesMatrix` 100/200%, Light/Booth, `en`/`en-XA`, `Typing_in_a_text_box_never_triggers_live_keys`, `Booth_lock_shows_the_banner_and_a_refused_command_says_why`, `A_message_from_the_booth_reaches_the_producer_only`, `A_saved_layout_comes_back_and_a_bad_layout_file_is_ignored`, `Holding_escape_for_one_second_clears_once_and_a_tap_does_not`); `content/i18n/en/live.ftl`; 10 `live.*` help anchors; 6 KB articles (`live.run-a-service-in-producer-mode`, `live.go-to-the-next-slide`, `live.clear-the-screens`, `live.use-layers-looks-timers-and-macros`, `live.arrange-the-producer-workspace`, `live.lock-the-booth`; `selah-kb-lint` 65 / 0 errors); full `tools/verify.ps1` GREEN on Windows (UI 136/136)
+- [x] **M4.5** Simple mode — evidence: commit `M4.5`; `app/Selah.UI` `SimpleModeView{,Model}` matching prototype 02 (service progress steps, **On screen now** / **Next**, **All slides in this song**, **Back** / **Next slide** / **Next song**, **Hide words** / **Hide background** / **Show logo** / **Clear everything** at ≥ 64 px via `Size.SimpleButtonHeight`, **Message the booth** capped at 200 characters, **Quick tips**, a tap on Esc hides the words); Simple / Producer switch in the Live toolbar; role lock moved into core (SEC-14): `SetRoleLock` + `LiveAutomationState.role_locked`, `crates/selah-core/src/role_lock.rs` (policy `live.role-lock` survives restarts, salted BLAKE3 PIN hash in `SecretStore`, 5 tries then 30 s), `permissions::authorize(actor, kind, role_locked)` (no client-chosen `user_id` check), reserved policy key, host uses `SecretStore::platform()`; tests `a_pin_locks_and_only_the_same_pin_unlocks`, `five_wrong_tries_wait_thirty_seconds_even_for_the_right_pin`, `a_missing_pin_record_unlocks_instead_of_trapping_the_church`, `crates/selah-core/tests/role_lock.rs` (`a_role_locked_volunteer_cannot_run_producer_commands_whatever_the_client_claims`, `five_wrong_pins_make_core_wait_and_the_lock_survives_a_restart`, `booth_lock_leaves_only_next_previous_and_clear`), `permission_matrix_covers_every_origin_and_command` (2 lock states × 3 claimed user ids), `M45RoleLockMessagesRoundTrip`, `app/Selah.UI.Tests/SimpleModeTests.cs` (`A_keyboard_only_simple_mode_flow_runs_a_song` across `ModesMatrix`, `A_role_locked_volunteer_cannot_open_producer_mode_or_the_editors`, `Message_the_booth_sends_a_short_note_to_the_producer_only`); errors `SEL-SEC-0002` to `SEL-SEC-0004`; 7 `simple.*` / `live.role-lock` anchors; 4 KB articles (`simple.run-a-service-in-simple-mode`, `simple.message-the-booth`, `live.lock-simple-mode-for-volunteers`, `troubleshooting.you-dont-have-permission`; `selah-kb-lint` 69 / 0 errors); full `tools/verify.ps1` GREEN on Windows
+- [ ] **M4.6** Stage display — evidence:
+- [ ] **M4.7** Ready for Sunday, practice mode, setup and tours — evidence:
+- [ ] **M4.8** End-to-end and chaos tests — evidence:
+- [ ] **M4.9** Knowledge base content for M4 — evidence:
 
 **Acceptance criteria**
 
-- [ ] **M4-A1** (auto) A scripted 12-item service (songs, scripture, video, countdown) produces every expected frame, and every slide change lands within 1 frame of the comman… — evidence: 
-- [ ] **M4-A2** (auto) Ctrl+Z in Live restores the previous on-screen state exactly (frame checksum). — evidence: 
-- [ ] **M4-A3** (auto) Each screen shows the right layers for each look (golden frames). — evidence: 
-- [ ] **M4-A4** (auto) Timer drift is ≤ 1 frame over 60 minutes (virtual clock); overrun behaves as set. — evidence: 
-- [ ] **M4-A5** (auto) 50 random kills of UI, core or engine during an e2e run all keep the continuity rules: no black screen when UI or core is killed; an engine restart with… — evidence: 
-- [ ] **M4-A6** (auto) A keyboard-only Simple-mode flow runs a song. — evidence: 
-- [ ] **M4-A7** (auto) Stage display golden frames pass, including chord alignment. — evidence: 
-- [ ] **M4-A8** (auto) Every Ready for Sunday check has unit tests and links to an existing fix article. — evidence: 
-- [ ] **M4-A9** (auto) Tours refuse to start while live content is on outputs, unless practice mode is on. — evidence: 
-- [ ] **M4-A10** (auto) KB coverage passes; the volunteer handbook collection exists; the ledger has grown; `m4.db` is saved. — evidence: 
-- [ ] **M4-A11** (H) 3 people new to Selah run a practice service in Simple mode after the 5-minute tour, without help. — evidence: 
-- [ ] **M4-A12** (auto) Booth lock leaves only Next, Previous and Clear working. — evidence: 
+- [ ] **M4-A1** (auto) A scripted 12-item service (songs, scripture, video, countdown) produces every expected frame, and every slide change lands within 1 frame of the comman… — evidence:
+- [x] **M4-A2** (auto) Ctrl+Z in Live restores the previous on-screen state exactly (frame checksum). — evidence: `crates/selah-core/tests/live_machine.rs::live_undo_ctrl_z_restores_exact_previous_frame_checksum_and_survives_restart` (`LiveUndo` / `LiveRedo` across multi-slide song & `ShowLogoCommand` transitions verified with `CpuCompositor::render` BLAKE3 `Frame::checksum` equality before and after `CoreService` crash/restart)
+- [x] **M4-A3** (auto) Each screen shows the right layers for each look (golden frames). — evidence: `crates/selah-testkit/tests/golden_m4.rs::each_screen_shows_the_right_layers_for_each_look_match_golden` (3 looks × 3 screens, GPU/CPU parity)
+- [x] **M4-A4** (auto) Timer drift is ≤ 1 frame over 60 minutes (virtual clock); overrun behaves as set. — evidence: `crates/selah-core/tests/live_automation.rs::timers_stay_within_one_frame_over_sixty_minutes_and_handle_overrun_modes`
+- [ ] **M4-A5** (auto) 50 random kills of UI, core or engine during an e2e run all keep the continuity rules: no black screen when UI or core is killed; an engine restart with… — evidence:
+- [x] **M4-A6** (auto) A keyboard-only Simple-mode flow runs a song. — evidence: `app/Selah.UI.Tests/SimpleModeTests.cs::A_keyboard_only_simple_mode_flow_runs_a_song` (100/200%, Light/Booth, `en`/`en-XA`); a role-locked volunteer can't open Producer: `A_role_locked_volunteer_cannot_open_producer_mode_or_the_editors` and core `a_role_locked_volunteer_cannot_run_producer_commands_whatever_the_client_claims`
+- [ ] **M4-A7** (auto) Stage display golden frames pass, including chord alignment. — evidence:
+- [ ] **M4-A8** (auto) Every Ready for Sunday check has unit tests and links to an existing fix article. — evidence:
+- [ ] **M4-A9** (auto) Tours refuse to start while live content is on outputs, unless practice mode is on. — evidence:
+- [ ] **M4-A10** (auto) KB coverage passes; the volunteer handbook collection exists; the ledger has grown; `m4.db` is saved. — evidence:
+- [ ] **M4-A11** (H) 3 people new to Selah run a practice service in Simple mode after the 5-minute tour, without help. — evidence:
+- [x] **M4-A12** (auto) Booth lock leaves only Next, Previous and Clear working. — evidence: `crates/selah-core/tests/role_lock.rs::booth_lock_leaves_only_next_previous_and_clear`; F12 from Live `Producer_mode_runs_a_service_from_the_keyboard_with_every_live_control_visible` (the window-level handler covers every view); held Esc `Holding_escape_for_one_second_clears_once_and_a_tap_does_not`; a refused and logged volunteer command `a_role_locked_volunteer_cannot_run_producer_commands_whatever_the_client_claims` (captures `command refused` with `role_locked=true`)
 
 ### M5. Screens, video and audio I/O
 
 **Work packages**
 
-- [ ] **M5.1** Display profiles and screen management — evidence: 
-- [ ] **M5.2** Edge blending, corner pin and masks — evidence: 
-- [ ] **M5.3** Colour calibration, LED walls and test patterns — evidence: 
-- [ ] **M5.4** NDI in and out — evidence: 
-- [ ] **M5.5** Texture sharing and virtual camera — evidence: 
-- [ ] **M5.6** Cameras and capture inputs — evidence: 
-- [ ] **M5.7** Audio routing, playlists and meters — evidence: 
-- [ ] **M5.8** Web pages and web video — evidence: 
-- [ ] **M5.9** Outputs UI, health and knowledge base — evidence: 
+- [ ] **M5.1** Display profiles and screen management — evidence:
+- [ ] **M5.2** Edge blending, corner pin and masks — evidence:
+- [ ] **M5.3** Colour calibration, LED walls and test patterns — evidence:
+- [ ] **M5.4** NDI in and out — evidence:
+- [ ] **M5.5** Texture sharing and virtual camera — evidence:
+- [ ] **M5.6** Cameras and capture inputs — evidence:
+- [ ] **M5.7** Audio routing, playlists and meters — evidence:
+- [ ] **M5.8** Web pages and web video — evidence:
+- [ ] **M5.9** Outputs UI, health and knowledge base — evidence:
 
 **Acceptance criteria**
 
-- [ ] **M5-A1** (auto) The blend ramp matches its analytic curve within tolerance; corner pin and mask golden frames pass. — evidence: 
-- [ ] **M5-A2** (auto) Colour calibration and test pattern golden frames pass; LED spanning layouts render correctly. — evidence: 
-- [ ] **M5-A3** (auto) NDI loopback keeps alpha intact (fake backend always; the real SDK when present). — evidence: 
-- [ ] **M5-A4** (auto) Spout or Syphon loopback works on the current platform. — evidence: 
-- [ ] **M5-A5** (auto) Audio routing with a null sink sends signal to the right channels; measured per-output delay is within ±1 ms of the setting. — evidence: 
-- [ ] **M5-A6** (auto) Simulated hot-plug switches profiles; outputs recover with no engine restart. — evidence: 
-- [ ] **M5-A7** (auto) A local test web page renders as a layer (golden frame). — evidence: 
-- [ ] **M5-A8** (H) A 3-projector blend has no visible seam. — evidence: 
-- [ ] **M5-A9** (auto) KB coverage passes; earlier tests pass; `m5.db` is saved. — evidence: 
-- [ ] **M5-A10** (auto) CEF policy tests pass: no file access, downloads, pop-ups or navigation to other sites. — evidence: 
+- [ ] **M5-A1** (auto) The blend ramp matches its analytic curve within tolerance; corner pin and mask golden frames pass. — evidence:
+- [ ] **M5-A2** (auto) Colour calibration and test pattern golden frames pass; LED spanning layouts render correctly. — evidence:
+- [ ] **M5-A3** (auto) NDI loopback keeps alpha intact (fake backend always; the real SDK when present). — evidence:
+- [ ] **M5-A4** (auto) Spout or Syphon loopback works on the current platform. — evidence:
+- [ ] **M5-A5** (auto) Audio routing with a null sink sends signal to the right channels; measured per-output delay is within ±1 ms of the setting. — evidence:
+- [ ] **M5-A6** (auto) Simulated hot-plug switches profiles; outputs recover with no engine restart. — evidence:
+- [ ] **M5-A7** (auto) A local test web page renders as a layer (golden frame). — evidence:
+- [ ] **M5-A8** (H) A 3-projector blend has no visible seam. — evidence:
+- [ ] **M5-A9** (auto) KB coverage passes; earlier tests pass; `m5.db` is saved. — evidence:
+- [ ] **M5-A10** (auto) CEF policy tests pass: no file access, downloads, pop-ups or navigation to other sites. — evidence:
 
 ### M6. Importers, migration and the alpha release
 
 **Work packages**
 
-- [ ] **M6.1** Import framework and worker — evidence: 
-- [ ] **M6.2** MediaShow importer — evidence: 
-- [ ] **M6.3** ProPresenter 6 and 7 importers — evidence: 
-- [ ] **M6.4** Song-app importers — evidence: 
-- [ ] **M6.5** Presentation importers and PowerPoint live mode — evidence: 
-- [ ] **M6.6** Migration assistant and import report — evidence: 
-- [ ] **M6.7** Alpha release pipeline — evidence: 
-- [ ] **M6.8** Import quality gate, fuzzing and knowledge base — evidence: 
+- [ ] **M6.1** Import framework and worker — evidence:
+- [ ] **M6.2** MediaShow importer — evidence:
+- [ ] **M6.3** ProPresenter 6 and 7 importers — evidence:
+- [ ] **M6.4** Song-app importers — evidence:
+- [ ] **M6.5** Presentation importers and PowerPoint live mode — evidence:
+- [ ] **M6.6** Migration assistant and import report — evidence:
+- [ ] **M6.7** Alpha release pipeline — evidence:
+- [ ] **M6.8** Import quality gate, fuzzing and knowledge base — evidence:
 
 **Acceptance criteria**
 
-- [ ] **M6-A1** (auto) Golden import tests pass for every format. — evidence: 
-- [ ] **M6-A2** (auto) On the import corpus, at least 98% of songs need no manual fix (measured against expected outputs). — evidence: 
-- [ ] **M6-A3** (auto) Each parser has been fuzzed for 10 minutes in a cloud session (corpus committed) and passes a 30-second smoke run in CI, with no crash or hang. — evidence: 
-- [ ] **M6-A4** (auto) The support bundle includes importer logs and still contains no secrets (test with seeded fake secrets). — evidence: 
-- [ ] **M6-A5** (H) PowerPoint import and live mode work on a PC with PowerPoint. — evidence: 
-- [ ] **M6-A6** (H) The installer installs, updates and uninstalls cleanly on clean Windows and macOS machines. — evidence: 
-- [ ] **M6-A7** (auto) KB coverage passes; earlier tests pass; `m6.db` is saved. — evidence: 
-- [ ] **M6-A8** (H) The closed alpha starts with 10 churches (H-22). — evidence: 
-- [ ] **M6-A9** (auto) Each worker runs with reduced rights (token and job-object checks on Windows, the sandbox profile on macOS). — evidence: 
+- [ ] **M6-A1** (auto) Golden import tests pass for every format. — evidence:
+- [ ] **M6-A2** (auto) On the import corpus, at least 98% of songs need no manual fix (measured against expected outputs). — evidence:
+- [ ] **M6-A3** (auto) Each parser has been fuzzed for 10 minutes in a cloud session (corpus committed) and passes a 30-second smoke run in CI, with no crash or hang. — evidence:
+- [ ] **M6-A4** (auto) The support bundle includes importer logs and still contains no secrets (test with seeded fake secrets). — evidence:
+- [ ] **M6-A5** (H) PowerPoint import and live mode work on a PC with PowerPoint. — evidence:
+- [ ] **M6-A6** (H) The installer installs, updates and uninstalls cleanly on clean Windows and macOS machines. — evidence:
+- [ ] **M6-A7** (auto) KB coverage passes; earlier tests pass; `m6.db` is saved. — evidence:
+- [ ] **M6-A8** (H) The closed alpha starts with 10 churches (H-22). — evidence:
+- [ ] **M6-A9** (auto) Each worker runs with reduced rights (token and job-object checks on Windows, the sandbox profile on macOS). — evidence:
 
 ### M7. Remote control, API and show control
 
 **Work packages**
 
-- [ ] **M7.1** Gateway, pairing and security — evidence: 
-- [ ] **M7.2** Public API v1 and OpenAPI — evidence: 
-- [ ] **M7.3** Web apps — evidence: 
-- [ ] **M7.4** SDKs and Companion module — evidence: 
-- [ ] **M7.5** MIDI — evidence: 
-- [ ] **M7.6** OSC, DMX/sACN and network triggers — evidence: 
-- [ ] **M7.7** Timelines and timecode — evidence: 
-- [ ] **M7.8** Multi-machine sync: backup and campus feeds — evidence: 
-- [ ] **M7.9** Knowledge base content for M7 — evidence: 
+- [ ] **M7.1** Gateway, pairing and security — evidence:
+- [ ] **M7.2** Public API v1 and OpenAPI — evidence:
+- [ ] **M7.3** Web apps — evidence:
+- [ ] **M7.4** SDKs and Companion module — evidence:
+- [ ] **M7.5** MIDI — evidence:
+- [ ] **M7.6** OSC, DMX/sACN and network triggers — evidence:
+- [ ] **M7.7** Timelines and timecode — evidence:
+- [ ] **M7.8** Multi-machine sync: backup and campus feeds — evidence:
+- [ ] **M7.9** Knowledge base content for M7 — evidence:
 
 **Acceptance criteria**
 
-- [ ] **M7-A1** (auto) The OpenAPI document validates; contract tests reach every command and query; every response validates against its schema. — evidence: 
-- [ ] **M7-A2** (auto) Security: no access without a token; scopes are enforced (viewer can't trigger); revoked tokens fail at once; the API is off by default. — evidence: 
-- [ ] **M7-A3** (auto) Playwright tests pass for the remote, pastor view and stage apps against a headless core. — evidence: 
-- [ ] **M7-A4** (auto) MIDI loopback on virtual ports triggers the mapped commands; learn mode captures a note. — evidence: 
-- [ ] **M7-A5** (auto) Timecode: LTC generated in the test chases with ±1 frame accuracy; timeline cues fire on time. — evidence: 
-- [ ] **M7-A6** (auto) Failover: 2 engine/core pairs on one machine. — evidence: 
-- [ ] **M7-A7** (auto) The Companion module builds and passes its tests against a mock API. — evidence: 
-- [ ] **M7-A8** (H) A real phone pairs by QR and runs a service; Companion works with a Stream Deck. — evidence: 
-- [ ] **M7-A9** (auto) KB coverage passes; earlier tests pass; `m7.db` is saved. — evidence: 
-- [ ] **M7-A10** (auto) The API fuzz smoke run finds no crash. — evidence: 
+- [ ] **M7-A1** (auto) The OpenAPI document validates; contract tests reach every command and query; every response validates against its schema. — evidence:
+- [ ] **M7-A2** (auto) Security: no access without a token; scopes are enforced (viewer can't trigger); revoked tokens fail at once; the API is off by default. — evidence:
+- [ ] **M7-A3** (auto) Playwright tests pass for the remote, pastor view and stage apps against a headless core. — evidence:
+- [ ] **M7-A4** (auto) MIDI loopback on virtual ports triggers the mapped commands; learn mode captures a note. — evidence:
+- [ ] **M7-A5** (auto) Timecode: LTC generated in the test chases with ±1 frame accuracy; timeline cues fire on time. — evidence:
+- [ ] **M7-A6** (auto) Failover: 2 engine/core pairs on one machine. — evidence:
+- [ ] **M7-A7** (auto) The Companion module builds and passes its tests against a mock API. — evidence:
+- [ ] **M7-A8** (H) A real phone pairs by QR and runs a service; Companion works with a Stream Deck. — evidence:
+- [ ] **M7-A9** (auto) KB coverage passes; earlier tests pass; `m7.db` is saved. — evidence:
+- [ ] **M7-A10** (auto) The API fuzz smoke run finds no crash. — evidence:
 
 ### M8. Broadcast, creative and intelligence
 
 **Work packages**
 
-- [ ] **M8.1** Blackmagic DeckLink — evidence: 
-- [ ] **M8.2** AJA — evidence: 
-- [ ] **M8.3** Recording — evidence: 
-- [ ] **M8.4** Streaming — evidence: 
-- [ ] **M8.5** Multiview and stream graphics — evidence: 
-- [ ] **M8.6** Full transition and effect library, and the shader SDK — evidence: 
-- [ ] **M8.7** Speech cues — evidence: 
-- [ ] **M8.8** Translation lines and parallel Bibles — evidence: 
-- [ ] **M8.9** Content Packs — evidence: 
-- [ ] **M8.10** Knowledge base content for M8 — evidence: 
+- [ ] **M8.1** Blackmagic DeckLink — evidence:
+- [ ] **M8.2** AJA — evidence:
+- [ ] **M8.3** Recording — evidence:
+- [ ] **M8.4** Streaming — evidence:
+- [ ] **M8.5** Multiview and stream graphics — evidence:
+- [ ] **M8.6** Full transition and effect library, and the shader SDK — evidence:
+- [ ] **M8.7** Speech cues — evidence:
+- [ ] **M8.8** Translation lines and parallel Bibles — evidence:
+- [ ] **M8.9** Content Packs — evidence:
+- [ ] **M8.10** Knowledge base content for M8 — evidence:
 
 **Acceptance criteria**
 
-- [ ] **M8-A1** (auto) DeckLink and AJA simulators receive correct fill and key frames and timing; an input source works. — evidence: 
-- [ ] **M8-A2** (auto) Recordings pass ffprobe validation; A/V sync is within ±1 frame; the disk guard stops recording safely. — evidence: 
-- [ ] **M8-A3** (auto) A 30-minute stream to a local MediaMTX server (RTMP and SRT), run in a cloud session (CI runs a 1-minute version), has no reconnect; a forced disconnect… — evidence: 
-- [ ] **M8-A4** (auto) Golden frames pass for every new transition and effect, and the SDK sample loads and hot-reloads. — evidence: 
-- [ ] **M8-A5** (auto) On the test audio set, explicit scripture references are detected with at least 90% precision and 80% recall; nothing triggers live automatically. — evidence: 
-- [ ] **M8-A6** (auto) Golden frames pass for translation lines and parallel Bibles; a Content Pack installs, searches and builds slides. — evidence: 
-- [ ] **M8-A7** (H) DeckLink and AJA fill and key are verified on a real switcher; streaming is verified to a real platform. — evidence: 
-- [ ] **M8-A8** (auto) KB coverage passes; earlier tests pass; `m8.db` is saved. — evidence: 
-- [ ] **M8-A9** (auto) With speech cues on, the egress test still shows no outgoing connections. — evidence: 
+- [ ] **M8-A1** (auto) DeckLink and AJA simulators receive correct fill and key frames and timing; an input source works. — evidence:
+- [ ] **M8-A2** (auto) Recordings pass ffprobe validation; A/V sync is within ±1 frame; the disk guard stops recording safely. — evidence:
+- [ ] **M8-A3** (auto) A 30-minute stream to a local MediaMTX server (RTMP and SRT), run in a cloud session (CI runs a 1-minute version), has no reconnect; a forced disconnect… — evidence:
+- [ ] **M8-A4** (auto) Golden frames pass for every new transition and effect, and the SDK sample loads and hot-reloads. — evidence:
+- [ ] **M8-A5** (auto) On the test audio set, explicit scripture references are detected with at least 90% precision and 80% recall; nothing triggers live automatically. — evidence:
+- [ ] **M8-A6** (auto) Golden frames pass for translation lines and parallel Bibles; a Content Pack installs, searches and builds slides. — evidence:
+- [ ] **M8-A7** (H) DeckLink and AJA fill and key are verified on a real switcher; streaming is verified to a real platform. — evidence:
+- [ ] **M8-A8** (auto) KB coverage passes; earlier tests pass; `m8.db` is saved. — evidence:
+- [ ] **M8-A9** (auto) With speech cues on, the egress test still shows no outgoing connections. — evidence:
 
 ### M9. Cloud, teams and enterprise
 
 **Work packages**
 
-- [ ] **M9.1** Sync server and organisation model — evidence: 
-- [ ] **M9.2** Client sync engine — evidence: 
-- [ ] **M9.3** Accounts, roles, SSO and SCIM — evidence: 
-- [ ] **M9.4** Admin console, policies, audit log and privacy — evidence: 
-- [ ] **M9.5** CCLI SongSelect and reporting — evidence: 
-- [ ] **M9.6** Planning Center, MultiTracks and Loop — evidence: 
-- [ ] **M9.7** Licensing and entitlements — evidence: 
-- [ ] **M9.8** Enterprise packaging and update rings — evidence: 
-- [ ] **M9.9** Telemetry, crash reporting and fleet dashboard — evidence: 
-- [ ] **M9.10** Church articles, handbook export and knowledge base — evidence: 
+- [ ] **M9.1** Sync server and organisation model — evidence:
+- [ ] **M9.2** Client sync engine — evidence:
+- [ ] **M9.3** Accounts, roles, SSO and SCIM — evidence:
+- [ ] **M9.4** Admin console, policies, audit log and privacy — evidence:
+- [ ] **M9.5** CCLI SongSelect and reporting — evidence:
+- [ ] **M9.6** Planning Center, MultiTracks and Loop — evidence:
+- [ ] **M9.7** Licensing and entitlements — evidence:
+- [ ] **M9.8** Enterprise packaging and update rings — evidence:
+- [ ] **M9.9** Telemetry, crash reporting and fleet dashboard — evidence:
+- [ ] **M9.10** Church articles, handbook export and knowledge base — evidence:
 
 **Acceptance criteria**
 
-- [ ] **M9-A1** (auto) Sync property test: 5 simulated clients with random offline periods and edits all converge with no lost data; concurrent lyric edits produce conflict co… — evidence: 
-- [ ] **M9-A2** (auto) SSO end to end against Keycloak in Docker; the SCIM conformance suite passes; the permission matrix is tested for every role × command. — evidence: 
-- [ ] **M9-A3** (auto) The audit log records every admin and API action; GDPR export and delete work end to end. — evidence: 
-- [ ] **M9-A4** (auto) CCLI, Planning Center, MultiTracks and Loop contract tests pass on recorded fixtures. — evidence: 
-- [ ] **M9-A5** (auto) An upgrade from every earlier milestone's DB fixture and installer build to the current one migrates without data loss. — evidence: 
-- [ ] **M9-A6** (auto) Telemetry and crash upload send nothing when consent is off (network-capture test) and the expected payloads when it's on. — evidence: 
-- [ ] **M9-A7** (H) Silent MSI install with ADMX policies works on a domain or Intune test machine; the notarised macOS pkg installs with a configuration profile; real partner… — evidence: 
-- [ ] **M9-A8** (auto) KB coverage passes; earlier tests pass; `m9.db` is saved. — evidence: 
-- [ ] **M9-A9** (H) The closed beta starts with 50 churches, including 5 multi-campus and 5 broadcast-heavy (H-22). — evidence: 
-- [ ] **M9-A10** (auto) The sync server refuses unauthenticated and cross-organisation requests (a test per endpoint). — evidence: 
+- [ ] **M9-A1** (auto) Sync property test: 5 simulated clients with random offline periods and edits all converge with no lost data; concurrent lyric edits produce conflict co… — evidence:
+- [ ] **M9-A2** (auto) SSO end to end against Keycloak in Docker; the SCIM conformance suite passes; the permission matrix is tested for every role × command. — evidence:
+- [ ] **M9-A3** (auto) The audit log records every admin and API action; GDPR export and delete work end to end. — evidence:
+- [ ] **M9-A4** (auto) CCLI, Planning Center, MultiTracks and Loop contract tests pass on recorded fixtures. — evidence:
+- [ ] **M9-A5** (auto) An upgrade from every earlier milestone's DB fixture and installer build to the current one migrates without data loss. — evidence:
+- [ ] **M9-A6** (auto) Telemetry and crash upload send nothing when consent is off (network-capture test) and the expected payloads when it's on. — evidence:
+- [ ] **M9-A7** (H) Silent MSI install with ADMX policies works on a domain or Intune test machine; the notarised macOS pkg installs with a configuration profile; real partner… — evidence:
+- [ ] **M9-A8** (auto) KB coverage passes; earlier tests pass; `m9.db` is saved. — evidence:
+- [ ] **M9-A9** (H) The closed beta starts with 50 churches, including 5 multi-campus and 5 broadcast-heavy (H-22). — evidence:
+- [ ] **M9-A10** (auto) The sync server refuses unauthenticated and cross-organisation requests (a test per endpoint). — evidence:
 
 ### M10. Launch readiness and v1.0
 
 **Work packages**
 
-- [ ] **M10.1** Parity and v1.0-bar checklist — evidence: 
-- [ ] **M10.2** Knowledge base completion and docs website — evidence: 
-- [ ] **M10.3** Localisation — evidence: 
-- [ ] **M10.4** Accessibility — evidence: 
-- [ ] **M10.5** Performance, soak and chaos — evidence: 
-- [ ] **M10.6** Security — evidence: 
-- [ ] **M10.7** Release operations and v1.0 sign-off — evidence: 
+- [ ] **M10.1** Parity and v1.0-bar checklist — evidence:
+- [ ] **M10.2** Knowledge base completion and docs website — evidence:
+- [ ] **M10.3** Localisation — evidence:
+- [ ] **M10.4** Accessibility — evidence:
+- [ ] **M10.5** Performance, soak and chaos — evidence:
+- [ ] **M10.6** Security — evidence:
+- [ ] **M10.7** Release operations and v1.0 sign-off — evidence:
 
 **Acceptance criteria**
 
-- [ ] **M10-A1** Every item in `docs/v1-parity-checklist.md` has passing evidence. — evidence: 
-- [ ] **M10-A2** (auto) (ci-win) `tools/verify.sh --release` and `tools/verify.ps1 -Release` exit 0: KB coverage 100%, no drafts, every article reviewed, no stale translations. — evidence: 
-- [ ] **M10-A3** (auto + H) The UI and knowledge base are complete in 6 languages and reviewed by native speakers. — evidence: 
-- [ ] **M10-A4** (auto + H) Automated accessibility checks pass, and there are no open AA findings from the manual audit. — evidence: 
-- [ ] **M10-A5** (H) Performance budgets (ARCHITECTURE §12) pass on reference hardware; the 72-hour soak shows no leaks or drift. — evidence: 
-- [ ] **M10-A6** (auto + H) The chaos suite passes; there are no open P0 or P1 bugs or security findings. — evidence: 
-- [ ] **M10-A7** (H) Every product plan §7.1 row is green: 99.9% glitch-free services across ≥ 50 churches over 12 weekends; SUS ≥ 80; volunteer findability ≥ 90%; migration ≥… — evidence: 
-- [ ] **M10-A8** `v1.0.0` is tagged and signed, release notes are published, and the update feed is live. — evidence: 
-- [ ] **M10-A9** (auto + H) Every SEC and SAFE item in docs/SECURITY.md has passing evidence in `docs/v1-parity-checklist.md`. — evidence: 
+- [ ] **M10-A1** Every item in `docs/v1-parity-checklist.md` has passing evidence. — evidence:
+- [ ] **M10-A2** (auto) (ci-win) `tools/verify.sh --release` and `tools/verify.ps1 -Release` exit 0: KB coverage 100%, no drafts, every article reviewed, no stale translations. — evidence:
+- [ ] **M10-A3** (auto + H) The UI and knowledge base are complete in 6 languages and reviewed by native speakers. — evidence:
+- [ ] **M10-A4** (auto + H) Automated accessibility checks pass, and there are no open AA findings from the manual audit. — evidence:
+- [ ] **M10-A5** (H) Performance budgets (ARCHITECTURE §12) pass on reference hardware; the 72-hour soak shows no leaks or drift. — evidence:
+- [ ] **M10-A6** (auto + H) The chaos suite passes; there are no open P0 or P1 bugs or security findings. — evidence:
+- [ ] **M10-A7** (H) Every product plan §7.1 row is green: 99.9% glitch-free services across ≥ 50 churches over 12 weekends; SUS ≥ 80; volunteer findability ≥ 90%; migration ≥… — evidence:
+- [ ] **M10-A8** `v1.0.0` is tagged and signed, release notes are published, and the update feed is live. — evidence:
+- [ ] **M10-A9** (auto + H) Every SEC and SAFE item in docs/SECURITY.md has passing evidence in `docs/v1-parity-checklist.md`. — evidence:
 
 ## Human tasks
 
 Owner: you. Coding sessions keep this table up to date, mark which feature flags are waiting on each task, and never block other work on them (ADR-017).
 
-| ID | Task | Needed by | Status | Notes |
-|---|---|---|---|---|
-| H-01 | Approve installing toolchains (Rust, VS Build Tools, LLVM, .NET 10 SDK, pnpm, buf). Only needed if you also code locally; cloud sessions install their own. | M1 (optional) | Not needed for cloud sessions | |
-| H-02 | Confirm the product name and choose the code licence | M1 (placeholder allowed) | Open | |
-| H-03 | GitHub remote (done). Before CI can run: clean the history, apply the public-period settings and make the repository public (docs/CLOUD-DEVELOPMENT.md §2.2 and §3) | M1 | Partly done | Repository recreated with a clean history and made public (2026-11-01). **CI is currently blocked:** Actions permissions allow only `yomiade1`-owned actions, so every run fails at startup (runs 20 and 21, 2026-11-11). Fix: Settings ▸ Actions ▸ General, tick **Allow actions created by GitHub** (§2.2). Also re-enable **Require status checks to pass** on the `main` ruleset, turned off to merge PR #7. |
-| H-04 | macOS checks run in the `macos` CI job. Provide a Mac only for hands-on macOS testing. | M1 onward (optional) | Open | |
-| H-05 | Legal review: use of the analysis, interoperability importers (product plan §1) | Before M6 | Open | |
-| H-06 | Confirm rights for bundled Bible translations | M2 | Open | Only public-domain KJV and WEB are bundled in M2 (`content/bibles/PROVENANCE.md`). |
-| H-07 | Accept the NDI SDK licence and install the NDI runtime | M5 | Open | |
-| H-08 | Hardware lab: projectors or displays, an LED processor, a capture card, a camera, a MIDI controller, a Stream Deck, a DMX node | M5, M7 | Open | |
-| H-09 | Legitimate sample libraries from churches, with written permission | M6 | Open | |
-| H-10 | A Google Cloud OAuth client for Google Slides | M6 | Open | |
-| H-11 | A Blackmagic DeckLink card and SDK download; an AJA card | M8 | Open | |
-| H-12 | A CCLI partner agreement and API credentials (start talks in M1) | M9 | Open | |
-| H-13 | A Planning Center OAuth application | M9 | Open | |
-| H-14 | MultiTracks and Loop Community partnerships | M9 | Open | |
-| H-15 | Code-signing: Windows (Azure Trusted Signing or EV) and an Apple Developer ID with notarisation | M6 (alpha), M9 | Open | |
-| H-16 | Cloud hosting, domains and transactional email for the sync service and docs site | M9 | Open | |
-| H-17 | A payments account (for example Stripe) and pricing | M9 | Open | |
-| H-18 | A content designer for 2i reviews of knowledge base articles | M2 onward | Open | 57 M1–M3 English articles sit at `status: review` (`reviewed_by: ""`). |
-| H-19 | Translators and native reviewers for es, pt, fr, ko, yo | M10 | Open | |
-| H-20 | A manual accessibility audit with screen-reader users | M10 | Open | |
-| H-21 | A third-party penetration test | M10 | Open | |
-| H-22 | Pilot churches: 3 testers (M4), 10 alpha (M6), 50 beta (M9); usability studies | M4–M10 | Open | |
-| H-23 | Reference hardware (ARCHITECTURE §12, TESTING §6) | M10 (useful from M1) | Open | |
-| H-24 | Supply the private MediaShow format notes when M6.2 starts (they're kept outside the repository) | M6 | Open | |
-| H-25 | Set up the Claude Code cloud environment: the setup script and network domains (docs/CLOUD-DEVELOPMENT.md §2.1) | M1 | Open | |
-| H-26 | Before making the repository private again, choose how test builds and updates are delivered (docs/CLOUD-DEVELOPMENT.md §6) | When going private | Open | |
+| ID   | Task                                                                                                                                                                | Needed by                | Status                        | Notes                                                                                                                                                                                                                                                                                                                                                                                                            |
+| ---- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------ | ----------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| H-01 | Approve installing toolchains (Rust, VS Build Tools, LLVM, .NET 10 SDK, pnpm, buf). Only needed if you also code locally; cloud sessions install their own.         | M1 (optional)            | Not needed for cloud sessions |                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| H-02 | Confirm the product name and choose the code licence                                                                                                                | M1 (placeholder allowed) | Open                          |                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| H-03 | GitHub remote (done). Before CI can run: clean the history, apply the public-period settings and make the repository public (docs/CLOUD-DEVELOPMENT.md §2.2 and §3) | M1                       | Partly done                   | Repository recreated with a clean history and made public (2026-11-01). **CI is currently blocked:** Actions permissions allow only `yomiade1`-owned actions, so every run fails at startup (runs 20 and 21, 2026-11-11). Fix: Settings ▸ Actions ▸ General, tick **Allow actions created by GitHub** (§2.2). Also re-enable **Require status checks to pass** on the `main` ruleset, turned off to merge PR #7. |
+| H-04 | macOS checks run in the `macos` CI job. Provide a Mac only for hands-on macOS testing.                                                                              | M1 onward (optional)     | Open                          |                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| H-05 | Legal review: use of the analysis, interoperability importers (product plan §1)                                                                                     | Before M6                | Open                          |                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| H-06 | Confirm rights for bundled Bible translations                                                                                                                       | M2                       | Open                          | Only public-domain KJV and WEB are bundled in M2 (`content/bibles/PROVENANCE.md`).                                                                                                                                                                                                                                                                                                                               |
+| H-07 | Accept the NDI SDK licence and install the NDI runtime                                                                                                              | M5                       | Open                          |                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| H-08 | Hardware lab: projectors or displays, an LED processor, a capture card, a camera, a MIDI controller, a Stream Deck, a DMX node                                      | M5, M7                   | Open                          |                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| H-09 | Legitimate sample libraries from churches, with written permission                                                                                                  | M6                       | Open                          |                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| H-10 | A Google Cloud OAuth client for Google Slides                                                                                                                       | M6                       | Open                          |                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| H-11 | A Blackmagic DeckLink card and SDK download; an AJA card                                                                                                            | M8                       | Open                          |                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| H-12 | A CCLI partner agreement and API credentials (start talks in M1)                                                                                                    | M9                       | Open                          |                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| H-13 | A Planning Center OAuth application                                                                                                                                 | M9                       | Open                          |                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| H-14 | MultiTracks and Loop Community partnerships                                                                                                                         | M9                       | Open                          |                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| H-15 | Code-signing: Windows (Azure Trusted Signing or EV) and an Apple Developer ID with notarisation                                                                     | M6 (alpha), M9           | Open                          |                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| H-16 | Cloud hosting, domains and transactional email for the sync service and docs site                                                                                   | M9                       | Open                          |                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| H-17 | A payments account (for example Stripe) and pricing                                                                                                                 | M9                       | Open                          |                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| H-18 | A content designer for 2i reviews of knowledge base articles                                                                                                        | M2 onward                | Open                          | 57 M1–M3 English articles sit at `status: review` (`reviewed_by: ""`).                                                                                                                                                                                                                                                                                                                                           |
+| H-19 | Translators and native reviewers for es, pt, fr, ko, yo                                                                                                             | M10                      | Open                          |                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| H-20 | A manual accessibility audit with screen-reader users                                                                                                               | M10                      | Open                          |                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| H-21 | A third-party penetration test                                                                                                                                      | M10                      | Open                          |                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| H-22 | Pilot churches: 3 testers (M4), 10 alpha (M6), 50 beta (M9); usability studies                                                                                      | M4–M10                   | Open                          |                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| H-23 | Reference hardware (ARCHITECTURE §12, TESTING §6)                                                                                                                   | M10 (useful from M1)     | Open                          |                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| H-24 | Supply the private MediaShow format notes when M6.2 starts (they're kept outside the repository)                                                                    | M6                       | Open                          |                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| H-25 | Set up the Claude Code cloud environment: the setup script and network domains (docs/CLOUD-DEVELOPMENT.md §2.1)                                                     | M1                       | Open                          |                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| H-26 | Before making the repository private again, choose how test builds and updates are delivered (docs/CLOUD-DEVELOPMENT.md §6)                                         | When going private       | Open                          |                                                                                                                                                                                                                                                                                                                                                                                                                  |
 
 ## Hardware and account checklists (H)
 
@@ -420,25 +430,26 @@ Get the test build from the M3 PR's **Checks** run (**Selah-win-x64-Setup** arti
 
 Copied from `tests/ledger.json` at the end of each milestone. Counts may only go up (ADR-016).
 
-| Milestone | rust | dotnet | web | golden | ui | e2e | kb | total |
-|---|---|---|---|---|---|---|---|---|
-| (baseline) | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
-| M1 | 121 | 20 | 3 | 4 | 70 | 6 | 7 | 231 |
-| M2 | 211 | 24 | 8 | 4 | 98 | 6 | 37 | 388 |
-| M3 | 279 | 28 | 12 | 10 | 118 | 6 | 57 | 510 |
-| M1–M3 review | 279 | 28 | 12 | 10 | 121 | 6 | 57 | 513 |
+| Milestone    | rust | dotnet | web | golden | ui  | e2e | kb  | total |
+| ------------ | ---- | ------ | --- | ------ | --- | --- | --- | ----- |
+| (baseline)   | 0    | 0      | 0   | 0      | 0   | 0   | 0   | 0     |
+| M1           | 121  | 20     | 3   | 4      | 70  | 6   | 7   | 231   |
+| M2           | 211  | 24     | 8   | 4      | 98  | 6   | 37  | 388   |
+| M3           | 279  | 28     | 12  | 10     | 118 | 6   | 57  | 510   |
+| M1–M3 review | 279  | 28     | 12  | 10     | 121 | 6   | 57  | 513   |
 
 ## Deviations and decisions
 
 _Anything done differently from BUILD-PLAN.md or the docs, with the reason and the ADR number if one was added._
 
+- 2026-11-11, M4 baseline: `engine::tests::engine_stages_preview_ring_without_affecting_live_outputs` timed out in Stage 6 on a clean checkout because `Engine::start` spawned a detached `selah-render` thread that held a strong `Arc<Engine>` clone inside `MediaPlaybackManager` and waited indefinitely when idle, keeping all 5 test WARP render threads alive simultaneously while `engine_stages_preview_ring_without_affecting_live_outputs` rendered at default `1920×1080` with a 5 s timeout. Updated `render_loop` (`crates/selah-engine/src/engine.rs`) to use a `Weak<Engine>` wake callback and exit when all external `Arc<Engine>` references drop (`Arc::strong_count <= 2`), configured `PREVIEW_WIDTH × PREVIEW_HEIGHT` output config in `engine_stages_preview_ring_without_affecting_live_outputs`, and raised initial WARP startup deadlines in `engine.rs` tests to 15 s; full `tools/verify.ps1` baseline gate is green.
 - 2026-11-11, M1–M3 review (no milestone work): first cloud session of the project. Reviewed M1–M3 against the code and fixed what the review found.
-  - **The cloud gate was red and had never been run.** `tools/verify.sh --cloud` failed at stage 5: the Windows type-check needs a prebuilt Skia for `x86_64-pc-windows-gnu`, `tools/cloud-setup.sh` had `linux-x64` hard-coded into `SKIA_BINARIES_URL` (so it looked for a Windows tarball inside the Linux folder), and nothing is pinned for that target — rust-skia publishes `windows-msvc` only, and the source fallback needs network the session doesn't have. The Skia- and FFmpeg-linked crates now come from `tools/windows-check-exclusions.txt`, which records why each is excluded; `selah-render`, `selah-core`, `selah-core-host`, `selah-engine` and `selah-bench` have no `#[cfg(windows)]` code, so nothing is lost for them, while `selah-media` and `selah-testkit` do and are recorded as CI-only. `tools/check-windows-coverage.py` (gate stage 5, tested in `tests/tools/test_windows_coverage.py`) fails the gate if an excluded crate gains `#[cfg(windows)]` code without that being recorded. `cfg!(windows)` runtime branches deliberately don't count: both arms compile everywhere. The comment in `cloud-setup.sh` now says why the path is Linux-only.
-  - **Five test names cited as evidence didn't exist.** `PROGRESS.md` M3-A8 and `docs/SECURITY.md` §9 SAFE-04 named two flash-analyser tests that were never written under those names (the real ones are `wcag_luminance_rate_and_area_thresholds_hold` and `transition_risk_catches_unsafe_strobe_and_passes_smooth_fade`); SAFE-05 named both audio-limiter tests wrongly (`master_limiter_keeps_plus_6dbfs_sine_under_minus_1_dbtp`, `clear_fade_ramps_smoothly_to_silence`); M3.6 credited a "poster_frame_from_path" in `selah-render` instead of `load_or_extract_video_poster` in `selah-core`. (A name that no longer exists is written in plain quotes, not backticks, so `tools/check-evidence.py` only checks names offered as real evidence.) Every control was genuinely tested — only the labels were wrong. `tools/check-evidence.py` (gate stage 14, tested in `tests/tools/test_evidence.py`) now checks all 128 cited test names and fails if one doesn't exist.
-  - **Eight hard-coded colours in the UI**, against the tokens-only rule. New tokens `color.{light,booth}.slide-text`, `slide-text-muted` and `scrim` cover slide-preview text and overlay dimming, with contrast pairs added. The command palette's inline `0 16 40 0 #40000000` shadow also contradicted DESIGN-SYSTEM §3 twice — far heavier than the documented elevation, and present in Booth, which should have no shadows — so a `shadow.{light,booth}.elevation` token group was added (`design/tokens/build.mjs` emits `BoxShadows` resources; Booth resolves to `none`). `TokenTests` gained 3 tests, one of which fails if any view hard-codes a colour again (ui 118 → 121).
-  - **M1-A1 and M3-A6 ticks were misleading** and now state what was really measured; the 8 ms budget miss is carried in an open-risks table under Current status.
-  - **The ledger is one floor for every platform, and raising it from Linux would have broken Windows.** `tools/test-ledger.py --update` wanted to set `rust` to `284`, because `#[cfg(unix)]` symlink and Unix-socket tests run here but not on Windows, which runs `279` for the same commit. Raising it would have failed stage 13 on the user's PC. The ledger keeps `rust: 279` (the lowest platform's count) and only `ui` rises, `118 -> 121`; total `510 -> 513`. The rule is now written down in TESTING-AND-QUALITY §3 rule 2 and in the tool's own `--help`.
-  - No milestone code changed: the fixes are in `tools/`, `design/tokens/`, the generated token files, three `.axaml` views and the docs. `tools/verify.sh --cloud` is **GREEN** in this cloud session (all 40 checks, Windows type-check and coverage guard included) — the first green cloud gate in the project.
+    - **The cloud gate was red and had never been run.** `tools/verify.sh --cloud` failed at stage 5: the Windows type-check needs a prebuilt Skia for `x86_64-pc-windows-gnu`, `tools/cloud-setup.sh` had `linux-x64` hard-coded into `SKIA_BINARIES_URL` (so it looked for a Windows tarball inside the Linux folder), and nothing is pinned for that target — rust-skia publishes `windows-msvc` only, and the source fallback needs network the session doesn't have. The Skia- and FFmpeg-linked crates now come from `tools/windows-check-exclusions.txt`, which records why each is excluded; `selah-render`, `selah-core`, `selah-core-host`, `selah-engine` and `selah-bench` have no `#[cfg(windows)]` code, so nothing is lost for them, while `selah-media` and `selah-testkit` do and are recorded as CI-only. `tools/check-windows-coverage.py` (gate stage 5, tested in `tests/tools/test_windows_coverage.py`) fails the gate if an excluded crate gains `#[cfg(windows)]` code without that being recorded. `cfg!(windows)` runtime branches deliberately don't count: both arms compile everywhere. The comment in `cloud-setup.sh` now says why the path is Linux-only.
+    - **Five test names cited as evidence didn't exist.** `PROGRESS.md` M3-A8 and `docs/SECURITY.md` §9 SAFE-04 named two flash-analyser tests that were never written under those names (the real ones are `wcag_luminance_rate_and_area_thresholds_hold` and `transition_risk_catches_unsafe_strobe_and_passes_smooth_fade`); SAFE-05 named both audio-limiter tests wrongly (`master_limiter_keeps_plus_6dbfs_sine_under_minus_1_dbtp`, `clear_fade_ramps_smoothly_to_silence`); M3.6 credited a "poster_frame_from_path" in `selah-render` instead of `load_or_extract_video_poster` in `selah-core`. (A name that no longer exists is written in plain quotes, not backticks, so `tools/check-evidence.py` only checks names offered as real evidence.) Every control was genuinely tested — only the labels were wrong. `tools/check-evidence.py` (gate stage 14, tested in `tests/tools/test_evidence.py`) now checks all 128 cited test names and fails if one doesn't exist.
+    - **Eight hard-coded colours in the UI**, against the tokens-only rule. New tokens `color.{light,booth}.slide-text`, `slide-text-muted` and `scrim` cover slide-preview text and overlay dimming, with contrast pairs added. The command palette's inline `0 16 40 0 #40000000` shadow also contradicted DESIGN-SYSTEM §3 twice — far heavier than the documented elevation, and present in Booth, which should have no shadows — so a `shadow.{light,booth}.elevation` token group was added (`design/tokens/build.mjs` emits `BoxShadows` resources; Booth resolves to `none`). `TokenTests` gained 3 tests, one of which fails if any view hard-codes a colour again (ui 118 → 121).
+    - **M1-A1 and M3-A6 ticks were misleading** and now state what was really measured; the 8 ms budget miss is carried in an open-risks table under Current status.
+    - **The ledger is one floor for every platform, and raising it from Linux would have broken Windows.** `tools/test-ledger.py --update` wanted to set `rust` to `284`, because `#[cfg(unix)]` symlink and Unix-socket tests run here but not on Windows, which runs `279` for the same commit. Raising it would have failed stage 13 on the user's PC. The ledger keeps `rust: 279` (the lowest platform's count) and only `ui` rises, `118 -> 121`; total `510 -> 513`. The rule is now written down in TESTING-AND-QUALITY §3 rule 2 and in the tool's own `--help`.
+    - No milestone code changed: the fixes are in `tools/`, `design/tokens/`, the generated token files, three `.axaml` views and the docs. `tools/verify.sh --cloud` is **GREEN** in this cloud session (all 40 checks, Windows type-check and coverage guard included) — the first green cloud gate in the project.
 - 2026-11-09, M2.1: this session runs on Windows, so `tools/verify.ps1` is the local full gate; Linux checks run in PR CI. The initial baseline run was interrupted by implementation edits before its test stage completed; it is not recorded as a passing baseline. The first sandboxed attempt also needed network access for pinned dependency checks and `PYTHONIOENCODING=utf-8` for Unicode diagnostics in this Windows shell.
 - 2026-11-09, M2.1: ADR-027 replaces the incompatible `rusqlite_migration` dependency with an append-only transactional/checksummed runner over existing bundled `rusqlite` 0.41. Added `uuid` (MIT/Apache-2.0) for OS-random UUIDv7 identities. Dependency resolution tried to move bindgen from its existing `syn` 2 dependency to `syn` 3, breaking compilation; its original lockfile entry was retained. No toolchain or pre-existing dependency version was changed.
 - 2026-11-09, M2.2: added `fastrand` `2` (MIT/Apache-2.0) as a dev-dependency on `selah-core` for the deterministic 10,000-sequence M2-A2 undo/redo property test (`cargo deny check` green); `selah-testkit::library_crash` holds the process-level M2-A3 recovery suite (`tests/ledger.json` counts it under `rust`, with `E2E_FILES` unchanged).
@@ -474,6 +485,12 @@ _Anything done differently from BUILD-PLAN.md or the docs, with the reason and t
 - 2026-11-07, M1 finish: `tests/fixtures/db/m1.db` isn't created, because M1 has no library database (TESTING §4.2 starts fixtures at M2; core keeps only `settings.json` and `live_state.bin`). The ledger is first recorded as a milestone row here.
 
 - 2026-11-07, M1 finish: `tests/golden/macos/text-en.png` and `text-yo.png` are macOS references (CoreText edges), taken from the `macos` job's failure report and reviewed by eye. `bless-golden.yml` failed on macOS (run 42411409570) because it doesn't build the decode-only macOS FFmpeg that gate stage 1 builds; follow-up: add that step before the next macOS blessing.
+
+- 2026-11-11, M4.3: this session found M4.3 implemented but uncommitted on the branch, left by an earlier session. It was checked with the fast gate and gate stage 7 (golden frames), then committed as `M4.3` unchanged apart from PROGRESS evidence.
+- 2026-11-11, M4.5: the parked M4.3 code treated an actor as a role-locked volunteer when its `user_id` started with `volunteer`. The client chooses that string, so a UI could leave it off and keep Producer rights, which fails SEC-14. M4.5 replaced it with core state (`SetRoleLock`, policy `live.role-lock`, PIN hash in `SecretStore`). The permission matrix test now checks every cell under both lock states and three claimed user ids.
+- 2026-11-11, M4.5: if the role lock is on but its PIN record is missing from the keychain, unlocking succeeds (with a warning in the log) rather than trapping the church in Simple mode. Only someone who can already act as the same OS user can remove the record, which is outside what the role lock defends against (accidental and casual changes at the booth; organisation roles arrive in M9).
+- 2026-11-11, M4.4: saved Producer layouts use Selah's own small JSON (`ProducerLayoutState`: pane proportions and the inspector tab, size-capped and clamped on load) instead of `Dock.Serializer.*`, which needs generated metadata for every dockable type. Panes can't be closed or floated, so the live controls can't be lost.
+- 2026-11-11, M4.4: Booth lock keeps **Show logo** (F9) working along with Next, Previous and Clear, as the parked M4.3 core code did. SAFE-03 groups Show logo with Clear everything as an emergency action; DESIGN-SYSTEM §10 lists only Next, Previous and Clear. Flagged for review.
 
 ## Quarantined tests
 

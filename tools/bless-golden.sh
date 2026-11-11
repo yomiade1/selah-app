@@ -24,7 +24,7 @@ if [ -z "$reason" ]; then
 fi
 
 export SELAH_BLESS_GOLDEN=1 SELAH_GPU=software
-cargo test -p selah-testkit --features golden --test golden_text --test golden_m3 -- ${filter:+"$filter"}
+cargo test -p selah-testkit --features golden --test golden_text --test golden_m3 --test golden_m4 -- ${filter:+"$filter"}
 
 {
   echo

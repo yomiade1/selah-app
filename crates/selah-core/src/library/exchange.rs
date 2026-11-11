@@ -119,7 +119,7 @@ fn check_local_input_path(raw: &str) -> Result<PathBuf, CommandBusError> {
     Ok(canonical)
 }
 
-fn validate_output_file_path(raw: &str) -> Result<PathBuf, CommandBusError> {
+pub(crate) fn validate_output_file_path(raw: &str) -> Result<PathBuf, CommandBusError> {
     check_no_url_or_protocol(raw)?;
     let trimmed = raw.trim();
     let candidate = Path::new(trimmed);

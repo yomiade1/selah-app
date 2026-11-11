@@ -320,8 +320,8 @@ public sealed partial class LibraryAndEditorTests : IDisposable
 
         var clearBtn = ControlByName<Button>(window, "ClearEverythingButton");
         var paletteDialog = ControlByName<Border>(window, "PaletteDialog");
-        var clearRect = new Rect(clearBtn.TranslatePoint(default, window) ?? default, clearBtn.Bounds.Size);
-        var paletteRect = new Rect(paletteDialog.TranslatePoint(default, window) ?? default, paletteDialog.Bounds.Size);
+        var clearRect = new Avalonia.Rect(clearBtn.TranslatePoint(default, window) ?? default, clearBtn.Bounds.Size);
+        var paletteRect = new Avalonia.Rect(paletteDialog.TranslatePoint(default, window) ?? default, paletteDialog.Bounds.Size);
         Assert.False(clearRect.Intersects(paletteRect), "Ctrl+K palette must not cover Clear everything");
 
         // 1) Find a song and activate it -> enters Song Editor with that song loaded.
@@ -621,6 +621,61 @@ public sealed partial class LibraryAndEditorTests : IDisposable
         window.Close();
     }
 
+    [AvaloniaTheory]
+    [MemberData(nameof(ModesMatrix))]
+    public void Service_planner_builds_service_inherits_last_week_projects_runtime_and_exports_print(int scale, string appearance, string language)
+    {
+        Configure(scale, appearance, language);
+        var library = new FakeLibrary();
+        var model = new MainViewModel(null, null, library, new FakeHelp());
+        var window = OpenWindow(model);
+
+        model.SelectModeCommand.Execute("ServicePlanner");
+        model.ServicePlanner.LoadCommand.ExecuteAsync(null).GetAwaiter().GetResult();
+        Dispatcher.UIThread.RunJobs();
+
+        Assert.Equal(WorkspaceMode.ServicePlanner, model.ActiveMode);
+        Assert.NotEmpty(model.ServicePlanner.Services);
+        Assert.NotEmpty(model.ServicePlanner.ServiceTypes);
+        Assert.NotEmpty(model.ServicePlanner.TeamMembers);
+        Assert.True(model.ServicePlanner.Items.Count >= 6);
+
+        // Add an Audio item and a Note item so all item kinds are represented, then reorder and save.
+        model.ServicePlanner.AddAudioItemCommand.ExecuteAsync(null).GetAwaiter().GetResult();
+        model.ServicePlanner.AddNoteItemCommand.ExecuteAsync(null).GetAwaiter().GetResult();
+        model.ServicePlanner.MoveItemUpCommand.ExecuteAsync(null).GetAwaiter().GetResult();
+        model.ServicePlanner.SaveServiceCommand.ExecuteAsync(null).GetAwaiter().GetResult();
+        Dispatcher.UIThread.RunJobs();
+
+        Assert.Contains("09:00", model.ServicePlanner.RuntimeSummary);
+        Assert.Equal(Localizer.Instance["services-saved-status"], model.ServicePlanner.StatusMessage);
+
+        // Add a volunteer to the team roster.
+        model.ServicePlanner.NewMemberName = "Alex Rivera";
+        model.ServicePlanner.NewMemberRole = "Camera 1";
+        model.ServicePlanner.AddTeamMemberCommand.ExecuteAsync(null).GetAwaiter().GetResult();
+        Dispatcher.UIThread.RunJobs();
+        Assert.Contains(model.ServicePlanner.TeamMembers, m => m.Name == "Alex Rivera" && m.Initials == "AR");
+
+        // Export print sheet & transposed chord charts.
+        model.ServicePlanner.ExportChordChartsCommand.ExecuteAsync(null).GetAwaiter().GetResult();
+        Dispatcher.UIThread.RunJobs();
+        Assert.Contains("Amazing Grace", model.ServicePlanner.LastExportedHtml);
+        Assert.True(model.ServicePlanner.LastExportedPdfBytes.Length > 100);
+        Assert.True(model.ServicePlanner.LastExportedPageCount >= 1);
+
+        // Inherit from last week.
+        var beforeCount = model.ServicePlanner.Services.Count;
+        model.ServicePlanner.InheritFromLastWeekCommand.ExecuteAsync(null).GetAwaiter().GetResult();
+        Dispatcher.UIThread.RunJobs();
+        Assert.Equal(beforeCount + 1, model.ServicePlanner.Services.Count);
+        Assert.Equal(Localizer.Instance["services-inherited-status"], model.ServicePlanner.StatusMessage);
+
+        Assert.Empty(ActiveCriticalLabelProblems(window, model));
+        Snapshot(window, $"service-planner-{scale}-{appearance}-{language}");
+        window.Close();
+    }
+
     private sealed class FakeHelp : IHelpSource
     {
         private static readonly string Ast = File.ReadAllText(Repo.PathOf("tests", "fixtures", "kb", "show-a-song.ast.json"));
@@ -646,6 +701,9 @@ public sealed partial class LibraryAndEditorTests : IDisposable
         public List<MediaItem> Media { get; } = [];
         public List<Template> Templates { get; } = [];
         public List<Presentation> Presentations { get; } = [];
+        public List<Service> Services { get; } = [];
+        public List<ServiceType> ServiceTypes { get; } = [];
+        public List<Team> Teams { get; } = [];
         public List<OutputConfig> Outputs { get; } =
         [
             new OutputConfig { OutputIndex = 0, Name = "Main 16:9", Role = OutputRole.Main, Resolution = new Resolution { Width = 1920, Height = 1080 } },
@@ -1196,6 +1254,153 @@ public sealed partial class LibraryAndEditorTests : IDisposable
         {
             StagedScenes.Add(scene.Clone());
             return Task.CompletedTask;
+        }
+
+        public Task<IReadOnlyList<Service>> ListServicesAsync(uint limit = 200, uint offset = 0) =>
+            Task.FromResult<IReadOnlyList<Service>>(Services.Select(s => s.Clone()).ToList());
+
+        public Task<Service?> GetServiceAsync(Id id) =>
+            Task.FromResult(Services.FirstOrDefault(s => LibraryIds.Same(s.Id, id))?.Clone());
+
+        public Task SaveServiceAsync(Service service, Id? undoGroup = null)
+        {
+            var idx = Services.FindIndex(s => LibraryIds.Same(s.Id, service.Id));
+            if (idx >= 0)
+            {
+                Services[idx] = service.Clone();
+            }
+            else
+            {
+                Services.Add(service.Clone());
+            }
+            RaiseChanged(DocumentType.Service, service.Id);
+            return Task.CompletedTask;
+        }
+
+        public Task DeleteServiceAsync(Id id, Id? undoGroup = null)
+        {
+            Services.RemoveAll(s => LibraryIds.Same(s.Id, id));
+            RaiseChanged(DocumentType.Service, id);
+            return Task.CompletedTask;
+        }
+
+        public Task<Service> CreateServiceFromPreviousAsync(CreateServiceFromPrevious request, Id? undoGroup = null)
+        {
+            var source = Services.FirstOrDefault(s => LibraryIds.Same(s.Id, request.SourceServiceId)) ?? Services.FirstOrDefault();
+            var created = source is not null ? source.Clone() : new Service();
+            created.Id = LibraryIds.NewId();
+            created.Name = string.IsNullOrWhiteSpace(request.Name) ? "Sunday Service (Inherited)" : request.Name;
+            created.SourceServiceId = source?.Id;
+            foreach (var item in created.Items)
+            {
+                item.Id = LibraryIds.NewId();
+            }
+            Services.Add(created.Clone());
+            RaiseChanged(DocumentType.Service, created.Id);
+            return Task.FromResult(created);
+        }
+
+        public Task<IReadOnlyList<ServiceType>> ListServiceTypesAsync(uint limit = 200, uint offset = 0) =>
+            Task.FromResult<IReadOnlyList<ServiceType>>(ServiceTypes.Select(t => t.Clone()).ToList());
+
+        public Task<ServiceType?> GetServiceTypeAsync(Id id) =>
+            Task.FromResult(ServiceTypes.FirstOrDefault(t => LibraryIds.Same(t.Id, id))?.Clone());
+
+        public Task SaveServiceTypeAsync(ServiceType serviceType, Id? undoGroup = null)
+        {
+            var idx = ServiceTypes.FindIndex(t => LibraryIds.Same(t.Id, serviceType.Id));
+            if (idx >= 0)
+            {
+                ServiceTypes[idx] = serviceType.Clone();
+            }
+            else
+            {
+                ServiceTypes.Add(serviceType.Clone());
+            }
+            RaiseChanged(DocumentType.ServiceType, serviceType.Id);
+            return Task.CompletedTask;
+        }
+
+        public Task DeleteServiceTypeAsync(Id id, Id? undoGroup = null)
+        {
+            ServiceTypes.RemoveAll(t => LibraryIds.Same(t.Id, id));
+            RaiseChanged(DocumentType.ServiceType, id);
+            return Task.CompletedTask;
+        }
+
+        public Task<IReadOnlyList<Team>> ListTeamsAsync(uint limit = 200, uint offset = 0) =>
+            Task.FromResult<IReadOnlyList<Team>>(Teams.Select(t => t.Clone()).ToList());
+
+        public Task<Team?> GetTeamAsync(Id id) =>
+            Task.FromResult(Teams.FirstOrDefault(t => LibraryIds.Same(t.Id, id))?.Clone());
+
+        public Task SaveTeamAsync(Team team, Id? undoGroup = null)
+        {
+            var idx = Teams.FindIndex(t => LibraryIds.Same(t.Id, team.Id));
+            if (idx >= 0)
+            {
+                Teams[idx] = team.Clone();
+            }
+            else
+            {
+                Teams.Add(team.Clone());
+            }
+            RaiseChanged(DocumentType.Team, team.Id);
+            return Task.CompletedTask;
+        }
+
+        public Task DeleteTeamAsync(Id id, Id? undoGroup = null)
+        {
+            Teams.RemoveAll(t => LibraryIds.Same(t.Id, id));
+            RaiseChanged(DocumentType.Team, id);
+            return Task.CompletedTask;
+        }
+
+        public Task<ServiceRuntimeProjection> ProjectServiceRuntimeAsync(ProjectServiceRuntime request)
+        {
+            var svc = request.Service ?? Services.FirstOrDefault(s => LibraryIds.Same(s.Id, request.ServiceId)) ?? new Service();
+            var baseSecs = svc.StartsAt is { UnixMilliseconds: > 0 } ts ? (int)((ts.UnixMilliseconds / 1000) % 86400) : 9 * 3600;
+            var offset = 0u;
+            var proj = new ServiceRuntimeProjection();
+            for (var i = 0; i < svc.Items.Count; i++)
+            {
+                var item = svc.Items[i];
+                var isHeader = item.Kind == ServiceItemKind.Header;
+                var cur = (int)((baseSecs + offset) % 86400);
+                var dur = isHeader ? 0u : (item.DurationSeconds > 0 ? item.DurationSeconds : 240u);
+                proj.Items.Add(new ProjectedServiceItem
+                {
+                    ItemId = item.Id,
+                    Index = (uint)i,
+                    OffsetSeconds = offset,
+                    DurationSeconds = dur,
+                    FormattedTime = isHeader ? "—" : $"{cur / 3600:D2}:{(cur % 3600) / 60:D2}",
+                    FormattedDuration = isHeader ? "—" : $"{dur / 60}:{dur % 60:D2}",
+                    IsHeader = isHeader,
+                });
+                offset += dur;
+            }
+            var endSecs = (int)((baseSecs + offset) % 86400);
+            proj.TotalDurationSeconds = offset;
+            proj.FormattedStartTime = $"{baseSecs / 3600:D2}:{(baseSecs % 3600) / 60:D2}";
+            proj.FormattedEndTime = $"{endSecs / 3600:D2}:{(endSecs % 3600) / 60:D2}";
+            var mins = (offset + 59) / 60;
+            proj.FormattedTotalDuration = mins >= 60 ? $"{mins / 60} hr {mins % 60} min" : $"{mins} min";
+            return Task.FromResult(proj);
+        }
+
+        public Task<ServicePrintExport> ExportServicePrintAsync(ExportServicePrint request)
+        {
+            var svc = Services.FirstOrDefault(s => LibraryIds.Same(s.Id, request.ServiceId)) ?? new Service { Name = "Sunday Service" };
+            var html = $"<!DOCTYPE html><html><body><h1>{svc.Name}</h1><p>Amazing Grace (Key: G)</p><pre>G   C   G\nAmazing grace! How sweet the sound</pre></body></html>";
+            var pdf = System.Text.Encoding.ASCII.GetBytes("%PDF-1.4\n1 0 obj << /Type /Catalog /Pages 2 0 R >> endobj\n%%EOF\n" + new string(' ', 120));
+            return Task.FromResult(new ServicePrintExport
+            {
+                Path = request.OutputPath,
+                Html = html,
+                PdfBytes = ByteString.CopyFrom(pdf),
+                PageCount = 2,
+            });
         }
 
         private void RaiseChanged(DocumentType docType, Id id)

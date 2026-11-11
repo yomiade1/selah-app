@@ -24,3 +24,10 @@ message Color {
   float blue = 3;
   float alpha = 4;
 }
+
+message Rect {
+  float x = 1;
+  float y = 2;
+  float width = 3;
+  float height = 4;
+}

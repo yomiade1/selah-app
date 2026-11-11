@@ -1,0 +1,415 @@
+syntax = "proto3";
+
+package selah.v1;
+
+import "selah/v1/common.proto";
+import "selah/v1/render.proto";
+
+option csharp_namespace = "Selah.Contracts.V1";
+
+// Look rules (screen × layer visibility + per-output template override, M4.3 / M4-A3).
+message LookRule {
+  Id id = 1;
+  uint32 output_index = 2;
+  repeated LayerKind enabled_layers = 3;
+  Id template_override_id = 4;
+  string template_style_json = 5;
+  bool mask_enabled = 6;
+}
+
+message Look {
+  Id id = 1;
+  string name = 2;
+  string hotkey = 3;
+  repeated LookRule rules = 4;
+}
+
+// Props: persistent or timed overlay cards/bugs on LayerKind::Props (M4.3).
+message Prop {
+  Id id = 1;
+  string name = 2;
+  string label = 3;
+  Rect position_rect = 4;
+  Color background_color = 5;
+  Color text_color = 6;
+  Id media_id = 7;
+  string elements_json = 8;
+  uint32 auto_clear_seconds = 9;
+}
+
+// Messages with {token} interpolation and auto-hide durations (M4.3).
+message LiveMessage {
+  Id id = 1;
+  string name = 2;
+  string template_text = 3;
+  map<string, string> default_tokens = 4;
+  uint32 duration_seconds = 5;
+  Id timer_id = 6;
+  bool stage_only = 7;
+  Color background_color = 8;
+  Color text_color = 9;
+}
+
+// Timers: countdown, count up, count to wall-clock time, with overrun behaviour (M4.3 / M4-A4).
+enum TimerKind {
+  TIMER_KIND_UNSPECIFIED = 0;
+  TIMER_KIND_COUNTDOWN = 1;
+  TIMER_KIND_COUNT_UP = 2;
+  TIMER_KIND_COUNT_TO_TIME = 3;
+}
+
+enum TimerOverrunMode {
+  TIMER_OVERRUN_MODE_UNSPECIFIED = 0;
+  TIMER_OVERRUN_MODE_STOP_AT_ZERO = 1;
+  TIMER_OVERRUN_MODE_COUNT_UP_NEGATIVE = 2;
+  TIMER_OVERRUN_MODE_TRIGGER_MACRO = 3;
+}
+
+message Timer {
+  Id id = 1;
+  string name = 2;
+  TimerKind kind = 3;
+  uint64 duration_ms = 4;
+  uint32 target_time_of_day_seconds = 5;
+  TimerOverrunMode overrun_mode = 6;
+  Id overrun_macro_id = 7;
+  bool show_hours = 8;
+}
+
+message TimerStatus {
+  Id timer_id = 1;
+  string name = 2;
+  TimerKind kind = 3;
+  TimerOverrunMode overrun_mode = 4;
+  bool running = 5;
+  bool overrun = 6;
+  int64 remaining_ms = 7;
+  uint64 elapsed_ms = 8;
+  uint64 duration_ms = 9;
+  string formatted_time = 10;
+  float progress = 11;
+  uint64 started_at_mono_ns = 12;
+  uint64 accumulated_elapsed_ns = 13;
+  Id overrun_macro_id = 14;
+  bool overrun_macro_fired = 15;
+}
+
+message LiveAutomationState {
+  Id active_look_id = 1;
+  string active_look_name = 2;
+  Id active_prop_id = 3;
+  string active_prop_name = 4;
+  Id active_message_id = 5;
+  string active_message_text = 6;
+  uint64 active_message_remaining_ms = 7;
+  string booth_message = 8;
+  repeated TimerStatus timers = 9;
+  Id active_stage_layout_id = 10;
+  string active_stage_layout_name = 11;
+  bool booth_locked = 12;
+  bool practice_mode = 13;
+  // SEC-14: core holds the Simple-mode role lock; the UI only shows it.
+  bool role_locked = 14;
+}
+
+// Macros and slide actions (M4.3).
+enum MacroActionKind {
+  MACRO_ACTION_KIND_UNSPECIFIED = 0;
+  MACRO_ACTION_KIND_SET_LOOK = 1;
+  MACRO_ACTION_KIND_SHOW_PROP = 2;
+  MACRO_ACTION_KIND_HIDE_PROP = 3;
+  MACRO_ACTION_KIND_SHOW_MESSAGE = 4;
+  MACRO_ACTION_KIND_HIDE_MESSAGE = 5;
+  MACRO_ACTION_KIND_START_TIMER = 6;
+  MACRO_ACTION_KIND_PAUSE_TIMER = 7;
+  MACRO_ACTION_KIND_RESET_TIMER = 8;
+  MACRO_ACTION_KIND_CLEAR_LAYER = 9;
+  MACRO_ACTION_KIND_TRIGGER_CLEAR_GROUP = 10;
+  MACRO_ACTION_KIND_CLEAR_ALL = 11;
+  MACRO_ACTION_KIND_SHOW_LOGO = 12;
+  MACRO_ACTION_KIND_PLAY_AUDIO = 13;
+  MACRO_ACTION_KIND_STOP_AUDIO = 14;
+  MACRO_ACTION_KIND_SET_STAGE_LAYOUT = 15;
+}
+
+message MacroAction {
+  Id id = 1;
+  MacroActionKind kind = 2;
+  Id target_id = 3;
+  LayerKind layer_kind = 4;
+  string text_param = 5;
+  float float_param = 6;
+  bool bool_param = 7;
+}
+
+message Macro {
+  Id id = 1;
+  string name = 2;
+  string hotkey = 3;
+  Color color = 4;
+  repeated MacroAction actions = 5;
+}
+
+// Clear groups (M4.3).
+message ClearGroup {
+  Id id = 1;
+  string name = 2;
+  string hotkey = 3;
+  repeated LayerKind layers_to_clear = 4;
+  bool stop_audio = 5;
+  bool stop_timers = 6;
+  bool clear_show_logo = 7;
+}
+
+// Stage display layouts (M4.3 schema + M4.6 stage editor/renderer).
+enum StageElementKind {
+  STAGE_ELEMENT_KIND_UNSPECIFIED = 0;
+  STAGE_ELEMENT_KIND_HEADER_BAR = 1;
+  STAGE_ELEMENT_KIND_CURRENT_SLIDE = 2;
+  STAGE_ELEMENT_KIND_NEXT_SLIDE = 3;
+  STAGE_ELEMENT_KIND_TIMER = 4;
+  STAGE_ELEMENT_KIND_CLOCK = 5;
+  STAGE_ELEMENT_KIND_BOOTH_MESSAGE = 6;
+  STAGE_ELEMENT_KIND_SPEAKER_NOTES = 7;
+  STAGE_ELEMENT_KIND_ARRANGEMENT_STRIP = 8;
+}
+
+message StageElement {
+  Id id = 1;
+  StageElementKind kind = 2;
+  Rect rect = 3;
+  bool visible = 4;
+  float font_scale = 5;
+  bool show_chords = 6;
+}
+
+message StageLayout {
+  Id id = 1;
+  string name = 2;
+  bool show_chords = 3;
+  bool show_key_badge = 4;
+  bool show_arrangement_strip = 5;
+  bool show_clock = 6;
+  bool show_next_slide = 7;
+  bool show_timer = 8;
+  bool show_speaker_notes = 9;
+  bool show_booth_message = 10;
+  repeated StageElement elements = 11;
+}
+
+// Library CRUD messages for M4.3 / M4.6 documents.
+message SaveLook {
+  Look look = 1;
+}
+
+message DeleteLook {
+  Id id = 1;
+}
+
+message GetLook {
+  Id id = 1;
+}
+
+message ListLooks {
+  uint32 limit = 1;
+  uint32 offset = 2;
+}
+
+message LookList {
+  repeated Look looks = 1;
+}
+
+message SaveProp {
+  Prop prop = 1;
+}
+
+message DeleteProp {
+  Id id = 1;
+}
+
+message GetProp {
+  Id id = 1;
+}
+
+message ListProps {
+  uint32 limit = 1;
+  uint32 offset = 2;
+}
+
+message PropList {
+  repeated Prop props = 1;
+}
+
+message SaveMessage {
+  LiveMessage message = 1;
+}
+
+message DeleteMessage {
+  Id id = 1;
+}
+
+message GetMessage {
+  Id id = 1;
+}
+
+message ListMessages {
+  uint32 limit = 1;
+  uint32 offset = 2;
+}
+
+message MessageList {
+  repeated LiveMessage messages = 1;
+}
+
+message SaveTimer {
+  Timer timer = 1;
+}
+
+message DeleteTimer {
+  Id id = 1;
+}
+
+message GetTimer {
+  Id id = 1;
+}
+
+message ListTimers {
+  uint32 limit = 1;
+  uint32 offset = 2;
+}
+
+message TimerList {
+  repeated Timer timers = 1;
+}
+
+message SaveMacro {
+  Macro macro = 1;
+}
+
+message DeleteMacro {
+  Id id = 1;
+}
+
+message GetMacro {
+  Id id = 1;
+}
+
+message ListMacros {
+  uint32 limit = 1;
+  uint32 offset = 2;
+}
+
+message MacroList {
+  repeated Macro macros = 1;
+}
+
+message SaveClearGroup {
+  ClearGroup clear_group = 1;
+}
+
+message DeleteClearGroup {
+  Id id = 1;
+}
+
+message GetClearGroup {
+  Id id = 1;
+}
+
+message ListClearGroups {
+  uint32 limit = 1;
+  uint32 offset = 2;
+}
+
+message ClearGroupList {
+  repeated ClearGroup clear_groups = 1;
+}
+
+message SaveStageLayout {
+  StageLayout stage_layout = 1;
+}
+
+message DeleteStageLayout {
+  Id id = 1;
+}
+
+message GetStageLayout {
+  Id id = 1;
+}
+
+message ListStageLayouts {
+  uint32 limit = 1;
+  uint32 offset = 2;
+}
+
+message StageLayoutList {
+  repeated StageLayout stage_layouts = 1;
+}
+
+// Live execution commands for M4.3 / M4.4 / M4.5 / M4.6.
+message SetLook {
+  Id look_id = 1;
+}
+
+message ShowProp {
+  Id prop_id = 1;
+}
+
+message HideProp {
+  Id prop_id = 1;
+}
+
+message ShowMessage {
+  Id message_id = 1;
+  map<string, string> token_values = 2;
+  string custom_text = 3;
+  uint32 duration_seconds = 4;
+  bool stage_only = 5;
+}
+
+message HideMessage {}
+
+message StartTimer {
+  Id timer_id = 1;
+}
+
+message PauseTimer {
+  Id timer_id = 1;
+}
+
+message ResetTimer {
+  Id timer_id = 1;
+}
+
+message AdvanceLiveClock {
+  uint64 delta_ms = 1;
+  int64 wall_unix_ms = 2;
+}
+
+message RunMacro {
+  Id macro_id = 1;
+}
+
+message TriggerClearGroup {
+  Id clear_group_id = 1;
+}
+
+message SetStageLayout {
+  Id stage_layout_id = 1;
+}
+
+// SAFE-01: sends a message only to the producer booth and stage alert, never to audience screens.
+message SendBoothMessage {
+  string text = 1;
+}
+
+// SAFE-06 / M4-A12: locks the booth UI so only Next, Previous and Clear commands are accepted.
+message SetBoothLock {
+  bool locked = 1;
+}
+
+// SEC-14 / M4-A6: lock this computer to Simple mode. Core keeps the state and a salted PIN hash
+// (SecretStore). Unlocking needs the PIN; wrong PINs are rate limited.
+message SetRoleLock {
+  bool locked = 1;
+  string pin = 2;
+}

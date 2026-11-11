@@ -6,13 +6,17 @@ import type { GenEnum, GenFile, GenMessage } from "@bufbuild/protobuf/codegenv2"
 import { enumDesc, fileDesc, messageDesc } from "@bufbuild/protobuf/codegenv2";
 import type { Id, Timestamp } from "./common_pb.js";
 import { file_selah_v1_common } from "./common_pb.js";
+import type { LiveAutomationState, Look, StageLayout } from "./live_pb.js";
+import { file_selah_v1_live } from "./live_pb.js";
+import type { LayerKind, LayerSpec, Scene } from "./render_pb.js";
+import { file_selah_v1_render } from "./render_pb.js";
 import type { Message } from "@bufbuild/protobuf";
 
 /**
  * Describes the file selah/v1/service.proto.
  */
 export const file_selah_v1_service: GenFile = /*@__PURE__*/
-  fileDesc("ChZzZWxhaC92MS9zZXJ2aWNlLnByb3RvEghzZWxhaC52MSLuAQoLU2VydmljZUl0ZW0SGAoCaWQYASABKAsyDC5zZWxhaC52MS5JZBInCgRraW5kGAIgASgOMhkuc2VsYWgudjEuU2VydmljZUl0ZW1LaW5kEiAKCmNvbnRlbnRfaWQYAyABKAsyDC5zZWxhaC52MS5JZBIkCg5hcnJhbmdlbWVudF9pZBgEIAEoCzIMLnNlbGFoLnYxLklkEg0KBXRpdGxlGAUgASgJEg0KBW5vdGVzGAYgASgJEhsKE3NjcmlwdHVyZV9yZWZlcmVuY2UYByABKAkSGQoRYmlibGVfdHJhbnNsYXRpb24YCCABKAkixgEKB1NlcnZpY2USGAoCaWQYASABKAsyDC5zZWxhaC52MS5JZBIMCgRuYW1lGAIgASgJEiYKCXN0YXJ0c19hdBgDIAEoCzITLnNlbGFoLnYxLlRpbWVzdGFtcBIlCg9zZXJ2aWNlX3R5cGVfaWQYBCABKAsyDC5zZWxhaC52MS5JZBIkCgVpdGVtcxgFIAMoCzIVLnNlbGFoLnYxLlNlcnZpY2VJdGVtEh4KCHRlYW1faWRzGAYgAygLMgwuc2VsYWgudjEuSWQiNQoLU2VydmljZVR5cGUSGAoCaWQYASABKAsyDC5zZWxhaC52MS5JZBIMCgRuYW1lGAIgASgJIi4KBFRlYW0SGAoCaWQYASABKAsyDC5zZWxhaC52MS5JZBIMCgRuYW1lGAIgASgJKs4BCg9TZXJ2aWNlSXRlbUtpbmQSIQodU0VSVklDRV9JVEVNX0tJTkRfVU5TUEVDSUZJRUQQABIaChZTRVJWSUNFX0lURU1fS0lORF9TT05HEAESHwobU0VSVklDRV9JVEVNX0tJTkRfU0NSSVBUVVJFEAISGwoXU0VSVklDRV9JVEVNX0tJTkRfTUVESUEQAxIiCh5TRVJWSUNFX0lURU1fS0lORF9QUkVTRU5UQVRJT04QBBIaChZTRVJWSUNFX0lURU1fS0lORF9OT1RFEAVCFaoCElNlbGFoLkNvbnRyYWN0cy5WMWIGcHJvdG8z", [file_selah_v1_common]);
+  fileDesc("ChZzZWxhaC92MS9zZXJ2aWNlLnByb3RvEghzZWxhaC52MSLJBQoLU2VydmljZUl0ZW0SGAoCaWQYASABKAsyDC5zZWxhaC52MS5JZBInCgRraW5kGAIgASgOMhkuc2VsYWgudjEuU2VydmljZUl0ZW1LaW5kEiAKCmNvbnRlbnRfaWQYAyABKAsyDC5zZWxhaC52MS5JZBIkCg5hcnJhbmdlbWVudF9pZBgEIAEoCzIMLnNlbGFoLnYxLklkEg0KBXRpdGxlGAUgASgJEg0KBW5vdGVzGAYgASgJEhsKE3NjcmlwdHVyZV9yZWZlcmVuY2UYByABKAkSGQoRYmlibGVfdHJhbnNsYXRpb24YCCABKAkSEAoIc3VidGl0bGUYCSABKAkSDQoFb3duZXIYCiABKAkSGAoQZHVyYXRpb25fc2Vjb25kcxgLIAEoDRIhCgt0ZW1wbGF0ZV9pZBgMIAEoCzIMLnNlbGFoLnYxLklkEhEKCWxvb2tfbmFtZRgNIAEoCRIdCgdsb29rX2lkGA4gASgLMgwuc2VsYWgudjEuSWQSKQoTYmFja2dyb3VuZF9tZWRpYV9pZBgPIAEoCzIMLnNlbGFoLnYxLklkEhIKCnN0YXR1c190YWcYECABKAkSEAoIc29uZ19rZXkYESABKAkSGQoRY291bnRkb3duX3NlY29uZHMYEiABKA0SHQoVY291bnRkb3duX3RhcmdldF90aW1lGBMgASgJEhkKEWNvdW50ZG93bl9tZXNzYWdlGBQgASgJEhwKFHRyYW5zbGF0aW9uX2xhbmd1YWdlGBUgASgJEh4KCG1hY3JvX2lkGBYgASgLMgwuc2VsYWgudjEuSWQSGgoSc2xpZGVfYWN0aW9uX2luZGV4GBcgASgNEiMKDXNsaWRlX2xvb2tfaWQYGCABKAsyDC5zZWxhaC52MS5JZBIkCg5zbGlkZV9tYWNyb19pZBgZIAEoCzIMLnNlbGFoLnYxLklkIogDCgdTZXJ2aWNlEhgKAmlkGAEgASgLMgwuc2VsYWgudjEuSWQSDAoEbmFtZRgCIAEoCRImCglzdGFydHNfYXQYAyABKAsyEy5zZWxhaC52MS5UaW1lc3RhbXASJQoPc2VydmljZV90eXBlX2lkGAQgASgLMgwuc2VsYWgudjEuSWQSJAoFaXRlbXMYBSADKAsyFS5zZWxhaC52MS5TZXJ2aWNlSXRlbRIeCgh0ZWFtX2lkcxgGIAMoCzIMLnNlbGFoLnYxLklkEg4KBnNlcmllcxgHIAEoCRIQCghsb2NhdGlvbhgIIAEoCRINCgVub3RlcxgJIAEoCRInChFzb3VyY2Vfc2VydmljZV9pZBgKIAEoCzIMLnNlbGFoLnYxLklkEiAKGHBsYW5uZWRfZHVyYXRpb25fc2Vjb25kcxgLIAEoDRIpChNkZWZhdWx0X3RlbXBsYXRlX2lkGAwgASgLMgwuc2VsYWgudjEuSWQSGQoRZGVmYXVsdF9sb29rX25hbWUYDSABKAkiggIKC1NlcnZpY2VUeXBlEhgKAmlkGAEgASgLMgwuc2VsYWgudjEuSWQSDAoEbmFtZRgCIAEoCRIaChJkZWZhdWx0X3N0YXJ0X3RpbWUYAyABKAkSIAoYZGVmYXVsdF9kdXJhdGlvbl9zZWNvbmRzGAQgASgNEhgKEGRlZmF1bHRfbG9jYXRpb24YBSABKAkSKQoTZGVmYXVsdF90ZW1wbGF0ZV9pZBgGIAEoCzIMLnNlbGFoLnYxLklkEhkKEWRlZmF1bHRfbG9va19uYW1lGAcgASgJEi0KDnRlbXBsYXRlX2l0ZW1zGAggAygLMhUuc2VsYWgudjEuU2VydmljZUl0ZW0iegoKVGVhbU1lbWJlchIYCgJpZBgBIAEoCzIMLnNlbGFoLnYxLklkEgwKBG5hbWUYAiABKAkSEAoIaW5pdGlhbHMYAyABKAkSDAoEcm9sZRgEIAEoCRIRCgljb25maXJtZWQYBSABKAgSEQoJbW9kZV9sb2NrGAYgASgJIlUKBFRlYW0SGAoCaWQYASABKAsyDC5zZWxhaC52MS5JZBIMCgRuYW1lGAIgASgJEiUKB21lbWJlcnMYAyADKAsyFC5zZWxhaC52MS5UZWFtTWVtYmVyIjEKC1NhdmVTZXJ2aWNlEiIKB3NlcnZpY2UYASABKAsyES5zZWxhaC52MS5TZXJ2aWNlIikKDURlbGV0ZVNlcnZpY2USGAoCaWQYASABKAsyDC5zZWxhaC52MS5JZCImCgpHZXRTZXJ2aWNlEhgKAmlkGAEgASgLMgwuc2VsYWgudjEuSWQiLQoMTGlzdFNlcnZpY2VzEg0KBWxpbWl0GAEgASgNEg4KBm9mZnNldBgCIAEoDSIyCgtTZXJ2aWNlTGlzdBIjCghzZXJ2aWNlcxgBIAMoCzIRLnNlbGFoLnYxLlNlcnZpY2UiPgoPU2F2ZVNlcnZpY2VUeXBlEisKDHNlcnZpY2VfdHlwZRgBIAEoCzIVLnNlbGFoLnYxLlNlcnZpY2VUeXBlIi0KEURlbGV0ZVNlcnZpY2VUeXBlEhgKAmlkGAEgASgLMgwuc2VsYWgudjEuSWQiKgoOR2V0U2VydmljZVR5cGUSGAoCaWQYASABKAsyDC5zZWxhaC52MS5JZCIxChBMaXN0U2VydmljZVR5cGVzEg0KBWxpbWl0GAEgASgNEg4KBm9mZnNldBgCIAEoDSI/Cg9TZXJ2aWNlVHlwZUxpc3QSLAoNc2VydmljZV90eXBlcxgBIAMoCzIVLnNlbGFoLnYxLlNlcnZpY2VUeXBlIigKCFNhdmVUZWFtEhwKBHRlYW0YASABKAsyDi5zZWxhaC52MS5UZWFtIiYKCkRlbGV0ZVRlYW0SGAoCaWQYASABKAsyDC5zZWxhaC52MS5JZCIjCgdHZXRUZWFtEhgKAmlkGAEgASgLMgwuc2VsYWgudjEuSWQiKgoJTGlzdFRlYW1zEg0KBWxpbWl0GAEgASgNEg4KBm9mZnNldBgCIAEoDSIpCghUZWFtTGlzdBIdCgV0ZWFtcxgBIAMoCzIOLnNlbGFoLnYxLlRlYW0ixQEKGUNyZWF0ZVNlcnZpY2VGcm9tUHJldmlvdXMSJwoRc291cmNlX3NlcnZpY2VfaWQYASABKAsyDC5zZWxhaC52MS5JZBIlCg9zZXJ2aWNlX3R5cGVfaWQYAiABKAsyDC5zZWxhaC52MS5JZBIMCgRuYW1lGAMgASgJEiYKCXN0YXJ0c19hdBgEIAEoCzITLnNlbGFoLnYxLlRpbWVzdGFtcBIOCgZzZXJpZXMYBSABKAkSEgoKa2VlcF9zb25ncxgGIAEoCCKLAgoUUHJvamVjdGVkU2VydmljZUl0ZW0SHQoHaXRlbV9pZBgBIAEoCzIMLnNlbGFoLnYxLklkEg0KBWluZGV4GAIgASgNEhYKDm9mZnNldF9zZWNvbmRzGAMgASgNEhgKEGR1cmF0aW9uX3NlY29uZHMYBCABKA0SJgoJc3RhcnRzX2F0GAUgASgLMhMuc2VsYWgudjEuVGltZXN0YW1wEiQKB2VuZHNfYXQYBiABKAsyEy5zZWxhaC52MS5UaW1lc3RhbXASFgoOZm9ybWF0dGVkX3RpbWUYByABKAkSGgoSZm9ybWF0dGVkX2R1cmF0aW9uGAggASgJEhEKCWlzX2hlYWRlchgJIAEoCCJdChVQcm9qZWN0U2VydmljZVJ1bnRpbWUSIAoKc2VydmljZV9pZBgBIAEoCzIMLnNlbGFoLnYxLklkEiIKB3NlcnZpY2UYAiABKAsyES5zZWxhaC52MS5TZXJ2aWNlIvUBChhTZXJ2aWNlUnVudGltZVByb2plY3Rpb24SLQoFaXRlbXMYASADKAsyHi5zZWxhaC52MS5Qcm9qZWN0ZWRTZXJ2aWNlSXRlbRIeChZ0b3RhbF9kdXJhdGlvbl9zZWNvbmRzGAIgASgNEi4KEXByb2plY3RlZF9lbmRzX2F0GAMgASgLMhMuc2VsYWgudjEuVGltZXN0YW1wEhwKFGZvcm1hdHRlZF9zdGFydF90aW1lGAQgASgJEhoKEmZvcm1hdHRlZF9lbmRfdGltZRgFIAEoCRIgChhmb3JtYXR0ZWRfdG90YWxfZHVyYXRpb24YBiABKAkidQoSRXhwb3J0U2VydmljZVByaW50EiAKCnNlcnZpY2VfaWQYASABKAsyDC5zZWxhaC52MS5JZBIoCgRraW5kGAIgASgOMhouc2VsYWgudjEuU2VydmljZVByaW50S2luZBITCgtvdXRwdXRfcGF0aBgDIAEoCSJXChJTZXJ2aWNlUHJpbnRFeHBvcnQSDAoEcGF0aBgBIAEoCRIMCgRodG1sGAIgASgJEhEKCXBkZl9ieXRlcxgDIAEoDBISCgpwYWdlX2NvdW50GAQgASgNIoUDCglMaXZlU2xpZGUSDQoFaW5kZXgYASABKA0SDQoFbGFiZWwYAiABKAkSFAoMc2VjdGlvbl9raW5kGAMgASgJEhUKDXNlY3Rpb25fY29sb3IYBCABKAkSDgoGaG90a2V5GAUgASgJEgwKBHRleHQYBiABKAkSEwoLY2hvcmRzX2pzb24YByABKAkSDQoFbm90ZXMYCCABKAkSEgoKdGl0bGVfdGV4dBgJIAEoCRIWCg5yZWZlcmVuY2VfdGV4dBgKIAEoCRITCgtmb290ZXJfdGV4dBgLIAEoCRIYChB0cmFuc2xhdGlvbl90ZXh0GAwgASgJEhUKDWVsZW1lbnRzX2pzb24YDSABKAkSEgoKc3R5bGVfanNvbhgOIAEoCRIQCghpc19ibGFuaxgPIAEoCBIeCghtYWNyb19pZBgQIAEoCzIMLnNlbGFoLnYxLklkEh0KB2xvb2tfaWQYESABKAsyDC5zZWxhaC52MS5JZBIUCgxhY3Rpb25fYmFkZ2UYEiABKAkixAEKDkxpdmVJdGVtU2xpZGVzEh0KB2l0ZW1faWQYASABKAsyDC5zZWxhaC52MS5JZBISCgppdGVtX2luZGV4GAIgASgNEicKBGtpbmQYAyABKA4yGS5zZWxhaC52MS5TZXJ2aWNlSXRlbUtpbmQSDQoFdGl0bGUYBCABKAkSEAoIc3VidGl0bGUYBSABKAkSEAoIc29uZ19rZXkYBiABKAkSIwoGc2xpZGVzGAcgAygLMhMuc2VsYWgudjEuTGl2ZVNsaWRlIogBCg9MaXZlTGF5ZXJTdGF0dXMSIQoEa2luZBgBIAEoDjITLnNlbGFoLnYxLkxheWVyS2luZBIOCgZhY3RpdmUYAiABKAgSDQoFdGl0bGUYAyABKAkSEAoIc3VidGl0bGUYBCABKAkSIQoEc3BlYxgFIAEoCzITLnNlbGFoLnYxLkxheWVyU3BlYyKlAQoQQXVkaW9MYXllclN0YXR1cxIPCgdwbGF5aW5nGAEgASgIEh4KCG1lZGlhX2lkGAIgASgLMgwuc2VsYWgudjEuSWQSDQoFdGl0bGUYAyABKAkSFAoMY29udGVudF9oYXNoGAQgASgJEhcKD21lZGlhX2V4dGVuc2lvbhgFIAEoCRIOCgZ2b2x1bWUYBiABKAISEgoKbG9vcF9hdWRpbxgHIAEoCCLnBQoKTGl2ZVN0YXR1cxIgCgpzZXJ2aWNlX2lkGAEgASgLMgwuc2VsYWgudjEuSWQSFAoMc2VydmljZV9uYW1lGAIgASgJEhcKD2hhc19hY3RpdmVfaXRlbRgDIAEoCBIaChJjdXJyZW50X2l0ZW1faW5kZXgYBCABKA0SGwoTY3VycmVudF9zbGlkZV9pbmRleBgFIAEoDRIQCghoYXNfbmV4dBgGIAEoCBIXCg9uZXh0X2l0ZW1faW5kZXgYByABKA0SGAoQbmV4dF9zbGlkZV9pbmRleBgIIAEoDRIaChJjdXJyZW50X2l0ZW1fdGl0bGUYCSABKAkSFwoPbmV4dF9pdGVtX3RpdGxlGAogASgJEhsKE2N1cnJlbnRfc2xpZGVfbGFiZWwYCyABKAkSGAoQbmV4dF9zbGlkZV9sYWJlbBgMIAEoCRIaChJjdXJyZW50X3NsaWRlX3RleHQYDSABKAkSFwoPbmV4dF9zbGlkZV90ZXh0GA4gASgJEhsKE2N1cnJlbnRfY2hvcmRzX2pzb24YDyABKAkSFQoNY3VycmVudF9ub3RlcxgQIAEoCRIQCghzb25nX2tleRgRIAEoCRIwChNjdXJyZW50X2l0ZW1fc2xpZGVzGBIgAygLMhMuc2VsYWgudjEuTGl2ZVNsaWRlEikKBmxheWVycxgTIAMoCzIZLnNlbGFoLnYxLkxpdmVMYXllclN0YXR1cxIpCgVhdWRpbxgUIAEoCzIaLnNlbGFoLnYxLkF1ZGlvTGF5ZXJTdGF0dXMSEQoJc2hvd19sb2dvGBUgASgIEg8KB2NsZWFyZWQYFiABKAgSFQoNY2FuX2xpdmVfdW5kbxgXIAEoCBIVCg1jYW5fbGl2ZV9yZWRvGBggASgIEhYKDnNjZW5lX3JldmlzaW9uGBkgASgEEjEKCmF1dG9tYXRpb24YGiADKAsyHS5zZWxhaC52MS5MaXZlQXV0b21hdGlvblN0YXRlIk8KD0xvYWRMaXZlU2VydmljZRIgCgpzZXJ2aWNlX2lkGAEgASgLMgwuc2VsYWgudjEuSWQSGgoSdHJpZ2dlcl9maXJzdF9pdGVtGAIgASgIIiEKC1RyaWdnZXJJdGVtEhIKCml0ZW1faW5kZXgYASABKA0iNwoMVHJpZ2dlclNsaWRlEhIKCml0ZW1faW5kZXgYASABKA0SEwoLc2xpZGVfaW5kZXgYAiABKA0iCwoJTmV4dFNsaWRlIg8KDVByZXZpb3VzU2xpZGUiCgoITmV4dEl0ZW0iDgoMUHJldmlvdXNJdGVtIiYKFFRyaWdnZXJTZWN0aW9uSG90a2V5Eg4KBmhvdGtleRgBIAEoCSIvCgpDbGVhckxheWVyEiEKBGtpbmQYASABKA4yEy5zZWxhaC52MS5MYXllcktpbmQiMwoNU2V0TGF5ZXJTdGF0ZRIiCgVsYXllchgBIAEoCzITLnNlbGFoLnYxLkxheWVyU3BlYyIkCg9TaG93TG9nb0NvbW1hbmQSEQoJc2hvd19sb2dvGAEgASgIIlQKDlBsYXlBdWRpb0xheWVyEh4KCG1lZGlhX2lkGAEgASgLMgwuc2VsYWgudjEuSWQSDgoGdm9sdW1lGAIgASgCEhIKCmxvb3BfYXVkaW8YAyABKAgiEAoOU3RvcEF1ZGlvTGF5ZXIiCgoITGl2ZVVuZG8iCgoITGl2ZVJlZG8iDgoMR2V0TGl2ZVN0YXRlIs8BChBMaXZlU3RhdGVDaGFuZ2VkEhYKDnNjZW5lX3JldmlzaW9uGAEgASgEEiAKCnNlcnZpY2VfaWQYAiABKAsyDC5zZWxhaC52MS5JZBIaChJjdXJyZW50X2l0ZW1faW5kZXgYAyABKA0SGwoTY3VycmVudF9zbGlkZV9pbmRleBgEIAEoDRIPCgdjbGVhcmVkGAUgASgIEhEKCXNob3dfbG9nbxgGIAEoCBIkCgZzdGF0dXMYByADKAsyFC5zZWxhaC52MS5MaXZlU3RhdHVzIlkKEUxpdmVTbmFwc2hvdEVudHJ5Eh4KBXNjZW5lGAEgASgLMg8uc2VsYWgudjEuU2NlbmUSJAoGc3RhdHVzGAIgASgLMhQuc2VsYWgudjEuTGl2ZVN0YXR1cyKMAwoTTGl2ZU1hY2hpbmVTbmFwc2hvdBIiCgdzZXJ2aWNlGAEgASgLMhEuc2VsYWgudjEuU2VydmljZRItCgtpdGVtX3NsaWRlcxgCIAMoCzIYLnNlbGFoLnYxLkxpdmVJdGVtU2xpZGVzEiQKBnN0YXR1cxgDIAEoCzIULnNlbGFoLnYxLkxpdmVTdGF0dXMSLwoKdW5kb19zdGFjaxgEIAMoCzIbLnNlbGFoLnYxLkxpdmVTbmFwc2hvdEVudHJ5Ei8KCnJlZG9fc3RhY2sYBSADKAsyGy5zZWxhaC52MS5MaXZlU25hcHNob3RFbnRyeRIjCgthY3RpdmVfbG9vaxgGIAEoCzIOLnNlbGFoLnYxLkxvb2sSMgoTYWN0aXZlX3N0YWdlX2xheW91dBgHIAEoCzIVLnNlbGFoLnYxLlN0YWdlTGF5b3V0Eh0KFXZpcnR1YWxfY2xvY2tfbW9ub19ucxgIIAEoBBIiChp2aXJ0dWFsX2Nsb2NrX3dhbGxfdW5peF9tcxgJIAEoAyqqAgoPU2VydmljZUl0ZW1LaW5kEiEKHVNFUlZJQ0VfSVRFTV9LSU5EX1VOU1BFQ0lGSUVEEAASGgoWU0VSVklDRV9JVEVNX0tJTkRfU09ORxABEh8KG1NFUlZJQ0VfSVRFTV9LSU5EX1NDUklQVFVSRRACEhsKF1NFUlZJQ0VfSVRFTV9LSU5EX01FRElBEAMSIgoeU0VSVklDRV9JVEVNX0tJTkRfUFJFU0VOVEFUSU9OEAQSGgoWU0VSVklDRV9JVEVNX0tJTkRfTk9URRAFEh8KG1NFUlZJQ0VfSVRFTV9LSU5EX0NPVU5URE9XThAGEhwKGFNFUlZJQ0VfSVRFTV9LSU5EX0hFQURFUhAHEhsKF1NFUlZJQ0VfSVRFTV9LSU5EX0FVRElPEAgqngEKEFNlcnZpY2VQcmludEtpbmQSIgoeU0VSVklDRV9QUklOVF9LSU5EX1VOU1BFQ0lGSUVEEAASJAogU0VSVklDRV9QUklOVF9LSU5EX1NFUlZJQ0VfT1JERVIQARIjCh9TRVJWSUNFX1BSSU5UX0tJTkRfQ0hPUkRfQ0hBUlRTEAISGwoXU0VSVklDRV9QUklOVF9LSU5EX0JPVEgQA0IVqgISU2VsYWguQ29udHJhY3RzLlYxYgZwcm90bzM", [file_selah_v1_common, file_selah_v1_live, file_selah_v1_render]);
 
 /**
  * @generated from message selah.v1.ServiceItem
@@ -57,6 +61,91 @@ export type ServiceItem = Message<"selah.v1.ServiceItem"> & {
    * @generated from field: string bible_translation = 8;
    */
   bibleTranslation: string;
+
+  /**
+   * @generated from field: string subtitle = 9;
+   */
+  subtitle: string;
+
+  /**
+   * @generated from field: string owner = 10;
+   */
+  owner: string;
+
+  /**
+   * @generated from field: uint32 duration_seconds = 11;
+   */
+  durationSeconds: number;
+
+  /**
+   * @generated from field: selah.v1.Id template_id = 12;
+   */
+  templateId?: Id;
+
+  /**
+   * @generated from field: string look_name = 13;
+   */
+  lookName: string;
+
+  /**
+   * @generated from field: selah.v1.Id look_id = 14;
+   */
+  lookId?: Id;
+
+  /**
+   * @generated from field: selah.v1.Id background_media_id = 15;
+   */
+  backgroundMediaId?: Id;
+
+  /**
+   * @generated from field: string status_tag = 16;
+   */
+  statusTag: string;
+
+  /**
+   * @generated from field: string song_key = 17;
+   */
+  songKey: string;
+
+  /**
+   * @generated from field: uint32 countdown_seconds = 18;
+   */
+  countdownSeconds: number;
+
+  /**
+   * @generated from field: string countdown_target_time = 19;
+   */
+  countdownTargetTime: string;
+
+  /**
+   * @generated from field: string countdown_message = 20;
+   */
+  countdownMessage: string;
+
+  /**
+   * @generated from field: string translation_language = 21;
+   */
+  translationLanguage: string;
+
+  /**
+   * @generated from field: selah.v1.Id macro_id = 22;
+   */
+  macroId?: Id;
+
+  /**
+   * @generated from field: uint32 slide_action_index = 23;
+   */
+  slideActionIndex: number;
+
+  /**
+   * @generated from field: selah.v1.Id slide_look_id = 24;
+   */
+  slideLookId?: Id;
+
+  /**
+   * @generated from field: selah.v1.Id slide_macro_id = 25;
+   */
+  slideMacroId?: Id;
 };
 
 /**
@@ -99,6 +188,41 @@ export type Service = Message<"selah.v1.Service"> & {
    * @generated from field: repeated selah.v1.Id team_ids = 6;
    */
   teamIds: Id[];
+
+  /**
+   * @generated from field: string series = 7;
+   */
+  series: string;
+
+  /**
+   * @generated from field: string location = 8;
+   */
+  location: string;
+
+  /**
+   * @generated from field: string notes = 9;
+   */
+  notes: string;
+
+  /**
+   * @generated from field: selah.v1.Id source_service_id = 10;
+   */
+  sourceServiceId?: Id;
+
+  /**
+   * @generated from field: uint32 planned_duration_seconds = 11;
+   */
+  plannedDurationSeconds: number;
+
+  /**
+   * @generated from field: selah.v1.Id default_template_id = 12;
+   */
+  defaultTemplateId?: Id;
+
+  /**
+   * @generated from field: string default_look_name = 13;
+   */
+  defaultLookName: string;
 };
 
 /**
@@ -121,6 +245,36 @@ export type ServiceType = Message<"selah.v1.ServiceType"> & {
    * @generated from field: string name = 2;
    */
   name: string;
+
+  /**
+   * @generated from field: string default_start_time = 3;
+   */
+  defaultStartTime: string;
+
+  /**
+   * @generated from field: uint32 default_duration_seconds = 4;
+   */
+  defaultDurationSeconds: number;
+
+  /**
+   * @generated from field: string default_location = 5;
+   */
+  defaultLocation: string;
+
+  /**
+   * @generated from field: selah.v1.Id default_template_id = 6;
+   */
+  defaultTemplateId?: Id;
+
+  /**
+   * @generated from field: string default_look_name = 7;
+   */
+  defaultLookName: string;
+
+  /**
+   * @generated from field: repeated selah.v1.ServiceItem template_items = 8;
+   */
+  templateItems: ServiceItem[];
 };
 
 /**
@@ -129,6 +283,48 @@ export type ServiceType = Message<"selah.v1.ServiceType"> & {
  */
 export const ServiceTypeSchema: GenMessage<ServiceType> = /*@__PURE__*/
   messageDesc(file_selah_v1_service, 2);
+
+/**
+ * @generated from message selah.v1.TeamMember
+ */
+export type TeamMember = Message<"selah.v1.TeamMember"> & {
+  /**
+   * @generated from field: selah.v1.Id id = 1;
+   */
+  id?: Id;
+
+  /**
+   * @generated from field: string name = 2;
+   */
+  name: string;
+
+  /**
+   * @generated from field: string initials = 3;
+   */
+  initials: string;
+
+  /**
+   * @generated from field: string role = 4;
+   */
+  role: string;
+
+  /**
+   * @generated from field: bool confirmed = 5;
+   */
+  confirmed: boolean;
+
+  /**
+   * @generated from field: string mode_lock = 6;
+   */
+  modeLock: string;
+};
+
+/**
+ * Describes the message selah.v1.TeamMember.
+ * Use `create(TeamMemberSchema)` to create a new message.
+ */
+export const TeamMemberSchema: GenMessage<TeamMember> = /*@__PURE__*/
+  messageDesc(file_selah_v1_service, 3);
 
 /**
  * @generated from message selah.v1.Team
@@ -143,6 +339,11 @@ export type Team = Message<"selah.v1.Team"> & {
    * @generated from field: string name = 2;
    */
   name: string;
+
+  /**
+   * @generated from field: repeated selah.v1.TeamMember members = 3;
+   */
+  members: TeamMember[];
 };
 
 /**
@@ -150,10 +351,1265 @@ export type Team = Message<"selah.v1.Team"> & {
  * Use `create(TeamSchema)` to create a new message.
  */
 export const TeamSchema: GenMessage<Team> = /*@__PURE__*/
-  messageDesc(file_selah_v1_service, 3);
+  messageDesc(file_selah_v1_service, 4);
 
 /**
- * Data contracts only. Planning and live commands arrive in M4.
+ * @generated from message selah.v1.SaveService
+ */
+export type SaveService = Message<"selah.v1.SaveService"> & {
+  /**
+   * @generated from field: selah.v1.Service service = 1;
+   */
+  service?: Service;
+};
+
+/**
+ * Describes the message selah.v1.SaveService.
+ * Use `create(SaveServiceSchema)` to create a new message.
+ */
+export const SaveServiceSchema: GenMessage<SaveService> = /*@__PURE__*/
+  messageDesc(file_selah_v1_service, 5);
+
+/**
+ * @generated from message selah.v1.DeleteService
+ */
+export type DeleteService = Message<"selah.v1.DeleteService"> & {
+  /**
+   * @generated from field: selah.v1.Id id = 1;
+   */
+  id?: Id;
+};
+
+/**
+ * Describes the message selah.v1.DeleteService.
+ * Use `create(DeleteServiceSchema)` to create a new message.
+ */
+export const DeleteServiceSchema: GenMessage<DeleteService> = /*@__PURE__*/
+  messageDesc(file_selah_v1_service, 6);
+
+/**
+ * @generated from message selah.v1.GetService
+ */
+export type GetService = Message<"selah.v1.GetService"> & {
+  /**
+   * @generated from field: selah.v1.Id id = 1;
+   */
+  id?: Id;
+};
+
+/**
+ * Describes the message selah.v1.GetService.
+ * Use `create(GetServiceSchema)` to create a new message.
+ */
+export const GetServiceSchema: GenMessage<GetService> = /*@__PURE__*/
+  messageDesc(file_selah_v1_service, 7);
+
+/**
+ * @generated from message selah.v1.ListServices
+ */
+export type ListServices = Message<"selah.v1.ListServices"> & {
+  /**
+   * @generated from field: uint32 limit = 1;
+   */
+  limit: number;
+
+  /**
+   * @generated from field: uint32 offset = 2;
+   */
+  offset: number;
+};
+
+/**
+ * Describes the message selah.v1.ListServices.
+ * Use `create(ListServicesSchema)` to create a new message.
+ */
+export const ListServicesSchema: GenMessage<ListServices> = /*@__PURE__*/
+  messageDesc(file_selah_v1_service, 8);
+
+/**
+ * @generated from message selah.v1.ServiceList
+ */
+export type ServiceList = Message<"selah.v1.ServiceList"> & {
+  /**
+   * @generated from field: repeated selah.v1.Service services = 1;
+   */
+  services: Service[];
+};
+
+/**
+ * Describes the message selah.v1.ServiceList.
+ * Use `create(ServiceListSchema)` to create a new message.
+ */
+export const ServiceListSchema: GenMessage<ServiceList> = /*@__PURE__*/
+  messageDesc(file_selah_v1_service, 9);
+
+/**
+ * @generated from message selah.v1.SaveServiceType
+ */
+export type SaveServiceType = Message<"selah.v1.SaveServiceType"> & {
+  /**
+   * @generated from field: selah.v1.ServiceType service_type = 1;
+   */
+  serviceType?: ServiceType;
+};
+
+/**
+ * Describes the message selah.v1.SaveServiceType.
+ * Use `create(SaveServiceTypeSchema)` to create a new message.
+ */
+export const SaveServiceTypeSchema: GenMessage<SaveServiceType> = /*@__PURE__*/
+  messageDesc(file_selah_v1_service, 10);
+
+/**
+ * @generated from message selah.v1.DeleteServiceType
+ */
+export type DeleteServiceType = Message<"selah.v1.DeleteServiceType"> & {
+  /**
+   * @generated from field: selah.v1.Id id = 1;
+   */
+  id?: Id;
+};
+
+/**
+ * Describes the message selah.v1.DeleteServiceType.
+ * Use `create(DeleteServiceTypeSchema)` to create a new message.
+ */
+export const DeleteServiceTypeSchema: GenMessage<DeleteServiceType> = /*@__PURE__*/
+  messageDesc(file_selah_v1_service, 11);
+
+/**
+ * @generated from message selah.v1.GetServiceType
+ */
+export type GetServiceType = Message<"selah.v1.GetServiceType"> & {
+  /**
+   * @generated from field: selah.v1.Id id = 1;
+   */
+  id?: Id;
+};
+
+/**
+ * Describes the message selah.v1.GetServiceType.
+ * Use `create(GetServiceTypeSchema)` to create a new message.
+ */
+export const GetServiceTypeSchema: GenMessage<GetServiceType> = /*@__PURE__*/
+  messageDesc(file_selah_v1_service, 12);
+
+/**
+ * @generated from message selah.v1.ListServiceTypes
+ */
+export type ListServiceTypes = Message<"selah.v1.ListServiceTypes"> & {
+  /**
+   * @generated from field: uint32 limit = 1;
+   */
+  limit: number;
+
+  /**
+   * @generated from field: uint32 offset = 2;
+   */
+  offset: number;
+};
+
+/**
+ * Describes the message selah.v1.ListServiceTypes.
+ * Use `create(ListServiceTypesSchema)` to create a new message.
+ */
+export const ListServiceTypesSchema: GenMessage<ListServiceTypes> = /*@__PURE__*/
+  messageDesc(file_selah_v1_service, 13);
+
+/**
+ * @generated from message selah.v1.ServiceTypeList
+ */
+export type ServiceTypeList = Message<"selah.v1.ServiceTypeList"> & {
+  /**
+   * @generated from field: repeated selah.v1.ServiceType service_types = 1;
+   */
+  serviceTypes: ServiceType[];
+};
+
+/**
+ * Describes the message selah.v1.ServiceTypeList.
+ * Use `create(ServiceTypeListSchema)` to create a new message.
+ */
+export const ServiceTypeListSchema: GenMessage<ServiceTypeList> = /*@__PURE__*/
+  messageDesc(file_selah_v1_service, 14);
+
+/**
+ * @generated from message selah.v1.SaveTeam
+ */
+export type SaveTeam = Message<"selah.v1.SaveTeam"> & {
+  /**
+   * @generated from field: selah.v1.Team team = 1;
+   */
+  team?: Team;
+};
+
+/**
+ * Describes the message selah.v1.SaveTeam.
+ * Use `create(SaveTeamSchema)` to create a new message.
+ */
+export const SaveTeamSchema: GenMessage<SaveTeam> = /*@__PURE__*/
+  messageDesc(file_selah_v1_service, 15);
+
+/**
+ * @generated from message selah.v1.DeleteTeam
+ */
+export type DeleteTeam = Message<"selah.v1.DeleteTeam"> & {
+  /**
+   * @generated from field: selah.v1.Id id = 1;
+   */
+  id?: Id;
+};
+
+/**
+ * Describes the message selah.v1.DeleteTeam.
+ * Use `create(DeleteTeamSchema)` to create a new message.
+ */
+export const DeleteTeamSchema: GenMessage<DeleteTeam> = /*@__PURE__*/
+  messageDesc(file_selah_v1_service, 16);
+
+/**
+ * @generated from message selah.v1.GetTeam
+ */
+export type GetTeam = Message<"selah.v1.GetTeam"> & {
+  /**
+   * @generated from field: selah.v1.Id id = 1;
+   */
+  id?: Id;
+};
+
+/**
+ * Describes the message selah.v1.GetTeam.
+ * Use `create(GetTeamSchema)` to create a new message.
+ */
+export const GetTeamSchema: GenMessage<GetTeam> = /*@__PURE__*/
+  messageDesc(file_selah_v1_service, 17);
+
+/**
+ * @generated from message selah.v1.ListTeams
+ */
+export type ListTeams = Message<"selah.v1.ListTeams"> & {
+  /**
+   * @generated from field: uint32 limit = 1;
+   */
+  limit: number;
+
+  /**
+   * @generated from field: uint32 offset = 2;
+   */
+  offset: number;
+};
+
+/**
+ * Describes the message selah.v1.ListTeams.
+ * Use `create(ListTeamsSchema)` to create a new message.
+ */
+export const ListTeamsSchema: GenMessage<ListTeams> = /*@__PURE__*/
+  messageDesc(file_selah_v1_service, 18);
+
+/**
+ * @generated from message selah.v1.TeamList
+ */
+export type TeamList = Message<"selah.v1.TeamList"> & {
+  /**
+   * @generated from field: repeated selah.v1.Team teams = 1;
+   */
+  teams: Team[];
+};
+
+/**
+ * Describes the message selah.v1.TeamList.
+ * Use `create(TeamListSchema)` to create a new message.
+ */
+export const TeamListSchema: GenMessage<TeamList> = /*@__PURE__*/
+  messageDesc(file_selah_v1_service, 19);
+
+/**
+ * @generated from message selah.v1.CreateServiceFromPrevious
+ */
+export type CreateServiceFromPrevious = Message<"selah.v1.CreateServiceFromPrevious"> & {
+  /**
+   * @generated from field: selah.v1.Id source_service_id = 1;
+   */
+  sourceServiceId?: Id;
+
+  /**
+   * @generated from field: selah.v1.Id service_type_id = 2;
+   */
+  serviceTypeId?: Id;
+
+  /**
+   * @generated from field: string name = 3;
+   */
+  name: string;
+
+  /**
+   * @generated from field: selah.v1.Timestamp starts_at = 4;
+   */
+  startsAt?: Timestamp;
+
+  /**
+   * @generated from field: string series = 5;
+   */
+  series: string;
+
+  /**
+   * @generated from field: bool keep_songs = 6;
+   */
+  keepSongs: boolean;
+};
+
+/**
+ * Describes the message selah.v1.CreateServiceFromPrevious.
+ * Use `create(CreateServiceFromPreviousSchema)` to create a new message.
+ */
+export const CreateServiceFromPreviousSchema: GenMessage<CreateServiceFromPrevious> = /*@__PURE__*/
+  messageDesc(file_selah_v1_service, 20);
+
+/**
+ * @generated from message selah.v1.ProjectedServiceItem
+ */
+export type ProjectedServiceItem = Message<"selah.v1.ProjectedServiceItem"> & {
+  /**
+   * @generated from field: selah.v1.Id item_id = 1;
+   */
+  itemId?: Id;
+
+  /**
+   * @generated from field: uint32 index = 2;
+   */
+  index: number;
+
+  /**
+   * @generated from field: uint32 offset_seconds = 3;
+   */
+  offsetSeconds: number;
+
+  /**
+   * @generated from field: uint32 duration_seconds = 4;
+   */
+  durationSeconds: number;
+
+  /**
+   * @generated from field: selah.v1.Timestamp starts_at = 5;
+   */
+  startsAt?: Timestamp;
+
+  /**
+   * @generated from field: selah.v1.Timestamp ends_at = 6;
+   */
+  endsAt?: Timestamp;
+
+  /**
+   * @generated from field: string formatted_time = 7;
+   */
+  formattedTime: string;
+
+  /**
+   * @generated from field: string formatted_duration = 8;
+   */
+  formattedDuration: string;
+
+  /**
+   * @generated from field: bool is_header = 9;
+   */
+  isHeader: boolean;
+};
+
+/**
+ * Describes the message selah.v1.ProjectedServiceItem.
+ * Use `create(ProjectedServiceItemSchema)` to create a new message.
+ */
+export const ProjectedServiceItemSchema: GenMessage<ProjectedServiceItem> = /*@__PURE__*/
+  messageDesc(file_selah_v1_service, 21);
+
+/**
+ * @generated from message selah.v1.ProjectServiceRuntime
+ */
+export type ProjectServiceRuntime = Message<"selah.v1.ProjectServiceRuntime"> & {
+  /**
+   * @generated from field: selah.v1.Id service_id = 1;
+   */
+  serviceId?: Id;
+
+  /**
+   * @generated from field: selah.v1.Service service = 2;
+   */
+  service?: Service;
+};
+
+/**
+ * Describes the message selah.v1.ProjectServiceRuntime.
+ * Use `create(ProjectServiceRuntimeSchema)` to create a new message.
+ */
+export const ProjectServiceRuntimeSchema: GenMessage<ProjectServiceRuntime> = /*@__PURE__*/
+  messageDesc(file_selah_v1_service, 22);
+
+/**
+ * @generated from message selah.v1.ServiceRuntimeProjection
+ */
+export type ServiceRuntimeProjection = Message<"selah.v1.ServiceRuntimeProjection"> & {
+  /**
+   * @generated from field: repeated selah.v1.ProjectedServiceItem items = 1;
+   */
+  items: ProjectedServiceItem[];
+
+  /**
+   * @generated from field: uint32 total_duration_seconds = 2;
+   */
+  totalDurationSeconds: number;
+
+  /**
+   * @generated from field: selah.v1.Timestamp projected_ends_at = 3;
+   */
+  projectedEndsAt?: Timestamp;
+
+  /**
+   * @generated from field: string formatted_start_time = 4;
+   */
+  formattedStartTime: string;
+
+  /**
+   * @generated from field: string formatted_end_time = 5;
+   */
+  formattedEndTime: string;
+
+  /**
+   * @generated from field: string formatted_total_duration = 6;
+   */
+  formattedTotalDuration: string;
+};
+
+/**
+ * Describes the message selah.v1.ServiceRuntimeProjection.
+ * Use `create(ServiceRuntimeProjectionSchema)` to create a new message.
+ */
+export const ServiceRuntimeProjectionSchema: GenMessage<ServiceRuntimeProjection> = /*@__PURE__*/
+  messageDesc(file_selah_v1_service, 23);
+
+/**
+ * @generated from message selah.v1.ExportServicePrint
+ */
+export type ExportServicePrint = Message<"selah.v1.ExportServicePrint"> & {
+  /**
+   * @generated from field: selah.v1.Id service_id = 1;
+   */
+  serviceId?: Id;
+
+  /**
+   * @generated from field: selah.v1.ServicePrintKind kind = 2;
+   */
+  kind: ServicePrintKind;
+
+  /**
+   * @generated from field: string output_path = 3;
+   */
+  outputPath: string;
+};
+
+/**
+ * Describes the message selah.v1.ExportServicePrint.
+ * Use `create(ExportServicePrintSchema)` to create a new message.
+ */
+export const ExportServicePrintSchema: GenMessage<ExportServicePrint> = /*@__PURE__*/
+  messageDesc(file_selah_v1_service, 24);
+
+/**
+ * @generated from message selah.v1.ServicePrintExport
+ */
+export type ServicePrintExport = Message<"selah.v1.ServicePrintExport"> & {
+  /**
+   * @generated from field: string path = 1;
+   */
+  path: string;
+
+  /**
+   * @generated from field: string html = 2;
+   */
+  html: string;
+
+  /**
+   * @generated from field: bytes pdf_bytes = 3;
+   */
+  pdfBytes: Uint8Array;
+
+  /**
+   * @generated from field: uint32 page_count = 4;
+   */
+  pageCount: number;
+};
+
+/**
+ * Describes the message selah.v1.ServicePrintExport.
+ * Use `create(ServicePrintExportSchema)` to create a new message.
+ */
+export const ServicePrintExportSchema: GenMessage<ServicePrintExport> = /*@__PURE__*/
+  messageDesc(file_selah_v1_service, 25);
+
+/**
+ * Live state machine, triggering, layers, hotkeys, audio layer and undo (M4.2).
+ *
+ * @generated from message selah.v1.LiveSlide
+ */
+export type LiveSlide = Message<"selah.v1.LiveSlide"> & {
+  /**
+   * @generated from field: uint32 index = 1;
+   */
+  index: number;
+
+  /**
+   * @generated from field: string label = 2;
+   */
+  label: string;
+
+  /**
+   * @generated from field: string section_kind = 3;
+   */
+  sectionKind: string;
+
+  /**
+   * @generated from field: string section_color = 4;
+   */
+  sectionColor: string;
+
+  /**
+   * @generated from field: string hotkey = 5;
+   */
+  hotkey: string;
+
+  /**
+   * @generated from field: string text = 6;
+   */
+  text: string;
+
+  /**
+   * @generated from field: string chords_json = 7;
+   */
+  chordsJson: string;
+
+  /**
+   * @generated from field: string notes = 8;
+   */
+  notes: string;
+
+  /**
+   * @generated from field: string title_text = 9;
+   */
+  titleText: string;
+
+  /**
+   * @generated from field: string reference_text = 10;
+   */
+  referenceText: string;
+
+  /**
+   * @generated from field: string footer_text = 11;
+   */
+  footerText: string;
+
+  /**
+   * @generated from field: string translation_text = 12;
+   */
+  translationText: string;
+
+  /**
+   * @generated from field: string elements_json = 13;
+   */
+  elementsJson: string;
+
+  /**
+   * @generated from field: string style_json = 14;
+   */
+  styleJson: string;
+
+  /**
+   * @generated from field: bool is_blank = 15;
+   */
+  isBlank: boolean;
+
+  /**
+   * @generated from field: selah.v1.Id macro_id = 16;
+   */
+  macroId?: Id;
+
+  /**
+   * @generated from field: selah.v1.Id look_id = 17;
+   */
+  lookId?: Id;
+
+  /**
+   * @generated from field: string action_badge = 18;
+   */
+  actionBadge: string;
+};
+
+/**
+ * Describes the message selah.v1.LiveSlide.
+ * Use `create(LiveSlideSchema)` to create a new message.
+ */
+export const LiveSlideSchema: GenMessage<LiveSlide> = /*@__PURE__*/
+  messageDesc(file_selah_v1_service, 26);
+
+/**
+ * @generated from message selah.v1.LiveItemSlides
+ */
+export type LiveItemSlides = Message<"selah.v1.LiveItemSlides"> & {
+  /**
+   * @generated from field: selah.v1.Id item_id = 1;
+   */
+  itemId?: Id;
+
+  /**
+   * @generated from field: uint32 item_index = 2;
+   */
+  itemIndex: number;
+
+  /**
+   * @generated from field: selah.v1.ServiceItemKind kind = 3;
+   */
+  kind: ServiceItemKind;
+
+  /**
+   * @generated from field: string title = 4;
+   */
+  title: string;
+
+  /**
+   * @generated from field: string subtitle = 5;
+   */
+  subtitle: string;
+
+  /**
+   * @generated from field: string song_key = 6;
+   */
+  songKey: string;
+
+  /**
+   * @generated from field: repeated selah.v1.LiveSlide slides = 7;
+   */
+  slides: LiveSlide[];
+};
+
+/**
+ * Describes the message selah.v1.LiveItemSlides.
+ * Use `create(LiveItemSlidesSchema)` to create a new message.
+ */
+export const LiveItemSlidesSchema: GenMessage<LiveItemSlides> = /*@__PURE__*/
+  messageDesc(file_selah_v1_service, 27);
+
+/**
+ * @generated from message selah.v1.LiveLayerStatus
+ */
+export type LiveLayerStatus = Message<"selah.v1.LiveLayerStatus"> & {
+  /**
+   * @generated from field: selah.v1.LayerKind kind = 1;
+   */
+  kind: LayerKind;
+
+  /**
+   * @generated from field: bool active = 2;
+   */
+  active: boolean;
+
+  /**
+   * @generated from field: string title = 3;
+   */
+  title: string;
+
+  /**
+   * @generated from field: string subtitle = 4;
+   */
+  subtitle: string;
+
+  /**
+   * @generated from field: selah.v1.LayerSpec spec = 5;
+   */
+  spec?: LayerSpec;
+};
+
+/**
+ * Describes the message selah.v1.LiveLayerStatus.
+ * Use `create(LiveLayerStatusSchema)` to create a new message.
+ */
+export const LiveLayerStatusSchema: GenMessage<LiveLayerStatus> = /*@__PURE__*/
+  messageDesc(file_selah_v1_service, 28);
+
+/**
+ * @generated from message selah.v1.AudioLayerStatus
+ */
+export type AudioLayerStatus = Message<"selah.v1.AudioLayerStatus"> & {
+  /**
+   * @generated from field: bool playing = 1;
+   */
+  playing: boolean;
+
+  /**
+   * @generated from field: selah.v1.Id media_id = 2;
+   */
+  mediaId?: Id;
+
+  /**
+   * @generated from field: string title = 3;
+   */
+  title: string;
+
+  /**
+   * @generated from field: string content_hash = 4;
+   */
+  contentHash: string;
+
+  /**
+   * @generated from field: string media_extension = 5;
+   */
+  mediaExtension: string;
+
+  /**
+   * @generated from field: float volume = 6;
+   */
+  volume: number;
+
+  /**
+   * @generated from field: bool loop_audio = 7;
+   */
+  loopAudio: boolean;
+};
+
+/**
+ * Describes the message selah.v1.AudioLayerStatus.
+ * Use `create(AudioLayerStatusSchema)` to create a new message.
+ */
+export const AudioLayerStatusSchema: GenMessage<AudioLayerStatus> = /*@__PURE__*/
+  messageDesc(file_selah_v1_service, 29);
+
+/**
+ * @generated from message selah.v1.LiveStatus
+ */
+export type LiveStatus = Message<"selah.v1.LiveStatus"> & {
+  /**
+   * @generated from field: selah.v1.Id service_id = 1;
+   */
+  serviceId?: Id;
+
+  /**
+   * @generated from field: string service_name = 2;
+   */
+  serviceName: string;
+
+  /**
+   * @generated from field: bool has_active_item = 3;
+   */
+  hasActiveItem: boolean;
+
+  /**
+   * @generated from field: uint32 current_item_index = 4;
+   */
+  currentItemIndex: number;
+
+  /**
+   * @generated from field: uint32 current_slide_index = 5;
+   */
+  currentSlideIndex: number;
+
+  /**
+   * @generated from field: bool has_next = 6;
+   */
+  hasNext: boolean;
+
+  /**
+   * @generated from field: uint32 next_item_index = 7;
+   */
+  nextItemIndex: number;
+
+  /**
+   * @generated from field: uint32 next_slide_index = 8;
+   */
+  nextSlideIndex: number;
+
+  /**
+   * @generated from field: string current_item_title = 9;
+   */
+  currentItemTitle: string;
+
+  /**
+   * @generated from field: string next_item_title = 10;
+   */
+  nextItemTitle: string;
+
+  /**
+   * @generated from field: string current_slide_label = 11;
+   */
+  currentSlideLabel: string;
+
+  /**
+   * @generated from field: string next_slide_label = 12;
+   */
+  nextSlideLabel: string;
+
+  /**
+   * @generated from field: string current_slide_text = 13;
+   */
+  currentSlideText: string;
+
+  /**
+   * @generated from field: string next_slide_text = 14;
+   */
+  nextSlideText: string;
+
+  /**
+   * @generated from field: string current_chords_json = 15;
+   */
+  currentChordsJson: string;
+
+  /**
+   * @generated from field: string current_notes = 16;
+   */
+  currentNotes: string;
+
+  /**
+   * @generated from field: string song_key = 17;
+   */
+  songKey: string;
+
+  /**
+   * @generated from field: repeated selah.v1.LiveSlide current_item_slides = 18;
+   */
+  currentItemSlides: LiveSlide[];
+
+  /**
+   * @generated from field: repeated selah.v1.LiveLayerStatus layers = 19;
+   */
+  layers: LiveLayerStatus[];
+
+  /**
+   * @generated from field: selah.v1.AudioLayerStatus audio = 20;
+   */
+  audio?: AudioLayerStatus;
+
+  /**
+   * @generated from field: bool show_logo = 21;
+   */
+  showLogo: boolean;
+
+  /**
+   * @generated from field: bool cleared = 22;
+   */
+  cleared: boolean;
+
+  /**
+   * @generated from field: bool can_live_undo = 23;
+   */
+  canLiveUndo: boolean;
+
+  /**
+   * @generated from field: bool can_live_redo = 24;
+   */
+  canLiveRedo: boolean;
+
+  /**
+   * @generated from field: uint64 scene_revision = 25;
+   */
+  sceneRevision: bigint;
+
+  /**
+   * @generated from field: repeated selah.v1.LiveAutomationState automation = 26;
+   */
+  automation: LiveAutomationState[];
+};
+
+/**
+ * Describes the message selah.v1.LiveStatus.
+ * Use `create(LiveStatusSchema)` to create a new message.
+ */
+export const LiveStatusSchema: GenMessage<LiveStatus> = /*@__PURE__*/
+  messageDesc(file_selah_v1_service, 30);
+
+/**
+ * @generated from message selah.v1.LoadLiveService
+ */
+export type LoadLiveService = Message<"selah.v1.LoadLiveService"> & {
+  /**
+   * @generated from field: selah.v1.Id service_id = 1;
+   */
+  serviceId?: Id;
+
+  /**
+   * @generated from field: bool trigger_first_item = 2;
+   */
+  triggerFirstItem: boolean;
+};
+
+/**
+ * Describes the message selah.v1.LoadLiveService.
+ * Use `create(LoadLiveServiceSchema)` to create a new message.
+ */
+export const LoadLiveServiceSchema: GenMessage<LoadLiveService> = /*@__PURE__*/
+  messageDesc(file_selah_v1_service, 31);
+
+/**
+ * @generated from message selah.v1.TriggerItem
+ */
+export type TriggerItem = Message<"selah.v1.TriggerItem"> & {
+  /**
+   * @generated from field: uint32 item_index = 1;
+   */
+  itemIndex: number;
+};
+
+/**
+ * Describes the message selah.v1.TriggerItem.
+ * Use `create(TriggerItemSchema)` to create a new message.
+ */
+export const TriggerItemSchema: GenMessage<TriggerItem> = /*@__PURE__*/
+  messageDesc(file_selah_v1_service, 32);
+
+/**
+ * @generated from message selah.v1.TriggerSlide
+ */
+export type TriggerSlide = Message<"selah.v1.TriggerSlide"> & {
+  /**
+   * @generated from field: uint32 item_index = 1;
+   */
+  itemIndex: number;
+
+  /**
+   * @generated from field: uint32 slide_index = 2;
+   */
+  slideIndex: number;
+};
+
+/**
+ * Describes the message selah.v1.TriggerSlide.
+ * Use `create(TriggerSlideSchema)` to create a new message.
+ */
+export const TriggerSlideSchema: GenMessage<TriggerSlide> = /*@__PURE__*/
+  messageDesc(file_selah_v1_service, 33);
+
+/**
+ * @generated from message selah.v1.NextSlide
+ */
+export type NextSlide = Message<"selah.v1.NextSlide"> & {
+};
+
+/**
+ * Describes the message selah.v1.NextSlide.
+ * Use `create(NextSlideSchema)` to create a new message.
+ */
+export const NextSlideSchema: GenMessage<NextSlide> = /*@__PURE__*/
+  messageDesc(file_selah_v1_service, 34);
+
+/**
+ * @generated from message selah.v1.PreviousSlide
+ */
+export type PreviousSlide = Message<"selah.v1.PreviousSlide"> & {
+};
+
+/**
+ * Describes the message selah.v1.PreviousSlide.
+ * Use `create(PreviousSlideSchema)` to create a new message.
+ */
+export const PreviousSlideSchema: GenMessage<PreviousSlide> = /*@__PURE__*/
+  messageDesc(file_selah_v1_service, 35);
+
+/**
+ * @generated from message selah.v1.NextItem
+ */
+export type NextItem = Message<"selah.v1.NextItem"> & {
+};
+
+/**
+ * Describes the message selah.v1.NextItem.
+ * Use `create(NextItemSchema)` to create a new message.
+ */
+export const NextItemSchema: GenMessage<NextItem> = /*@__PURE__*/
+  messageDesc(file_selah_v1_service, 36);
+
+/**
+ * @generated from message selah.v1.PreviousItem
+ */
+export type PreviousItem = Message<"selah.v1.PreviousItem"> & {
+};
+
+/**
+ * Describes the message selah.v1.PreviousItem.
+ * Use `create(PreviousItemSchema)` to create a new message.
+ */
+export const PreviousItemSchema: GenMessage<PreviousItem> = /*@__PURE__*/
+  messageDesc(file_selah_v1_service, 37);
+
+/**
+ * @generated from message selah.v1.TriggerSectionHotkey
+ */
+export type TriggerSectionHotkey = Message<"selah.v1.TriggerSectionHotkey"> & {
+  /**
+   * @generated from field: string hotkey = 1;
+   */
+  hotkey: string;
+};
+
+/**
+ * Describes the message selah.v1.TriggerSectionHotkey.
+ * Use `create(TriggerSectionHotkeySchema)` to create a new message.
+ */
+export const TriggerSectionHotkeySchema: GenMessage<TriggerSectionHotkey> = /*@__PURE__*/
+  messageDesc(file_selah_v1_service, 38);
+
+/**
+ * @generated from message selah.v1.ClearLayer
+ */
+export type ClearLayer = Message<"selah.v1.ClearLayer"> & {
+  /**
+   * @generated from field: selah.v1.LayerKind kind = 1;
+   */
+  kind: LayerKind;
+};
+
+/**
+ * Describes the message selah.v1.ClearLayer.
+ * Use `create(ClearLayerSchema)` to create a new message.
+ */
+export const ClearLayerSchema: GenMessage<ClearLayer> = /*@__PURE__*/
+  messageDesc(file_selah_v1_service, 39);
+
+/**
+ * @generated from message selah.v1.SetLayerState
+ */
+export type SetLayerState = Message<"selah.v1.SetLayerState"> & {
+  /**
+   * @generated from field: selah.v1.LayerSpec layer = 1;
+   */
+  layer?: LayerSpec;
+};
+
+/**
+ * Describes the message selah.v1.SetLayerState.
+ * Use `create(SetLayerStateSchema)` to create a new message.
+ */
+export const SetLayerStateSchema: GenMessage<SetLayerState> = /*@__PURE__*/
+  messageDesc(file_selah_v1_service, 40);
+
+/**
+ * @generated from message selah.v1.ShowLogoCommand
+ */
+export type ShowLogoCommand = Message<"selah.v1.ShowLogoCommand"> & {
+  /**
+   * @generated from field: bool show_logo = 1;
+   */
+  showLogo: boolean;
+};
+
+/**
+ * Describes the message selah.v1.ShowLogoCommand.
+ * Use `create(ShowLogoCommandSchema)` to create a new message.
+ */
+export const ShowLogoCommandSchema: GenMessage<ShowLogoCommand> = /*@__PURE__*/
+  messageDesc(file_selah_v1_service, 41);
+
+/**
+ * @generated from message selah.v1.PlayAudioLayer
+ */
+export type PlayAudioLayer = Message<"selah.v1.PlayAudioLayer"> & {
+  /**
+   * @generated from field: selah.v1.Id media_id = 1;
+   */
+  mediaId?: Id;
+
+  /**
+   * @generated from field: float volume = 2;
+   */
+  volume: number;
+
+  /**
+   * @generated from field: bool loop_audio = 3;
+   */
+  loopAudio: boolean;
+};
+
+/**
+ * Describes the message selah.v1.PlayAudioLayer.
+ * Use `create(PlayAudioLayerSchema)` to create a new message.
+ */
+export const PlayAudioLayerSchema: GenMessage<PlayAudioLayer> = /*@__PURE__*/
+  messageDesc(file_selah_v1_service, 42);
+
+/**
+ * @generated from message selah.v1.StopAudioLayer
+ */
+export type StopAudioLayer = Message<"selah.v1.StopAudioLayer"> & {
+};
+
+/**
+ * Describes the message selah.v1.StopAudioLayer.
+ * Use `create(StopAudioLayerSchema)` to create a new message.
+ */
+export const StopAudioLayerSchema: GenMessage<StopAudioLayer> = /*@__PURE__*/
+  messageDesc(file_selah_v1_service, 43);
+
+/**
+ * @generated from message selah.v1.LiveUndo
+ */
+export type LiveUndo = Message<"selah.v1.LiveUndo"> & {
+};
+
+/**
+ * Describes the message selah.v1.LiveUndo.
+ * Use `create(LiveUndoSchema)` to create a new message.
+ */
+export const LiveUndoSchema: GenMessage<LiveUndo> = /*@__PURE__*/
+  messageDesc(file_selah_v1_service, 44);
+
+/**
+ * @generated from message selah.v1.LiveRedo
+ */
+export type LiveRedo = Message<"selah.v1.LiveRedo"> & {
+};
+
+/**
+ * Describes the message selah.v1.LiveRedo.
+ * Use `create(LiveRedoSchema)` to create a new message.
+ */
+export const LiveRedoSchema: GenMessage<LiveRedo> = /*@__PURE__*/
+  messageDesc(file_selah_v1_service, 45);
+
+/**
+ * @generated from message selah.v1.GetLiveState
+ */
+export type GetLiveState = Message<"selah.v1.GetLiveState"> & {
+};
+
+/**
+ * Describes the message selah.v1.GetLiveState.
+ * Use `create(GetLiveStateSchema)` to create a new message.
+ */
+export const GetLiveStateSchema: GenMessage<GetLiveState> = /*@__PURE__*/
+  messageDesc(file_selah_v1_service, 46);
+
+/**
+ * @generated from message selah.v1.LiveStateChanged
+ */
+export type LiveStateChanged = Message<"selah.v1.LiveStateChanged"> & {
+  /**
+   * @generated from field: uint64 scene_revision = 1;
+   */
+  sceneRevision: bigint;
+
+  /**
+   * @generated from field: selah.v1.Id service_id = 2;
+   */
+  serviceId?: Id;
+
+  /**
+   * @generated from field: uint32 current_item_index = 3;
+   */
+  currentItemIndex: number;
+
+  /**
+   * @generated from field: uint32 current_slide_index = 4;
+   */
+  currentSlideIndex: number;
+
+  /**
+   * @generated from field: bool cleared = 5;
+   */
+  cleared: boolean;
+
+  /**
+   * @generated from field: bool show_logo = 6;
+   */
+  showLogo: boolean;
+
+  /**
+   * @generated from field: repeated selah.v1.LiveStatus status = 7;
+   */
+  status: LiveStatus[];
+};
+
+/**
+ * Describes the message selah.v1.LiveStateChanged.
+ * Use `create(LiveStateChangedSchema)` to create a new message.
+ */
+export const LiveStateChangedSchema: GenMessage<LiveStateChanged> = /*@__PURE__*/
+  messageDesc(file_selah_v1_service, 47);
+
+/**
+ * @generated from message selah.v1.LiveSnapshotEntry
+ */
+export type LiveSnapshotEntry = Message<"selah.v1.LiveSnapshotEntry"> & {
+  /**
+   * @generated from field: selah.v1.Scene scene = 1;
+   */
+  scene?: Scene;
+
+  /**
+   * @generated from field: selah.v1.LiveStatus status = 2;
+   */
+  status?: LiveStatus;
+};
+
+/**
+ * Describes the message selah.v1.LiveSnapshotEntry.
+ * Use `create(LiveSnapshotEntrySchema)` to create a new message.
+ */
+export const LiveSnapshotEntrySchema: GenMessage<LiveSnapshotEntry> = /*@__PURE__*/
+  messageDesc(file_selah_v1_service, 48);
+
+/**
+ * @generated from message selah.v1.LiveMachineSnapshot
+ */
+export type LiveMachineSnapshot = Message<"selah.v1.LiveMachineSnapshot"> & {
+  /**
+   * @generated from field: selah.v1.Service service = 1;
+   */
+  service?: Service;
+
+  /**
+   * @generated from field: repeated selah.v1.LiveItemSlides item_slides = 2;
+   */
+  itemSlides: LiveItemSlides[];
+
+  /**
+   * @generated from field: selah.v1.LiveStatus status = 3;
+   */
+  status?: LiveStatus;
+
+  /**
+   * @generated from field: repeated selah.v1.LiveSnapshotEntry undo_stack = 4;
+   */
+  undoStack: LiveSnapshotEntry[];
+
+  /**
+   * @generated from field: repeated selah.v1.LiveSnapshotEntry redo_stack = 5;
+   */
+  redoStack: LiveSnapshotEntry[];
+
+  /**
+   * @generated from field: selah.v1.Look active_look = 6;
+   */
+  activeLook?: Look;
+
+  /**
+   * @generated from field: selah.v1.StageLayout active_stage_layout = 7;
+   */
+  activeStageLayout?: StageLayout;
+
+  /**
+   * @generated from field: uint64 virtual_clock_mono_ns = 8;
+   */
+  virtualClockMonoNs: bigint;
+
+  /**
+   * @generated from field: int64 virtual_clock_wall_unix_ms = 9;
+   */
+  virtualClockWallUnixMs: bigint;
+};
+
+/**
+ * Describes the message selah.v1.LiveMachineSnapshot.
+ * Use `create(LiveMachineSnapshotSchema)` to create a new message.
+ */
+export const LiveMachineSnapshotSchema: GenMessage<LiveMachineSnapshot> = /*@__PURE__*/
+  messageDesc(file_selah_v1_service, 49);
+
+/**
+ * Service planning, service types, teams, runtime projection and print/PDF export (M4.1).
  *
  * @generated from enum selah.v1.ServiceItemKind
  */
@@ -187,6 +1643,21 @@ export enum ServiceItemKind {
    * @generated from enum value: SERVICE_ITEM_KIND_NOTE = 5;
    */
   NOTE = 5,
+
+  /**
+   * @generated from enum value: SERVICE_ITEM_KIND_COUNTDOWN = 6;
+   */
+  COUNTDOWN = 6,
+
+  /**
+   * @generated from enum value: SERVICE_ITEM_KIND_HEADER = 7;
+   */
+  HEADER = 7,
+
+  /**
+   * @generated from enum value: SERVICE_ITEM_KIND_AUDIO = 8;
+   */
+  AUDIO = 8,
 }
 
 /**
@@ -194,4 +1665,35 @@ export enum ServiceItemKind {
  */
 export const ServiceItemKindSchema: GenEnum<ServiceItemKind> = /*@__PURE__*/
   enumDesc(file_selah_v1_service, 0);
+
+/**
+ * @generated from enum selah.v1.ServicePrintKind
+ */
+export enum ServicePrintKind {
+  /**
+   * @generated from enum value: SERVICE_PRINT_KIND_UNSPECIFIED = 0;
+   */
+  UNSPECIFIED = 0,
+
+  /**
+   * @generated from enum value: SERVICE_PRINT_KIND_SERVICE_ORDER = 1;
+   */
+  SERVICE_ORDER = 1,
+
+  /**
+   * @generated from enum value: SERVICE_PRINT_KIND_CHORD_CHARTS = 2;
+   */
+  CHORD_CHARTS = 2,
+
+  /**
+   * @generated from enum value: SERVICE_PRINT_KIND_BOTH = 3;
+   */
+  BOTH = 3,
+}
+
+/**
+ * Describes the enum selah.v1.ServicePrintKind.
+ */
+export const ServicePrintKindSchema: GenEnum<ServicePrintKind> = /*@__PURE__*/
+  enumDesc(file_selah_v1_service, 1);
 

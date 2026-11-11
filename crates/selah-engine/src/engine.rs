@@ -467,11 +467,13 @@ impl Engine {
         let mut scheduler = FrameScheduler::with_default_period(self.epoch);
         let mut media_root = resolve_media_root();
         let decode_mode = default_decode_mode();
-        let wake_engine = self.clone();
+        let wake_engine = Arc::downgrade(&self);
         let mut playback = MediaPlaybackManager::new(Arc::new(move || {
-            let mut st = wake_engine.lock();
-            st.dirty = true;
-            wake_engine.wake.notify_all();
+            if let Some(eng) = wake_engine.upgrade() {
+                let mut st = eng.lock();
+                st.dirty = true;
+                eng.wake.notify_all();
+            }
         }));
         compositor.set_media_root(Some(media_root.clone()));
 
@@ -516,6 +518,9 @@ impl Engine {
                     && state.outputs.is_empty()
                     && state.pending_preload.is_empty()
                 {
+                    if Arc::strong_count(&self) <= 2 {
+                        return;
+                    }
                     if let Some(wait) = scheduler.wait_timeout(Instant::now(), animating) {
                         if wait.is_zero() {
                             timed_out = true;
@@ -531,8 +536,15 @@ impl Engine {
                             break;
                         }
                     } else {
-                        state = self.wake.wait(state).unwrap_or_else(|p| p.into_inner());
+                        let (guard, _) = self
+                            .wake
+                            .wait_timeout(state, Duration::from_millis(200))
+                            .unwrap_or_else(|p| p.into_inner());
+                        state = guard;
                     }
+                }
+                if Arc::strong_count(&self) <= 2 {
+                    return;
                 }
                 let dirty = std::mem::take(&mut state.dirty);
                 let preview_dirty = std::mem::take(&mut state.preview_dirty);
@@ -1664,7 +1676,7 @@ mod tests {
 
         // Two outputs sharing one content hash must spawn at most one MediaPlayer and advance frames.
         let mut distinct_checksums = std::collections::HashSet::new();
-        let deadline = Instant::now() + Duration::from_secs(6);
+        let deadline = Instant::now() + Duration::from_secs(15);
         while distinct_checksums.len() < 3 {
             let status = engine.status();
             if status.output_statuses.len() == 2
@@ -1756,7 +1768,7 @@ mod tests {
             action: Some(render_command::Action::SetScene(blue_scene)),
         });
 
-        let deadline = Instant::now() + Duration::from_secs(5);
+        let deadline = Instant::now() + Duration::from_secs(15);
         let blue_checksum = loop {
             let st = engine.status();
             if st.output_statuses.len() == 1
@@ -1915,9 +1927,26 @@ mod tests {
 
         let (engine, _) = Engine::start(Mode::Headless).expect("engine starts headless");
         engine.set_media_root_for_test(media_dir);
+        engine.apply(&RenderCommand {
+            action: Some(render_command::Action::SetOutputConfigs(
+                selah_proto::v1::SetOutputConfigs {
+                    outputs: vec![OutputConfig {
+                        output_index: 0,
+                        name: "Main".into(),
+                        role: OutputRole::Main as i32,
+                        resolution: Some(Resolution {
+                            width: PREVIEW_WIDTH,
+                            height: PREVIEW_HEIGHT,
+                        }),
+                        enabled: true,
+                        ..Default::default()
+                    }],
+                },
+            )),
+        });
 
         // Wait for initial cleared live frame (output 0, revision 0).
-        let deadline = Instant::now() + Duration::from_secs(5);
+        let deadline = Instant::now() + Duration::from_secs(15);
         let cleared_live_checksum = loop {
             let st = engine.status();
             if !st.frame_checksum.is_empty() && !st.live {

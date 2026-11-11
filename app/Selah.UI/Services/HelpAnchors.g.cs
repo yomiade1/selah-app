@@ -52,4 +52,44 @@ public static class HelpAnchors
     public const string SlidesEditor = "slides.editor";
     /// <summary>Slide editor, Element properties, background, transition, and effect chain.</summary>
     public const string SlidesInspector = "slides.inspector";
+    /// <summary>Services, Service planner toolbar, runtime projection, and print export actions.</summary>
+    public const string ServicesPlanner = "services.planner";
+    /// <summary>Services, Service order table, item controls, and runtime projection.</summary>
+    public const string ServicesOrder = "services.order";
+    /// <summary>Services, Volunteer team roster and role assignments.</summary>
+    public const string ServicesTeam = "services.team";
+    /// <summary>Live, Producer mode workspace and its top bar.</summary>
+    public const string LiveProducer = "live.producer";
+    /// <summary>Live, the Producer layout picker and Save layout.</summary>
+    public const string LiveLayout = "live.layout";
+    /// <summary>Live, the Booth lock button and banner (SAFE-06).</summary>
+    public const string LiveBoothLock = "live.booth-lock";
+    /// <summary>Live, the bottom bar with Clear, Show logo, Previous, Next and Undo.</summary>
+    public const string LiveControls = "live.controls";
+    /// <summary>Live, the health bar that shows each screen's state.</summary>
+    public const string LiveHealth = "live.health";
+    /// <summary>Live, the service order list.</summary>
+    public const string LiveServiceOrder = "live.service-order";
+    /// <summary>Live, the slide grid for the live item.</summary>
+    public const string LiveSlides = "live.slides";
+    /// <summary>Live, the Program preview of what the audience sees.</summary>
+    public const string LiveProgramPreview = "live.program-preview";
+    /// <summary>Live, the layer list with a Clear button for each layer.</summary>
+    public const string LiveLayers = "live.layers";
+    /// <summary>Live, tiles for looks, timers and macros.</summary>
+    public const string LiveTiles = "live.tiles";
+    /// <summary>Live, Lock to Simple mode and its PIN (SEC-14).</summary>
+    public const string LiveRoleLock = "live.role-lock";
+    /// <summary>Simple mode, the big Back, Next slide, Next song and clear buttons.</summary>
+    public const string SimpleControls = "simple.controls";
+    /// <summary>Simple mode, the On screen now picture.</summary>
+    public const string SimpleNowShowing = "simple.now-showing";
+    /// <summary>Simple mode, the service progress steps.</summary>
+    public const string SimpleServiceProgress = "simple.service-progress";
+    /// <summary>Simple mode, All slides in this song.</summary>
+    public const string SimpleSlideStrip = "simple.slide-strip";
+    /// <summary>Simple mode, Message the booth and Quick tips.</summary>
+    public const string SimpleMessageTheBooth = "simple.message-the-booth";
+    /// <summary>Simple mode, Unlock with the PIN.</summary>
+    public const string SimpleUnlock = "simple.unlock";
 }

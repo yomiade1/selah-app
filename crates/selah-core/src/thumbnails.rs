@@ -525,6 +525,7 @@ pub fn render_scene_thumbnail(
             outputs: vec![canonical_out],
             is_preview: false,
             preload_items: Vec::new(),
+            ..Default::default()
         }
     } else if !req_scene.outputs.is_empty() {
         // Output-addressed scene with no entry for `output_index`: renders black cleared output.
@@ -540,6 +541,7 @@ pub fn render_scene_thumbnail(
             outputs: Vec::new(),
             is_preview: false,
             preload_items: Vec::new(),
+            ..Default::default()
         }
     } else {
         Scene {
@@ -554,6 +556,7 @@ pub fn render_scene_thumbnail(
             outputs: Vec::new(),
             is_preview: false,
             preload_items: Vec::new(),
+            ..Default::default()
         }
     };
 

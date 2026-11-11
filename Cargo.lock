@@ -2323,6 +2323,7 @@ dependencies = [
  "tempfile",
  "thiserror 2.0.21",
  "tracing",
+ "tracing-subscriber",
  "uuid",
 ]
 
@@ -2337,6 +2338,7 @@ dependencies = [
  "selah-net",
  "selah-proto",
  "selah-runtime",
+ "selah-secrets",
  "serde",
  "serde_json",
  "tokio",

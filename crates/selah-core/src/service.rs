@@ -1,12 +1,14 @@
 //! Core request handling: authorise, validate, apply, then tell the engine and subscribers.
 use prost::Message;
 use selah_proto::v1::{
-    Actor, ActorOrigin, BibleFormat, Command, CopyrightPlacement, Envelope, Event,
-    GetPolicySettingReply, LibraryChanged, MediaItemList, MediaKind, OutputConfig,
-    OutputConfigList, OutputFrameStatus, ParsePastedSongReply, ParseScriptureReferenceReply,
-    PolicySetting, PresentationList, RenderCommand, Reply, Scene, SearchScope, SetOutputConfigs,
-    SetPreviewScene, Song, SongList, SongPasteFormat, Status, TagList, TemplateList, TestPattern,
-    UndoStateChanged, command, envelope, event, query, render_command, reply,
+    Actor, ActorOrigin, BibleFormat, ClearGroupList, Command, CopyrightPlacement, Envelope, Event,
+    GetPolicySettingReply, LibraryChanged, LookList, MacroList, MediaItemList, MediaKind,
+    MessageList, OutputConfig, OutputConfigList, OutputFrameStatus, ParsePastedSongReply,
+    ParseScriptureReferenceReply, PolicySetting, PresentationList, PropList, RenderCommand, Reply,
+    Scene, SearchScope, ServiceList, ServiceTypeList, SetOutputConfigs, SetPreviewScene, Song,
+    SongList, SongPasteFormat, StageLayoutList, Status, TagList, TeamList, TemplateList,
+    TestPattern, TimerList, UndoStateChanged, command, envelope, event, query, render_command,
+    reply,
 };
 
 use crate::library::{
@@ -157,6 +159,10 @@ pub struct Outcome {
 pub struct CoreService {
     settings: SettingsStore,
     live: LiveState,
+    /// The Simple-mode role lock (SEC-14), core's own state.
+    role_lock: crate::role_lock::RoleLock,
+    /// Every secret goes through SecretStore (the OS keychain in the host, memory in tests).
+    secrets: selah_secrets::SecretStore,
     library: Library,
     pub engine: EngineView,
     preview_scene: Option<Scene>,
@@ -222,6 +228,8 @@ impl CoreService {
         let mut service = Self {
             settings: SettingsStore::open(config_dir),
             live: LiveState::open(config_dir),
+            role_lock: crate::role_lock::RoleLock::default(),
+            secrets: selah_secrets::SecretStore::memory(),
             library,
             engine: EngineView::default(),
             preview_scene: None,
@@ -240,7 +248,26 @@ impl CoreService {
         service.apply_settings_side_effects();
         // The live-state snapshot may say something is on the screens (core restarted).
         service.sync_keep_awake();
+        // SEC-14: the role lock survives restarts; it is core's state, not the UI's.
+        let role_locked = service
+            .library
+            .setting(crate::role_lock::POLICY_KEY)
+            .ok()
+            .flatten()
+            .is_some_and(|setting| setting.value.as_bool() == Some(true));
+        service.role_lock = crate::role_lock::RoleLock::new(role_locked);
+        service.live.set_role_locked(role_locked);
         Ok(service)
+    }
+
+    /// The host gives core the OS keychain (SecretStore::platform); tests keep memory.
+    pub fn set_secrets(&mut self, secrets: selah_secrets::SecretStore) {
+        self.secrets = secrets;
+    }
+
+    /// Whether the Simple-mode role lock is on (SEC-14).
+    pub fn is_role_locked(&self) -> bool {
+        self.role_lock.is_locked()
     }
 
     pub fn library(&self) -> &Library {
@@ -317,6 +344,58 @@ impl CoreService {
     fn status_event(&self) -> Event {
         Event {
             notification: Some(event::Notification::Status(self.status())),
+        }
+    }
+
+    fn live_state_event(&self) -> Event {
+        let status = self.live.status();
+        Event {
+            notification: Some(event::Notification::LiveStateChanged(
+                selah_proto::v1::LiveStateChanged {
+                    scene_revision: status.scene_revision,
+                    service_id: status.service_id.clone(),
+                    current_item_index: status.current_item_index,
+                    current_slide_index: status.current_slide_index,
+                    cleared: status.cleared,
+                    show_logo: status.show_logo,
+                    status: vec![status],
+                },
+            )),
+        }
+    }
+
+    fn live_outcome(
+        &self,
+        request: &Envelope,
+        result: Result<selah_proto::v1::LiveStatus, CommandBusError>,
+        send_to_engine: bool,
+    ) -> Outcome {
+        match result {
+            Ok(status) => Outcome {
+                reply: Some(self.reply(request, reply::Result::LiveStatus(status.clone()))),
+                to_engine: send_to_engine.then(|| self.resync_command()),
+                broadcast: vec![
+                    self.status_event(),
+                    Event {
+                        notification: Some(event::Notification::LiveStateChanged(
+                            selah_proto::v1::LiveStateChanged {
+                                scene_revision: status.scene_revision,
+                                service_id: status.service_id.clone(),
+                                current_item_index: status.current_item_index,
+                                current_slide_index: status.current_slide_index,
+                                cleared: status.cleared,
+                                show_logo: status.show_logo,
+                                status: vec![status],
+                            },
+                        )),
+                    },
+                ],
+                ..Outcome::default()
+            },
+            Err(error) => Outcome {
+                reply: Some(self.bus_error(request, &error)),
+                ..Outcome::default()
+            },
         }
     }
 
@@ -483,8 +562,16 @@ impl CoreService {
         let kind = permissions::kind_of(action);
         let actor = request.actor.clone().unwrap_or_default();
         // SEC-14: authorise before validating or applying anything.
-        if let Err(denied) = permissions::authorize(&actor, kind) {
-            tracing::warn!(origin = ?denied.origin, kind = ?denied.kind, "command refused");
+        if let Err(denied) = permissions::authorize(&actor, kind, self.role_lock.is_locked()) {
+            tracing::warn!(origin = ?denied.origin, kind = ?denied.kind, role_locked = self.role_lock.is_locked(), "command refused");
+            return Outcome {
+                reply: Some(self.error(request, DENIED_CODE, "error-not-permitted")),
+                ..Outcome::default()
+            };
+        }
+        // SAFE-06 / M4-A12: Booth lock leaves only Next, Previous and Clear working (plus SetBoothLock to unlock).
+        if self.live.is_booth_locked() && !permissions::is_booth_lock_allowed(kind) {
+            tracing::warn!(kind = ?kind, "command refused while booth is locked");
             return Outcome {
                 reply: Some(self.error(request, DENIED_CODE, "error-not-permitted")),
                 ..Outcome::default()
@@ -523,17 +610,11 @@ impl CoreService {
                 }
             }
             command::Action::ClearOutputs(_) => {
-                self.live.change(|scene| {
-                    scene.cleared = true;
-                    scene.test_pattern = TestPattern::Unspecified as i32;
-                    scene.text.clear();
-                    scene.outputs.clear();
-                    scene.preload_items.clear();
-                });
+                self.live.clear_all();
                 Outcome {
                     reply: ack(self),
                     to_engine: Some(self.resync_command()),
-                    broadcast: vec![self.status_event()],
+                    broadcast: vec![self.status_event(), self.live_state_event()],
                     ..Outcome::default()
                 }
             }
@@ -765,6 +846,390 @@ impl CoreService {
                 };
                 self.library_outcome(request, result)
             }
+            command::Action::SaveService(cmd) => {
+                let result = match cmd.service.as_ref() {
+                    Some(doc) => self.library.save_document_op(doc, &meta),
+                    None => Err(CommandBusError::Invalid("missing service".into())),
+                };
+                self.library_outcome(request, result)
+            }
+            command::Action::DeleteService(cmd) => {
+                let result = match cmd.id.as_ref() {
+                    Some(id) => self
+                        .library
+                        .delete_document_op(DocumentKind::Service, id, &meta),
+                    None => Err(CommandBusError::Invalid("missing service id".into())),
+                };
+                self.library_outcome(request, result)
+            }
+            command::Action::SaveServiceType(cmd) => {
+                let result = match cmd.service_type.as_ref() {
+                    Some(doc) => self.library.save_document_op(doc, &meta),
+                    None => Err(CommandBusError::Invalid("missing service type".into())),
+                };
+                self.library_outcome(request, result)
+            }
+            command::Action::DeleteServiceType(cmd) => {
+                let result = match cmd.id.as_ref() {
+                    Some(id) => {
+                        self.library
+                            .delete_document_op(DocumentKind::ServiceType, id, &meta)
+                    }
+                    None => Err(CommandBusError::Invalid("missing service type id".into())),
+                };
+                self.library_outcome(request, result)
+            }
+            command::Action::SaveTeam(cmd) => {
+                let result = match cmd.team.as_ref() {
+                    Some(doc) => self.library.save_document_op(doc, &meta),
+                    None => Err(CommandBusError::Invalid("missing team".into())),
+                };
+                self.library_outcome(request, result)
+            }
+            command::Action::DeleteTeam(cmd) => {
+                let result = match cmd.id.as_ref() {
+                    Some(id) => self
+                        .library
+                        .delete_document_op(DocumentKind::Team, id, &meta),
+                    None => Err(CommandBusError::Invalid("missing team id".into())),
+                };
+                self.library_outcome(request, result)
+            }
+            command::Action::CreateServiceFromPrevious(cmd) => {
+                let result =
+                    crate::planner::create_service_from_previous_op(&mut self.library, cmd, &meta);
+                self.library_outcome(request, result)
+            }
+            command::Action::ExportServicePrint(cmd) => {
+                match crate::planner::export_service_print(&self.library, cmd) {
+                    Ok(exported) => Outcome {
+                        reply: Some(
+                            self.reply(request, reply::Result::ServicePrintExport(exported)),
+                        ),
+                        ..Outcome::default()
+                    },
+                    Err(error) => Outcome {
+                        reply: Some(self.bus_error(request, &error)),
+                        ..Outcome::default()
+                    },
+                }
+            }
+            command::Action::LoadLiveService(cmd) => {
+                let res = match cmd.service_id.as_ref() {
+                    Some(id) => self
+                        .live
+                        .load_service(&self.library, id, cmd.trigger_first_item),
+                    None => Err(CommandBusError::Invalid("missing service_id".into())),
+                };
+                self.live_outcome(request, res, cmd.trigger_first_item)
+            }
+            command::Action::TriggerItem(cmd) => {
+                let res = self.live.trigger_item(&self.library, cmd.item_index);
+                self.live_outcome(request, res, true)
+            }
+            command::Action::TriggerSlide(cmd) => {
+                let res = self
+                    .live
+                    .trigger_slide(&self.library, cmd.item_index, cmd.slide_index);
+                self.live_outcome(request, res, true)
+            }
+            command::Action::NextSlide(_) => {
+                let res = self.live.next_slide(&self.library);
+                self.live_outcome(request, res, true)
+            }
+            command::Action::PreviousSlide(_) => {
+                let res = self.live.previous_slide(&self.library);
+                self.live_outcome(request, res, true)
+            }
+            command::Action::NextItem(_) => {
+                let res = self.live.next_item(&self.library);
+                self.live_outcome(request, res, true)
+            }
+            command::Action::PreviousItem(_) => {
+                let res = self.live.previous_item(&self.library);
+                self.live_outcome(request, res, true)
+            }
+            command::Action::TriggerSectionHotkey(cmd) => {
+                let res = self.live.trigger_section_hotkey(&self.library, &cmd.hotkey);
+                self.live_outcome(request, res, true)
+            }
+            command::Action::ClearLayer(cmd) => {
+                let kind = selah_proto::v1::LayerKind::try_from(cmd.kind)
+                    .unwrap_or(selah_proto::v1::LayerKind::Unspecified);
+                let res = self.live.clear_layer(kind);
+                self.live_outcome(request, res, true)
+            }
+            command::Action::SetLayerState(cmd) => {
+                let res = match cmd.layer.clone() {
+                    Some(spec) => self.live.set_layer_state(spec),
+                    None => Err(CommandBusError::Invalid("missing layer spec".into())),
+                };
+                self.live_outcome(request, res, true)
+            }
+            command::Action::ShowLogo(cmd) => {
+                let status = self.live.set_show_logo(cmd.show_logo);
+                self.live_outcome(request, Ok(status), true)
+            }
+            command::Action::PlayAudioLayer(cmd) => {
+                let res = match cmd.media_id.as_ref() {
+                    Some(id) => {
+                        self.live
+                            .play_audio_layer(&self.library, id, cmd.volume, cmd.loop_audio)
+                    }
+                    None => Err(CommandBusError::Invalid("missing media_id".into())),
+                };
+                self.live_outcome(request, res, true)
+            }
+            command::Action::StopAudioLayer(_) => {
+                let status = self.live.stop_audio_layer();
+                self.live_outcome(request, Ok(status), true)
+            }
+            command::Action::LiveUndo(_) => {
+                let res = self.live.live_undo();
+                self.live_outcome(request, res, true)
+            }
+            command::Action::LiveRedo(_) => {
+                let res = self.live.live_redo();
+                self.live_outcome(request, res, true)
+            }
+            command::Action::SaveLook(cmd) => {
+                let result = match cmd.look.as_ref() {
+                    Some(doc) => self.library.save_document_op(doc, &meta),
+                    None => Err(CommandBusError::Invalid("missing look".into())),
+                };
+                self.library_outcome(request, result)
+            }
+            command::Action::DeleteLook(cmd) => {
+                let result = match cmd.id.as_ref() {
+                    Some(id) => self
+                        .library
+                        .delete_document_op(DocumentKind::Look, id, &meta),
+                    None => Err(CommandBusError::Invalid("missing look id".into())),
+                };
+                self.library_outcome(request, result)
+            }
+            command::Action::SaveProp(cmd) => {
+                let result = match cmd.prop.as_ref() {
+                    Some(doc) => self.library.save_document_op(doc, &meta),
+                    None => Err(CommandBusError::Invalid("missing prop".into())),
+                };
+                self.library_outcome(request, result)
+            }
+            command::Action::DeleteProp(cmd) => {
+                let result = match cmd.id.as_ref() {
+                    Some(id) => self
+                        .library
+                        .delete_document_op(DocumentKind::Prop, id, &meta),
+                    None => Err(CommandBusError::Invalid("missing prop id".into())),
+                };
+                self.library_outcome(request, result)
+            }
+            command::Action::SaveMessage(cmd) => {
+                let result = match cmd.message.as_ref() {
+                    Some(doc) => self.library.save_document_op(doc, &meta),
+                    None => Err(CommandBusError::Invalid("missing message".into())),
+                };
+                self.library_outcome(request, result)
+            }
+            command::Action::DeleteMessage(cmd) => {
+                let result = match cmd.id.as_ref() {
+                    Some(id) => self
+                        .library
+                        .delete_document_op(DocumentKind::Message, id, &meta),
+                    None => Err(CommandBusError::Invalid("missing message id".into())),
+                };
+                self.library_outcome(request, result)
+            }
+            command::Action::SaveTimer(cmd) => {
+                let result = match cmd.timer.as_ref() {
+                    Some(doc) => self.library.save_document_op(doc, &meta),
+                    None => Err(CommandBusError::Invalid("missing timer".into())),
+                };
+                self.library_outcome(request, result)
+            }
+            command::Action::DeleteTimer(cmd) => {
+                let result = match cmd.id.as_ref() {
+                    Some(id) => self
+                        .library
+                        .delete_document_op(DocumentKind::Timer, id, &meta),
+                    None => Err(CommandBusError::Invalid("missing timer id".into())),
+                };
+                self.library_outcome(request, result)
+            }
+            command::Action::SaveMacro(cmd) => {
+                let result = match cmd.r#macro.as_ref() {
+                    Some(doc) => self.library.save_document_op(doc, &meta),
+                    None => Err(CommandBusError::Invalid("missing macro".into())),
+                };
+                self.library_outcome(request, result)
+            }
+            command::Action::DeleteMacro(cmd) => {
+                let result = match cmd.id.as_ref() {
+                    Some(id) => self
+                        .library
+                        .delete_document_op(DocumentKind::Macro, id, &meta),
+                    None => Err(CommandBusError::Invalid("missing macro id".into())),
+                };
+                self.library_outcome(request, result)
+            }
+            command::Action::SaveClearGroup(cmd) => {
+                let result = match cmd.clear_group.as_ref() {
+                    Some(doc) => self.library.save_document_op(doc, &meta),
+                    None => Err(CommandBusError::Invalid("missing clear_group".into())),
+                };
+                self.library_outcome(request, result)
+            }
+            command::Action::DeleteClearGroup(cmd) => {
+                let result = match cmd.id.as_ref() {
+                    Some(id) => {
+                        self.library
+                            .delete_document_op(DocumentKind::ClearGroup, id, &meta)
+                    }
+                    None => Err(CommandBusError::Invalid("missing clear_group id".into())),
+                };
+                self.library_outcome(request, result)
+            }
+            command::Action::SaveStageLayout(cmd) => {
+                let result = match cmd.stage_layout.as_ref() {
+                    Some(doc) => self.library.save_document_op(doc, &meta),
+                    None => Err(CommandBusError::Invalid("missing stage_layout".into())),
+                };
+                self.library_outcome(request, result)
+            }
+            command::Action::DeleteStageLayout(cmd) => {
+                let result = match cmd.id.as_ref() {
+                    Some(id) => {
+                        self.library
+                            .delete_document_op(DocumentKind::StageLayout, id, &meta)
+                    }
+                    None => Err(CommandBusError::Invalid("missing stage_layout id".into())),
+                };
+                self.library_outcome(request, result)
+            }
+            command::Action::SetLook(cmd) => {
+                let id = cmd.look_id.clone().unwrap_or_default();
+                let res = self.live.set_look(&self.library, &id);
+                self.live_outcome(request, res, true)
+            }
+            command::Action::ShowProp(cmd) => {
+                let res = match cmd.prop_id.as_ref() {
+                    Some(id) => self.live.show_prop(&self.library, id),
+                    None => Err(CommandBusError::Invalid("missing prop_id".into())),
+                };
+                self.live_outcome(request, res, true)
+            }
+            command::Action::HideProp(cmd) => {
+                let res = self.live.hide_prop(cmd.prop_id.as_ref());
+                self.live_outcome(request, res, true)
+            }
+            command::Action::ShowMessage(cmd) => {
+                let res = self.live.show_message(&self.library, cmd);
+                self.live_outcome(request, res, true)
+            }
+            command::Action::HideMessage(_) => {
+                let res = self.live.hide_message();
+                self.live_outcome(request, res, true)
+            }
+            command::Action::StartTimer(cmd) => {
+                let res = match cmd.timer_id.as_ref() {
+                    Some(id) => self.live.start_timer(&self.library, id),
+                    None => Err(CommandBusError::Invalid("missing timer_id".into())),
+                };
+                self.live_outcome(request, res, false)
+            }
+            command::Action::PauseTimer(cmd) => {
+                let res = match cmd.timer_id.as_ref() {
+                    Some(id) => self.live.pause_timer(id),
+                    None => Err(CommandBusError::Invalid("missing timer_id".into())),
+                };
+                self.live_outcome(request, res, false)
+            }
+            command::Action::ResetTimer(cmd) => {
+                let res = match cmd.timer_id.as_ref() {
+                    Some(id) => self.live.reset_timer(&self.library, id),
+                    None => Err(CommandBusError::Invalid("missing timer_id".into())),
+                };
+                self.live_outcome(request, res, false)
+            }
+            command::Action::AdvanceLiveClock(cmd) => {
+                let res = self.live.advance_live_clock(&self.library, cmd);
+                self.live_outcome(request, res, true)
+            }
+            command::Action::RunMacro(cmd) => {
+                let res = match cmd.macro_id.as_ref() {
+                    Some(id) => self.live.run_macro(&self.library, id),
+                    None => Err(CommandBusError::Invalid("missing macro_id".into())),
+                };
+                self.live_outcome(request, res, true)
+            }
+            command::Action::TriggerClearGroup(cmd) => {
+                let res = match cmd.clear_group_id.as_ref() {
+                    Some(id) => self.live.trigger_clear_group(&self.library, id),
+                    None => Err(CommandBusError::Invalid("missing clear_group_id".into())),
+                };
+                self.live_outcome(request, res, true)
+            }
+            command::Action::SetStageLayout(cmd) => {
+                let id = cmd.stage_layout_id.clone().unwrap_or_default();
+                let res = self.live.set_stage_layout(&self.library, &id);
+                self.live_outcome(request, res, false)
+            }
+            command::Action::SendBoothMessage(cmd) => {
+                let res = self.live.send_booth_message(&cmd.text);
+                self.live_outcome(request, res, false)
+            }
+            command::Action::SetBoothLock(cmd) => {
+                let status = self.live.set_booth_lock(cmd.locked);
+                self.live_outcome(request, Ok(status), false)
+            }
+            command::Action::SetRoleLock(cmd) => {
+                let machine = selah_proto::v1::PolicyLevel::Machine as i32;
+                let result = if cmd.locked {
+                    let was_locked = self.role_lock.is_locked();
+                    self.role_lock.lock(&self.secrets, &cmd.pin).and_then(|()| {
+                        if was_locked {
+                            return Ok(());
+                        }
+                        self.library
+                            .set_policy_setting_op(
+                                crate::role_lock::POLICY_KEY,
+                                "true",
+                                machine,
+                                false,
+                                &meta,
+                            )
+                            .map(|_| ())
+                            .map_err(|_| crate::role_lock::RoleLockError::Storage)
+                    })
+                } else {
+                    let was_locked = self.role_lock.is_locked();
+                    self.role_lock
+                        .unlock(&self.secrets, &cmd.pin, std::time::Instant::now())
+                        .and_then(|()| {
+                            if !was_locked {
+                                return Ok(());
+                            }
+                            self.library
+                                .remove_policy_setting_op(
+                                    crate::role_lock::POLICY_KEY,
+                                    machine,
+                                    &meta,
+                                )
+                                .map(|_| ())
+                                .map_err(|_| crate::role_lock::RoleLockError::Storage)
+                        })
+                };
+                match result {
+                    Ok(()) => {
+                        let status = self.live.set_role_locked(self.role_lock.is_locked());
+                        self.live_outcome(request, Ok(status), false)
+                    }
+                    Err(error) => Outcome {
+                        reply: Some(self.error(request, error.code(), error.message_key())),
+                        ..Outcome::default()
+                    },
+                }
+            }
             command::Action::Undo(cmd) => {
                 let result = self.library.undo_op(cmd.doc_id.as_ref(), &meta);
                 self.library_outcome(request, result)
@@ -790,6 +1255,12 @@ impl CoreService {
                 };
                 self.library_outcome(request, result)
             }
+            command::Action::SetPolicySetting(cmd) if cmd.key == crate::role_lock::POLICY_KEY => {
+                Outcome {
+                    reply: Some(self.error(request, DENIED_CODE, "error-not-permitted")),
+                    ..Outcome::default()
+                }
+            }
             command::Action::SetPolicySetting(cmd) => {
                 let result = self.library.set_policy_setting_op(
                     &cmd.key,
@@ -799,6 +1270,14 @@ impl CoreService {
                     &meta,
                 );
                 self.library_outcome(request, result)
+            }
+            command::Action::RemovePolicySetting(cmd)
+                if cmd.key == crate::role_lock::POLICY_KEY =>
+            {
+                Outcome {
+                    reply: Some(self.error(request, DENIED_CODE, "error-not-permitted")),
+                    ..Outcome::default()
+                }
             }
             command::Action::RemovePolicySetting(cmd) => {
                 let result = self
@@ -1436,6 +1915,97 @@ impl CoreService {
                     Ok(thumb) => self.reply(request, reply::Result::SceneThumbnail(thumb)),
                     Err(error) => self.bus_error(request, &error),
                 }
+            }
+            Some(query::Request::GetService(get)) => {
+                self.get_document(request, get.id.as_ref(), reply::Result::Service)
+            }
+            Some(query::Request::ListServices(list)) => {
+                self.list_documents(request, list.limit, list.offset, |services| {
+                    reply::Result::ServiceList(ServiceList { services })
+                })
+            }
+            Some(query::Request::GetServiceType(get)) => {
+                self.get_document(request, get.id.as_ref(), reply::Result::ServiceType)
+            }
+            Some(query::Request::ListServiceTypes(list)) => {
+                self.list_documents(request, list.limit, list.offset, |service_types| {
+                    reply::Result::ServiceTypeList(ServiceTypeList { service_types })
+                })
+            }
+            Some(query::Request::GetTeam(get)) => {
+                self.get_document(request, get.id.as_ref(), reply::Result::Team)
+            }
+            Some(query::Request::ListTeams(list)) => {
+                self.list_documents(request, list.limit, list.offset, |teams| {
+                    reply::Result::TeamList(TeamList { teams })
+                })
+            }
+            Some(query::Request::ProjectServiceRuntime(q)) => {
+                match crate::planner::project_service_runtime(&self.library, q) {
+                    Ok(projection) => {
+                        self.reply(request, reply::Result::ServiceRuntimeProjection(projection))
+                    }
+                    Err(error) => self.bus_error(request, &error),
+                }
+            }
+            Some(query::Request::GetLiveState(_)) => {
+                self.reply(request, reply::Result::LiveStatus(self.live.status()))
+            }
+            Some(query::Request::GetLook(get)) => {
+                self.get_document(request, get.id.as_ref(), reply::Result::Look)
+            }
+            Some(query::Request::ListLooks(list)) => {
+                self.list_documents(request, list.limit, list.offset, |looks| {
+                    reply::Result::LookList(LookList { looks })
+                })
+            }
+            Some(query::Request::GetProp(get)) => {
+                self.get_document(request, get.id.as_ref(), reply::Result::Prop)
+            }
+            Some(query::Request::ListProps(list)) => {
+                self.list_documents(request, list.limit, list.offset, |props| {
+                    reply::Result::PropList(PropList { props })
+                })
+            }
+            Some(query::Request::GetMessage(get)) => {
+                self.get_document(request, get.id.as_ref(), reply::Result::LiveMessage)
+            }
+            Some(query::Request::ListMessages(list)) => {
+                self.list_documents(request, list.limit, list.offset, |messages| {
+                    reply::Result::MessageList(MessageList { messages })
+                })
+            }
+            Some(query::Request::GetTimer(get)) => {
+                self.get_document(request, get.id.as_ref(), reply::Result::Timer)
+            }
+            Some(query::Request::ListTimers(list)) => {
+                self.list_documents(request, list.limit, list.offset, |timers| {
+                    reply::Result::TimerList(TimerList { timers })
+                })
+            }
+            Some(query::Request::GetMacro(get)) => {
+                self.get_document(request, get.id.as_ref(), reply::Result::Macro)
+            }
+            Some(query::Request::ListMacros(list)) => {
+                self.list_documents(request, list.limit, list.offset, |macros| {
+                    reply::Result::MacroList(MacroList { macros })
+                })
+            }
+            Some(query::Request::GetClearGroup(get)) => {
+                self.get_document(request, get.id.as_ref(), reply::Result::ClearGroup)
+            }
+            Some(query::Request::ListClearGroups(list)) => {
+                self.list_documents(request, list.limit, list.offset, |clear_groups| {
+                    reply::Result::ClearGroupList(ClearGroupList { clear_groups })
+                })
+            }
+            Some(query::Request::GetStageLayout(get)) => {
+                self.get_document(request, get.id.as_ref(), reply::Result::StageLayout)
+            }
+            Some(query::Request::ListStageLayouts(list)) => {
+                self.list_documents(request, list.limit, list.offset, |stage_layouts| {
+                    reply::Result::StageLayoutList(StageLayoutList { stage_layouts })
+                })
             }
             Some(query::Request::GetWatchdogStatus(_)) | None => {
                 self.error(request, codes::UNSUPPORTED, "error-unsupported-request")

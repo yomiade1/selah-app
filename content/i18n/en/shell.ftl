@@ -26,6 +26,8 @@ mode-library = Library
 mode-song-editor = Song editor
 mode-slide-editor = Slide editor
 mode-templates = Templates
+mode-services = Services
+mode-live = Live
 
 ## Sidebar
 sidebar-heading-plan = Plan

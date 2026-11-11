@@ -36,7 +36,7 @@ public sealed record ConnectionSnapshot(
 /// </list>
 /// Events arrive on thread-pool threads; view models marshal them to the UI thread.
 /// </summary>
-public sealed class CoreConnection : IAsyncDisposable, Selah.UI.ViewModels.IHelpSource, Selah.UI.ViewModels.IUpdateService, Selah.UI.ViewModels.IDiagnosticsService, Selah.UI.ViewModels.ILibraryService
+public sealed class CoreConnection : IAsyncDisposable, Selah.UI.ViewModels.IHelpSource, Selah.UI.ViewModels.IUpdateService, Selah.UI.ViewModels.IDiagnosticsService, Selah.UI.ViewModels.ILibraryService, Selah.UI.ViewModels.ILiveService
 {
     public static readonly TimeSpan HeartbeatInterval = TimeSpan.FromMilliseconds(250);
     private static readonly TimeSpan RequestTimeout = TimeSpan.FromSeconds(2);
@@ -78,6 +78,9 @@ public sealed class CoreConnection : IAsyncDisposable, Selah.UI.ViewModels.IHelp
 
     /// <summary>Raised when undo/redo availability changes in core.</summary>
     public event EventHandler<UndoStateChanged>? UndoStateChanged;
+
+    /// <summary>Raised when core reports a new live state (M4.4).</summary>
+    public event EventHandler<LiveStatus>? LiveStatusChanged;
 
     public ConnectionSnapshot Snapshot
     {
@@ -809,6 +812,251 @@ public sealed class CoreConnection : IAsyncDisposable, Selah.UI.ViewModels.IHelp
         }).ConfigureAwait(false);
     }
 
+    public async Task<IReadOnlyList<Service>> ListServicesAsync(uint limit = 200, uint offset = 0)
+    {
+        var reply = await RequestAsync(new Envelope { Query = new Query { ListServices = new ListServices { Limit = limit, Offset = offset } } })
+            .ConfigureAwait(false);
+        return reply.Reply?.ServiceList?.Services.ToList() ?? [];
+    }
+
+    public async Task<Service?> GetServiceAsync(Id id)
+    {
+        var reply = await RequestAsync(new Envelope { Query = new Query { GetService = new GetService { Id = id } } })
+            .ConfigureAwait(false);
+        return reply.Reply?.Service;
+    }
+
+    public async Task SaveServiceAsync(Service service, Id? undoGroup = null)
+    {
+        if (service.Id is null || service.Id.Value.IsEmpty)
+        {
+            service.Id = LibraryIds.NewId();
+        }
+        foreach (var item in service.Items)
+        {
+            if (item.Id is null || item.Id.Value.IsEmpty)
+            {
+                item.Id = LibraryIds.NewId();
+            }
+        }
+        var command = new Command { SaveService = new SaveService { Service = service } };
+        if (undoGroup is not null)
+        {
+            command.UndoGroup = undoGroup;
+        }
+        await RequestAsync(new Envelope { Command = command }).ConfigureAwait(false);
+    }
+
+    public async Task DeleteServiceAsync(Id id, Id? undoGroup = null)
+    {
+        var command = new Command { DeleteService = new DeleteService { Id = id } };
+        if (undoGroup is not null)
+        {
+            command.UndoGroup = undoGroup;
+        }
+        await RequestAsync(new Envelope { Command = command }).ConfigureAwait(false);
+    }
+
+    public async Task<IReadOnlyList<ServiceType>> ListServiceTypesAsync(uint limit = 200, uint offset = 0)
+    {
+        var reply = await RequestAsync(new Envelope { Query = new Query { ListServiceTypes = new ListServiceTypes { Limit = limit, Offset = offset } } })
+            .ConfigureAwait(false);
+        return reply.Reply?.ServiceTypeList?.ServiceTypes.ToList() ?? [];
+    }
+
+    public async Task<ServiceType?> GetServiceTypeAsync(Id id)
+    {
+        var reply = await RequestAsync(new Envelope { Query = new Query { GetServiceType = new GetServiceType { Id = id } } })
+            .ConfigureAwait(false);
+        return reply.Reply?.ServiceType;
+    }
+
+    public async Task SaveServiceTypeAsync(ServiceType serviceType, Id? undoGroup = null)
+    {
+        if (serviceType.Id is null || serviceType.Id.Value.IsEmpty)
+        {
+            serviceType.Id = LibraryIds.NewId();
+        }
+        foreach (var item in serviceType.TemplateItems)
+        {
+            if (item.Id is null || item.Id.Value.IsEmpty)
+            {
+                item.Id = LibraryIds.NewId();
+            }
+        }
+        var command = new Command { SaveServiceType = new SaveServiceType { ServiceType = serviceType } };
+        if (undoGroup is not null)
+        {
+            command.UndoGroup = undoGroup;
+        }
+        await RequestAsync(new Envelope { Command = command }).ConfigureAwait(false);
+    }
+
+    public async Task DeleteServiceTypeAsync(Id id, Id? undoGroup = null)
+    {
+        var command = new Command { DeleteServiceType = new DeleteServiceType { Id = id } };
+        if (undoGroup is not null)
+        {
+            command.UndoGroup = undoGroup;
+        }
+        await RequestAsync(new Envelope { Command = command }).ConfigureAwait(false);
+    }
+
+    public async Task<IReadOnlyList<Team>> ListTeamsAsync(uint limit = 200, uint offset = 0)
+    {
+        var reply = await RequestAsync(new Envelope { Query = new Query { ListTeams = new ListTeams { Limit = limit, Offset = offset } } })
+            .ConfigureAwait(false);
+        return reply.Reply?.TeamList?.Teams.ToList() ?? [];
+    }
+
+    public async Task<Team?> GetTeamAsync(Id id)
+    {
+        var reply = await RequestAsync(new Envelope { Query = new Query { GetTeam = new GetTeam { Id = id } } })
+            .ConfigureAwait(false);
+        return reply.Reply?.Team;
+    }
+
+    public async Task SaveTeamAsync(Team team, Id? undoGroup = null)
+    {
+        if (team.Id is null || team.Id.Value.IsEmpty)
+        {
+            team.Id = LibraryIds.NewId();
+        }
+        foreach (var member in team.Members)
+        {
+            if (member.Id is null || member.Id.Value.IsEmpty)
+            {
+                member.Id = LibraryIds.NewId();
+            }
+        }
+        var command = new Command { SaveTeam = new SaveTeam { Team = team } };
+        if (undoGroup is not null)
+        {
+            command.UndoGroup = undoGroup;
+        }
+        await RequestAsync(new Envelope { Command = command }).ConfigureAwait(false);
+    }
+
+    public async Task DeleteTeamAsync(Id id, Id? undoGroup = null)
+    {
+        var command = new Command { DeleteTeam = new DeleteTeam { Id = id } };
+        if (undoGroup is not null)
+        {
+            command.UndoGroup = undoGroup;
+        }
+        await RequestAsync(new Envelope { Command = command }).ConfigureAwait(false);
+    }
+
+    public async Task<Service> CreateServiceFromPreviousAsync(CreateServiceFromPrevious request, Id? undoGroup = null)
+    {
+        var command = new Command { CreateServiceFromPrevious = request };
+        if (undoGroup is not null)
+        {
+            command.UndoGroup = undoGroup;
+        }
+        var reply = await RequestAsync(new Envelope { Command = command }).ConfigureAwait(false);
+        return reply.Reply?.Service ?? new Service();
+    }
+
+    public async Task<ServiceRuntimeProjection> ProjectServiceRuntimeAsync(ProjectServiceRuntime request)
+    {
+        var reply = await RequestAsync(new Envelope { Query = new Query { ProjectServiceRuntime = request } })
+            .ConfigureAwait(false);
+        return reply.Reply?.ServiceRuntimeProjection ?? new ServiceRuntimeProjection();
+    }
+
+    public async Task<ServicePrintExport> ExportServicePrintAsync(ExportServicePrint request)
+    {
+        var reply = await RequestAsync(new Envelope { Command = new Command { ExportServicePrint = request } }, SlowRequestTimeout)
+            .ConfigureAwait(false);
+        return reply.Reply?.ServicePrintExport ?? new ServicePrintExport();
+    }
+
+    // Live control (M4.4, M4.5). Core authorises each command (SEC-14) and replies with LiveStatus.
+    private async Task<LiveStatus> LiveAsync(Command command)
+    {
+        var reply = await RequestAsync(new Envelope { Command = command }).ConfigureAwait(false);
+        return reply.Reply?.LiveStatus ?? new LiveStatus();
+    }
+
+    public async Task<LiveStatus> GetLiveStateAsync()
+    {
+        var reply = await RequestAsync(new Envelope { Query = new Query { GetLiveState = new GetLiveState() } })
+            .ConfigureAwait(false);
+        return reply.Reply?.LiveStatus ?? new LiveStatus();
+    }
+
+    public Task<LiveStatus> LoadLiveServiceAsync(Id serviceId, bool triggerFirstItem = false) =>
+        LiveAsync(new Command { LoadLiveService = new LoadLiveService { ServiceId = serviceId, TriggerFirstItem = triggerFirstItem } });
+
+    public Task<LiveStatus> TriggerItemAsync(uint itemIndex) =>
+        LiveAsync(new Command { TriggerItem = new TriggerItem { ItemIndex = itemIndex } });
+
+    public Task<LiveStatus> TriggerSlideAsync(uint itemIndex, uint slideIndex) =>
+        LiveAsync(new Command { TriggerSlide = new TriggerSlide { ItemIndex = itemIndex, SlideIndex = slideIndex } });
+
+    public Task<LiveStatus> NextSlideAsync() => LiveAsync(new Command { NextSlide = new NextSlide() });
+
+    public Task<LiveStatus> PreviousSlideAsync() => LiveAsync(new Command { PreviousSlide = new PreviousSlide() });
+
+    public Task<LiveStatus> NextItemAsync() => LiveAsync(new Command { NextItem = new NextItem() });
+
+    public Task<LiveStatus> PreviousItemAsync() => LiveAsync(new Command { PreviousItem = new PreviousItem() });
+
+    public Task<LiveStatus> TriggerSectionHotkeyAsync(string hotkey) =>
+        LiveAsync(new Command { TriggerSectionHotkey = new TriggerSectionHotkey { Hotkey = hotkey } });
+
+    public Task<LiveStatus> ClearLayerAsync(LayerKind kind) =>
+        LiveAsync(new Command { ClearLayer = new ClearLayer { Kind = kind } });
+
+    public Task<LiveStatus> ShowLogoAsync(bool showLogo) =>
+        LiveAsync(new Command { ShowLogo = new ShowLogoCommand { ShowLogo = showLogo } });
+
+    public Task<LiveStatus> LiveUndoAsync() => LiveAsync(new Command { LiveUndo = new LiveUndo() });
+
+    public Task<LiveStatus> LiveRedoAsync() => LiveAsync(new Command { LiveRedo = new LiveRedo() });
+
+    public Task<LiveStatus> SetLookAsync(Id lookId) => LiveAsync(new Command { SetLook = new SetLook { LookId = lookId } });
+
+    public Task<LiveStatus> RunMacroAsync(Id macroId) => LiveAsync(new Command { RunMacro = new RunMacro { MacroId = macroId } });
+
+    public Task<LiveStatus> StartTimerAsync(Id timerId) => LiveAsync(new Command { StartTimer = new StartTimer { TimerId = timerId } });
+
+    public Task<LiveStatus> PauseTimerAsync(Id timerId) => LiveAsync(new Command { PauseTimer = new PauseTimer { TimerId = timerId } });
+
+    public Task<LiveStatus> ResetTimerAsync(Id timerId) => LiveAsync(new Command { ResetTimer = new ResetTimer { TimerId = timerId } });
+
+    public Task<LiveStatus> HideMessageAsync() => LiveAsync(new Command { HideMessage = new HideMessage() });
+
+    public Task<LiveStatus> HidePropAsync() => LiveAsync(new Command { HideProp = new HideProp() });
+
+    public Task<LiveStatus> SetBoothLockAsync(bool locked) =>
+        LiveAsync(new Command { SetBoothLock = new SetBoothLock { Locked = locked } });
+
+    public Task<LiveStatus> SetRoleLockAsync(bool locked, string pin) =>
+        LiveAsync(new Command { SetRoleLock = new SetRoleLock { Locked = locked, Pin = pin } });
+
+    public Task<LiveStatus> SendBoothMessageAsync(string text) =>
+        LiveAsync(new Command { SendBoothMessage = new SendBoothMessage { Text = text } });
+
+    public async Task<IReadOnlyList<Look>> ListLooksAsync()
+    {
+        var reply = await RequestAsync(new Envelope { Query = new Query { ListLooks = new ListLooks { Limit = 200 } } }).ConfigureAwait(false);
+        return reply.Reply?.LookList?.Looks.ToList() ?? [];
+    }
+
+    public async Task<IReadOnlyList<Macro>> ListMacrosAsync()
+    {
+        var reply = await RequestAsync(new Envelope { Query = new Query { ListMacros = new ListMacros { Limit = 200 } } }).ConfigureAwait(false);
+        return reply.Reply?.MacroList?.Macros.ToList() ?? [];
+    }
+
+    public async Task<IReadOnlyList<Selah.Contracts.V1.Timer>> ListTimersAsync()
+    {
+        var reply = await RequestAsync(new Envelope { Query = new Query { ListTimers = new ListTimers { Limit = 200 } } }).ConfigureAwait(false);
+        return reply.Reply?.TimerList?.Timers.ToList() ?? [];
+    }
+
     private Task<Envelope> RequestAsync(Envelope message) => RequestAsync(message, RequestTimeout);
 
     private async Task<Envelope> RequestAsync(Envelope message, TimeSpan timeout)
@@ -870,6 +1118,10 @@ public sealed class CoreConnection : IAsyncDisposable, Selah.UI.ViewModels.IHelp
         if (envelope.Event?.UndoStateChanged is { } undoStateChanged)
         {
             UndoStateChanged?.Invoke(this, undoStateChanged);
+        }
+        if (envelope.Event?.LiveStateChanged is { Status.Count: > 0 } liveChanged)
+        {
+            LiveStatusChanged?.Invoke(this, liveChanged.Status[0]);
         }
     }
 

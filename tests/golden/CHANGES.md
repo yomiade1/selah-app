@@ -80,3 +80,12 @@ platform-specific images in `tests/golden/<platform>/`.
 - Rendered on: PR #6's `linux` (`ubuntu-24.04`, lavapipe) and `macos` (`macos-15`, software) CI jobs
   in run 42913050496, taken from their `verify-report-*` failure artifacts (`bless-golden.yml` does
   not build decode-only macOS FFmpeg yet). Reviewed by eye and verified by bounding-box diff.
+
+## 2026-11-11 — reference (M4.3: 9 `m4-look-*` frames)
+
+- Reason: M4-A3 look-rule golden frames (`crates/selah-testkit/tests/golden_m4.rs`):
+  - `m4-look-worship-{main,stream,lobby}` (3 frames): Main Hall shows `Media`, `Slide` (Sanctuary), `Props`, and `Messages`; Broadcast Stream shows `VideoInput`, `Slide` (Lower Third template override), and `Props`; Lobby shows `Media`, `Slide`, and `Messages`.
+  - `m4-look-sermon-{main,stream,lobby}` (3 frames): Main Hall shows `Media`, `Slide`, and `Props`; Broadcast Stream shows `VideoInput` and `Slide` (Lower Third override); Lobby shows `VideoInput` and `Messages`.
+  - `m4-look-camera-{main,stream,lobby}` (3 frames): Main Hall shows `VideoInput` only; Broadcast Stream shows `VideoInput` and `Props`; Lobby shows `VideoInput` and `Messages`.
+- Reviewed by eye and verified with GPU (`AdapterChoice::Software`) vs CPU compositor parity (`each_screen_shows_the_right_layers_for_each_look_match_golden`).
+- Rendered on: Windows x64, WARP (`SELAH_GPU=software`).

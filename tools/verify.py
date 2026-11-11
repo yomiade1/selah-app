@@ -248,7 +248,7 @@ def stages(args):
     stage("6", "m3 benchmark", [tool("cargo"), "run", "--release", "--locked", "-q", "-p", "selah-bench", "--",
                                 "m3", "--iterations", "10", "--check", "--json", "target/verify-report/bench-m3.json"], rust_env)
     stage("7", "golden frames", [tool("cargo"), "test", "--locked", "-p", "selah-testkit", "--features", "golden",
-                                 "--test", "golden_text", "--test", "golden_m3"], rust_env, skip=args.fast)
+                                 "--test", "golden_text", "--test", "golden_m3", "--test", "golden_m4"], rust_env, skip=args.fast)
     # Stage 8: headless UI tests at 100/150/200%, Light and Booth, en and en-XA (M1-A9).
     stage("8", "ui tests", [tool("dotnet"), "test", "app/Selah.UI.Tests/Selah.UI.Tests.csproj", "-c", "Release",
                             "--no-build", "--blame-hang-timeout", "120s"], timeout=900, skip=args.fast)

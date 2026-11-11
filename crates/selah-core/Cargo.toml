@@ -20,6 +20,7 @@ selah-net = { path = "../selah-net" }
 selah-proto = { path = "../selah-proto" }
 selah-render = { path = "../selah-render" }
 selah-runtime = { path = "../selah-runtime" }
+selah-secrets = { path = "../selah-secrets" }
 semver.workspace = true
 serde.workspace = true
 serde_json.workspace = true
@@ -27,8 +28,8 @@ sha2.workspace = true
 thiserror.workspace = true
 tracing.workspace = true
 tempfile.workspace = true
-uuid = { version = "1", features = ["v7"] }
+uuid = { version = "1", features = ["v4", "v7"] }
 
 [dev-dependencies]
 fastrand = "2"
-selah-secrets = { path = "../selah-secrets" }
+tracing-subscriber = { workspace = true, features = ["fmt", "std"] }

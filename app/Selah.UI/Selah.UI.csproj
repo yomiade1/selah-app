@@ -16,6 +16,10 @@
     <!-- Headless mode: watchdog chaos tests and the installer check on machines with no display. -->
     <PackageReference Include="Avalonia.Headless" Version="12.1.5" />
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.2" />
+    <!-- The Producer docking workspace (ADR-002, M4.4). MIT, built for Avalonia 12.1.5. -->
+    <PackageReference Include="Dock.Avalonia" Version="12.1.5" />
+    <PackageReference Include="Dock.Avalonia.Themes.Fluent" Version="12.1.5" />
+    <PackageReference Include="Dock.Model.Mvvm" Version="12.1.5" />
     <PackageReference Include="Linguini.Bundle" Version="0.11.0" />
     <ProjectReference Include="../Selah.Client/Selah.Client.csproj" />
   </ItemGroup>

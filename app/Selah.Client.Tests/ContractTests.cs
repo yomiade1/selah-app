@@ -1017,4 +1017,249 @@ public sealed class ContractTests
         };
         Assert.Equal(diagReply, Envelope.Parser.ParseFrom(diagReply.ToByteArray()));
     }
+
+    [Fact]
+    public void M41ServicePlannerMessagesRoundTrip()
+    {
+        var idBytes = ByteString.CopyFrom(new byte[]
+        {
+            0x01, 0x92, 0x70, 0x00, 0x00, 0x00, 0x70, 0x00,
+            0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01,
+        });
+        var saveCmd = new Envelope
+        {
+            Id = 7101,
+            Command = new Command
+            {
+                SaveService = new SaveService
+                {
+                    Service = new Service
+                    {
+                        Id = new Id { Value = idBytes },
+                        Name = "Sunday Morning",
+                        Series = "Romans",
+                        Location = "Sanctuary",
+                        Items =
+                        {
+                            new ServiceItem
+                            {
+                                Id = new Id { Value = idBytes },
+                                Kind = ServiceItemKind.Countdown,
+                                Title = "Countdown",
+                                CountdownSeconds = 300,
+                                DurationSeconds = 300,
+                                StatusTag = "Ready",
+                            },
+                            new ServiceItem
+                            {
+                                Id = new Id { Value = idBytes },
+                                Kind = ServiceItemKind.Header,
+                                Title = "Worship",
+                            },
+                            new ServiceItem
+                            {
+                                Id = new Id { Value = idBytes },
+                                Kind = ServiceItemKind.Audio,
+                                Title = "Pad in G",
+                                DurationSeconds = 180,
+                            },
+                        },
+                    },
+                },
+            },
+        };
+        Assert.Equal(saveCmd, Envelope.Parser.ParseFrom(saveCmd.ToByteArray()));
+
+        var projReply = new Envelope
+        {
+            Id = 7102,
+            CorrelationId = 7101,
+            Reply = new Reply
+            {
+                ServiceRuntimeProjection = new ServiceRuntimeProjection
+                {
+                    TotalDurationSeconds = 4500,
+                    FormattedStartTime = "09:00",
+                    FormattedEndTime = "10:15",
+                    FormattedTotalDuration = "1 hr 15 min",
+                    Items =
+                    {
+                        new ProjectedServiceItem
+                        {
+                            ItemId = new Id { Value = idBytes },
+                            Index = 0,
+                            DurationSeconds = 300,
+                            FormattedTime = "09:00",
+                            FormattedDuration = "5:00",
+                        },
+                    },
+                },
+            },
+        };
+        Assert.Equal(projReply, Envelope.Parser.ParseFrom(projReply.ToByteArray()));
+
+        var exportCmd = new Envelope
+        {
+            Id = 7103,
+            Command = new Command
+            {
+                ExportServicePrint = new ExportServicePrint
+                {
+                    ServiceId = new Id { Value = idBytes },
+                    Kind = ServicePrintKind.Both,
+                    OutputPath = "C:/temp/service.pdf",
+                },
+            },
+        };
+        Assert.Equal(exportCmd, Envelope.Parser.ParseFrom(exportCmd.ToByteArray()));
+    }
+
+    [Fact]
+    public void M42LiveStateMachineMessagesRoundTrip()
+    {
+        var idBytes = Google.Protobuf.ByteString.CopyFrom(new byte[]
+        {
+            0x01, 0x92, 0x70, 0x00, 0x00, 0x00, 0x70, 0x00,
+            0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x42,
+        });
+
+        var triggerCmd = new Envelope
+        {
+            Id = 7201,
+            Command = new Command
+            {
+                TriggerSlide = new TriggerSlide
+                {
+                    ItemIndex = 1,
+                    SlideIndex = 2,
+                },
+            },
+        };
+        Assert.Equal(triggerCmd, Envelope.Parser.ParseFrom(triggerCmd.ToByteArray()));
+
+        var hotkeyCmd = new Envelope
+        {
+            Id = 7202,
+            Command = new Command
+            {
+                TriggerSectionHotkey = new TriggerSectionHotkey { Hotkey = "C" },
+            },
+        };
+        Assert.Equal(hotkeyCmd, Envelope.Parser.ParseFrom(hotkeyCmd.ToByteArray()));
+
+        var liveStatusReply = new Envelope
+        {
+            Id = 7203,
+            CorrelationId = 7201,
+            Reply = new Reply
+            {
+                LiveStatus = new LiveStatus
+                {
+                    ServiceId = new Id { Value = idBytes },
+                    ServiceName = "Sunday Morning",
+                    HasActiveItem = true,
+                    CurrentItemIndex = 1,
+                    CurrentSlideIndex = 2,
+                    HasNext = true,
+                    NextItemIndex = 1,
+                    NextSlideIndex = 3,
+                    CurrentItemTitle = "Cornerstone",
+                    CurrentSlideLabel = "Chorus",
+                    CurrentSlideText = "Christ alone, Cornerstone",
+                    SongKey = "D",
+                    CanLiveUndo = true,
+                    SceneRevision = 42,
+                    Audio = new AudioLayerStatus
+                    {
+                        Playing = true,
+                        MediaId = new Id { Value = idBytes },
+                        Title = "Warm Pad.wav",
+                        Volume = 0.8f,
+                        LoopAudio = true,
+                    },
+                },
+            },
+        };
+        Assert.Equal(liveStatusReply, Envelope.Parser.ParseFrom(liveStatusReply.ToByteArray()));
+    }
+
+    [Fact]
+    public void M43LiveAutomationMessagesRoundTrip()
+    {
+        var idBytes = Google.Protobuf.ByteString.CopyFrom(new byte[]
+        {
+            0x01, 0x92, 0x70, 0x00, 0x00, 0x00, 0x70, 0x00,
+            0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x43,
+        });
+
+        var saveLook = new Envelope
+        {
+            Id = 7301,
+            Command = new Command
+            {
+                SaveLook = new SaveLook
+                {
+                    Look = new Look
+                    {
+                        Id = new Id { Value = idBytes },
+                        Name = "Worship",
+                        Hotkey = "Shift+1",
+                        Rules =
+                        {
+                            new LookRule
+                            {
+                                Id = new Id { Value = idBytes },
+                                OutputIndex = 0,
+                                EnabledLayers = { LayerKind.Media, LayerKind.Slide },
+                            },
+                        },
+                    },
+                },
+            },
+        };
+        Assert.Equal(saveLook, Envelope.Parser.ParseFrom(saveLook.ToByteArray()));
+
+        var showMessage = new Envelope
+        {
+            Id = 7302,
+            Command = new Command
+            {
+                ShowMessage = new ShowMessage
+                {
+                    MessageId = new Id { Value = idBytes },
+                    DurationSeconds = 15,
+                    TokenValues = { { "code", "142" } },
+                },
+            },
+        };
+        Assert.Equal(showMessage, Envelope.Parser.ParseFrom(showMessage.ToByteArray()));
+
+        var boothLock = new Envelope
+        {
+            Id = 7303,
+            Command = new Command
+            {
+                SetBoothLock = new SetBoothLock { Locked = true },
+            },
+        };
+        Assert.Equal(boothLock, Envelope.Parser.ParseFrom(boothLock.ToByteArray()));
+    }
+    [Fact]
+    public void M45RoleLockMessagesRoundTrip()
+    {
+        var lockEnvelope = new Envelope
+        {
+            Id = 7451,
+            Command = new Command { SetRoleLock = new SetRoleLock { Locked = true, Pin = "2468" } },
+        };
+        var lockBack = Envelope.Parser.ParseFrom(lockEnvelope.ToByteArray());
+        Assert.Equal(lockEnvelope, lockBack);
+        Assert.True(lockBack.Command.SetRoleLock.Locked);
+
+        var status = new LiveStatus();
+        status.Automation.Add(new LiveAutomationState { RoleLocked = true, BoothLocked = false });
+        var reply = new Envelope { Id = 7452, Reply = new Reply { LiveStatus = status } };
+        var replyBack = Envelope.Parser.ParseFrom(reply.ToByteArray());
+        Assert.True(replyBack.Reply.LiveStatus.Automation[0].RoleLocked);
+    }
 }
