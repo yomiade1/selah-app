@@ -60,6 +60,25 @@ public interface ILiveService
 
     Task<IReadOnlyList<Look>> ListLooksAsync();
 
+    Task<IReadOnlyList<Prop>> ListPropsAsync();
+
+    Task<IReadOnlyList<LiveMessage>> ListMessagesAsync();
+
+    Task<IReadOnlyList<ClearGroup>> ListClearGroupsAsync();
+
+    /// <summary>Save a look, prop, message, timer, macro or clear group (the Set up tiles tab).
+    /// Core checks every field (SEC-03) and keeps it in the library.</summary>
+    Task SaveControlAsync(ShowControl control);
+
+    /// <summary>Delete one saved look, prop, message, timer, macro or clear group.</summary>
+    Task DeleteControlAsync(ShowControlKind kind, Id id);
+
+    Task<LiveStatus> ShowPropAsync(Id propId);
+
+    Task<LiveStatus> ShowMessageAsync(Id messageId);
+
+    Task<LiveStatus> TriggerClearGroupAsync(Id clearGroupId);
+
     Task<IReadOnlyList<Macro>> ListMacrosAsync();
 
     Task<IReadOnlyList<Selah.Contracts.V1.Timer>> ListTimersAsync();

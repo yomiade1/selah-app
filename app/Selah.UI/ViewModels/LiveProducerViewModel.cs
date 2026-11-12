@@ -105,9 +105,12 @@ public enum LiveTileKind
     Look,
     Timer,
     Macro,
+    Prop,
+    Message,
+    ClearGroup,
 }
 
-/// <summary>A tile for a look, timer or macro.</summary>
+/// <summary>A tile for a look, timer, macro, prop, message or clear group.</summary>
 public sealed partial class LiveTile : ObservableObject
 {
     public required LiveTileKind Kind { get; init; }
@@ -149,7 +152,7 @@ public sealed record ProducerLayoutState(string Name, double ServiceOrder, doubl
         var b = Clamp(Slides);
         var c = Clamp(Inspector);
         var sum = a + b + c;
-        var tab = InspectorTab is "layers" or "tiles" or "stage" ? InspectorTab : "layers";
+        var tab = InspectorTab is "layers" or "tiles" or "setup-tiles" or "stage" ? InspectorTab : "layers";
         return this with { ServiceOrder = a / sum, Slides = b / sum, Inspector = c / sum, Program = Clamp(Program), InspectorTab = tab };
     }
 }
@@ -181,6 +184,7 @@ public sealed partial class LiveProducerViewModel : ObservableObject
             NewLayer(LayerKind.VideoInput, "live-layer-video-input", "live-clear"),
         ];
         Stage = new StageEditorViewModel(live, ShowError);
+        TilesSetup = new TilesEditorViewModel(live, library, ShowError, LoadTilesAsync);
         Layout = LoadLayout();
         Dock = new ProducerDockFactory(this);
         DockLayout = Dock.Build(Layout);
@@ -235,6 +239,9 @@ public sealed partial class LiveProducerViewModel : ObservableObject
 
     /// <summary>The stage display editor (M4.6), the Stage tab of the inspector.</summary>
     public StageEditorViewModel Stage { get; }
+
+    /// <summary>The Set up tiles tab: makes what the tiles use.</summary>
+    public TilesEditorViewModel TilesSetup { get; }
 
     [ObservableProperty]
     private Dock.Model.Controls.IRootDock dockLayout;
@@ -331,7 +338,35 @@ public sealed partial class LiveProducerViewModel : ObservableObject
             await RunAsync(live.GetLiveStateAsync);
         }
         await Stage.RefreshAsync();
+        await TilesSetup.RefreshAsync();
     }
+
+    /// <summary>Light up the tiles that are on now and show each running timer's time.</summary>
+    private void UpdateTiles(LiveAutomationState? automation)
+    {
+        foreach (var tile in Tiles)
+        {
+            switch (tile.Kind)
+            {
+                case LiveTileKind.Look:
+                    tile.IsOn = automation?.ActiveLookId is { } look && LibraryIds.Same(look, tile.Id);
+                    break;
+                case LiveTileKind.Prop:
+                    tile.IsOn = automation?.ActivePropId is { } prop && LibraryIds.Same(prop, tile.Id);
+                    break;
+                case LiveTileKind.Message:
+                    tile.IsOn = automation?.ActiveMessageId is { } message && LibraryIds.Same(message, tile.Id);
+                    break;
+                case LiveTileKind.Timer when automation?.Timers.FirstOrDefault(t => LibraryIds.Same(t.TimerId, tile.Id)) is { } timer:
+                    tile.Value = timer.FormattedTime;
+                    tile.IsOn = timer.Running;
+                    break;
+            }
+        }
+    }
+
+    /// <summary>Reload the tiles, for example after Set up tiles saves or deletes one.</summary>
+    public Task ReloadTilesAsync() => LoadTilesAsync();
 
     private async Task LoadTilesAsync()
     {
@@ -344,6 +379,9 @@ public sealed partial class LiveProducerViewModel : ObservableObject
             var looks = await live.ListLooksAsync();
             var timers = await live.ListTimersAsync();
             var macros = await live.ListMacrosAsync();
+            var props = await live.ListPropsAsync();
+            var messages = await live.ListMessagesAsync();
+            var clearGroups = await live.ListClearGroupsAsync();
             Tiles.Clear();
             foreach (var look in looks)
             {
@@ -357,6 +395,19 @@ public sealed partial class LiveProducerViewModel : ObservableObject
             {
                 Tiles.Add(new LiveTile { Kind = LiveTileKind.Macro, Id = macro.Id, Caption = Localizer.Instance["live-tile-macro"], Hotkey = macro.Hotkey, Value = macro.Name });
             }
+            foreach (var prop in props)
+            {
+                Tiles.Add(new LiveTile { Kind = LiveTileKind.Prop, Id = prop.Id, Caption = Localizer.Instance["live-tile-prop"], Hotkey = string.Empty, Value = prop.Name });
+            }
+            foreach (var message in messages)
+            {
+                Tiles.Add(new LiveTile { Kind = LiveTileKind.Message, Id = message.Id, Caption = Localizer.Instance["live-tile-message"], Hotkey = string.Empty, Value = message.Name });
+            }
+            foreach (var group in clearGroups)
+            {
+                Tiles.Add(new LiveTile { Kind = LiveTileKind.ClearGroup, Id = group.Id, Caption = Localizer.Instance["live-tile-clear-group"], Hotkey = group.Hotkey, Value = group.Name });
+            }
+            UpdateTiles(Status.Automation.FirstOrDefault());
         }
         catch (CoreException error)
         {
@@ -422,19 +473,7 @@ public sealed partial class LiveProducerViewModel : ObservableObject
             layer.IsActive = source?.Active ?? false;
             layer.Detail = source is { Active: true } ? Join(source.Title, source.Subtitle) : Localizer.Instance["live-layer-empty"];
         }
-        foreach (var tile in Tiles)
-        {
-            switch (tile.Kind)
-            {
-                case LiveTileKind.Look:
-                    tile.IsOn = automation?.ActiveLookId is { } look && LibraryIds.Same(look, tile.Id);
-                    break;
-                case LiveTileKind.Timer when automation?.Timers.FirstOrDefault(t => LibraryIds.Same(t.TimerId, tile.Id)) is { } timer:
-                    tile.Value = timer.FormattedTime;
-                    tile.IsOn = timer.Running;
-                    break;
-            }
-        }
+        UpdateTiles(automation);
         if (slideChanged && next.HasActiveItem && !next.Cleared)
         {
             Announcement = Localizer.Instance.Get("live-announce-slide", ("label", next.CurrentSlideLabel), ("number", (next.CurrentSlideIndex + 1).ToString(System.Globalization.CultureInfo.CurrentCulture)));
@@ -581,6 +620,12 @@ public sealed partial class LiveProducerViewModel : ObservableObject
         null => Task.CompletedTask,
         { Kind: LiveTileKind.Look } => RunAsync(() => live!.SetLookAsync(tile.Id)),
         { Kind: LiveTileKind.Macro } => RunAsync(() => live!.RunMacroAsync(tile.Id)),
+        // A prop or message tile that is on hides it; otherwise it shows it (and replaces another).
+        { Kind: LiveTileKind.Prop, IsOn: true } => RunAsync(() => live!.HidePropAsync()),
+        { Kind: LiveTileKind.Prop } => RunAsync(() => live!.ShowPropAsync(tile.Id)),
+        { Kind: LiveTileKind.Message, IsOn: true } => RunAsync(() => live!.HideMessageAsync()),
+        { Kind: LiveTileKind.Message } => RunAsync(() => live!.ShowMessageAsync(tile.Id)),
+        { Kind: LiveTileKind.ClearGroup } => RunAsync(() => live!.TriggerClearGroupAsync(tile.Id)),
         { Kind: LiveTileKind.Timer, IsOn: true } => RunAsync(() => live!.PauseTimerAsync(tile.Id)),
         _ => RunAsync(() => live!.StartTimerAsync(tile.Id)),
     };

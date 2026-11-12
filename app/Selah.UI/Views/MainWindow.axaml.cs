@@ -254,6 +254,7 @@ public sealed partial class MainWindow : Window, IHelpHost
         }
         var window = new SettingsWindow { DataContext = Model.Settings };
         window.Show(this);
+        _ = Model.Settings.Church.LoadAsync();
     }
 
     private HelpWindow? helpWindow;

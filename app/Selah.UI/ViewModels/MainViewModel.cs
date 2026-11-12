@@ -36,7 +36,8 @@ public sealed partial class MainViewModel : ObservableObject
         var resolvedHelp = helpSource ?? connection;
         Settings = new SettingsViewModel(
             connection is null ? null : connection.SetAppearanceAsync,
-            new UpdatesViewModel(connection, () => ConfirmIfLiveAsync(LiveGuardKind.Update)));
+            new UpdatesViewModel(connection, () => ConfirmIfLiveAsync(LiveGuardKind.Update)),
+            new ChurchSettingsViewModel(resolvedLibrary));
         HelpSource = resolvedHelp;
         Help = new HelpViewModel(resolvedHelp);
         HelpPanel = new HelpPanelViewModel(resolvedHelp);

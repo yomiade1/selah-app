@@ -12,10 +12,11 @@ public sealed partial class SettingsViewModel : ObservableObject
     private readonly Func<AppearanceSettings, Task>? save;
     private bool applyingFromCore;
 
-    public SettingsViewModel(Func<AppearanceSettings, Task>? save = null, UpdatesViewModel? updates = null)
+    public SettingsViewModel(Func<AppearanceSettings, Task>? save = null, UpdatesViewModel? updates = null, ChurchSettingsViewModel? church = null)
     {
         this.save = save;
         Updates = updates ?? new UpdatesViewModel();
+        Church = church ?? new ChurchSettingsViewModel(null);
         TextScale.Instance.PropertyChanged += (_, args) =>
         {
             if (args.PropertyName == nameof(TextScale.Percent))
@@ -34,6 +35,9 @@ public sealed partial class SettingsViewModel : ObservableObject
 
     /// <summary>Settings ▸ Updates.</summary>
     public UpdatesViewModel Updates { get; }
+
+    /// <summary>Settings ▸ Church: CCLI licence number and the first Bible.</summary>
+    public ChurchSettingsViewModel Church { get; }
 
     /// <summary>0 Light, 1 Booth, 2 Automatic (the order of the segmented control).</summary>
     [ObservableProperty]

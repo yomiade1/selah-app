@@ -17,6 +17,8 @@ anchors:
     description: Help, Report a problem.
   - id: help.diagnostics
     description: Help, Diagnostics.
+  - id: settings.church
+    description: Settings, Church section with the CCLI licence number and the Bible to open first (M4.9).
   - id: settings.updates
     description: Settings, Updates.
   - id: shell.command-palette
@@ -75,6 +77,8 @@ anchors:
     description: Live, the layer list with a Clear button for each layer.
   - id: live.tiles
     description: Live, tiles for looks, timers and macros.
+  - id: live.setup-tiles
+    description: Live, the Set up tiles tab that makes looks, props, messages, timers, macros and clear groups (M4.9).
   - id: live.stage-editor
     description: Live, the Stage tab that edits stage display layouts (M4.6).
   - id: live.stage-preview

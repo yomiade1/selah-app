@@ -1045,6 +1045,59 @@ public sealed class CoreConnection : IAsyncDisposable, Selah.UI.ViewModels.IHelp
         return reply.Reply?.LookList?.Looks.ToList() ?? [];
     }
 
+    public async Task<IReadOnlyList<Prop>> ListPropsAsync()
+    {
+        var reply = await RequestAsync(new Envelope { Query = new Query { ListProps = new ListProps { Limit = 200 } } }).ConfigureAwait(false);
+        return reply.Reply?.PropList?.Props.ToList() ?? [];
+    }
+
+    public async Task<IReadOnlyList<LiveMessage>> ListMessagesAsync()
+    {
+        var reply = await RequestAsync(new Envelope { Query = new Query { ListMessages = new ListMessages { Limit = 200 } } }).ConfigureAwait(false);
+        return reply.Reply?.MessageList?.Messages.ToList() ?? [];
+    }
+
+    public async Task<IReadOnlyList<ClearGroup>> ListClearGroupsAsync()
+    {
+        var reply = await RequestAsync(new Envelope { Query = new Query { ListClearGroups = new ListClearGroups { Limit = 200 } } }).ConfigureAwait(false);
+        return reply.Reply?.ClearGroupList?.ClearGroups.ToList() ?? [];
+    }
+
+    public async Task SaveControlAsync(ShowControl control)
+    {
+        var command = control.Kind switch
+        {
+            ShowControlKind.Look => new Command { SaveLook = new SaveLook { Look = control.Look } },
+            ShowControlKind.Prop => new Command { SaveProp = new SaveProp { Prop = control.Prop } },
+            ShowControlKind.Message => new Command { SaveMessage = new SaveMessage { Message = control.Message } },
+            ShowControlKind.Timer => new Command { SaveTimer = new SaveTimer { Timer = control.Timer } },
+            ShowControlKind.Macro => new Command { SaveMacro = new SaveMacro { Macro = control.Macro } },
+            _ => new Command { SaveClearGroup = new SaveClearGroup { ClearGroup = control.ClearGroup } },
+        };
+        await RequestAsync(new Envelope { Command = command }).ConfigureAwait(false);
+    }
+
+    public async Task DeleteControlAsync(ShowControlKind kind, Id id)
+    {
+        var command = kind switch
+        {
+            ShowControlKind.Look => new Command { DeleteLook = new DeleteLook { Id = id } },
+            ShowControlKind.Prop => new Command { DeleteProp = new DeleteProp { Id = id } },
+            ShowControlKind.Message => new Command { DeleteMessage = new DeleteMessage { Id = id } },
+            ShowControlKind.Timer => new Command { DeleteTimer = new DeleteTimer { Id = id } },
+            ShowControlKind.Macro => new Command { DeleteMacro = new DeleteMacro { Id = id } },
+            _ => new Command { DeleteClearGroup = new DeleteClearGroup { Id = id } },
+        };
+        await RequestAsync(new Envelope { Command = command }).ConfigureAwait(false);
+    }
+
+    public Task<LiveStatus> ShowPropAsync(Id propId) => LiveAsync(new Command { ShowProp = new ShowProp { PropId = propId } });
+
+    public Task<LiveStatus> ShowMessageAsync(Id messageId) => LiveAsync(new Command { ShowMessage = new ShowMessage { MessageId = messageId } });
+
+    public Task<LiveStatus> TriggerClearGroupAsync(Id clearGroupId) =>
+        LiveAsync(new Command { TriggerClearGroup = new TriggerClearGroup { ClearGroupId = clearGroupId } });
+
     public async Task<IReadOnlyList<Macro>> ListMacrosAsync()
     {
         var reply = await RequestAsync(new Envelope { Query = new Query { ListMacros = new ListMacros { Limit = 200 } } }).ConfigureAwait(false);
