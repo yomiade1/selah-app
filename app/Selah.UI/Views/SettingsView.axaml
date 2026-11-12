@@ -3,6 +3,7 @@
              xmlns:vm="using:Selah.UI.ViewModels"
              xmlns:views="using:Selah.UI.Views"
              xmlns:s="using:Selah.UI.Services"
+             xmlns:pb="using:Selah.Contracts.V1"
              x:Class="Selah.UI.Views.SettingsView"
              x:DataType="vm:SettingsViewModel">
   <!-- Settings ▸ Appearance (prototype screen 8): appearance, text size with a live preview. -->
@@ -65,6 +66,33 @@
               <TextBlock Text="{Binding [text-size-preview-body], Source={x:Static s:Localizer.Instance}}" />
             </StackPanel>
           </Border>
+        </StackPanel>
+      </Border>
+
+      <!-- Settings ▸ Church (M4.9): the CCLI licence number and the first Bible. -->
+      <WrapPanel ItemSpacing="{DynamicResource Space.2}" VerticalAlignment="Center">
+        <TextBlock Classes="title-3" VerticalAlignment="Center" Text="{Binding [settings-section-church], Source={x:Static s:Localizer.Instance}}" />
+        <views:InfoButton Anchor="settings.church" />
+      </WrapPanel>
+      <Border Name="ChurchCard" Classes="card" s:Help.Anchor="settings.church">
+        <StackPanel Spacing="{DynamicResource Space.3}">
+          <TextBlock Name="CcliLabel" Classes="label" Text="{Binding [setup-ccli-label], Source={x:Static s:Localizer.Instance}}" />
+          <views:HintText Text="{Binding [ccli-licence-hint], Source={x:Static s:Localizer.Instance}}" />
+          <TextBox Name="CcliNumber" Text="{Binding Church.CcliNumber}" MaxLength="12" MinWidth="160" HorizontalAlignment="Left"
+                   AutomationProperties.LabeledBy="{Binding #CcliLabel}" />
+          <TextBlock Name="DefaultBibleLabel" Classes="label" Text="{Binding [church-default-bible-label], Source={x:Static s:Localizer.Instance}}" />
+          <views:HintText Text="{Binding [default-bible-hint], Source={x:Static s:Localizer.Instance}}" />
+          <ComboBox Name="DefaultBible" MinWidth="200" ItemsSource="{Binding Church.Bibles}" SelectedItem="{Binding Church.SelectedBible}"
+                    AutomationProperties.LabeledBy="{Binding #DefaultBibleLabel}">
+            <ComboBox.ItemTemplate>
+              <DataTemplate x:DataType="pb:BibleTranslation"><TextBlock Text="{Binding Name}" /></DataTemplate>
+            </ComboBox.ItemTemplate>
+          </ComboBox>
+          <Button Name="SaveChurch" HorizontalAlignment="Left" Command="{Binding Church.SaveCommand}">
+            <TextBlock Text="{Binding [church-save], Source={x:Static s:Localizer.Instance}}" />
+          </Button>
+          <TextBlock Name="ChurchStatus" TextWrapping="Wrap" Text="{Binding Church.StatusText}"
+                     IsVisible="{Binding Church.StatusText, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
         </StackPanel>
       </Border>
 

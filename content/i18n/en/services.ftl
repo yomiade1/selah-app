@@ -48,5 +48,7 @@ services-team-add-button = Add to team
 services-saved-status = Service saved.
 services-created-status = New service created.
 services-inherited-status = Service inherited from last week.
+# The name of the copy that Inherit from last week makes.
+services-inherited-name = { $name } (next week)
 services-exported-status = Print sheet exported.
 services-rehearse-status = Rehearsal staged on preview.

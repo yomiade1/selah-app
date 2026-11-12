@@ -23,6 +23,10 @@ serde_json.workspace = true
 tempfile.workspace = true
 tokio = { workspace = true, features = ["rt-multi-thread", "macros", "sync", "time", "process", "fs"] }
 
+[dev-dependencies]
+# The e2e chaos test allows the watchdog's crash-loop back-off (policy::restart_delay).
+selah-watchdog = { path = "../selah-watchdog" }
+
 [target.'cfg(windows)'.dependencies]
 # Chaos tests freeze a process by suspending its threads (src/freeze.rs).
 windows-sys = { workspace = true, features = ["Win32_Foundation", "Win32_System_Diagnostics_ToolHelp", "Win32_System_Threading"] }

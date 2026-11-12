@@ -266,6 +266,178 @@
             </ItemsControl>
           </ScrollViewer>
         </DataTemplate>
+        <DataTemplate DataType="vm:TilesSetupPane">
+          <ScrollViewer s:Help.Anchor="live.setup-tiles">
+            <StackPanel Name="TilesEditor" Spacing="{DynamicResource Space.2}" Margin="{DynamicResource Space.Text.Small}"
+                        DataContext="{Binding Live.TilesSetup}" x:DataType="vm:TilesEditorViewModel">
+              <TextBlock Classes="label" Text="{Binding [tiles-title], Source={x:Static s:Localizer.Instance}}" />
+              <TextBlock Classes="caption" TextWrapping="Wrap" Text="{Binding [tiles-hint], Source={x:Static s:Localizer.Instance}}" />
+
+              <TextBlock Classes="caption" Text="{Binding [tiles-kind], Source={x:Static s:Localizer.Instance}}" />
+              <ComboBox Name="TilesKindCombo" MinWidth="160" ItemsSource="{Binding Kinds}" SelectedItem="{Binding SelectedKind}"
+                        AutomationProperties.Name="{Binding [tiles-kind], Source={x:Static s:Localizer.Instance}}">
+                <ComboBox.ItemTemplate>
+                  <DataTemplate x:DataType="vm:ShowControlKindOption"><TextBlock Text="{Binding Name}" /></DataTemplate>
+                </ComboBox.ItemTemplate>
+              </ComboBox>
+
+              <TextBlock Classes="caption" Text="{Binding [tiles-saved-list], Source={x:Static s:Localizer.Instance}}" />
+              <WrapPanel ItemSpacing="{DynamicResource Space.2}" LineSpacing="{DynamicResource Space.2}">
+                <ComboBox Name="TilesSavedCombo" MinWidth="160" ItemsSource="{Binding Saved}" SelectedItem="{Binding SelectedSaved}"
+                          IsVisible="{Binding !HasNoSaved}" AutomationProperties.Name="{Binding [tiles-saved-list], Source={x:Static s:Localizer.Instance}}">
+                  <ComboBox.ItemTemplate>
+                    <DataTemplate x:DataType="vm:ShowControl"><TextBlock Text="{Binding Name}" /></DataTemplate>
+                  </ComboBox.ItemTemplate>
+                </ComboBox>
+                <TextBlock Classes="caption" VerticalAlignment="Center" Text="{Binding [tiles-saved-none], Source={x:Static s:Localizer.Instance}}" IsVisible="{Binding HasNoSaved}" />
+                <Button Name="TilesNewButton" Command="{Binding NewCommand}"><TextBlock Text="{Binding [tiles-new], Source={x:Static s:Localizer.Instance}}" /></Button>
+              </WrapPanel>
+
+              <TextBlock Classes="caption" Text="{Binding [tiles-name], Source={x:Static s:Localizer.Instance}}" />
+              <TextBox Name="TilesName" Text="{Binding Name}" MaxLength="80" AutomationProperties.Name="{Binding [tiles-name], Source={x:Static s:Localizer.Instance}}" />
+              <StackPanel Spacing="{DynamicResource Space.1}" IsVisible="{Binding HasKey}">
+                <TextBlock Classes="caption" Text="{Binding [tiles-key], Source={x:Static s:Localizer.Instance}}" />
+                <TextBox Name="TilesKey" Text="{Binding Key}" MaxLength="1" MinWidth="80" HorizontalAlignment="Left" AutomationProperties.Name="{Binding [tiles-key], Source={x:Static s:Localizer.Instance}}" />
+                <TextBlock Classes="caption" TextWrapping="Wrap" Text="{Binding [tiles-key-hint], Source={x:Static s:Localizer.Instance}}" />
+              </StackPanel>
+
+              <!-- Look: which layers each audience screen shows. -->
+              <StackPanel Name="TilesLookFields" Spacing="{DynamicResource Space.1}" IsVisible="{Binding IsLook}">
+                <TextBlock Classes="caption" Text="{Binding [tiles-look-screens], Source={x:Static s:Localizer.Instance}}" />
+                <ItemsControl ItemsSource="{Binding ScreenRules}">
+                  <ItemsControl.ItemTemplate>
+                    <DataTemplate x:DataType="vm:LookScreenRow">
+                      <StackPanel Spacing="{DynamicResource Space.1}">
+                        <TextBlock Classes="label" Text="{Binding Name}" />
+                        <ItemsControl ItemsSource="{Binding Layers}">
+                          <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate><WrapPanel ItemSpacing="{DynamicResource Space.2}" /></ItemsPanelTemplate>
+                          </ItemsControl.ItemsPanel>
+                          <ItemsControl.ItemTemplate>
+                            <DataTemplate x:DataType="vm:LayerChoice">
+                              <CheckBox IsChecked="{Binding IsChecked}" Content="{Binding Name}" />
+                            </DataTemplate>
+                          </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                      </StackPanel>
+                    </DataTemplate>
+                  </ItemsControl.ItemTemplate>
+                </ItemsControl>
+              </StackPanel>
+
+              <!-- Prop and message: the words and how long they stay up. -->
+              <StackPanel Name="TilesWordsFields" Spacing="{DynamicResource Space.1}" IsVisible="{Binding HasWords}">
+                <TextBlock Classes="caption" Text="{Binding [tiles-prop-words], Source={x:Static s:Localizer.Instance}}" IsVisible="{Binding IsProp}" />
+                <TextBlock Classes="caption" Text="{Binding [tiles-message-text], Source={x:Static s:Localizer.Instance}}" IsVisible="{Binding IsMessage}" />
+                <TextBox Name="TilesWords" Text="{Binding Words}" MaxLength="200" TextWrapping="Wrap"
+                         AutomationProperties.Name="{Binding [tiles-prop-words], Source={x:Static s:Localizer.Instance}}" />
+                <TextBlock Classes="caption" TextWrapping="Wrap" Text="{Binding [tiles-prop-words-hint], Source={x:Static s:Localizer.Instance}}" IsVisible="{Binding IsProp}" />
+                <TextBlock Classes="caption" TextWrapping="Wrap" Text="{Binding [tiles-message-text-hint], Source={x:Static s:Localizer.Instance}}" IsVisible="{Binding IsMessage}" />
+                <TextBlock Classes="caption" Text="{Binding [tiles-hide-after], Source={x:Static s:Localizer.Instance}}" />
+                <NumericUpDown Name="TilesHideAfter" Minimum="0" Maximum="3600" Increment="5" FormatString="0" Value="{Binding HideAfterSeconds}"
+                               MinWidth="110" HorizontalAlignment="Left" AutomationProperties.Name="{Binding [tiles-hide-after], Source={x:Static s:Localizer.Instance}}" />
+                <TextBlock Classes="caption" TextWrapping="Wrap" Text="{Binding [tiles-hide-after-hint], Source={x:Static s:Localizer.Instance}}" />
+                <CheckBox Name="TilesStageOnly" IsChecked="{Binding StageOnly}" IsVisible="{Binding IsMessage}" Content="{Binding [tiles-message-stage-only], Source={x:Static s:Localizer.Instance}}" />
+              </StackPanel>
+
+              <!-- Timer. -->
+              <StackPanel Name="TilesTimerFields" Spacing="{DynamicResource Space.1}" IsVisible="{Binding IsTimer}">
+                <TextBlock Classes="caption" Text="{Binding [tiles-timer-kind], Source={x:Static s:Localizer.Instance}}" />
+                <ComboBox Name="TilesTimerKind" MinWidth="160" ItemsSource="{Binding TimerKinds}" SelectedItem="{Binding SelectedTimerKind}"
+                          AutomationProperties.Name="{Binding [tiles-timer-kind], Source={x:Static s:Localizer.Instance}}">
+                  <ComboBox.ItemTemplate>
+                    <DataTemplate x:DataType="vm:TimerKindOption"><TextBlock Text="{Binding Name}" /></DataTemplate>
+                  </ComboBox.ItemTemplate>
+                </ComboBox>
+                <StackPanel Spacing="{DynamicResource Space.1}" IsVisible="{Binding UsesMinutes}">
+                  <TextBlock Classes="caption" Text="{Binding [tiles-timer-minutes], Source={x:Static s:Localizer.Instance}}" />
+                  <NumericUpDown Name="TilesTimerMinutes" Minimum="1" Maximum="600" Increment="1" FormatString="0" Value="{Binding Minutes}"
+                                 MinWidth="110" HorizontalAlignment="Left" AutomationProperties.Name="{Binding [tiles-timer-minutes], Source={x:Static s:Localizer.Instance}}" />
+                </StackPanel>
+                <StackPanel Spacing="{DynamicResource Space.1}" IsVisible="{Binding UsesTimeOfDay}">
+                  <TextBlock Classes="caption" Text="{Binding [tiles-timer-time], Source={x:Static s:Localizer.Instance}}" />
+                  <TextBox Name="TilesTimerTime" Text="{Binding TimeOfDay}" MaxLength="5" MinWidth="110" HorizontalAlignment="Left"
+                           AutomationProperties.Name="{Binding [tiles-timer-time], Source={x:Static s:Localizer.Instance}}" />
+                </StackPanel>
+                <TextBlock Classes="caption" Text="{Binding [tiles-timer-at-zero], Source={x:Static s:Localizer.Instance}}" />
+                <ComboBox Name="TilesTimerOverrun" MinWidth="160" ItemsSource="{Binding OverrunOptions}" SelectedItem="{Binding SelectedOverrun}"
+                          AutomationProperties.Name="{Binding [tiles-timer-at-zero], Source={x:Static s:Localizer.Instance}}">
+                  <ComboBox.ItemTemplate>
+                    <DataTemplate x:DataType="vm:OverrunOption"><TextBlock Text="{Binding Name}" /></DataTemplate>
+                  </ComboBox.ItemTemplate>
+                </ComboBox>
+                <StackPanel Spacing="{DynamicResource Space.1}" IsVisible="{Binding RunsMacroAtZero}">
+                  <TextBlock Classes="caption" Text="{Binding [tiles-timer-macro], Source={x:Static s:Localizer.Instance}}" />
+                  <ComboBox Name="TilesTimerMacro" MinWidth="160" ItemsSource="{Binding Macros}" SelectedItem="{Binding OverrunMacro}"
+                            AutomationProperties.Name="{Binding [tiles-timer-macro], Source={x:Static s:Localizer.Instance}}">
+                    <ComboBox.ItemTemplate>
+                      <DataTemplate x:DataType="pb:Macro"><TextBlock Text="{Binding Name}" /></DataTemplate>
+                    </ComboBox.ItemTemplate>
+                  </ComboBox>
+                </StackPanel>
+              </StackPanel>
+
+              <!-- Macro: its steps, in order. -->
+              <StackPanel Name="TilesMacroFields" Spacing="{DynamicResource Space.1}" IsVisible="{Binding IsMacro}">
+                <TextBlock Classes="caption" Text="{Binding [tiles-macro-steps], Source={x:Static s:Localizer.Instance}}" />
+                <TextBlock Classes="caption" TextWrapping="Wrap" Text="{Binding [tiles-macro-steps-none], Source={x:Static s:Localizer.Instance}}" IsVisible="{Binding !HasSteps}" />
+                <ItemsControl Name="TilesMacroSteps" ItemsSource="{Binding Steps}">
+                  <ItemsControl.ItemTemplate>
+                    <DataTemplate x:DataType="vm:MacroStepRow">
+                      <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="{DynamicResource Space.1}">
+                        <TextBlock Classes="label" VerticalAlignment="Center" TextWrapping="Wrap" Text="{Binding Text}" />
+                        <Button Grid.Column="1" Command="{Binding $parent[ItemsControl].((vm:TilesEditorViewModel)DataContext).MoveStepUpCommand}"
+                                CommandParameter="{Binding}"><TextBlock Text="{Binding [tiles-macro-move-up], Source={x:Static s:Localizer.Instance}}" /></Button>
+                        <Button Grid.Column="2" Command="{Binding $parent[ItemsControl].((vm:TilesEditorViewModel)DataContext).RemoveStepCommand}"
+                                CommandParameter="{Binding}"><TextBlock Text="{Binding [tiles-macro-remove-step], Source={x:Static s:Localizer.Instance}}" /></Button>
+                      </Grid>
+                    </DataTemplate>
+                  </ItemsControl.ItemTemplate>
+                </ItemsControl>
+                <TextBlock Classes="caption" Text="{Binding [tiles-macro-step], Source={x:Static s:Localizer.Instance}}" />
+                <ComboBox Name="TilesStepKind" MinWidth="160" ItemsSource="{Binding StepKinds}" SelectedItem="{Binding SelectedStepKind}"
+                          AutomationProperties.Name="{Binding [tiles-macro-step], Source={x:Static s:Localizer.Instance}}">
+                  <ComboBox.ItemTemplate>
+                    <DataTemplate x:DataType="vm:MacroStepOption"><TextBlock Text="{Binding Name}" /></DataTemplate>
+                  </ComboBox.ItemTemplate>
+                </ComboBox>
+                <StackPanel Spacing="{DynamicResource Space.1}" IsVisible="{Binding StepNeedsTarget}">
+                  <TextBlock Classes="caption" Text="{Binding [tiles-macro-step-target], Source={x:Static s:Localizer.Instance}}" />
+                  <ComboBox Name="TilesStepTarget" MinWidth="160" ItemsSource="{Binding StepTargets}" SelectedItem="{Binding SelectedStepTarget}"
+                            AutomationProperties.Name="{Binding [tiles-macro-step-target], Source={x:Static s:Localizer.Instance}}">
+                    <ComboBox.ItemTemplate>
+                      <DataTemplate x:DataType="vm:StepTarget"><TextBlock Text="{Binding Name}" /></DataTemplate>
+                    </ComboBox.ItemTemplate>
+                  </ComboBox>
+                </StackPanel>
+                <Button Name="TilesAddStep" HorizontalAlignment="Left" Command="{Binding AddStepCommand}"><TextBlock Text="{Binding [tiles-macro-add-step], Source={x:Static s:Localizer.Instance}}" /></Button>
+              </StackPanel>
+
+              <!-- Clear group: what one tile clears. -->
+              <StackPanel Name="TilesClearFields" Spacing="{DynamicResource Space.1}" IsVisible="{Binding IsClearGroup}">
+                <TextBlock Classes="caption" Text="{Binding [tiles-clear-layers], Source={x:Static s:Localizer.Instance}}" />
+                <ItemsControl ItemsSource="{Binding ClearLayers}">
+                  <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate><WrapPanel ItemSpacing="{DynamicResource Space.2}" /></ItemsPanelTemplate>
+                  </ItemsControl.ItemsPanel>
+                  <ItemsControl.ItemTemplate>
+                    <DataTemplate x:DataType="vm:LayerChoice"><CheckBox IsChecked="{Binding IsChecked}" Content="{Binding Name}" /></DataTemplate>
+                  </ItemsControl.ItemTemplate>
+                </ItemsControl>
+                <CheckBox Name="TilesClearAudio" IsChecked="{Binding StopAudio}" Content="{Binding [tiles-clear-stop-audio], Source={x:Static s:Localizer.Instance}}" />
+                <CheckBox Name="TilesClearTimers" IsChecked="{Binding StopTimers}" Content="{Binding [tiles-clear-stop-timers], Source={x:Static s:Localizer.Instance}}" />
+                <CheckBox Name="TilesClearLogo" IsChecked="{Binding HideLogo}" Content="{Binding [tiles-clear-hide-logo], Source={x:Static s:Localizer.Instance}}" />
+              </StackPanel>
+
+              <WrapPanel ItemSpacing="{DynamicResource Space.2}" LineSpacing="{DynamicResource Space.2}">
+                <Button Name="TilesSaveButton" Classes="primary" Command="{Binding SaveCommand}"><TextBlock Text="{Binding [tiles-save], Source={x:Static s:Localizer.Instance}}" /></Button>
+                <Button Name="TilesDeleteButton" Command="{Binding DeleteCommand}" IsEnabled="{Binding CanDelete}"><TextBlock Text="{Binding [tiles-delete], Source={x:Static s:Localizer.Instance}}" /></Button>
+              </WrapPanel>
+              <TextBlock Name="TilesStatus" Classes="caption" TextWrapping="Wrap" Text="{Binding StatusText}"
+                         IsVisible="{Binding StatusText, Converter={x:Static ObjectConverters.IsNotNull}}" />
+            </StackPanel>
+          </ScrollViewer>
+        </DataTemplate>
         <DataTemplate DataType="vm:StagePane">
           <ScrollViewer s:Help.Anchor="live.stage-editor">
             <StackPanel Name="StageEditor" Spacing="{DynamicResource Space.2}" Margin="{DynamicResource Space.Text.Small}"

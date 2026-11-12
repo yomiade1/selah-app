@@ -36,6 +36,9 @@ public sealed class TilesPane(LiveProducerViewModel owner) : ProducerPane(owner,
 /// <summary>The stage display editor (M4.6).</summary>
 public sealed class StagePane(LiveProducerViewModel owner) : ProducerPane(owner, "stage", "live-pane-stage");
 
+/// <summary>Set up tiles (M4.9): make looks, props, messages, timers, macros and clear groups.</summary>
+public sealed class TilesSetupPane(LiveProducerViewModel owner) : ProducerPane(owner, "setup-tiles", "live-pane-setup-tiles");
+
 /// <summary>
 /// Builds the Producer docking workspace (Dock.Avalonia, ADR-002) from a saved layout, and reads
 /// the current sizes back so the person can save their own.
@@ -64,10 +67,12 @@ public sealed class ProducerDockFactory(LiveProducerViewModel owner) : Factory
         var layers = new LayersPane(owner);
         var tiles = new TilesPane(owner);
         var stage = new StagePane(owner);
-        inspectorTabs.VisibleDockables = CreateList<IDockable>(layers, tiles, stage);
+        var setup = new TilesSetupPane(owner);
+        inspectorTabs.VisibleDockables = CreateList<IDockable>(layers, tiles, setup, stage);
         inspectorTabs.ActiveDockable = state.InspectorTab switch
         {
             "tiles" => tiles,
+            "setup-tiles" => setup,
             "stage" => stage,
             _ => layers,
         };
@@ -128,6 +133,7 @@ public sealed class ProducerDockFactory(LiveProducerViewModel owner) : Factory
         var tab = inspectorTabs?.ActiveDockable switch
         {
             TilesPane => "tiles",
+            TilesSetupPane => "setup-tiles",
             StagePane => "stage",
             _ => "layers",
         };

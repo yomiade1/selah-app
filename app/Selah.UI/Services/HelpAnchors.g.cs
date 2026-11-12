@@ -20,6 +20,8 @@ public static class HelpAnchors
     public const string HelpReportAProblem = "help.report-a-problem";
     /// <summary>Help, Diagnostics.</summary>
     public const string HelpDiagnostics = "help.diagnostics";
+    /// <summary>Settings, Church section with the CCLI licence number and the Bible to open first (M4.9).</summary>
+    public const string SettingsChurch = "settings.church";
     /// <summary>Settings, Updates.</summary>
     public const string SettingsUpdates = "settings.updates";
     /// <summary>Quick find command palette (Ctrl/Cmd+K).</summary>
@@ -78,6 +80,8 @@ public static class HelpAnchors
     public const string LiveLayers = "live.layers";
     /// <summary>Live, tiles for looks, timers and macros.</summary>
     public const string LiveTiles = "live.tiles";
+    /// <summary>Live, the Set up tiles tab that makes looks, props, messages, timers, macros and clear groups (M4.9).</summary>
+    public const string LiveSetupTiles = "live.setup-tiles";
     /// <summary>Live, the Stage tab that edits stage display layouts (M4.6).</summary>
     public const string LiveStageEditor = "live.stage-editor";
     /// <summary>Live, the stage screen preview in the Stage tab.</summary>

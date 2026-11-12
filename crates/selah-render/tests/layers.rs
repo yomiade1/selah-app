@@ -291,6 +291,33 @@ fn prerasterise_hints_warm_caches_for_upcoming_slides() {
     assert_eq!(misses_after, misses_before);
 }
 
+#[test]
+fn prerasterise_hints_draw_each_upcoming_slide_only_once() {
+    // Core resends the upcoming slides with every change; the engine must not redraw them.
+    let mut cpu = CpuCompositor::default();
+    let hint = PreloadHint {
+        key: "next-verse".into(),
+        output_index: 0,
+        resolution: Some(Resolution {
+            width: 320,
+            height: 180,
+        }),
+        text: "Great is Thy faithfulness".into(),
+        ..Default::default()
+    };
+    assert_eq!(
+        cpu.prerasterise_hints(std::slice::from_ref(&hint)).unwrap(),
+        1
+    );
+    let stats = cpu.cache_stats();
+    assert_eq!(cpu.prerasterise_hints(&[hint.clone(), hint]).unwrap(), 0);
+    assert_eq!(
+        cpu.cache_stats(),
+        stats,
+        "a cached hint is neither a hit nor a miss"
+    );
+}
+
 struct TestDir(std::path::PathBuf);
 
 impl TestDir {

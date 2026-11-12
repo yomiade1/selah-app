@@ -955,7 +955,7 @@ public sealed partial class ServicePlannerViewModel : ObservableObject
             {
                 SourceServiceId = SelectedService?.Id,
                 ServiceTypeId = SelectedServiceType?.Id,
-                Name = $"{ServiceName} (Next Week)",
+                Name = Localizer.Instance.Get("services-inherited-name", ("name", ServiceName)),
                 Series = ServiceSeries,
                 KeepSongs = true,
             });

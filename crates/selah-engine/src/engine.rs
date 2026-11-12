@@ -4,7 +4,7 @@
 //! newest scene across every configured output, presents it on a vsync-locked schedule, and
 //! broadcasts `FrameShown`. The emergency lane takes the same lock, so it waits behind nothing
 //! but a state update, and the render thread picks it up on the next frame (SAFE-03).
-use std::collections::{BTreeMap, HashSet};
+use std::collections::{BTreeMap, HashSet, VecDeque};
 use std::io::Read;
 use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
@@ -493,6 +493,9 @@ impl Engine {
         let mut active_output_transitions: BTreeMap<u32, ActiveOutputTransition> = BTreeMap::new();
         let mut active_layer_transitions: BTreeMap<(u32, LayerKind), ActiveLayerTransition> =
             BTreeMap::new();
+        // Upcoming slides to draw ahead of time. They're drawn one per pass and only while no
+        // new scene waits, so a Next never queues behind warming the caches (M4-A1).
+        let mut warm_queue: VecDeque<PreloadHint> = VecDeque::new();
 
         loop {
             let (
@@ -517,6 +520,7 @@ impl Engine {
                     && !state.media_root_dirty
                     && state.outputs.is_empty()
                     && state.pending_preload.is_empty()
+                    && warm_queue.is_empty()
                 {
                     if Arc::strong_count(&self) <= 2 {
                         return;
@@ -574,6 +578,8 @@ impl Engine {
                 )
             };
 
+            queue_warm_hints(&mut warm_queue, preload);
+
             if let Some(new_root) = media_root_update {
                 media_root = new_root;
                 compositor.set_media_root(Some(media_root.clone()));
@@ -592,12 +598,6 @@ impl Engine {
                 if !should_render {
                     if resized {
                         self.present(&mut compositor, &mut surfaces);
-                    }
-                    if !preload.is_empty() {
-                        if let Err(error) = compositor.prerasterise_hints(&preload) {
-                            tracing::warn!(%error, "prerasterise failed");
-                        }
-                        self.lock().cache_stats = compositor.cache_stats();
                     }
                     break 'live;
                 }
@@ -798,14 +798,6 @@ impl Engine {
                     });
                 }
                 let _ = after.send(FrameWork::Live(batch));
-
-                // Warm caches for upcoming items after the live frame is handed off.
-                if !preload.is_empty() {
-                    if let Err(error) = compositor.prerasterise_hints(&preload) {
-                        tracing::warn!(%error, "post-frame prerasterise failed");
-                    }
-                    self.lock().cache_stats = compositor.cache_stats();
-                }
             }
 
             if let Some((maybe_preview_scene, preview_received_ns)) = preview_request
@@ -821,6 +813,18 @@ impl Engine {
                 if let Some(staged) = staged {
                     let _ = after.send(FrameWork::Preview(staged));
                 }
+            }
+
+            // Warm one upcoming slide, unless a new scene or a clear is already waiting.
+            let busy = {
+                let state = self.lock();
+                state.dirty || state.preview_dirty || self.emergency_pending.load(Ordering::Acquire)
+            };
+            if !busy && let Some(hint) = warm_queue.pop_front() {
+                if let Err(error) = compositor.prerasterise_hints(std::slice::from_ref(&hint)) {
+                    tracing::warn!(%error, "prerasterise failed");
+                }
+                self.lock().cache_stats = compositor.cache_stats();
             }
         }
     }
@@ -1143,6 +1147,23 @@ fn load_staged_video_posters(
     loaded
 }
 
+/// Most upcoming slides the engine keeps waiting to be drawn ahead of time.
+const WARM_QUEUE_LIMIT: usize = 64;
+
+/// Adds new upcoming-slide hints to the warm-up queue: a hint already waiting isn't added twice,
+/// and the oldest hints go first when the queue is full (newer hints are closer to the operator).
+fn queue_warm_hints(queue: &mut VecDeque<PreloadHint>, hints: Vec<PreloadHint>) {
+    for hint in hints {
+        if queue.contains(&hint) {
+            continue;
+        }
+        if queue.len() >= WARM_QUEUE_LIMIT {
+            queue.pop_front();
+        }
+        queue.push_back(hint);
+    }
+}
+
 fn render_staged_preview(
     compositor: &mut selah_render::cpu::CpuCompositor,
     media_root: &Path,
@@ -1421,6 +1442,26 @@ fn scene_needs_non_media_tick(scene: &Scene) -> bool {
 mod tests {
     use super::*;
     use selah_proto::v1::{LayerKind, LayerSpec, OutputScene, SlideLayerSpec, layer_spec};
+
+    #[test]
+    fn warm_queue_skips_repeats_and_keeps_the_newest_hints() {
+        let hint = |n: usize| PreloadHint {
+            key: format!("slide-{n}"),
+            text: format!("Line {n}"),
+            ..Default::default()
+        };
+        let mut queue = VecDeque::new();
+        queue_warm_hints(&mut queue, vec![hint(0), hint(1), hint(0)]);
+        assert_eq!(queue.len(), 2, "a hint already waiting isn't queued twice");
+        queue_warm_hints(&mut queue, (0..WARM_QUEUE_LIMIT + 10).map(hint).collect());
+        assert_eq!(queue.len(), WARM_QUEUE_LIMIT);
+        assert_eq!(queue.back(), Some(&hint(WARM_QUEUE_LIMIT + 9)));
+        assert_eq!(
+            queue.front(),
+            Some(&hint(10)),
+            "the oldest hints were dropped"
+        );
+    }
 
     #[tokio::test]
     async fn engine_renders_multiple_outputs_and_clears_all_on_emergency() {

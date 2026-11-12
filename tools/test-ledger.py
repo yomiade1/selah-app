@@ -25,7 +25,7 @@ LEDGER = ROOT / "tests" / "ledger.json"
 COUNTS = ROOT / "target" / "verify-report" / "counts"
 SUITES = ["rust", "dotnet", "web", "golden", "ui", "e2e", "kb"]
 # Rust integration test files that are end-to-end (real processes), not unit or integration.
-E2E_FILES = {"continuity", "launch"}
+E2E_FILES = {"continuity", "launch", "service_e2e"}
 
 RUNNING = re.compile(r"Running (?:unittests )?(?P<path>\S+)")
 RESULT = re.compile(r"test result: \w+\. (?P<passed>\d+) passed")

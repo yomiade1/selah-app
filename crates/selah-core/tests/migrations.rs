@@ -1,4 +1,4 @@
-//! M2-A9 / M3-A7 / Stage 10 migration checks: every historical fixture opens, migrates
+//! M2-A9 / M3-A7 / M4-A10 / Stage 10 migration checks: every historical fixture opens, migrates
 //! cleanly, passes SQLite integrity checks, and preserves seeded documents, search indexes, and ops.
 use std::path::{Path, PathBuf};
 
@@ -33,6 +33,7 @@ fn every_historical_database_fixture_opens_migrates_and_passes_integrity() {
     assert!(names.contains(&"schema-v1.db".to_owned()), "{names:?}");
     assert!(names.contains(&"m2.db".to_owned()), "{names:?}");
     assert!(names.contains(&"m3.db".to_owned()), "{names:?}");
+    assert!(names.contains(&"m4.db".to_owned()), "{names:?}");
 
     for fixture in fixtures {
         let root = tempfile::tempdir().unwrap();
@@ -347,4 +348,115 @@ fn m3_fixture_preserves_templates_policies_custom_elements_and_flash_tags() {
             .any(|p| p.name == "Synthetic M3 Custom Deck (Edited)")
     );
     library.integrity_check().unwrap();
+}
+
+#[test]
+fn m4_fixture_preserves_services_teams_and_every_live_tool() {
+    let m4_path = fixtures_dir().join("m4.db");
+    let root = tempfile::tempdir().unwrap();
+    std::fs::copy(&m4_path, root.path().join("library.db")).unwrap();
+
+    let library = Library::open(root.path()).unwrap();
+    assert_eq!(library.schema_version().unwrap(), CURRENT_SCHEMA_VERSION);
+    library.integrity_check().unwrap();
+
+    // The service keeps every item kind M4 plans, in order, with its type and team.
+    let services = library.list::<Service>(50, 0).unwrap();
+    let service = services
+        .iter()
+        .find(|s| s.name == "Synthetic M4 Sunday")
+        .expect("M4 service present");
+    let kinds: Vec<i32> = service.items.iter().map(|i| i.kind).collect();
+    assert_eq!(
+        kinds,
+        [
+            ServiceItemKind::Countdown,
+            ServiceItemKind::Header,
+            ServiceItemKind::Song,
+            ServiceItemKind::Scripture,
+            ServiceItemKind::Media,
+            ServiceItemKind::Note,
+            ServiceItemKind::Audio,
+        ]
+        .map(|k| k as i32)
+    );
+    assert_eq!(service.items[0].countdown_seconds, 300);
+    assert_eq!(service.items[2].song_key, "D");
+    assert!(service.items[5].macro_id.is_some());
+    let service_type = library
+        .get::<ServiceType>(service.service_type_id.as_ref().unwrap())
+        .unwrap()
+        .expect("service type present");
+    assert_eq!(service_type.default_start_time, "09:00");
+    let team = library
+        .get::<Team>(&service.team_ids[0])
+        .unwrap()
+        .expect("team present");
+    assert_eq!(team.members.len(), 2);
+    assert_eq!(team.members[1].mode_lock, "simple");
+
+    // One of each live tool, with its links intact.
+    let look = library.list::<Look>(50, 0).unwrap().pop().expect("look");
+    assert_eq!(look.hotkey, "\u{21e7}2");
+    assert_eq!(
+        look.rules[0].enabled_layers,
+        [LayerKind::Media as i32, LayerKind::Messages as i32]
+    );
+    assert!(look.rules[0].mask_enabled);
+    let prop = library.list::<Prop>(50, 0).unwrap().pop().expect("prop");
+    assert_eq!(prop.auto_clear_seconds, 15);
+    let message = library
+        .list::<LiveMessage>(50, 0)
+        .unwrap()
+        .pop()
+        .expect("message");
+    assert!(message.template_text.contains("{timer}"));
+    assert_eq!(
+        message.default_tokens.get("plate").map(String::as_str),
+        Some("AB12 CDE")
+    );
+    let timer = library.list::<Timer>(50, 0).unwrap().pop().expect("timer");
+    assert_eq!(timer.overrun_mode, TimerOverrunMode::TriggerMacro as i32);
+    let macros = library.list::<Macro>(50, 0).unwrap();
+    assert_eq!(macros.len(), 2);
+    let sermon = macros
+        .iter()
+        .find(|m| m.name == "Synthetic Sermon Start")
+        .expect("sermon macro");
+    assert_eq!(sermon.actions.len(), 3);
+    assert_eq!(sermon.actions[0].target_id, look.id);
+    assert_eq!(sermon.actions[1].target_id, timer.id);
+    assert_eq!(sermon.actions[2].layer_kind, LayerKind::Props as i32);
+    let group = library
+        .list::<ClearGroup>(50, 0)
+        .unwrap()
+        .pop()
+        .expect("clear group");
+    assert!(group.stop_timers);
+    let stage = library
+        .list::<StageLayout>(50, 0)
+        .unwrap()
+        .pop()
+        .expect("stage layout");
+    assert!(stage.show_speaker_notes);
+    assert!((stage.elements[0].font_scale - 1.25).abs() < 1e-6);
+
+    // Church settings from first-run setup and Settings, Church.
+    let ccli = library.setting("church.ccli-licence").unwrap().unwrap();
+    assert_eq!(ccli.value, json!("1234567"));
+    assert_eq!(ccli.level, PolicyLevel::Machine);
+    let bible = library
+        .setting("scripture.default-translation")
+        .unwrap()
+        .unwrap();
+    assert_eq!(bible.value, json!("KJV"));
+
+    // The M3 seed underneath is still there.
+    assert!(
+        library
+            .list::<Template>(50, 0)
+            .unwrap()
+            .iter()
+            .any(|t| t.name == "Synthetic Sanctuary Style")
+    );
 }

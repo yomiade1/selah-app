@@ -2509,6 +2509,12 @@ impl CoreService {
     }
 
     pub fn on_engine_connection(&mut self, connected: bool) -> Vec<Event> {
+        if !connected {
+            // What a lost engine showed says nothing about what its replacement shows. Forget
+            // it until an engine reports a frame again (a reconnecting engine resends its last
+            // frames at once), so status never says the screens are restored before they are.
+            self.engine = EngineView::default();
+        }
         self.engine.connected = connected;
         vec![self.status_event()]
     }
@@ -2740,6 +2746,42 @@ mod tests {
         assert_eq!(error.code, DENIED_CODE);
         assert!(!core.status().live);
         assert_eq!(core.scene().revision, 0);
+    }
+
+    #[test]
+    fn a_lost_engine_frame_is_forgotten_until_the_new_engine_shows_one() {
+        // M4-A5, ADR-001: status must not say the screens are restored before they are.
+        let dir = tempfile::tempdir().unwrap();
+        let mut core = CoreService::new(dir.path(), false);
+        core.on_engine_connection(true);
+        let revision = core.scene().revision;
+        let frame = |checksum: u8| Event {
+            notification: Some(event::Notification::FrameShown(
+                selah_proto::v1::FrameShown {
+                    scene_revision: revision,
+                    frame_checksum: vec![checksum; 32],
+                    output_index: 0,
+                    ..Default::default()
+                },
+            )),
+        };
+        core.on_engine_event(&frame(7));
+        assert_eq!(core.status().frame_checksum, vec![7; 32]);
+
+        core.on_engine_connection(false);
+        core.on_engine_connection(true);
+        let status = core.status();
+        assert!(status.engine_connected);
+        assert!(
+            status.frame_checksum.is_empty(),
+            "the old engine's frame is gone"
+        );
+        assert_eq!(status.engine_scene_revision, 0);
+        assert!(status.output_statuses.is_empty());
+
+        core.on_engine_event(&frame(9));
+        assert_eq!(core.status().frame_checksum, vec![9; 32]);
+        assert_eq!(core.status().engine_scene_revision, revision);
     }
 
     #[test]

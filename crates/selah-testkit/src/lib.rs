@@ -86,6 +86,21 @@ pub fn test_actor() -> Actor {
     }
 }
 
+/// The adapter the test stack renders with: `software` unless `SELAH_TEST_GPU=auto`.
+fn test_gpu() -> &'static str {
+    if uses_hardware_gpu() {
+        "auto"
+    } else {
+        "software"
+    }
+}
+
+/// Whether the test stack runs on the machine's GPU (`SELAH_TEST_GPU=auto`) rather than the
+/// deterministic software adapter. Frame-time budgets only hold on a real GPU.
+pub fn uses_hardware_gpu() -> bool {
+    std::env::var("SELAH_TEST_GPU").is_ok_and(|v| v == "auto")
+}
+
 #[derive(Clone, Debug, Default)]
 pub struct StackOptions {
     /// Start the real UI, headless. It writes `$SELAH_HOME/ui.txt` (`<pid> <generation>`) each
@@ -141,7 +156,11 @@ impl Stack {
             .env("SELAH_HEADLESS", "1")
             .env("SELAH_EXIT_WITH_WATCHDOG", "1")
             // Software rendering is deterministic and works on machines without a GPU.
-            .env("SELAH_GPU", "software")
+            // SELAH_TEST_GPU=auto runs the stack on the machine's GPU (for timing checks).
+            .env("SELAH_GPU", test_gpu())
+            // A debug engine checks every GPU call, which adds ~0.6 s to each start. Shipped
+            // engines don't, and these tests time restarts, so match the shipped engine.
+            .env("SELAH_GPU_VALIDATION", "0")
             .env(
                 "SELAH_AUDIO",
                 std::env::var("SELAH_AUDIO").unwrap_or_else(|_| "null".into()),
@@ -299,6 +318,19 @@ impl Stack {
             );
             tokio::time::sleep(Duration::from_millis(10)).await;
         }
+    }
+
+    /// The UI's pid once it has connected to core and subscribed (it writes `ui.txt` then), or
+    /// `None` while no UI has got that far. Compare with `pid("ui")` to know the UI that is
+    /// running has finished starting.
+    pub fn ui_ready_pid(&self) -> Option<u32> {
+        std::fs::read_to_string(self.home.join("ui.txt"))
+            .ok()?
+            .split_whitespace()
+            .next()?
+            .parse()
+            .ok()
+            .filter(|pid| *pid != 0)
     }
 
     pub fn home(&self) -> &Path {

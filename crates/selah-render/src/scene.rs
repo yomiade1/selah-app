@@ -548,6 +548,11 @@ impl OverlayCache {
         self.order.clear();
     }
 
+    /// Whether `key` is cached, without counting a hit or a miss or changing the eviction order.
+    pub fn contains(&self, key: &[u8; 32]) -> bool {
+        self.cache.contains_key(key)
+    }
+
     pub fn get(&mut self, key: &[u8; 32]) -> Option<Arc<Frame>> {
         if let Some(hit) = self.cache.get(key) {
             self.hits += 1;
@@ -986,22 +991,12 @@ pub fn prerasterise_hints(
             continue;
         }
         let (width, height) = clamp_resolution(hint.resolution, (1920, 1080));
-        if text_renderer.is_none() {
-            *text_renderer = Some(TextRenderer::bundled()?);
-        }
         let slide = SlideLayerSpec {
             text: hint.text.clone(),
             style_json: hint.style_json.clone(),
             elements_json: hint.elements_json.clone(),
             ..Default::default()
         };
-        let frame = rasterise_slide_text(
-            &slide,
-            width,
-            height,
-            text_renderer.as_mut().expect("text renderer exists"),
-            clock_unix_ms,
-        )?;
         let spec = LayerSpec {
             kind: LayerKind::Slide as i32,
             enabled: true,
@@ -1009,6 +1004,23 @@ pub fn prerasterise_hints(
             ..Default::default()
         };
         let key = layer_cache_key(LayerKind::Slide, 1.0, &spec, width, height);
+        // Core resends the upcoming slides with every change; draw each one only once.
+        if overlay_cache.contains(&key) {
+            continue;
+        }
+        if text_renderer.is_none() {
+            *text_renderer = Some(TextRenderer::bundled()?);
+        }
+        let Some(layer_spec::Content::Slide(slide)) = spec.content.as_ref() else {
+            unreachable!("the spec was built with a slide");
+        };
+        let frame = rasterise_slide_text(
+            slide,
+            width,
+            height,
+            text_renderer.as_mut().expect("text renderer exists"),
+            clock_unix_ms,
+        )?;
         overlay_cache.insert(key, frame);
         warmed += 1;
     }

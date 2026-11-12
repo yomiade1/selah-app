@@ -41,3 +41,9 @@ updates-none = You have the newest version ({ $version }).
 updates-available = Version { $version } is ready to install.
 updates-install = Install update
 updates-installing = Installing the update. Selah will close and open again.
+
+## Settings ▸ Church (M4.9). The CCLI label and hints are in setup.ftl.
+settings-section-church = Church
+church-default-bible-label = Bible to open first
+church-save = Save church details
+church-saved = Saved.

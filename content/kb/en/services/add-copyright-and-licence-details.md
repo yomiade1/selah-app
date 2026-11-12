@@ -5,8 +5,8 @@ type: task
 status: review
 audience: [producer, admin]
 modes: [producer]
-context: [services.ready-check, setup.ccli]
-settings: [church.ccli-licence]
+context: [services.ready-check, setup.ccli, settings.church]
+settings: [church.ccli-licence, scripture.default-translation]
 error_codes: [SEL-RDY-0004, SEL-RDY-0005]
 summary: Add each song's copyright line and your church's CCLI licence number so the credits show on screen.
 popover: ""
@@ -16,7 +16,7 @@ related: [services.get-ready-for-sunday, getting-started.set-up-selah]
 collections: [producer-guide, admin-guide]
 applies_to: ">=1.0"
 platforms: [windows, macos]
-last_reviewed: 2026-11-11
+last_reviewed: 2026-11-12
 reviewed_by: ""
 ---
 
@@ -32,9 +32,12 @@ Songs that aren't in the public domain need a credit line. Your church's CCLI li
 
 ## Add your licence number
 
-Selah asks for it the first time you open it. Type your number in **CCLI licence number**. Use digits only.
+Selah asks for it the first time you open it. To add or change it later:
 
-If you skipped it, you can't add it later yet. A later update of Selah adds it to the settings.
+1. Open **Settings**.
+2. Under **Church**, type your number in **CCLI licence number**. Use digits only.
+3. Choose the **Bible to open first** if you want a different one.
+4. Select **Save church details**.
 
 > [!TIP]
 > Old hymns are often in the public domain. Type "Public Domain" as the copyright line.

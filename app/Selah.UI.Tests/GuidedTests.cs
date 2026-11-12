@@ -248,6 +248,41 @@ public sealed class GuidedTests : IDisposable
         window.Close();
     }
 
+    [AvaloniaTheory]
+    [MemberData(nameof(ModesMatrix))]
+    public async Task Settings_change_the_ccli_licence_and_the_first_bible_after_setup(int scale, string appearance, string language)
+    {
+        var library = FakeLibrary.Create();
+        library.Policies[SetupViewModel.CcliKey] = "\"12345\"";
+        var (window, model, _) = Open(scale, appearance, language, library.Service);
+        var settings = new SettingsWindow { DataContext = model.Settings, Width = 820, Height = 720 };
+        settings.Show();
+        var church = model.Settings.Church;
+        await church.LoadAsync();
+        Dispatcher.UIThread.RunJobs();
+        Assert.Equal("12345", church.CcliNumber);
+        Assert.Equal("WEB", church.SelectedBible?.Code);
+        foreach (var name in new[] { "CcliNumber", "DefaultBible", "SaveChurch" })
+        {
+            Assert.True(settings.GetVisualDescendants().OfType<Control>().First(c => c.Name == name).IsEffectivelyVisible, name);
+        }
+
+        // Letters are refused and nothing is saved.
+        church.CcliNumber = "12A";
+        await church.SaveCommand.ExecuteAsync(null);
+        Assert.Equal(Localizer.Instance["setup-ccli-invalid"], church.StatusText);
+        Assert.Equal("\"12345\"", library.Policies[SetupViewModel.CcliKey]);
+
+        church.CcliNumber = " 7654321 ";
+        church.SelectedBible = church.Bibles.Single(b => b.Code == "KJV");
+        await church.SaveCommand.ExecuteAsync(null);
+        Assert.Equal("\"7654321\"", library.Policies[SetupViewModel.CcliKey]);
+        Assert.Equal("\"KJV\"", library.Policies[SetupViewModel.BibleKey]);
+        Assert.Equal(Localizer.Instance["church-saved"], church.StatusText);
+        settings.Close();
+        window.Close();
+    }
+
     /// <summary>A library stand-in that records calls; unhandled calls return empty results.</summary>
     public class FakeLibrary : DispatchProxy
     {

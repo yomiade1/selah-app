@@ -80,7 +80,7 @@ public sealed class LiveProducerTests : IDisposable
         // The docking workspace has the five panes of prototype 01, plus the Stage tab (M4.6).
         var dock = Named<DockControl>(window, "LiveDock");
         Assert.True(dock.IsEffectivelyVisible);
-        Assert.Equal(["service-order", "slides", "program", "layers", "tiles", "stage"], model.LiveProducer.Dock.PaneIds(model.LiveProducer.DockLayout));
+        Assert.Equal(["service-order", "slides", "program", "layers", "tiles", "setup-tiles", "stage"], model.LiveProducer.Dock.PaneIds(model.LiveProducer.DockLayout));
         Assert.Equal(4, model.LiveProducer.Items.Count);
         Assert.True(model.LiveProducer.Items[0].IsLive);
         Assert.True(model.LiveProducer.Items[1].IsNext);
@@ -247,7 +247,13 @@ public sealed class LiveProducerTests : IDisposable
 
         public Service Service { get; }
 
-        private static readonly HashSet<string> ProducerOnly = ["look", "macro", "timer-start", "timer-pause", "timer-reset", "booth-lock", "stage-use", "stage-save"];
+        private static readonly HashSet<string> ProducerOnly = ["look", "macro", "timer-start", "timer-pause", "timer-reset", "booth-lock", "stage-use", "stage-save", "save", "delete", "prop", "message", "clear-group"];
+
+        /// <summary>Looks, props, messages, timers, macros and clear groups made in Set up tiles.</summary>
+        public List<ShowControl> Controls { get; } = [];
+
+        private Id? activeProp;
+        private Id? activeMessage;
 
         private Id? activeStage;
         private bool practising;
@@ -304,6 +310,8 @@ public sealed class LiveProducerTests : IDisposable
                 BoothMessage = boothMessage,
                 ActiveLookId = activeLook,
                 ActiveLookName = activeLook is null ? string.Empty : "Worship",
+                ActivePropId = activeProp,
+                ActiveMessageId = activeMessage,
                 ActiveStageLayoutId = activeStage,
                 PracticeMode = practising,
                 ActiveStageLayoutName = StageLayouts.FirstOrDefault(l => l.Id.Value == activeStage?.Value)?.Name ?? string.Empty,
@@ -388,9 +396,9 @@ public sealed class LiveProducerTests : IDisposable
 
         public Task<LiveStatus> ResetTimerAsync(Id timerId) => Do("timer-reset", () => { });
 
-        public Task<LiveStatus> HideMessageAsync() => Do("hide-message", () => { }, allowedWhenLocked: true);
+        public Task<LiveStatus> HideMessageAsync() => Do("hide-message", () => activeMessage = null, allowedWhenLocked: true);
 
-        public Task<LiveStatus> HidePropAsync() => Do("hide-prop", () => { }, allowedWhenLocked: true);
+        public Task<LiveStatus> HidePropAsync() => Do("hide-prop", () => activeProp = null, allowedWhenLocked: true);
 
         public Task<LiveStatus> SetBoothLockAsync(bool locked) => Do($"booth-lock:{locked}", () => this.locked = locked, allowedWhenLocked: true);
 
@@ -416,14 +424,38 @@ public sealed class LiveProducerTests : IDisposable
 
         public Task<LiveStatus> SendBoothMessageAsync(string text) => Do("booth-message", () => boothMessage = text, allowedWhenLocked: true);
 
+        private IReadOnlyList<T> Saved<T>(ShowControlKind kind, Func<ShowControl, T> pick) =>
+            Controls.Where(c => c.Kind == kind).Select(pick).ToList();
+
         public Task<IReadOnlyList<Look>> ListLooksAsync() =>
-            Task.FromResult<IReadOnlyList<Look>>([new Look { Id = lookId, Name = "Worship", Hotkey = "⇧1" }]);
+            Task.FromResult<IReadOnlyList<Look>>([new Look { Id = lookId, Name = "Worship", Hotkey = "⇧1" }, .. Saved(ShowControlKind.Look, c => c.Look!.Clone())]);
 
         public Task<IReadOnlyList<Macro>> ListMacrosAsync() =>
-            Task.FromResult<IReadOnlyList<Macro>>([new Macro { Id = LibraryIds.NewId(), Name = "Go to sermon", Hotkey = "M" }]);
+            Task.FromResult<IReadOnlyList<Macro>>([new Macro { Id = LibraryIds.NewId(), Name = "Go to sermon", Hotkey = "M" }, .. Saved(ShowControlKind.Macro, c => c.Macro!.Clone())]);
 
         public Task<IReadOnlyList<Selah.Contracts.V1.Timer>> ListTimersAsync() =>
-            Task.FromResult<IReadOnlyList<Selah.Contracts.V1.Timer>>([new Selah.Contracts.V1.Timer { Id = LibraryIds.NewId(), Name = "Sermon", DurationMs = 35 * 60 * 1000 }]);
+            Task.FromResult<IReadOnlyList<Selah.Contracts.V1.Timer>>([new Selah.Contracts.V1.Timer { Id = LibraryIds.NewId(), Name = "Sermon", DurationMs = 35 * 60 * 1000 }, .. Saved(ShowControlKind.Timer, c => c.Timer!.Clone())]);
+
+        public Task<IReadOnlyList<Prop>> ListPropsAsync() => Task.FromResult(Saved(ShowControlKind.Prop, c => c.Prop!.Clone()));
+
+        public Task<IReadOnlyList<LiveMessage>> ListMessagesAsync() => Task.FromResult(Saved(ShowControlKind.Message, c => c.Message!.Clone()));
+
+        public Task<IReadOnlyList<ClearGroup>> ListClearGroupsAsync() => Task.FromResult(Saved(ShowControlKind.ClearGroup, c => c.ClearGroup!.Clone()));
+
+        public Task SaveControlAsync(ShowControl control) => Do($"save:{control.Kind}", () =>
+        {
+            Controls.RemoveAll(c => c.Kind == control.Kind && c.Id.Value == control.Id.Value);
+            Controls.Add(control);
+        });
+
+        public Task DeleteControlAsync(ShowControlKind kind, Id id) =>
+            Do($"delete:{kind}", () => Controls.RemoveAll(c => c.Kind == kind && c.Id.Value == id.Value));
+
+        public Task<LiveStatus> ShowPropAsync(Id propId) => Do("prop", () => activeProp = propId);
+
+        public Task<LiveStatus> ShowMessageAsync(Id messageId) => Do("message", () => activeMessage = messageId);
+
+        public Task<LiveStatus> TriggerClearGroupAsync(Id clearGroupId) => Do("clear-group", () => cleared = true);
 
         public Task<IReadOnlyList<StageLayout>> ListStageLayoutsAsync() =>
             Task.FromResult<IReadOnlyList<StageLayout>>(StageLayouts.Select(l => l.Clone()).ToList());

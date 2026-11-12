@@ -5,9 +5,11 @@ use std::path::PathBuf;
 
 use selah_core::library::{CommandMeta, Library, PolicyLevel};
 use selah_proto::v1::{
-    Actor, ActorOrigin, Arrangement, Chord, Color, Id, LyricLine, MediaItem, MediaKind,
-    Presentation, Resolution, Section, SectionKind, Service, ServiceItem, ServiceItemKind,
-    ServiceType, Slide, Song, Tag, Team, Template, TemplateVariant, TranslationLines,
+    Actor, ActorOrigin, Arrangement, Chord, ClearGroup, Color, Id, LayerKind, LiveMessage, Look,
+    LookRule, LyricLine, Macro, MacroAction, MacroActionKind, MediaItem, MediaKind, Presentation,
+    Prop, Rect, Resolution, Section, SectionKind, Service, ServiceItem, ServiceItemKind,
+    ServiceType, Slide, Song, StageElement, StageElementKind, StageLayout, Tag, Team, TeamMember,
+    Template, TemplateVariant, Timer, TimerKind, TimerOverrunMode, TranslationLines,
 };
 use selah_render::slide_elements::{
     ShapeKind, SlideBackgroundSpec, SlideEffectEntry, SlideElement, SlideElementKind,
@@ -657,11 +659,230 @@ fn seed_m3(library: &mut Library) -> anyhow::Result<()> {
     Ok(())
 }
 
+/// M4: a service of every item kind, its type and team, and one of each live tool (looks,
+/// props, messages, timers, macros, clear groups, a stage layout) on top of the M3 seed.
+fn seed_m4(library: &mut Library) -> anyhow::Result<()> {
+    seed_m3(library)?;
+
+    let service_type = ServiceType {
+        id: Some(id(20, 1)),
+        name: "Synthetic Sunday 9:00 AM".into(),
+        default_start_time: "09:00".into(),
+        default_duration_seconds: 4500,
+        default_location: "Synthetic Hall".into(),
+        default_look_name: "Synthetic Worship".into(),
+        ..Default::default()
+    };
+    library.save(&service_type)?;
+    let team = Team {
+        id: Some(id(20, 2)),
+        name: "Synthetic Booth Team".into(),
+        members: vec![
+            TeamMember {
+                id: Some(id(20, 3)),
+                name: "Sam Example".into(),
+                initials: "SE".into(),
+                role: "Producer".into(),
+                confirmed: true,
+                ..Default::default()
+            },
+            TeamMember {
+                id: Some(id(20, 4)),
+                name: "Alex Example".into(),
+                initials: "AE".into(),
+                role: "Volunteer".into(),
+                mode_lock: "simple".into(),
+                ..Default::default()
+            },
+        ],
+    };
+    library.save(&team)?;
+
+    let look = Look {
+        id: Some(id(21, 1)),
+        name: "Synthetic Lobby".into(),
+        hotkey: "\u{21e7}2".into(),
+        rules: vec![LookRule {
+            id: Some(id(21, 2)),
+            output_index: 0,
+            enabled_layers: vec![LayerKind::Media as i32, LayerKind::Messages as i32],
+            mask_enabled: true,
+            ..Default::default()
+        }],
+    };
+    library.save(&look)?;
+    let prop = Prop {
+        id: Some(id(21, 3)),
+        name: "Synthetic Speaker".into(),
+        label: "Pastor Example".into(),
+        auto_clear_seconds: 15,
+        ..Default::default()
+    };
+    library.save(&prop)?;
+    let message = LiveMessage {
+        id: Some(id(21, 4)),
+        name: "Synthetic Parking".into(),
+        template_text: "Car {plate} has its lights on. Time left: {timer}".into(),
+        default_tokens: HashMap::from([("plate".to_owned(), "AB12 CDE".to_owned())]),
+        duration_seconds: 20,
+        ..Default::default()
+    };
+    library.save(&message)?;
+    let clear_group = ClearGroup {
+        id: Some(id(21, 5)),
+        name: "Synthetic Words and Props".into(),
+        hotkey: "W".into(),
+        layers_to_clear: vec![LayerKind::Slide as i32, LayerKind::Props as i32],
+        stop_timers: true,
+        ..Default::default()
+    };
+    library.save(&clear_group)?;
+    let wrap_up = Macro {
+        id: Some(id(21, 6)),
+        name: "Synthetic Wrap Up".into(),
+        hotkey: "Q".into(),
+        actions: vec![MacroAction {
+            id: Some(id(21, 7)),
+            kind: MacroActionKind::TriggerClearGroup as i32,
+            target_id: Some(id(21, 5)),
+            ..Default::default()
+        }],
+        ..Default::default()
+    };
+    library.save(&wrap_up)?;
+    let timer = Timer {
+        id: Some(id(21, 8)),
+        name: "Synthetic Sermon".into(),
+        kind: TimerKind::Countdown as i32,
+        duration_ms: 30 * 60 * 1000,
+        overrun_mode: TimerOverrunMode::TriggerMacro as i32,
+        overrun_macro_id: Some(id(21, 6)),
+        ..Default::default()
+    };
+    library.save(&timer)?;
+    let sermon = Macro {
+        id: Some(id(21, 9)),
+        name: "Synthetic Sermon Start".into(),
+        hotkey: "S".into(),
+        actions: vec![
+            MacroAction {
+                id: Some(id(21, 10)),
+                kind: MacroActionKind::SetLook as i32,
+                target_id: Some(id(21, 1)),
+                ..Default::default()
+            },
+            MacroAction {
+                id: Some(id(21, 11)),
+                kind: MacroActionKind::StartTimer as i32,
+                target_id: Some(id(21, 8)),
+                ..Default::default()
+            },
+            MacroAction {
+                id: Some(id(21, 12)),
+                kind: MacroActionKind::ClearLayer as i32,
+                layer_kind: LayerKind::Props as i32,
+                ..Default::default()
+            },
+        ],
+        ..Default::default()
+    };
+    library.save(&sermon)?;
+    let stage = StageLayout {
+        id: Some(id(21, 13)),
+        name: "Synthetic Speaker Stage".into(),
+        show_clock: true,
+        show_timer: true,
+        show_speaker_notes: true,
+        show_booth_message: true,
+        elements: vec![StageElement {
+            id: Some(id(21, 14)),
+            kind: StageElementKind::CurrentSlide as i32,
+            rect: Some(Rect {
+                x: 0.0,
+                y: 0.07,
+                width: 0.55,
+                height: 0.65,
+            }),
+            visible: true,
+            font_scale: 1.25,
+            show_chords: false,
+        }],
+        ..Default::default()
+    };
+    library.save(&stage)?;
+
+    let item = |last: u8, kind: ServiceItemKind, title: &str| ServiceItem {
+        id: Some(id(22, last)),
+        kind: kind as i32,
+        title: title.into(),
+        ..Default::default()
+    };
+    let service = Service {
+        id: Some(id(22, 1)),
+        name: "Synthetic M4 Sunday".into(),
+        service_type_id: Some(id(20, 1)),
+        team_ids: vec![id(20, 2)],
+        series: "Synthetic Series".into(),
+        location: "Synthetic Hall".into(),
+        notes: "Invented fixture data.".into(),
+        planned_duration_seconds: 4500,
+        default_look_name: "Synthetic Worship".into(),
+        items: vec![
+            ServiceItem {
+                countdown_seconds: 300,
+                countdown_message: "Service starts soon".into(),
+                ..item(2, ServiceItemKind::Countdown, "Synthetic Countdown")
+            },
+            item(3, ServiceItemKind::Header, "Synthetic Worship"),
+            ServiceItem {
+                content_id: Some(id(2, 1)),
+                owner: "Sam Example".into(),
+                duration_seconds: 300,
+                song_key: "D".into(),
+                look_id: Some(id(21, 1)),
+                ..item(4, ServiceItemKind::Song, "Synthetic Morning Anthem")
+            },
+            ServiceItem {
+                scripture_reference: "Psalm 23:1-2".into(),
+                bible_translation: "KJV".into(),
+                ..item(5, ServiceItemKind::Scripture, "Psalm 23:1-2")
+            },
+            ServiceItem {
+                content_id: Some(id(10, 1)),
+                ..item(6, ServiceItemKind::Media, "Synthetic Loop")
+            },
+            ServiceItem {
+                notes: "Pray for the week ahead.".into(),
+                macro_id: Some(id(21, 9)),
+                ..item(7, ServiceItemKind::Note, "Synthetic Sermon")
+            },
+            item(8, ServiceItemKind::Audio, "Synthetic Postlude"),
+        ],
+        ..Default::default()
+    };
+    library.save(&service)?;
+
+    library.set_setting(
+        "church.ccli-licence",
+        &json!("1234567"),
+        PolicyLevel::Machine,
+        false,
+    )?;
+    library.set_setting(
+        "scripture.default-translation",
+        &json!("KJV"),
+        PolicyLevel::Machine,
+        false,
+    )?;
+    Ok(())
+}
+
 #[derive(Clone, Copy, PartialEq, Eq)]
 enum FixtureMode {
     V1,
     M2,
     M3,
+    M4,
 }
 
 fn main() -> anyhow::Result<()> {
@@ -670,7 +891,8 @@ fn main() -> anyhow::Result<()> {
         [path] => (FixtureMode::V1, path.as_str()),
         [flag, path] if flag == "--m2" => (FixtureMode::M2, path.as_str()),
         [flag, path] if flag == "--m3" => (FixtureMode::M3, path.as_str()),
-        _ => anyhow::bail!("usage: library_fixture [--m2 | --m3] <new-fixture.db>"),
+        [flag, path] if flag == "--m4" => (FixtureMode::M4, path.as_str()),
+        _ => anyhow::bail!("usage: library_fixture [--m2 | --m3 | --m4] <new-fixture.db>"),
     };
     let output = PathBuf::from(output_arg);
     anyhow::ensure!(
@@ -683,6 +905,7 @@ fn main() -> anyhow::Result<()> {
         FixtureMode::V1 => seed_v1(&mut library)?,
         FixtureMode::M2 => seed_m2(&mut library)?,
         FixtureMode::M3 => seed_m3(&mut library)?,
+        FixtureMode::M4 => seed_m4(&mut library)?,
     }
     library.integrity_check()?;
     let source = library.paths().database.clone();

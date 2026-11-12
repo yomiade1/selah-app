@@ -146,6 +146,21 @@ pub struct GpuCompositor {
     clock_unix_ms: Option<i64>,
 }
 
+/// GPU API checks. Release builds never turn them on. Debug builds do, unless
+/// `SELAH_GPU_VALIDATION=0`: the D3D12 debug layer adds about 0.6 s to every start, so the
+/// process-stack tests turn it off to restart a debug engine as fast as a shipped one.
+fn instance_flags() -> wgpu::InstanceFlags {
+    validation_flags(std::env::var("SELAH_GPU_VALIDATION").ok().as_deref())
+}
+
+fn validation_flags(setting: Option<&str>) -> wgpu::InstanceFlags {
+    match setting {
+        // What a release build uses.
+        Some("0") => wgpu::InstanceFlags::VALIDATION_INDIRECT_CALL,
+        _ => wgpu::InstanceFlags::from_build_config(),
+    }
+}
+
 fn backends() -> wgpu::Backends {
     if cfg!(windows) {
         wgpu::Backends::DX12
@@ -242,6 +257,7 @@ impl GpuCompositor {
         let _init_guard = GPU_INIT_LOCK.lock().unwrap_or_else(|p| p.into_inner());
         let mut descriptor = wgpu::InstanceDescriptor::new_without_display_handle();
         descriptor.backends = backends();
+        descriptor.flags = instance_flags();
         let instance = wgpu::Instance::new(descriptor);
         let request = |force_fallback_adapter| {
             pollster::block_on(instance.request_adapter(&wgpu::RequestAdapterOptions {
@@ -1652,5 +1668,30 @@ impl GpuCompositor {
         }
         target.readback.unmap();
         Ok(frame)
+    }
+}
+
+#[cfg(test)]
+mod validation_tests {
+    use super::validation_flags;
+
+    #[test]
+    fn validation_follows_the_build_unless_turned_off() {
+        assert_eq!(
+            validation_flags(None),
+            wgpu::InstanceFlags::from_build_config()
+        );
+        assert_eq!(
+            validation_flags(Some("1")),
+            wgpu::InstanceFlags::from_build_config()
+        );
+        let off = validation_flags(Some("0"));
+        assert!(!off.contains(wgpu::InstanceFlags::VALIDATION));
+        assert!(!off.contains(wgpu::InstanceFlags::DEBUG));
+        assert_eq!(
+            off,
+            wgpu::InstanceFlags::VALIDATION_INDIRECT_CALL,
+            "the release default"
+        );
     }
 }

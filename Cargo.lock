@@ -2487,6 +2487,7 @@ dependencies = [
  "selah-proto",
  "selah-render",
  "selah-runtime",
+ "selah-watchdog",
  "serde_json",
  "tempfile",
  "tokio",
