@@ -38,8 +38,6 @@ Select the **Looks, timers and macros** tab.
 4. Select a prop or message tile to show it. Select it again to hide it.
 5. Select a clear group tile to clear the layers it lists.
 
-To make a new tile, use the **Set up tiles** tab.
-
 > [!TIP]
 > The tile that is on now is filled in.
 

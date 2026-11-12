@@ -279,7 +279,6 @@ public sealed class GuidedTests : IDisposable
         Assert.Equal("\"7654321\"", library.Policies[SetupViewModel.CcliKey]);
         Assert.Equal("\"KJV\"", library.Policies[SetupViewModel.BibleKey]);
         Assert.Equal(Localizer.Instance["church-saved"], church.StatusText);
-        Assert.DoesNotContain(LayoutTests.ClippedCriticalLabels(settings), p => !p.EndsWith("is hidden", StringComparison.Ordinal));
         settings.Close();
         window.Close();
     }

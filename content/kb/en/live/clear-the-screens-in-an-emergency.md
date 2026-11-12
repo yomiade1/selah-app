@@ -11,7 +11,7 @@ error_codes: []
 summary: Press F12 to clear every screen at once. It works even when the booth is locked or Selah is busy.
 popover: "Press F12 to clear every screen right away."
 user_need: As an operator, I want to clear every screen at once when something goes wrong so that the wrong thing never stays up.
-keywords: [emergency, clear, black, f12, escape, wrong slide, panic]
+keywords: [emergency, clear, f12, escape, wrong slide, panic]
 related: [live.clear-the-screens, troubleshooting.screens-are-black, live.keyboard-shortcuts]
 collections: [volunteer-handbook, producer-guide]
 applies_to: ">=1.0"

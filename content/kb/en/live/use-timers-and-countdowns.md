@@ -8,10 +8,10 @@ modes: [producer]
 context: [live.setup-tiles, live.tiles]
 settings: []
 error_codes: []
-summary: Make a timer that counts down, counts up, or counts down to a time of day. Choose what it does when it reaches zero.
+summary: Make a timer for the sermon or the start of the service, and choose what happens when time runs out.
 popover: "A timer counts down or up. Select its tile to start it and again to pause it."
 user_need: As a producer, I want to time the sermon and the start of the service so that everyone keeps to time.
-keywords: [timer, countdown, count up, clock, sermon, zero, overrun]
+keywords: [timer, countdown, clock, sermon, zero, overrun]
 related: [live.show-a-message, live.make-a-macro, stage.set-up-the-stage-display]
 collections: [producer-guide]
 applies_to: ">=1.0"

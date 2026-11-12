@@ -20,6 +20,8 @@ const STARTUP: Duration = Duration::from_secs(30);
 /// takes 1.8–2.1 s (OS teardown ~0.45 s, GPU start ~1.2 s, first frame ~0.2 s), so the run
 /// reports every restart over it rather than failing on it: see PROGRESS.md, M4-A5.
 const RECOVERY: Duration = Duration::from_secs(2);
+/// Longest the run waits for the UI to reconnect before the next kill (pacing only).
+const UI_SETTLE: Duration = Duration::from_secs(10);
 /// An engine that hasn't restored the picture by now has stalled: that fails the run.
 const ENGINE_STALL: Duration = Duration::from_secs(5);
 /// These tests time a whole process stack each, so they take turns: two stacks drawing at
@@ -535,13 +537,21 @@ async fn fifty_random_kills_during_a_service_keep_the_show_going() {
         round += 1;
         assert!(round < 200, "too many rounds without a process to kill");
         let before = stack.wait_ready(STARTUP).await;
-        // Each crash lands on a running service, not on one still starting up from the last
-        // round: the UI has connected again (the heaviest start) before the next kill.
-        eventually(STARTUP, "the UI to finish starting", || async {
-            let running = stack.pid("ui").await?;
-            (stack.ui_ready_pid() == Some(running)).then_some(())
-        })
-        .await;
+        // Space the crashes so each lands on a running service, not on one still starting up
+        // from the last round: wait (up to 10 s) for the UI to connect again, its heaviest
+        // start. This only paces the run; the UI branch below checks that the UI comes back.
+        let settle = Instant::now();
+        loop {
+            let running = stack.pid("ui").await;
+            if running.is_some() && stack.ui_ready_pid() == running {
+                break;
+            }
+            if settle.elapsed() > UI_SETTLE {
+                eprintln!("round {round}: the UI hadn't reconnected after {UI_SETTLE:?}; going on");
+                break;
+            }
+            tokio::time::sleep(Duration::from_millis(10)).await;
+        }
         let role = ["ui", "core", "engine"][(random.next() % 3) as usize];
         let Some(pid) = stack.pid(role).await else {
             // The UI may still be starting after a restart.

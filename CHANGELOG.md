@@ -6,6 +6,20 @@ Fixes since Milestone 3:
 
 - The command palette's drop shadow is now the soft elevation the design system calls for, and is gone in the Booth appearance, where shadows don't belong.
 
+Milestone 4: plan a service and run it live. This is the first build you can practise a whole service with. Test it in practice mode before you use it on a Sunday.
+
+- Plan services: put songs, Bible readings, media, slides, countdowns and notes in order, see when the service ends, assign the team, start from last week's service, and print the order of service and chord charts.
+- Run it live two ways: Producer mode, a workspace you can arrange, with the service order, slides, program, layers and tiles; or Simple mode, with big buttons for volunteers. Press Space for the next slide and Ctrl+Z to undo a change on screen.
+- Looks, props, messages, timers, macros and clear groups: make them in the new **Set up tiles** tab, then use each one as a tile while you are live.
+- A stage display for singers and speakers, with the words, chords, the next slide, a clock, the timer and notes from the booth.
+- **Ready for Sunday?** checks a service for missing media and fonts, words that don't fit, song credits, your CCLI licence, screens, flashing video and loud sound, and links each problem to its fix.
+- Practice mode runs the service on your screen only, so the room sees nothing. First-run setup and two guided tours help new volunteers start.
+- Lock the booth (Ctrl+L) so only Next, Previous and Clear work, or lock a volunteer's computer to Simple mode with a PIN.
+- F12, or holding Esc for 1 second, clears every screen from anywhere in Live, even when locked.
+- Your CCLI licence number and the Bible Selah opens first are now in **Settings**, under **Church**.
+- If part of Selah stops, the screens keep showing what they showed. Tested by stopping parts of Selah 50 times during a service.
+- 41 new help articles, including the volunteer handbook.
+
 Milestone 3: the render engine, templates and the slide editor. Still a work-in-progress preview build with no live Sunday service runner yet (coming in M4).
 
 - Multi-layer render engine & independent screens: composes Video Input, Media, Slide, Props and Messages layers at 60 Hz across independent screen resolutions with upcoming-slide pre-rasterisation.

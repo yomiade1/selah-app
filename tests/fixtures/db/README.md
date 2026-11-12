@@ -12,6 +12,11 @@ scripture template policies, a `flash_warning`-flagged motion video item, and a 
 `Presentation` with strict `SlideElementsDocument` v1 slides (text with `{clock}`/`{timer}`,
 rounded-rectangle shape, image, video, `fade` transition, and `vignette` effect) plus
 live undo/redo history.
+`m4.db` was saved at Milestone 4 completion on top of the M3 seed with a service holding
+every planned item kind (countdown, header, song with key and look, scripture, media, note with
+a macro, audio), a service type, a team with a Simple-mode volunteer, one look (per-screen
+layers and a mask), prop, message (tokens and `{timer}`), timer (runs a macro at zero), two
+macros, a clear group and a stage layout, plus the CCLI licence and default Bible settings.
 
 No real church or licensed content is present in any fixture. All fixtures are
 immutable; later builds must open and migrate every saved `*.db` fixture without losing

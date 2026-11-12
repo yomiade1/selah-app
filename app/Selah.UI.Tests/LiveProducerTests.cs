@@ -80,7 +80,7 @@ public sealed class LiveProducerTests : IDisposable
         // The docking workspace has the five panes of prototype 01, plus the Stage tab (M4.6).
         var dock = Named<DockControl>(window, "LiveDock");
         Assert.True(dock.IsEffectivelyVisible);
-        Assert.Equal(["service-order", "slides", "program", "layers", "tiles", "stage"], model.LiveProducer.Dock.PaneIds(model.LiveProducer.DockLayout));
+        Assert.Equal(["service-order", "slides", "program", "layers", "tiles", "setup-tiles", "stage"], model.LiveProducer.Dock.PaneIds(model.LiveProducer.DockLayout));
         Assert.Equal(4, model.LiveProducer.Items.Count);
         Assert.True(model.LiveProducer.Items[0].IsLive);
         Assert.True(model.LiveProducer.Items[1].IsNext);
