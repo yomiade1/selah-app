@@ -109,17 +109,15 @@ where
     }
 }
 
+/// How long a starting engine waits for the instance lock before giving up and leaving the
+/// running engine alone. It covers the half-second or so the operating system takes to tear
+/// down the old engine's graphics device, with room to spare, and stays short enough that a
+/// genuine second copy of Selah gives up quickly (ADR-028).
+const LOCK_WAIT: Duration = Duration::from_secs(2);
+
 fn main() -> anyhow::Result<()> {
     let paths = selah_runtime::paths::Paths::from_env();
     let _logs = selah_runtime::logging::init("engine", &paths.logs)?;
-    let _lock = match selah_runtime::instance::InstanceLock::acquire("engine") {
-        Ok(lock) => lock,
-        Err(error) if error.kind() == std::io::ErrorKind::WouldBlock => {
-            tracing::info!("another selah-engine is already running");
-            std::process::exit(3);
-        }
-        Err(error) => return Err(error).context("could not take the engine lock"),
-    };
     let headless = std::env::args().any(|arg| arg == "--headless")
         || std::env::var("SELAH_HEADLESS").as_deref() == Ok("1");
     let mode = if headless {
@@ -139,7 +137,24 @@ fn main() -> anyhow::Result<()> {
         .enable_all()
         .worker_threads(2)
         .build()?;
+    // Start the engine (and with it the GPU, on the render thread) BEFORE taking the instance
+    // lock, so a replacement engine warms its graphics device while the engine it replaces is
+    // still shutting down (ADR-028). Engine::start touches no output and binds no endpoint, so
+    // nothing reaches the screens until the lock below is held.
     let (engine, instance) = Engine::start(mode)?;
+    let _lock = match selah_runtime::instance::InstanceLock::acquire_waiting(
+        "engine",
+        LOCK_WAIT,
+    ) {
+        Ok(lock) => lock,
+        Err(error) if error.kind() == std::io::ErrorKind::WouldBlock => {
+            tracing::info!(
+                "another selah-engine still holds the lock after {LOCK_WAIT:?}; leaving it to run"
+            );
+            std::process::exit(3);
+        }
+        Err(error) => return Err(error).context("could not take the engine lock"),
+    };
     let servers = {
         let engine = engine.clone();
         runtime.spawn(async move {

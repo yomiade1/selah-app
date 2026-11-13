@@ -63,6 +63,11 @@ struct Supervised {
 #[derive(Default)]
 struct Shared {
     heartbeats: HashMap<Role, Instant>,
+    /// When each role's heartbeat connection last dropped (ADR-028). A process loses its
+    /// connection the moment it dies, well before the operating system finishes tearing down
+    /// its graphics device and reports the exit, so this is the earliest honest signal that a
+    /// replacement is needed.
+    connection_lost: HashMap<Role, Instant>,
     status: WatchdogStatus,
     /// The UI asked to leave safe mode ("Restart normally", SAFE-07).
     restart_normally: bool,
@@ -119,6 +124,8 @@ async fn serve(shared: SharedState, connection: Connection) {
     let Connection {
         mut reader, sender, ..
     } = connection;
+    // Which process this connection belongs to, learned from its first heartbeat.
+    let mut connection_role: Option<Role> = None;
     while let Ok(message) = reader.next().await {
         match message.body.as_ref() {
             Some(envelope::Body::Event(event)) => {
@@ -128,6 +135,7 @@ async fn serve(shared: SharedState, connection: Connection) {
                         .as_ref()
                         .and_then(|actor| Role::from_origin(actor.origin));
                     if let Some(role) = role {
+                        connection_role = Some(role);
                         lock(&shared).heartbeats.insert(role, Instant::now());
                     }
                 }
@@ -182,6 +190,13 @@ async fn serve(shared: SharedState, connection: Connection) {
             }
             _ => {}
         }
+    }
+    // The connection has closed. If it carried a process's heartbeats, that process has gone
+    // or is going; the supervision loop restarts it without waiting for the exit status.
+    if let Some(role) = connection_role {
+        lock(&shared)
+            .connection_lost
+            .insert(role, Instant::now());
     }
 }
 
@@ -279,6 +294,9 @@ async fn main() -> anyhow::Result<()> {
     } else {
         tracing::info!("no UI: running core and engine only");
     }
+    // Children we have killed and not yet reaped. A process that held a graphics device can
+    // take about half a second to disappear; the loop polls these instead of waiting (ADR-028).
+    let mut reaping: Vec<tokio::process::Child> = Vec::new();
     let exit_with_watchdog = std::env::var("SELAH_EXIT_WITH_WATCHDOG").as_deref() == Ok("1");
     let pid_home = std::env::var_os("SELAH_HOME")
         .filter(|value| !value.is_empty())
@@ -298,7 +316,13 @@ async fn main() -> anyhow::Result<()> {
             _ = tokio::signal::ctrl_c() => break,
         }
         let now = Instant::now();
-        let heartbeats = lock(&shared).heartbeats.clone();
+        let (heartbeats, connection_lost) = {
+            let shared = lock(&shared);
+            (shared.heartbeats.clone(), shared.connection_lost.clone())
+        };
+        // Children killed but not yet reaped: the operating system can take a while to finish
+        // with a process that held a graphics device, and we never block the loop on it.
+        reaping.retain_mut(|child| child.try_wait().ok().flatten().is_none());
         let mut enter_safe_mode = false;
         let mut quit = false;
         for process in processes.iter_mut() {
@@ -330,13 +354,29 @@ async fn main() -> anyhow::Result<()> {
                     process.adopted = false;
                     process.not_before = None;
                 }
+            } else if process.child.is_some()
+                && connection_lost
+                    .get(&process.role)
+                    .is_some_and(|lost| *lost >= process.started)
+            {
+                // ADR-028: the process's heartbeat connection has dropped, so it is gone even
+                // though the operating system has not reported its exit yet. Start the
+                // replacement now instead of waiting out the graphics-device teardown.
+                tracing::warn!(
+                    role = process.role.name(),
+                    "heartbeat connection dropped; restarting without waiting for the exit"
+                );
+                if let Some(mut child) = process.child.take() {
+                    let _ = child.start_kill();
+                    reaping.push(child);
+                }
+                process.crashed(now, &mut crashes, &mut enter_safe_mode);
             } else if process.child.is_some() && policy::is_hung(process.started, last_beat, now) {
                 tracing::warn!(role = process.role.name(), "stopped responding; restarting");
-                if let Some(child) = process.child.as_mut() {
+                if let Some(mut child) = process.child.take() {
                     let _ = child.start_kill();
-                    let _ = child.wait().await;
+                    reaping.push(child);
                 }
-                process.child = None;
                 process.crashed(now, &mut crashes, &mut enter_safe_mode);
             }
         }
