@@ -194,9 +194,7 @@ async fn serve(shared: SharedState, connection: Connection) {
     // The connection has closed. If it carried a process's heartbeats, that process has gone
     // or is going; the supervision loop restarts it without waiting for the exit status.
     if let Some(role) = connection_role {
-        lock(&shared)
-            .connection_lost
-            .insert(role, Instant::now());
+        lock(&shared).connection_lost.insert(role, Instant::now());
     }
 }
 
@@ -354,30 +352,34 @@ async fn main() -> anyhow::Result<()> {
                     process.adopted = false;
                     process.not_before = None;
                 }
-            } else if process.child.is_some()
-                && connection_lost
-                    .get(&process.role)
-                    .is_some_and(|lost| *lost >= process.started)
-            {
-                // ADR-028: the process's heartbeat connection has dropped, so it is gone even
-                // though the operating system has not reported its exit yet. Start the
-                // replacement now instead of waiting out the graphics-device teardown.
-                tracing::warn!(
-                    role = process.role.name(),
-                    "heartbeat connection dropped; restarting without waiting for the exit"
+            } else if process.child.is_some() {
+                let reason = policy::replace_reason(
+                    process.started,
+                    connection_lost.get(&process.role).copied(),
+                    last_beat,
+                    now,
                 );
-                if let Some(mut child) = process.child.take() {
-                    let _ = child.start_kill();
-                    reaping.push(child);
+                if reason != policy::Replace::No {
+                    match reason {
+                        // ADR-028: it has gone even though the operating system has not
+                        // reported the exit yet. Replace it now rather than waiting out the
+                        // graphics-device teardown.
+                        policy::Replace::ConnectionDropped => tracing::warn!(
+                            role = process.role.name(),
+                            "heartbeat connection dropped; restarting without waiting for the exit"
+                        ),
+                        policy::Replace::Hung => tracing::warn!(
+                            role = process.role.name(),
+                            "stopped responding; restarting"
+                        ),
+                        policy::Replace::No => unreachable!(),
+                    }
+                    if let Some(mut child) = process.child.take() {
+                        let _ = child.start_kill();
+                        reaping.push(child);
+                    }
+                    process.crashed(now, &mut crashes, &mut enter_safe_mode);
                 }
-                process.crashed(now, &mut crashes, &mut enter_safe_mode);
-            } else if process.child.is_some() && policy::is_hung(process.started, last_beat, now) {
-                tracing::warn!(role = process.role.name(), "stopped responding; restarting");
-                if let Some(mut child) = process.child.take() {
-                    let _ = child.start_kill();
-                    reaping.push(child);
-                }
-                process.crashed(now, &mut crashes, &mut enter_safe_mode);
             }
         }
         if quit {

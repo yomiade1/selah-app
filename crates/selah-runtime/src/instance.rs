@@ -41,7 +41,10 @@ impl InstanceLock {
         Self::waiting(timeout, || Self::acquire_in(dir, name))
     }
 
-    fn waiting(timeout: Duration, mut attempt: impl FnMut() -> io::Result<Self>) -> io::Result<Self> {
+    fn waiting(
+        timeout: Duration,
+        mut attempt: impl FnMut() -> io::Result<Self>,
+    ) -> io::Result<Self> {
         let deadline = Instant::now() + timeout;
         loop {
             match attempt() {

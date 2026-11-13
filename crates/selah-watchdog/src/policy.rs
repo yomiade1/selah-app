@@ -59,6 +59,39 @@ pub fn is_hung(started: Instant, last_heartbeat: Option<Instant>, now: Instant) 
     }
 }
 
+/// Why a running child needs replacing, decided from what the watchdog can see.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Replace {
+    /// It is still doing its job.
+    No,
+    /// Its heartbeat connection has dropped, so it has gone even though the operating system
+    /// has not reported the exit yet (ADR-028). This is the fast path: on Windows the exit
+    /// status of a process that held a graphics device arrives about half a second late.
+    ConnectionDropped,
+    /// It is alive but has stopped sending heartbeats.
+    Hung,
+}
+
+/// Decide whether a running child should be replaced.
+///
+/// `connection_lost` and `last_beat` are only believed when they belong to the generation that
+/// started at `started`: a previous process's dropped connection must never take down its
+/// replacement.
+pub fn replace_reason(
+    started: Instant,
+    connection_lost: Option<Instant>,
+    last_beat: Option<Instant>,
+    now: Instant,
+) -> Replace {
+    if connection_lost.is_some_and(|lost| lost >= started) {
+        return Replace::ConnectionDropped;
+    }
+    if is_hung(started, last_beat.filter(|beat| *beat >= started), now) {
+        return Replace::Hung;
+    }
+    Replace::No
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -113,5 +146,57 @@ mod tests {
             Some(beat),
             beat + Duration::from_millis(1600)
         ));
+    }
+
+    #[test]
+    fn a_dropped_connection_replaces_at_once_without_waiting_for_the_exit() {
+        // ADR-028: the whole point. The child is alive as far as the operating system is
+        // concerned (it is still tearing down its graphics device) and it beat only a moment
+        // ago, so neither the exit status nor the hang rule would fire yet.
+        let started = Instant::now();
+        let just_now = started + Duration::from_millis(100);
+        assert_eq!(
+            replace_reason(started, Some(just_now), Some(just_now), just_now),
+            Replace::ConnectionDropped
+        );
+    }
+
+    #[test]
+    fn an_earlier_generations_dropped_connection_is_ignored() {
+        // The replacement must not be taken down by the drop that caused it.
+        let old_drop = Instant::now();
+        let started = old_drop + Duration::from_millis(50);
+        let now = started + Duration::from_millis(100);
+        assert_eq!(
+            replace_reason(started, Some(old_drop), Some(now), now),
+            Replace::No
+        );
+    }
+
+    #[test]
+    fn a_silent_but_connected_child_is_still_caught_as_hung() {
+        // The backstop stays: a process that holds its connection open but stops working.
+        let started = Instant::now();
+        let now = started + STARTUP_GRACE + HUNG_AFTER + Duration::from_millis(10);
+        assert_eq!(replace_reason(started, None, None, now), Replace::Hung);
+    }
+
+    #[test]
+    fn a_healthy_child_is_left_alone() {
+        let started = Instant::now();
+        let now = started + Duration::from_secs(30);
+        let beat = now - Duration::from_millis(100);
+        assert_eq!(replace_reason(started, None, Some(beat), now), Replace::No);
+    }
+
+    #[test]
+    fn a_dropped_connection_wins_over_a_hang() {
+        // Both are true after a kill; the connection drop is the earlier, stronger signal.
+        let started = Instant::now();
+        let now = started + STARTUP_GRACE + HUNG_AFTER + Duration::from_secs(1);
+        assert_eq!(
+            replace_reason(started, Some(now), None, now),
+            Replace::ConnectionDropped
+        );
     }
 }

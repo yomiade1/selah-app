@@ -142,10 +142,7 @@ fn main() -> anyhow::Result<()> {
     // still shutting down (ADR-028). Engine::start touches no output and binds no endpoint, so
     // nothing reaches the screens until the lock below is held.
     let (engine, instance) = Engine::start(mode)?;
-    let _lock = match selah_runtime::instance::InstanceLock::acquire_waiting(
-        "engine",
-        LOCK_WAIT,
-    ) {
+    let _lock = match selah_runtime::instance::InstanceLock::acquire_waiting("engine", LOCK_WAIT) {
         Ok(lock) => lock,
         Err(error) if error.kind() == std::io::ErrorKind::WouldBlock => {
             tracing::info!(

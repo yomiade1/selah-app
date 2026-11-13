@@ -16,9 +16,11 @@ use selah_testkit::{Stack, StackOptions, eventually, kill_pid, uses_hardware_gpu
 use selah_watchdog::policy::{BACKOFF_AFTER, CRASH_WINDOW, MAX_BACKOFF, restart_delay};
 
 const STARTUP: Duration = Duration::from_secs(30);
-/// ADR-001's engine restart budget. Measured from the kill to the restored picture, this PC
-/// takes 1.8–2.1 s (OS teardown ~0.45 s, GPU start ~1.2 s, first frame ~0.2 s), so the run
-/// reports every restart over it rather than failing on it: see PROGRESS.md, M4-A5.
+/// ADR-001's engine restart budget, measured from the kill to the restored picture. Restarts
+/// the watchdog did not deliberately hold back must come in under it, or this test fails
+/// (M4-A5). ADR-028 is what makes that affordable: the watchdog replaces the engine on its
+/// dropped heartbeat connection instead of waiting out the graphics-device teardown, and the
+/// replacement warms its own device during it rather than after.
 const RECOVERY: Duration = Duration::from_secs(2);
 /// Longest the run waits for the UI to reconnect before the next kill (pacing only).
 const UI_SETTLE: Duration = Duration::from_secs(10);
@@ -685,6 +687,14 @@ async fn fifty_random_kills_during_a_service_keep_the_show_going() {
     eprintln!("kills: {kills:?}; safe mode round trips: {safe_mode_round_trips}");
     eprintln!(
         "engine restarts over the {RECOVERY:?} budget (without back-off): {} of {unheld} {over_budget:?}",
+        over_budget.len()
+    );
+    // M4-A5: every restart the watchdog did not hold back must restore the picture inside the
+    // budget. Each entry is (round, how long it took).
+    assert!(
+        over_budget.is_empty(),
+        "{} of {unheld} engine restarts took longer than {RECOVERY:?} to restore the picture: \
+         {over_budget:?}",
         over_budget.len()
     );
     assert_eq!(kills.values().sum::<u32>(), 50);
